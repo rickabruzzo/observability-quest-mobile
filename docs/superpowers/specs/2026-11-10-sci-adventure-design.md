@@ -2,7 +2,7 @@
 
 **Date:** 2026-11-10
 **Owner:** Rick Abruzzo (Honeycomb Field & Events)
-**Status:** Draft for review
+**Status:** Reviewed by builder-check; awaiting Rick's approval
 **Supersedes:** the v0.1 CYOA port (tag `v0.1-cyoa`, branch `main`) — which stays deployable as the rollback.
 **Branch:** `sci-adventure`
 
@@ -57,9 +57,9 @@ This is **a game, not a toolkit**: we replicate the experience of an SCI-era gam
 
 1. **Title** — new title art (generated, SCI-style), logo rendered crisp from the official SVG (never AI-generated), FM title theme on first tap, START.
 2. **Intro: *Night Shift*** — the character-driven sequence from mock 2, re-shot with real backgrounds: bedroom 3:02 AM → the walk → the wall of green dashboards → the hex on the horizon → "SO YOU WANT TO BE ON CALL?" Skippable. Script by Rick.
-3. **Character creation** — Sierra sheet: hero preview left, pickers right: hair (6 styles × 6 colours), skin (6), glasses (none/round/square), top colour (Honeycomb palette), accessory (headphones / lanyard / coffee). Dice button randomizes. Optional name, default "the Engineer". Choices persist for the session.
+3. **Character creation** — Sierra sheet: hero preview left, pickers right: hair (6 styles × 6 colours), skin (6), glasses (none/round/square), top colour (Honeycomb palette), accessory (headphones / lanyard / coffee). Dice button randomizes. Optional name, default "the Engineer". Choices persist for the session. **Appearance only** — the class is not chosen here (Rick's call); each chapter hands the hero its persona.
 4. **Three chapters**, drawn from the five (*The draw*, below), each:
-   - **Class card**: the chapter's persona with silly stats (below). Tap to continue.
+   - **Class card**: the chapter's persona and silly stats (below), which the hero *wears* for this chapter — "Tonight you are the SRE." Tap to continue.
    - **Room**: a 320×200 scene with the hero, 3–5 hotspots, narrator line on entry.
    - **Hotspots**: tapping one walks the hero there (or teleports under reduced motion) and triggers it.
    - **Solve**: the Honeycomb hotspot opens the gamified product screen; the right prompt animates the result; narrator declares the win; score ticks up in the status bar.
@@ -73,8 +73,8 @@ Target length: 2–3 minutes for a first-time player who tries one wrong thing p
 
 Three of the five chapters per run, dealt when the player taps START (so only those three preload). Rules, in priority order:
 
-1. **Rule pending Rick's answer** — see *Open items*: whether the Team Agents chapter (5) is always dealt, whether at least one of the two flagship chapters (4 Canvas, 5 Team Agents) is, or whether the deal is uniform.
-2. Prefer chapters not in `oq.seen`; when fewer than three remain unseen, fill from the seen ones.
+1. **At least one flagship chapter in every hand** — 4 (Canvas with Claw Codez) or 5 (Team Agents). Rick's call.
+2. Prefer chapters not in `oq.seen`; when fewer than three remain unseen, fill from the seen ones. Rule 1 still holds on a replay.
 3. Otherwise uniform random. Play order is the chapter number order (1→5), so the stories escalate the same way every run.
 
 `?ch=1,4,5` in the URL forces a hand (for QA and for the booth demo loop); malformed values are ignored.
@@ -85,7 +85,7 @@ Three of the five chapters per run, dealt when the player taps START (so only th
 - **Status bar** (top, DOM): `Observability Quest` left, `Score: 120 of 300` right, in the small pixel font on a light grey bar — the SCI0/SCI1 look.
 - **Icon bar**: SCI1-style, bottom of the scene, three icons only — **Look** (eye), **Use** (hand), **Help** (?). Default mode is Use; tapping Look then a hotspot gives a descriptive line instead of acting. Help explains the three icons in one window. No inventory icon in v2.0 (a pager and a coffee appear as *props*, not inventory).
 - **Tap to act**: tapping anywhere walkable makes the hero walk there; tapping a hotspot walks to it and triggers it. Walkable area is a floor line per room (one y, min/max x); hotspots have a stand point. Walking takes ≤ 1.2 s across the whole room.
-- **Message windows**: the panel described above carries narrator and dialogue text; typewriter at 25 ms/char; tap to complete, tap to dismiss. Persona lines are prefixed with the speaker's name (who speaks them depends on the class question in *Open items*).
+- **Message windows**: the panel described above carries narrator and dialogue text; typewriter at 25 ms/char; tap to complete, tap to dismiss. Narrator lines carry no prefix. The hero's own lines, spoken in that chapter's class, are prefixed with the class name (`SRE:`), and the script addresses the player in the second person ("you let the renewal lapse"). Other characters in a room (the manager who runs in, Einar on the phone) are prefixed with their name and need no sprite — they speak from off-screen or from a prop.
 - **Prompts**: inside product screens and in some windows, choices appear as bracketed buttons: `[Run BubbleUp on slow sessions]`. Max three. One right, one plausible, one silly.
 - **Feedback**: right → short result animation and points (see *Scoring*); wrong → the narrator's jab, no points, and the tried prompt greys out. Nothing ever subtracts.
 
@@ -106,7 +106,7 @@ Personas and stats are shown as a Sierra character sheet at the start of each ch
 - *Room*: a glass-walled exec floor at night; the support bot's chat window frozen on a wall screen; a renewal contract on the desk.
 - *Situation (laptop)*: the AI assistant stalls mid-answer; fourth outage this week; the logs vendor's renewal is due Friday.
 - *Old tool*: **Cave Logs Inc.** — `[grep 40,000 lines of JSON]` `[Add another dashboard]` `[Renew for 3 years]`.
-- *Hero feature*: **SLOs + tracing every LLM call**. Screen: an SLO burn chart with `[Open the burning SLO]` → trace waterfall of 12 model calls → `[Find what's starving the threads]` → one nightly cron job glows. Win: SLO recovered; the TDM lets the Cave Logs renewal lapse.
+- *Hero feature*: **SLOs + tracing every LLM call**. Screen: an SLO burn chart with `[Open the burning SLO]` → trace waterfall of 12 model calls → `[Find what's starving the threads]` → one nightly cron job glows. Win: SLO recovered; you let the Cave Logs renewal lapse.
 
 ### 2 · Migrations · Fintech · **Platform Eng**
 - *Inspired by* Nubank. Company: a fictional digital bank, two years into a monolith → 350-service migration.
@@ -213,8 +213,6 @@ Carry over from v0.1: static layout shell, `text.js`, `claim.js` (form/complete)
 
 ## Open items (Rick)
 
-- **Class: chosen once or worn per chapter?** The spec as written shows a class card at the start of each chapter (the hero "wears" that chapter's persona and stats). The alternative, closer to Hero's Quest and to what Rick asked for: the player **picks their class at character creation** — Platform Eng, Technical Decision Maker, DevOps/SRE, Dev, Build & Release Eng — keeps it all run, and that class's chapter is always one of the three dealt. The chosen class can also ride along to the form as a hidden field. The answer decides the creator screen, the draw, and who speaks the persona lines in the script (the hero in first person, or the narrator about the hero).
-- **The draw rule**: Team Agents (5) always dealt · at least one of Canvas (4) / Team Agents (5) always dealt · uniform. Uniform leaves one hand in ten with neither flagship.
 - **The script**: intro narration, every room's narrator lines, Look lines, persona lines, prompt labels, wrong-move jabs, win lines, Charity's six verdicts, class-card stats. A draft script document follows this spec for review; PMM review later.
 - **Six reference screenshots** of the real surfaces the kit renders — SLO burn chart, service map, Core Web Vitals / Web Launchpad, Canvas with an agent working, Team Agents Finding card, Agent Timeline — so the VGA versions have the real feature's shape.
 - **Fonts**: Goatmeal's reply on Sierra Font 004 / SCI Menu Font; GloryQuest TTF in `assets/fonts/`.
