@@ -43,6 +43,7 @@ let pageIdx = 0;
 let pageSource = null; // { texts: string[], header }
 let tw = null;         // current typewriter handle
 let ready = false;
+let loaded = false;   // all scene art preloaded
 let countTimer = null;
 let layer = null;      // canvas animation layer (created at boot)
 
@@ -283,7 +284,7 @@ function enterComplete(sc) {
 
 // ---- events ----
 el.start.addEventListener('click', async () => {
-  if (!(ready && state === S.TITLE)) return;
+  if (!(ready && loaded && state === S.TITLE)) return;
   await audio.unlock();
   audio.playLoop();
   audio.blip('select');
@@ -328,6 +329,7 @@ window.addEventListener('resize', () => {
 // ---- debug / test handle ----
 window.__oq = {
   get ready() { return ready; },
+  get loaded() { return loaded; },
   get state() { return state; },
   get page() { return pageIdx; },
   get pages() { return pages; },
@@ -356,21 +358,27 @@ window.__oq = {
   layer = createLayer(el.art, image);
   el.body.dataset.screen = 'LOADING';
   el.start.hidden = false;
-  const names = [
-    'title_screen', 'hc_logo_white', 'hc_logomark',
-    ...SCENARIOS.map((s) => s.image), ...SCENARIOS.map((s) => s.narrator.portrait), CHARITY.portrait,
-  ];
-  try {
-    await preload([...new Set(names)]);
-  } catch (e) {
-    console.error(e);
-  }
+  const titleAssets = ['title_screen', 'hc_logo_white', 'hc_logomark'];
+  const rest = [...new Set([...SCENARIOS.map((s) => s.image), ...SCENARIOS.map((s) => s.narrator.portrait), CHARITY.portrait])];
+  // Phase 1: title screen interactive as soon as its own art and the fonts are in.
+  try { await preload(titleAssets); } catch (e) { console.error(e); }
   ready = true;
   el.mute.hidden = false;
   paintMute();
   const done = loadComplete();
   if (done !== null && Number.isFinite(done)) enterComplete(done);
   else enterTitle();
+  // Phase 2: everything else behind the START button, with a percentage readout.
+  el.start.disabled = true;
+  el.start.textContent = 'LOADING 0%';
+  el.start.classList.remove('blink');
+  try {
+    await preload(rest, { fonts: false, onProgress: (d, t) => { el.start.textContent = `LOADING ${Math.round((d / t) * 100)}%`; } });
+  } catch (e) {
+    console.error(e);
+  }
   el.start.disabled = false;
   el.start.textContent = 'START';
+  el.start.classList.add('blink');
+  loaded = true;
 })();

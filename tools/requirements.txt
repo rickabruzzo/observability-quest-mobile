@@ -2,3 +2,4 @@ Pillow>=10
 numpy>=1.26
 opencv-python-headless>=4.9
 pytest>=8
+pyoxipng>=9

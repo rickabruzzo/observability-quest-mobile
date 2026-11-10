@@ -21,11 +21,15 @@ function loadImage(name) {
   });
 }
 
-/** Preload every image by name; resolves when all are decoded. */
-export async function preload(names) {
-  const imgs = await Promise.all(names.map(loadImage));
-  names.forEach((n, i) => { IMAGES[n] = imgs[i]; });
-  if (document.fonts?.load) {
+/** Preload images by name; resolves when all are decoded. onProgress(done, total) per image. */
+export async function preload(names, { onProgress, fonts = true } = {}) {
+  let done = 0;
+  await Promise.all(names.map(async (n) => {
+    IMAGES[n] = await loadImage(n);
+    done++;
+    onProgress?.(done, names.length);
+  }));
+  if (fonts && document.fonts?.load) {
     const cs = getComputedStyle(document.documentElement);
     const body = cs.getPropertyValue('--font-body').trim();
     const small = cs.getPropertyValue('--font-small').trim();

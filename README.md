@@ -3,22 +3,70 @@
 Mobile web port of Honeycomb's *Observability Quest* badge game (Pimoroni Tufty 2350 / BadgeOS).
 Scan a QR at the booth, play five customer-story scenarios, claim a prize.
 
-Plain HTML/CSS/JS, no build step. See `docs/superpowers/specs/` for the design and
-`docs/superpowers/plans/` for the implementation plan.
+Plain HTML/CSS/JS, no build step, no framework. Design: `docs/superpowers/specs/`. Plan:
+`docs/superpowers/plans/`. Animation concept and coordinates: `docs/animation-handoff.md`.
 
-## Develop
+## Run it
 
 ```
-npm test          # unit tests (node --test)
-npm run e2e       # Playwright end-to-end tests
-npm run serve     # http://localhost:8080
+npm run serve          # http://localhost:8080  (any static server works)
 ```
 
-Asset tooling (Python): `pip install -r tools/requirements.txt`, then `python3 tools/build_anim.py`.
+Open `anim-preview.html` to see every scene and portrait animating side by side.
 
-## Fonts
+## Test
 
-Self-hosted, all SIL OFL (licenses in `assets/fonts/`):
-- Body: **Pixelify Sans 700** at 20px / 25px line-height (~31 chars per line at 390 wide). Chosen for the chunky Sierra feel closest to the badge's `yesterday.ppf`.
-- Small / labels / buttons: **Silkscreen** 700 at 11–12px (closest to the badge's `nope.ppf`).
-- Also bundled for comparison: VT323, Press Start 2P. Swap via the `--font-*` tokens in `css/game.css`.
+```
+npm test               # unit tests: copy, text engine, audio data, animation timelines, claim logic
+npm run e2e            # Playwright: full game flows at 360/390/430, audio, claim/redeem, reduced motion, budget
+python3 -m pytest tools/tests -q   # asset tooling
+```
+
+`npm run e2e` needs Playwright: `npm i -D playwright && npx playwright install chromium`
+(or symlink a global install into `node_modules/`).
+
+## Layout of the code
+
+```
+index.html            one page; <canvas id="art"> + text box + control bar
+css/game.css          palette tokens, Sierra text box, buttons, claim form, completion screen
+js/game.js            state machine: TITLE HOWTO INTRO CHOICE WIN LOSE FINAL CLAIM COMPLETE
+js/scenarios.js       all copy (verbatim from the badge) + roster; edit titles/names here
+js/text.js            wrap / paginate / intro header (ported from the badge's start_text)
+js/screen.js          text box DOM, typewriter, choice menu, preload
+js/audio.js           Web Audio synth: title loop + UI blips + mute
+js/audio/title-loop.js  the original chiptune, as note data (render with tools/render-loop.mjs)
+js/claim.js           prize claim: placeholder form, HubSpot slot, redeem flag
+js/anim/              canvas scene layer: layer.js, sprites.js, one module per scene, portraits
+assets/               12 stills at 640×428 (nearest-neighbour from the Firefly 1K originals), logos, fonts
+assets/anim/          sprite patches + "blank" patches that clear moving parts off a still
+tools/                build_anim.py (frames → patches), optimize_png.py, render-loop.mjs, stamp.mjs
+```
+
+## Common edits
+
+- **Change a title or swap a narrator:** `js/scenarios.js` → `narrator: { name, title, portrait }`.
+  Drop the new `portrait_<name>.png` (640×428) in `assets/`; blink/talk frames are optional.
+- **Wire the HubSpot form:** `js/claim.js` → `HUBSPOT = { portalId, formId, region }`. Use the script
+  embed's ids. Hidden fields `quest_score` and `quest_event` are filled if the form has them.
+  Styling for the embedded form lives under `.hs-form` in `css/game.css`.
+- **Per-event QR attribution:** link to `/?e=<eventcode>` — it is passed to HubSpot as `quest_event`.
+- **Music:** edit `js/audio/title-loop.js`; preview with `node tools/render-loop.mjs out.wav`.
+- **Fonts:** tokens `--font-*` in `css/game.css`. Bundled (OFL): Pixelify Sans (body), Silkscreen
+  (labels), plus VT323 and Press Start 2P for comparison.
+- **Regenerate animation patches:** put Gemini edit frames in `scratch/anim_gen/`, run
+  `python3 tools/build_anim.py`, check `scratch/anim_review.png`, then `python3 tools/optimize_png.py`.
+
+## Deploy (Vercel)
+
+Static site, framework preset "Other", output directory `/`. Before deploying, `node tools/stamp.mjs`
+rewrites `index.html`'s css/js references with the git sha so caches invalidate cleanly.
+
+Budget: a full run transfers ~2.7 MB (limit 3 MB); the title is interactive in < 2 s on 4G and the
+START button enables when the rest of the art is in. Once loaded, the game needs no network until
+the claim form (scene sprites load with their scene; if that fails the scene shows its still).
+
+## Status
+
+See `ASSET_PROMPTS.md` for image provenance. Scenario 4's portrait is Jessitron variant 1 (FPO until
+she picks). The claim form is a placeholder until the HubSpot form exists.
