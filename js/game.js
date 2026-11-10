@@ -102,8 +102,8 @@ function show(btn, visible) { btn.hidden = !visible; }
 
 function paintMute() {
   el.mute.setAttribute('aria-pressed', audio.muted ? 'true' : 'false');
-  el.mute.setAttribute('aria-label', audio.muted ? 'Unmute music' : 'Mute music');
-  el.mute.textContent = audio.muted ? '\u266A\u0338' : '\u266B';
+  el.mute.setAttribute('aria-label', audio.muted ? 'Sound is off. Turn sound on' : 'Sound is on. Turn sound off');
+  el.mute.innerHTML = audio.muted ? '<span class="ico">&#9834;</span> SOUND OFF' : '<span class="ico">&#9835;</span> SOUND ON';
 }
 
 function setStatus(html) { el.status.innerHTML = html; }
