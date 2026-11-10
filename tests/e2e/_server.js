@@ -2,8 +2,9 @@
 import http from 'node:http';
 import { createReadStream, statSync } from 'node:fs';
 import { extname, join, normalize } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = new URL('../../', import.meta.url).pathname;
+const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css',
   '.png': 'image/png', '.json': 'application/json', '.woff2': 'font/woff2', '.wav': 'audio/wav',
