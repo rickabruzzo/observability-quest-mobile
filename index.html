@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#000000">
+<title>Observability Quest</title>
+<meta name="description" content="A Sierra-style adventure through five real Honeycomb customer stories. Pick your move. See how it plays out.">
+<link rel="icon" href="assets/hc_logomark.png">
+<link rel="stylesheet" href="css/game.css">
+</head>
+<body data-screen="LOADING">
+<div id="app">
+  <div id="stage">
+    <canvas id="art" width="640" height="428" aria-label="Scene art"></canvas>
+    <div id="flash" aria-hidden="true"></div>
+  </div>
+  <div id="textbox" role="region" aria-live="polite"></div>
+  <div id="controls">
+    <button id="btn-back" class="btn btn-ghost" type="button" disabled>&lsaquo; BACK</button>
+    <div id="status" class="status" aria-live="polite"></div>
+    <button id="btn-next" class="btn" type="button">NEXT &rsaquo;</button>
+    <button id="btn-continue" class="btn btn-go" type="button" hidden>NEXT SCENARIO &rsaquo;</button>
+    <button id="btn-claim" class="btn btn-go" type="button" hidden>CLAIM YOUR PRIZE</button>
+    <button id="btn-start" class="btn btn-go blink" type="button" hidden disabled>LOADING&hellip;</button>
+    <button id="btn-begin" class="btn btn-go" type="button" hidden>BEGIN</button>
+    <button id="btn-mute" class="btn btn-icon" type="button" aria-label="Mute music" aria-pressed="false" hidden>&#9835;</button>
+  </div>
+</div>
+<script type="module" src="js/game.js"></script>
+</body>
+</html>
