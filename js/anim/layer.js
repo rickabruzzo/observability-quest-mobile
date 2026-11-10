@@ -24,9 +24,11 @@ export function createLayer(canvas, getImage, { fps = 10 } = {}) {
 
   function frameNow() { return quantize(performance.now() - t0, scene?.fps || fps); }
 
+  const env = { image: getImage, W, H };
+
   function render(frame) {
     drawStill(scene.still);
-    try { scene.draw(ctx, frame, state); } catch (e) { console.error(e); }
+    try { scene.draw(ctx, frame, state, env); } catch (e) { console.error(e); }
   }
 
   function tick() {
@@ -40,6 +42,7 @@ export function createLayer(canvas, getImage, { fps = 10 } = {}) {
     get scene() { return scene; },
     get frame() { return lastFrame; },
     still(name) { api.stop(); drawStill(name); },
+    get ctx() { return ctx; },
     setState(partial) { state = { ...state, ...partial }; },
     stop() { if (raf) cancelAnimationFrame(raf); raf = 0; scene = null; lastFrame = -1; },
     async show(next, initialState = {}) {
@@ -47,12 +50,14 @@ export function createLayer(canvas, getImage, { fps = 10 } = {}) {
       const my = ++token;
       state = { ...initialState };
       drawStill(next.still);                // show the approved still immediately
-      if (reducedMotion()) return;          // and leave it there under reduced motion
+      if (next.init) { try { await next.init(env); } catch (e) { console.error(e); } }
+      if (my !== token) return;             // a newer show() superseded us
+      if (next.drawStatic) { try { next.drawStatic(ctx, env); } catch (e) { console.error(e); } }
+      if (reducedMotion()) return;          // leave the still (plus any static overlay) under reduced motion
       if (next.assets?.length) {
         try { await warm(next.assets, { optional: !!next.optional }); } catch (e) { console.error(e); return; }
       }
-      if (next.init) { try { await next.init(); } catch (e) { console.error(e); } }
-      if (my !== token) return;             // a newer show() superseded us
+      if (my !== token) return;
       scene = next; t0 = performance.now(); lastFrame = -1;
       tick();
     },

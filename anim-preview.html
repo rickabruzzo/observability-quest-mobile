@@ -45,7 +45,7 @@
     L.layer = createLayer(L.c, (n) => IMGS.get(n));
     const scene = sceneFor(L.n);
     await L.layer.show(scene, { typing: typingBox.checked });
-    const hasAnim = scene.assets.some((a) => sprite(a)) || scene.assets.length === 0 && !!scene.animates;
+    const hasAnim = scene.assets.length === 0 ? true : scene.assets.some((a) => sprite(a));
     if (!hasAnim) L.c.dataset.static = '1';
   }
   typingBox.addEventListener('change', () => layers.forEach((L) => L.layer.setState({ typing: typingBox.checked })));

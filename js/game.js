@@ -4,7 +4,7 @@
 import { SCENARIOS, VERDICTS, CHARITY, HOW_TO_PLAY } from './scenarios.js';
 import { parseIntro, introLead, wrap, paginate, isCTA } from './text.js';
 import {
-  preload, image, initCanvas, drawTitle, flashBlack, makeMeasure, textMetrics, headerHeight,
+  preload, image, initCanvas, flashBlack, makeMeasure, textMetrics, headerHeight,
   setBoxLines, typewrite, setChoiceMenu, reducedMotion,
 } from './screen.js';
 import { createLayer } from './anim/layer.js';
@@ -156,8 +156,7 @@ function enterTitle() {
   audio.setLoopLevel(false);
   score = 0; scenarioIdx = 0; pages = [[]]; pageIdx = 0; pageSource = null; tw = null;
   setScreen(S.TITLE);
-  layer.stop();
-  drawTitle();
+  showScene('title_screen');
   el.box.className = '';
   el.box.innerHTML = '<div class="tagline">FIVE CUSTOMER STORIES.<br>FIVE CHOICES.<br>ONE OBSERVABILITY QUEST.<small>A HONEYCOMB ADVENTURE</small></div>';
   updateControls();
@@ -166,8 +165,7 @@ function enterTitle() {
 function enterHowTo() {
   setScreen(S.HOWTO);
   flashBlack(el.flash);
-  layer.stop();
-  drawTitle();
+  showScene('title_screen');
   setPages([HOW_TO_PLAY]);
   showPage({ slide: true });
 }
