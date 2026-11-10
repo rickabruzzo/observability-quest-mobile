@@ -7,6 +7,10 @@ import {
   preload, initCanvas, drawStill, drawTitle, flashBlack, makeMeasure, textMetrics, headerHeight,
   setBoxLines, typewrite, setChoiceMenu, reducedMotion,
 } from './screen.js';
+import { createAudio } from './audio.js';
+
+const LOOP_IN_GAME = true; // keep the title loop playing (quietly) during scenarios
+const audio = createAudio();
 
 export const S = Object.freeze({
   TITLE: 'TITLE', HOWTO: 'HOWTO', INTRO: 'INTRO', CHOICE: 'CHOICE', WIN: 'WIN', LOSE: 'LOSE',
@@ -73,6 +77,12 @@ function setScreen(s) {
 
 function show(btn, visible) { btn.hidden = !visible; }
 
+function paintMute() {
+  el.mute.setAttribute('aria-pressed', audio.muted ? 'true' : 'false');
+  el.mute.setAttribute('aria-label', audio.muted ? 'Unmute music' : 'Mute music');
+  el.mute.textContent = audio.muted ? '\u266A\u0338' : '\u266B';
+}
+
 function setStatus(html) { el.status.innerHTML = html; }
 
 function stopCount() { if (countTimer) { clearInterval(countTimer); countTimer = null; } }
@@ -118,7 +128,7 @@ function finishTyping() { if (tw && tw.typing) tw.finishNow(); }
 
 function nextPage() {
   if (typing()) { finishTyping(); return false; }
-  if (!isLastPage()) { pageIdx++; showPage(); return true; }
+  if (!isLastPage()) { pageIdx++; showPage(); audio.blip('advance'); return true; }
   return null; // at end
 }
 
@@ -129,6 +139,7 @@ function prevPage() {
 // ---- state transitions ----
 function enterTitle() {
   stopCount();
+  audio.setLoopLevel(false);
   score = 0; scenarioIdx = 0; pages = [[]]; pageIdx = 0; pageSource = null; tw = null;
   setScreen(S.TITLE);
   drawTitle();
@@ -157,13 +168,14 @@ function enterChoice() {
   setScreen(S.CHOICE);
   const sc = scenario();
   drawStill(sc.image);
-  setChoiceMenu(el.box, sc.choiceA, sc.choiceB, (idx) => (idx === 0 ? enterOutcome(true) : enterOutcome(false)));
+  setChoiceMenu(el.box, sc.choiceA, sc.choiceB, (idx) => (idx === 0 ? enterOutcome(true) : enterOutcome(false)), () => audio.blip('select'));
   updateControls();
 }
 
 function enterOutcome(win) {
   const sc = scenario();
   if (win) score++;
+  audio.blip(win ? 'win' : 'lose');
   setScreen(win ? S.WIN : S.LOSE);
   flashBlack(el.flash);
   drawStill(sc.narrator.portrait);
@@ -183,6 +195,7 @@ function enterFinal() {
   drawStill(CHARITY.portrait);
   setPages([VERDICTS[score] ?? VERDICTS[0]], CHARITY);
   showPage({ slide: true });
+  audio.blip('fanfare');
   // score counts up 0→N in the control bar
   stopCount();
   let n = 0;
@@ -206,8 +219,20 @@ function enterClaim() {
 }
 
 // ---- events ----
-el.start.addEventListener('click', () => { if (ready && state === S.TITLE) enterHowTo(); });
-el.begin.addEventListener('click', () => { if (state === S.HOWTO) { scenarioIdx = 0; score = 0; enterIntro(); } });
+el.start.addEventListener('click', async () => {
+  if (!(ready && state === S.TITLE)) return;
+  await audio.unlock();
+  audio.playLoop();
+  audio.blip('select');
+  enterHowTo();
+});
+el.mute.addEventListener('click', () => { audio.toggleMute(); paintMute(); });
+el.begin.addEventListener('click', () => {
+  if (state !== S.HOWTO) return;
+  if (LOOP_IN_GAME) audio.setLoopLevel(true); else audio.stopLoop();
+  audio.blip('advance');
+  scenarioIdx = 0; score = 0; enterIntro();
+});
 el.back.addEventListener('click', () => { if (!el.back.disabled) { finishTyping(); prevPage(); } });
 el.next.addEventListener('click', () => {
   const r = nextPage();
@@ -247,6 +272,7 @@ window.__oq = {
   get scenario() { return scenarioIdx; },
   get typing() { return typing(); },
   finishTyping,
+  audio,
   go(s) {
     switch (s) {
       case S.TITLE: enterTitle(); break;
@@ -274,6 +300,8 @@ window.__oq = {
     console.error(e);
   }
   ready = true;
+  el.mute.hidden = false;
+  paintMute();
   enterTitle();
   el.start.disabled = false;
   el.start.textContent = 'START';

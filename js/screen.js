@@ -173,7 +173,7 @@ export function typewrite(lineEls, { msPerChar = 25, instant = false, onTick } =
 }
 
 /** Render the two-option choice menu into the box. onPick(0|1) is called after the flash. */
-export function setChoiceMenu(boxEl, choiceA, choiceB, onPick) {
+export function setChoiceMenu(boxEl, choiceA, choiceB, onPick, onSelect) {
   boxEl.className = 'cobalt';
   boxEl.innerHTML = '';
   const menu = document.createElement('div');
@@ -196,6 +196,7 @@ export function setChoiceMenu(boxEl, choiceA, choiceB, onPick) {
     a.classList.remove('sel'); b.classList.remove('sel');
     el.classList.add('sel');
     navigator.vibrate?.(15);
+    onSelect?.();
     if (reducedMotion()) { onPick(idx); return; }
     let n = 0;
     const t = setInterval(() => {
