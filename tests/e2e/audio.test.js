@@ -38,3 +38,15 @@ test('mute toggle persists for the session and is visible on every screen', asyn
   await page.click('#btn-begin'); assert.equal(await page.isVisible('#btn-mute'), true);
   await ctx.close();
 });
+
+test('any tap on the title screen starts the music and stays on the title', async () => {
+  const { ctx, page } = await open();
+  await page.waitForSelector('#btn-start:not([disabled])');
+  assert.equal(await page.evaluate(() => window.__oq.audio.running), false);
+  await page.click('#textbox');
+  assert.equal(await page.evaluate(() => window.__oq.audio.running), true);
+  assert.equal(await page.evaluate(() => document.body.dataset.screen), 'TITLE');
+  await page.click('#btn-start');
+  assert.equal(await page.evaluate(() => document.body.dataset.screen), 'HOWTO');
+  await ctx.close();
+});

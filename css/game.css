@@ -122,6 +122,8 @@ body[data-screen="TITLE"] #controls, body[data-screen="HOWTO"] #controls { justi
 body[data-screen="TITLE"] #textbox { display: flex; align-items: center; justify-content: center; text-align: center; }
 body[data-screen="TITLE"] #textbox .tagline { color: var(--pacific); font-size: 0.9em; line-height: 1.3; }
 body[data-screen="TITLE"] #textbox .tagline small { display: block; color: var(--dim); font-family: var(--font-small); font-size: var(--font-small-size); margin-top: 10px; font-weight: 400; }
+body[data-screen="TITLE"] #textbox .tagline .hint-tap { color: var(--honey); margin-top: 22px; animation: blink 1800ms steps(1) infinite; }
+body[data-screen="TITLE"] #textbox { cursor: pointer; }
 
 /* ---- prize claim ---- */
 /* claim + completion: the box scrolls instead of clipping, and panels centre only when there is room */

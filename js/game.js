@@ -177,7 +177,7 @@ function enterTitle() {
   setScreen(S.TITLE);
   showScene('title_screen');
   el.box.className = '';
-  el.box.innerHTML = '<div class="tagline">FIVE CUSTOMER STORIES.<br>FIVE CHOICES.<br>ONE OBSERVABILITY QUEST.<small>A HONEYCOMB ADVENTURE</small></div>';
+  el.box.innerHTML = '<div class="tagline">FIVE CUSTOMER STORIES.<br>FIVE CHOICES.<br>ONE OBSERVABILITY QUEST.<small>A HONEYCOMB ADVENTURE</small><small class="hint-tap">TAP FOR SOUND</small></div>';
   updateControls();
 }
 
@@ -305,10 +305,18 @@ function enterComplete(sc) {
 }
 
 // ---- events ----
-el.start.addEventListener('click', async () => {
-  if (!(ready && loaded && state === S.TITLE)) return;
+function startMusic() {
+  if (audio.running) return;
   audio.unlock().catch(() => {});   // creates the context synchronously inside the tap; resume may stay pending on iOS
   audio.playLoop();
+}
+
+// Browsers only allow sound after a tap, so the first tap anywhere on the title screen starts the
+// music (and stays on the title); START also starts it if it hasn't yet.
+el.art.addEventListener('click', () => { if (state === S.TITLE) startMusic(); });
+el.start.addEventListener('click', async () => {
+  if (!(ready && loaded && state === S.TITLE)) return;
+  startMusic();
   audio.blip('select');
   enterHowTo();
 });
@@ -330,6 +338,7 @@ el.cont.addEventListener('click', () => { if (state === S.WIN || state === S.LOS
 el.claim.addEventListener('click', () => { if (state === S.FINAL) enterClaim(); });
 el.box.addEventListener('click', (e) => {
   if (e.target.closest('button')) return;
+  if (state === S.TITLE) { startMusic(); return; }
   if (state === S.INTRO || state === S.WIN || state === S.LOSE || state === S.FINAL || state === S.HOWTO) {
     if (typing()) finishTyping();
     else if (!isLastPage()) { pageIdx++; showPage(); }
