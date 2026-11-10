@@ -59,8 +59,10 @@ tools/                build_anim.py (frames → patches), optimize_png.py, rende
 
 ## Deploy (Vercel)
 
-Static site, framework preset "Other", output directory `/`. Before deploying, `node tools/stamp.mjs`
-rewrites `index.html`'s css/js references with the git sha so caches invalidate cleanly.
+Static site, framework preset "Other", output directory `/`, production branch `main`. The public URL is
+the Vercel-provided `https://<project-name>.vercel.app` (a honeycomb.io subdomain can be added later
+without changing anything here). Before deploying, `node tools/stamp.mjs` rewrites `index.html`'s css/js
+references with the git sha so caches invalidate cleanly.
 
 Budget: a full run transfers ~2.7 MB (limit 3 MB); the title is interactive in < 2 s on 4G and the
 START button enables when the rest of the art is in. Once loaded, the game needs no network until

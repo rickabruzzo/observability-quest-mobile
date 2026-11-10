@@ -16,13 +16,22 @@ game itself is static files and needs nothing else. Ordered roughly by when you'
 
 - **Vercel project** connected to the repo above. Framework preset: "Other" (no build step),
   output directory `/` (root). No environment variables are needed for the game.
-- **Production domain.** Options, pick one:
-  - Free `*.vercel.app` subdomain — fine for testing, ugly on a QR sign.
-  - A Honeycomb subdomain, e.g. `quest.honeycomb.io` — needs a CNAME from whoever owns
-    `honeycomb.io` DNS (Marketing Ops / IT). Vercel will show the exact record to add. Allow a
-    day or two for that request.
-  - A short vanity domain you register yourself (e.g. `o11yquest.com`) — fastest path to a
-    clean QR, no DNS ticket; ~$12/yr.
+- **Production URL: the Vercel-provided one, for now and possibly for good.** A `honeycomb.io`
+  subdomain needs a DNS change from whoever owns the zone and that approval will take a while, so
+  the plan does not wait for it:
+  - Name the Vercel project so the free URL reads well on a sign — the project name *is* the
+    subdomain: `observability-quest` → `https://observability-quest.vercel.app`. Pick the name when
+    you create the project (Settings → General → Project Name changes it later, which changes the URL,
+    so settle it before anything is printed). If `observability-quest` is taken, try
+    `honeycomb-quest`, `o11y-quest`, `play-observability-quest`.
+  - **Print the QR with the `.vercel.app` URL.** It keeps working forever, including after a custom
+    domain is added — Vercel serves both. Nothing has to be reprinted when the CNAME lands.
+  - When/if `quest.honeycomb.io` (or similar) is approved: Vercel → Project → Settings → Domains →
+    Add; it shows the exact CNAME record for the DNS owner. Then switch the QR for *new* print runs
+    only. Optionally set the `.vercel.app` URL to redirect to the custom domain at that point
+    (Domains → "Redirect to") so attribution lands in one place.
+  - Production branch: `main`. Every push to `main` deploys production; every other branch gets a
+    preview URL (`<project>-<hash>-<team>.vercel.app`), which is how we test on phones.
 - **HTTPS** is automatic on Vercel for any of the above.
 - **Preview deployments** on every branch/PR are automatic — that's how we'll test on phones
   before anything is live.
@@ -53,8 +62,8 @@ game itself is static files and needs nothing else. Ordered roughly by when you'
 
 ## 4. QR code and signage
 
-- URL to encode: production domain, with a per-event query string for attribution, e.g.
-  `https://<domain>/?e=reinvent26`. The game reads `e` and passes it into the HubSpot hidden
+- URL to encode: the production `.vercel.app` URL (see §2), with a per-event query string for
+  attribution, e.g. `https://observability-quest.vercel.app/?e=reinvent26`. The game reads `e` and passes it into the HubSpot hidden
   field `event_name`. One QR per event; same code everywhere at that booth.
 - Generate the QR at high error correction (level H) so it survives booth lighting and a
   slightly curved banner. SVG or ≥ 2000 px PNG for print.
@@ -109,6 +118,6 @@ game itself is static files and needs nothing else. Ordered roughly by when you'
 
 1. Repo URL (or "create it under my account and I'll transfer").
 2. Vercel project connected; tell me the preview URL pattern.
-3. Domain decision.
+3. Vercel project name (this is the public URL until a honeycomb.io subdomain is approved).
 4. HubSpot Portal ID + Form GUID + region, once the form exists.
 5. Per-event code convention for the QR (`e=reinvent26` style) — or I'll pick one.
