@@ -2,7 +2,8 @@
 """Build animation assets from the approved stills and the Gemini edit frames.
 
 Inputs  (gitignored):  assets/*.png (stills), scratch/anim_gen/*.png (JPEG frames, 1264x848)
-Outputs (committed):   assets/anim/*.png + *.json, scratch/anim_review.png (contact sheet)
+Outputs (committed):   assets/anim/*.png + *.json (sprites and "blank" patches that clear moving parts
+                       off the still — no full plates are shipped), scratch/anim_review.png
 
 Coordinates are in 640x428 export space, from docs/animation-handoff.md.
 Run:  python3 tools/build_anim.py
@@ -144,7 +145,7 @@ def build_s3(review):
     # the panel background is a dark blue field; fill the whole product region with its median colour
     bg = np.median(inner.reshape(-1, 3), axis=0).astype(np.uint8)
     cleared = plate.copy(); cleared[y:y + h, x:x + w] = bg
-    save_png(cleared, os.path.join(OUT, "s3_plate.png"))
+    save_sprite("s3_product_blank", cleared[y:y + h, x:x + w], S3_PRODUCT)
     tiles.append(cleared)
     review.append(("s3", tiles))
 
@@ -188,9 +189,11 @@ def build_s5(review):
         rr, gg, bb = region[:, :, 0].astype(int), region[:, :, 1].astype(int), region[:, :, 2].astype(int)
         k = (region.sum(axis=2) > 30) & ~((bb > rr + 40) & (bb > gg + 20))
         region[k] = (0, 0, 0)
-    save_png(cleared, os.path.join(OUT, "s5_plate.png"))
-    with open(os.path.join(OUT, "s5_coins.json"), "w") as f:
-        json.dump([{"x": c[0], "y": c[1], "w": c[2], "h": c[3]} for c in S5_COINS], f)
+    for i, (cx, cy, cw, ch) in enumerate(S5_COINS):
+        save_sprite(f"s5_coin_blank_{i}", cleared[cy:cy + ch, cx:cx + cw], (cx, cy, cw, ch))
+    with open(os.path.join(OUT, "s5_layout.json"), "w") as f:
+        json.dump({"coins": [{"x": c[0], "y": c[1], "w": c[2], "h": c[3]} for c in S5_COINS],
+                   "pay2": {"x": px, "y": py, "w": pw, "h": ph}}, f)
     tiles = [plate, cleared, composite.paste(cleared, silver, S5_COINS[1]), composite.paste(cleared, copper, S5_COINS[3])]
     review.append(("s5", tiles))
 
@@ -216,7 +219,7 @@ def build_s4(review):
     cleared = plates.fill_from_offset(cleared, (m_panel & (ys >= 318)).astype(np.uint8), dx=0, dy=-19)
     cleared = plates.fill_from_offset(cleared, (m_panel & (ys >= 316) & (ys <= 321)).astype(np.uint8), dx=-40, dy=0)
     cleared[(rect > 0) & ((xs > PANEL_RIGHT) | (ys >= 322))] = (0, 0, 0)
-    save_png(cleared, os.path.join(OUT, "s4_plate.png"))
+    save_sprite("s4_bang_blank", cleared[y:y + h, x:x + w], S4_BANG)
     bounced = cleared.copy()
     sub = bounced[y - 6:y - 6 + h, x:x + w]
     bounced[y - 6:y - 6 + h, x:x + w] = np.where(alpha[..., None] > 0, region, sub)
