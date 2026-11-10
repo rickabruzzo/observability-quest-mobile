@@ -52,8 +52,7 @@ export const SCENARIOS = [
       'STAFF SITE RELIABILITY ENGINEER\nLANGUAGE LEARNING PLATFORM\n\nYou run a 99.99 percent reliability initiative. Your service graph looks like a plate of spaghetti. You have a log tool, an APM, a metrics system, a tracing tool, and a SIEM.',
       'When incidents happen engineers spend hours pivoting between 5 platforms trying to stitch together a narrative.\n\nLicensing costs are ballooning. Morale is suffering.\n\nHOW DO YOU FIX THIS?',
     ],
-    // Narrator replaced 2026-11 (was JULIE NEUMANN / CMO).
-    // PLACEHOLDER portrait: Jessitron variant 1 is FPO until Jess picks her variant.
+    // Narrator replaced 2026-11 (was JULIE NEUMANN / CMO). Portrait: Jess's pick (variant 2), 2026-11-10.
     narrator: { name: 'JESSITRON', title: 'ENG MANAGER OF DEVELOPER RELATIONS', portrait: 'portrait_jessitron' },
     choiceA: { title: 'HONEYCOMB', sub: 'Unify logs, traces, metrics' },
     choiceB: { title: 'ADD A SIXTH TOOL', sub: 'Correlate the other five' },

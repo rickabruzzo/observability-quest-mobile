@@ -24,7 +24,7 @@ GEN = os.path.join(ROOT, "scratch", "anim_gen")
 REVIEW = os.path.join(ROOT, "scratch", "anim_review.png")
 W, H = 640, 428
 
-PORTRAITS = ["christine", "emily", "graham", "matt", "charity"]
+PORTRAITS = ["christine", "emily", "graham", "matt", "charity", "jessitron"]
 # search windows for the changed region (x, y, w, h) — heads are centred in frame
 EYES_WIN = (140, 60, 360, 190)
 MOUTH_WIN = (160, 170, 320, 170)
@@ -109,6 +109,9 @@ def build_portraits(review):
         plate = load(os.path.join(ASSETS, f"portrait_{who}.png"))
         tiles = [plate]
         for kind, win, thresh in (("blink", EYES_WIN, 110), ("talk1", MOUTH_WIN, 110), ("talk2", MOUTH_WIN, 110)):
+            if not os.path.exists(os.path.join(GEN, f"{who}_{kind}.png")):
+                print(f"  -- {who}_{kind}: no frame yet (static portrait)")
+                continue
             fr = load_frame(f"{who}_{kind}.png")
             dx, dy = composite.align(plate, fr, region=(120, 40, 400, 340), search=4)
             fr = shift(fr, dx, dy)

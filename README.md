@@ -68,5 +68,5 @@ the claim form (scene sprites load with their scene; if that fails the scene sho
 
 ## Status
 
-See `ASSET_PROMPTS.md` for image provenance. Scenario 4's portrait is Jessitron variant 1 (FPO until
-she picks). The claim form is a placeholder until the HubSpot form exists.
+See `ASSET_PROMPTS.md` for image provenance. Scenario 4's portrait is Jess's pick (variant 2); her blink/talk
+frames are pending. The claim form is a placeholder until the HubSpot form exists.

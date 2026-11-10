@@ -8,8 +8,8 @@ Rick's working folder (`ASSET_PROMPTS.md` there); this file records what the rep
 Generated in Adobe Firefly with **Gemini 3.1 (Nano Banana 2)**, 3:2, 1K; exported at 640×428
 nearest-neighbour. Common preamble: *"Sierra On-Line EGA pixel art adventure game scene, 320x200,
 1989 era."* Honeycomb palette named by hex in each prompt. `s2_microservices.png` had its
-"Paymeits" label fixed with a Gemini region edit (2026-11-09). `portrait_jessitron.png` is variant
-1 of 4 (FPO).
+"Paymeits" label fixed with a Gemini region edit (2026-11-09). `portrait_jessitron.png` is Jess's pick,
+variant 2 of 4 (2026-11-10).
 
 ## Animation frames (`scratch/anim_gen/*`, consumed by `tools/build_anim.py`)
 
