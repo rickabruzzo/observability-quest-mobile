@@ -8,6 +8,10 @@ import {
   setBoxLines, typewrite, setChoiceMenu, reducedMotion,
 } from './screen.js';
 import { createAudio } from './audio.js';
+import { HUBSPOT, mountClaimForm, getEventCode, redeemed } from './claim.js';
+
+const COMPLETE_KEY = 'oq.complete';
+const EVENT_CODE = getEventCode(location.search);
 
 const LOOP_IN_GAME = true; // keep the title loop playing (quietly) during scenarios
 const audio = createAudio();
@@ -107,6 +111,8 @@ function updateControls() {
     case S.HOWTO: setStatus('<span class="hint">HOW TO PLAY</span>'); break;
     case S.INTRO: setStatus(`SCENARIO ${scenarioIdx + 1}/${TOTAL}`); break;
     case S.CHOICE: setStatus('CHOOSE YOUR MOVE'); break;
+    case S.CLAIM: setStatus('ALMOST DONE'); break;
+    case S.COMPLETE: setStatus(''); break;
     case S.WIN: case S.LOSE: setStatus(`SCORE <span class="score">${score}/${TOTAL}</span>`); break;
     case S.FINAL: /* count-up handled in enterFinal */ break;
     default: setStatus('');
@@ -209,12 +215,61 @@ function enterFinal() {
 }
 
 function enterClaim() {
-  // Task 6 replaces this stub with the prize-claim form.
   setScreen(S.CLAIM);
   stopCount();
   flashBlack(el.flash);
   el.box.className = '';
-  el.box.innerHTML = '<div class="line">PRIZE CLAIM — coming soon.</div>';
+  el.box.innerHTML = '';
+  updateControls();
+  mountClaimForm(el.box, {
+    score,
+    eventCode: EVENT_CODE,
+    onSubmitted: () => enterComplete(score),
+  }).then((mode) => { el.body.dataset.claimMode = mode; });
+}
+
+function saveComplete(sc) { try { localStorage.setItem(COMPLETE_KEY, String(sc)); } catch { /* ignore */ } }
+function loadComplete() { try { const v = localStorage.getItem(COMPLETE_KEY); return v === null ? null : Number(v); } catch { return null; } }
+function clearComplete() { try { localStorage.removeItem(COMPLETE_KEY); } catch { /* ignore */ } }
+
+function enterComplete(sc) {
+  score = sc;
+  saveComplete(sc);
+  setScreen(S.COMPLETE);
+  stopCount();
+  flashBlack(el.flash);
+  drawStill(CHARITY.portrait);
+  el.box.className = '';
+  el.box.innerHTML = `
+    <div id="complete" class="complete">
+      <div class="c-title">YOU FINISHED<br>OBSERVABILITY QUEST</div>
+      <div class="c-score">SCORE <span class="score">${sc}/${TOTAL}</span></div>
+      <div class="c-instr">SHOW THIS SCREEN TO<br>HONEYCOMB BOOTH STAFF</div>
+      <div class="c-stamp" aria-hidden="true">REDEEMED</div>
+      <div class="c-foot">
+        <button id="btn-redeem" class="btn btn-small" type="button">STAFF: MARK REDEEMED</button>
+        <button id="btn-play-again" class="btn btn-small btn-link" type="button">PLAY AGAIN</button>
+      </div>
+    </div>`;
+  const panel = el.box.querySelector('#complete');
+  const btn = el.box.querySelector('#btn-redeem');
+  const paintRedeemed = () => { panel.classList.add('redeemed'); btn.disabled = true; btn.textContent = 'REDEEMED'; };
+  if (redeemed.get()) paintRedeemed();
+  let armed = null;
+  btn.addEventListener('click', () => {
+    if (redeemed.get()) return;
+    if (!armed) {
+      btn.textContent = 'TAP AGAIN TO CONFIRM REDEEM';
+      btn.classList.add('armed');
+      armed = setTimeout(() => { armed = null; btn.textContent = 'STAFF: MARK REDEEMED'; btn.classList.remove('armed'); }, 4000);
+      return;
+    }
+    clearTimeout(armed); armed = null;
+    redeemed.set();
+    paintRedeemed();
+    navigator.vibrate?.(30);
+  });
+  el.box.querySelector('#btn-play-again').addEventListener('click', () => { clearComplete(); enterTitle(); });
   updateControls();
 }
 
@@ -273,6 +328,7 @@ window.__oq = {
   get typing() { return typing(); },
   finishTyping,
   audio,
+  hubspot: HUBSPOT,
   go(s) {
     switch (s) {
       case S.TITLE: enterTitle(); break;
@@ -302,7 +358,9 @@ window.__oq = {
   ready = true;
   el.mute.hidden = false;
   paintMute();
-  enterTitle();
+  const done = loadComplete();
+  if (done !== null && Number.isFinite(done)) enterComplete(done);
+  else enterTitle();
   el.start.disabled = false;
   el.start.textContent = 'START';
 })();
