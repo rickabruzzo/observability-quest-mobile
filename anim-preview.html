@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Observability Quest — animation preview</title>
+<style>
+  body { margin: 0; background: #05070b; color: #DCF0FF; font: 14px/1.4 system-ui, sans-serif; padding: 16px; }
+  h1 { font-size: 16px; margin: 0 0 12px; display: flex; gap: 16px; align-items: center; }
+  label { color: #FFB000; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+  .card { background: #0F1423; border: 1px solid #25303E; padding: 8px; }
+  .card canvas { width: 100%; aspect-ratio: 640/428; image-rendering: pixelated; display: block; background: #000; }
+  .card .cap { font-size: 12px; color: #828282; margin-top: 6px; display: flex; justify-content: space-between; }
+  .card .cap b { color: #0298EC; font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>Animation preview
+  <label><input id="typing" type="checkbox"> narrator typing</label>
+  <span id="fps" style="color:#828282"></span>
+</h1>
+<div id="grid" class="grid"></div>
+<script type="module">
+  import { createLayer } from './js/anim/layer.js';
+  import { sceneFor, animatedNames } from './js/anim/scenes.js';
+  import { sprite } from './js/anim/sprites.js';
+
+  const IMGS = new Map();
+  const loadImg = (n) => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = `assets/${n}.png`; });
+  const names = animatedNames();
+  const grid = document.getElementById('grid');
+  const layers = [];
+  const typingBox = document.getElementById('typing');
+
+  for (const n of names) {
+    const card = document.createElement('div'); card.className = 'card';
+    const c = document.createElement('canvas'); c.width = 640; c.height = 428; c.className = 'preview'; c.dataset.scene = n;
+    const cap = document.createElement('div'); cap.className = 'cap'; cap.innerHTML = `<b>${n}</b><span class="f"></span>`;
+    card.append(c, cap); grid.appendChild(card);
+    layers.push({ n, c, cap });
+  }
+  await Promise.all(names.map(async (n) => IMGS.set(n, await loadImg(n))));
+  for (const L of layers) {
+    L.layer = createLayer(L.c, (n) => IMGS.get(n));
+    const scene = sceneFor(L.n);
+    await L.layer.show(scene, { typing: typingBox.checked });
+    const hasAnim = scene.assets.some((a) => sprite(a)) || scene.assets.length === 0 && !!scene.animates;
+    if (!hasAnim) L.c.dataset.static = '1';
+  }
+  typingBox.addEventListener('change', () => layers.forEach((L) => L.layer.setState({ typing: typingBox.checked })));
+  setInterval(() => layers.forEach((L) => { L.cap.querySelector('.f').textContent = `frame ${L.layer.frame}`; }), 250);
+  window.__preview = { ready: true, setTyping(v) { typingBox.checked = v; typingBox.dispatchEvent(new Event('change')); }, layers };
+</script>
+</body>
+</html>

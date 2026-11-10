@@ -4,9 +4,11 @@
 import { SCENARIOS, VERDICTS, CHARITY, HOW_TO_PLAY } from './scenarios.js';
 import { parseIntro, introLead, wrap, paginate, isCTA } from './text.js';
 import {
-  preload, initCanvas, drawStill, drawTitle, flashBlack, makeMeasure, textMetrics, headerHeight,
+  preload, image, initCanvas, drawTitle, flashBlack, makeMeasure, textMetrics, headerHeight,
   setBoxLines, typewrite, setChoiceMenu, reducedMotion,
 } from './screen.js';
+import { createLayer } from './anim/layer.js';
+import { sceneFor } from './anim/scenes.js';
 import { createAudio } from './audio.js';
 import { HUBSPOT, mountClaimForm, getEventCode, redeemed } from './claim.js';
 
@@ -42,6 +44,11 @@ let pageSource = null; // { texts: string[], header }
 let tw = null;         // current typewriter handle
 let ready = false;
 let countTimer = null;
+let layer = null;      // canvas animation layer (created at boot)
+
+/** Show a scene (still + its animation module, if any). */
+function showScene(name, state = {}) { layer.show(sceneFor(name), state); }
+function showStill(name) { layer.still(name); }
 
 // ---- helpers ----
 function scenario() { return SCENARIOS[scenarioIdx]; }
@@ -126,7 +133,8 @@ function showPage({ slide = false } = {}) {
   const ctaIndex = lines.findIndex(isCTA);
   const els = setBoxLines(el.box, lines, { header, slide, ctaIndex });
   tw = typewrite(els, { msPerChar: TYPE_MS });
-  tw.done.then(() => { if (pages[pageIdx] === lines) updateControls(); });
+  layer.setState({ typing: tw.typing });
+  tw.done.then(() => { layer.setState({ typing: false }); if (pages[pageIdx] === lines) updateControls(); });
   updateControls();
 }
 
@@ -148,6 +156,7 @@ function enterTitle() {
   audio.setLoopLevel(false);
   score = 0; scenarioIdx = 0; pages = [[]]; pageIdx = 0; pageSource = null; tw = null;
   setScreen(S.TITLE);
+  layer.stop();
   drawTitle();
   el.box.className = '';
   el.box.innerHTML = '<div class="tagline">FIVE CUSTOMER STORIES.<br>FIVE CHOICES.<br>ONE OBSERVABILITY QUEST.<small>A HONEYCOMB ADVENTURE</small></div>';
@@ -157,6 +166,7 @@ function enterTitle() {
 function enterHowTo() {
   setScreen(S.HOWTO);
   flashBlack(el.flash);
+  layer.stop();
   drawTitle();
   setPages([HOW_TO_PLAY]);
   showPage({ slide: true });
@@ -165,7 +175,7 @@ function enterHowTo() {
 function enterIntro() {
   setScreen(S.INTRO);
   flashBlack(el.flash);
-  drawStill(scenario().image);
+  showScene(scenario().image);
   setPages(introTexts(scenario()));
   showPage({ slide: true });
 }
@@ -173,7 +183,7 @@ function enterIntro() {
 function enterChoice() {
   setScreen(S.CHOICE);
   const sc = scenario();
-  drawStill(sc.image);
+  showScene(sc.image);
   setChoiceMenu(el.box, sc.choiceA, sc.choiceB, (idx) => (idx === 0 ? enterOutcome(true) : enterOutcome(false)), () => audio.blip('select'));
   updateControls();
 }
@@ -184,7 +194,7 @@ function enterOutcome(win) {
   audio.blip(win ? 'win' : 'lose');
   setScreen(win ? S.WIN : S.LOSE);
   flashBlack(el.flash);
-  drawStill(sc.narrator.portrait);
+  showScene(sc.narrator.portrait, { typing: true });
   setPages([win ? sc.winText : sc.loseText], sc.narrator);
   showPage({ slide: true });
 }
@@ -198,7 +208,7 @@ function continueAfterOutcome() {
 function enterFinal() {
   setScreen(S.FINAL);
   flashBlack(el.flash);
-  drawStill(CHARITY.portrait);
+  showScene(CHARITY.portrait, { typing: true });
   setPages([VERDICTS[score] ?? VERDICTS[0]], CHARITY);
   showPage({ slide: true });
   audio.blip('fanfare');
@@ -238,7 +248,7 @@ function enterComplete(sc) {
   setScreen(S.COMPLETE);
   stopCount();
   flashBlack(el.flash);
-  drawStill(CHARITY.portrait);
+  showStill(CHARITY.portrait);
   el.box.className = '';
   el.box.innerHTML = `
     <div id="complete" class="complete">
@@ -329,6 +339,7 @@ window.__oq = {
   finishTyping,
   audio,
   hubspot: HUBSPOT,
+  get layer() { return layer; },
   go(s) {
     switch (s) {
       case S.TITLE: enterTitle(); break;
@@ -344,6 +355,7 @@ window.__oq = {
 // ---- boot ----
 (async function boot() {
   initCanvas(el.art);
+  layer = createLayer(el.art, image);
   el.body.dataset.screen = 'LOADING';
   el.start.hidden = false;
   const names = [
