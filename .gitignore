@@ -1,0 +1,15 @@
+# secrets
+.env
+.env.*
+
+# working files
+scratch/
+_to_delete/
+.DS_Store
+__pycache__/
+*.pyc
+
+# editor / tooling
+.claude/
+.vercel/
+node_modules/

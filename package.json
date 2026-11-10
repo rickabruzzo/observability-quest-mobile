@@ -1,0 +1,12 @@
+{
+  "name": "observability-quest-mobile",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Mobile web port of Honeycomb's Observability Quest badge game",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "e2e": "node --test tests/e2e/*.test.js",
+    "serve": "python3 -m http.server 8080"
+  }
+}
