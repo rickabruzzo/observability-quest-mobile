@@ -8,7 +8,7 @@
 
 ## Intent
 
-Rebuild Observability Quest as a short point-and-click adventure in the look and feel of Sierra's SCI games (King's Quest IV/V, Quest for Glory, Space Quest IV era, 1988–92): a hero you create, rooms you walk through, things you click, a narrator who comments, a score in the top bar. Five chapters, one per Honeycomb use case, each starring the Honeycomb ICP persona who owns that pain. The "puzzle" in every chapter is simple enough for a conference attendee holding a phone in one hand: look at the problem, try the old tool if you like, then use the right Honeycomb feature through a gamified VGA rendering of the product. Finish, claim a prize at the booth.
+Rebuild Observability Quest as a short point-and-click adventure in the look and feel of Sierra's SCI games (King's Quest IV/V, Quest for Glory, Space Quest IV era, 1988–92): a hero you create, rooms you walk through, things you click, a narrator who comments, a score in the top bar. Five chapters are written, one per Honeycomb use case, each built around the Honeycomb ICP persona who owns that pain; **a run plays three of them, drawn at random**, so the game stays under three minutes and a second run at the booth is a different game. The "puzzle" in every chapter is simple enough for a conference attendee holding a phone in one hand: look at the problem, try the old tool if you like, then use the right Honeycomb feature through a gamified VGA rendering of the product. Finish, claim a prize at the booth.
 
 Why: the v0.1 port is a faithful badge game, but a wall of narration on a phone doesn't earn three minutes of an attendee's attention. A person on screen, a room to poke at, and a product moment you *do* rather than read about will. The era is also the brand of the thing: Honeycomb's booth already leans on this nostalgia.
 
@@ -16,7 +16,8 @@ This is **a game, not a toolkit**: we replicate the experience of an SCI-era gam
 
 ## Goals
 
-- Five chapters mapping to Honeycomb's five use cases × five industries, each with a distinct ICP persona and a distinct hero feature as the "good solve".
+- Five authored chapters mapping to Honeycomb's five use cases × five industries, each with a distinct ICP persona and a distinct hero feature as the "good solve". A run plays **three**, drawn at random under the rules in *The draw*; a run is 2–3 minutes.
+- Replayable: PLAY AGAIN deals a different hand. The prize is claimed once.
 - Character creation: the player customizes their hero's appearance; the hero persists through every chapter.
 - SCI-era presentation: 320×200 logical VGA scenes, pixel hero with a walk cycle, popup message windows, top status bar with score, icon bar, narrator voice.
 - Interaction simple enough that nobody dead-ends: tap a hotspot → hero walks there → something happens. Wrong choices cost points and get a joke; they never block progress.
@@ -47,7 +48,7 @@ This is **a game, not a toolkit**: we replicate the experience of an SCI-era gam
 - Palette: Honeycomb brand colours as in v0.1, plus a **VGA-era palette for scene art** (Sierra used 256 colours on a 320×200 canvas; we constrain generated scenes to a muted 64-colour set derived per scene so they read as one game).
 - **Logical resolution 320×200**, drawn on a 640×400 canvas (2 px per logical pixel), `image-rendering: pixelated`. The canvas fills the phone width; the status bar and message windows are DOM, in a pixel font, below/over it.
 - Fonts: dialogue font **TBD** — Sierra Font 004 if Goatmeal grants permission; otherwise an OFL alternative. GloryQuest (CC BY-SA, credit required) for display text. Until then, the v0.1 fonts stand in.
-- Weight budget **4 MB** for a full run (raised from 3 MB for the extra scenes and FM patches); title interactive < 2 s on 4G; everything else preloaded behind START with a progress readout.
+- Weight budget **4 MB shipped in total**; a run downloads only what it plays (title, intro, creator, its three chapters, final — target ≤ 3 MB). Title interactive < 2 s on 4G; the run's assets preload behind START with a progress readout, after the draw is made.
 - Reduced motion: scenes still, hero teleports instead of walking, no screen shakes.
 - All copy transcribed from the approved **script** (separate document, Rick authors; see Open items).
 - Legal naming: competitor parodies and "Claw Codez" are fixed in the script; the code never contains a real competitor name.
@@ -57,25 +58,36 @@ This is **a game, not a toolkit**: we replicate the experience of an SCI-era gam
 1. **Title** — new title art (generated, SCI-style), logo rendered crisp from the official SVG (never AI-generated), FM title theme on first tap, START.
 2. **Intro: *Night Shift*** — the character-driven sequence from mock 2, re-shot with real backgrounds: bedroom 3:02 AM → the walk → the wall of green dashboards → the hex on the horizon → "SO YOU WANT TO BE ON CALL?" Skippable. Script by Rick.
 3. **Character creation** — Sierra sheet: hero preview left, pickers right: hair (6 styles × 6 colours), skin (6), glasses (none/round/square), top colour (Honeycomb palette), accessory (headphones / lanyard / coffee). Dice button randomizes. Optional name, default "the Engineer". Choices persist for the session.
-4. **Five chapters**, each:
+4. **Three chapters**, drawn from the five (*The draw*, below), each:
    - **Class card**: the chapter's persona with silly stats (below). Tap to continue.
    - **Room**: a 320×200 scene with the hero, 3–5 hotspots, narrator line on entry.
    - **Hotspots**: tapping one walks the hero there (or teleports under reduced motion) and triggers it.
    - **Solve**: the Honeycomb hotspot opens the gamified product screen; the right prompt animates the result; narrator declares the win; score ticks up in the status bar.
    - **Verdict**: short popup from the chapter's narrator portrait (the v0.1 portraits), then NEXT.
 5. **Final** — Charity's score verdict (tiers reuse the v0.1 six, rewritten to the SCI voice in the script) with a **sunrise coda**: the hero walks out into daylight, shades on.
-6. **Claim** and **Complete** — unchanged from v0.1 (placeholder form → HubSpot embed after review; "SHOW THIS TO BOOTH STAFF"; staff REDEEMED tap; persisted).
+6. **Claim** and **Complete** — as v0.1 (placeholder form → HubSpot embed after review; "SHOW THIS TO BOOTH STAFF"; staff REDEEMED tap; persisted), plus a **PLAY AGAIN** button on Complete. A replay keeps the hero, deals a new hand that prefers chapters this device hasn't seen (`oq.seen` in sessionStorage), ends on Charity's verdict, and returns to Complete without showing the form again.
 
-Target length: 3–5 minutes for a first-time player who tries one wrong thing per chapter.
+Target length: 2–3 minutes for a first-time player who tries one wrong thing per chapter.
+
+### The draw
+
+Three of the five chapters per run, dealt when the player taps START (so only those three preload). Rules, in priority order:
+
+1. **Rule pending Rick's answer** — see *Open items*: whether the Team Agents chapter (5) is always dealt, whether at least one of the two flagship chapters (4 Canvas, 5 Team Agents) is, or whether the deal is uniform.
+2. Prefer chapters not in `oq.seen`; when fewer than three remain unseen, fill from the seen ones.
+3. Otherwise uniform random. Play order is the chapter number order (1→5), so the stories escalate the same way every run.
+
+`?ch=1,4,5` in the URL forces a hand (for QA and for the booth demo loop); malformed values are ignored.
 
 ## Interface (SCI grammar, phone-sized)
 
-- **Status bar** (top, DOM): `Observability Quest` left, `Score: 120 of 500` right, in the small pixel font on a light grey bar — the SCI0/SCI1 look.
+- **Layout on a phone** (my call): the stage — status bar, 16:10 scene, icon bar — is pinned to the top as in v0.1, and **all text and prompts live in a panel below it**, styled as an SCI message window (white, black border, drop shadow) that has been pulled down into thumb reach. The scene stays visible above while you read and choose. Hotspots in the scene are tapped once each, so their height is acceptable; prompts, which are tapped constantly, are always at the bottom. On the 375×548 short viewport the panel shrinks to three lines and paginates with a tap. Product screens take over the scene area and put their prompts in the same panel.
+- **Status bar** (top, DOM): `Observability Quest` left, `Score: 120 of 300` right, in the small pixel font on a light grey bar — the SCI0/SCI1 look.
 - **Icon bar**: SCI1-style, bottom of the scene, three icons only — **Look** (eye), **Use** (hand), **Help** (?). Default mode is Use; tapping Look then a hotspot gives a descriptive line instead of acting. Help explains the three icons in one window. No inventory icon in v2.0 (a pager and a coffee appear as *props*, not inventory).
 - **Tap to act**: tapping anywhere walkable makes the hero walk there; tapping a hotspot walks to it and triggers it. Walkable area is a floor line per room (one y, min/max x); hotspots have a stand point. Walking takes ≤ 1.2 s across the whole room.
-- **Message windows**: centred SCI-style windows (white, black border, drop shadow) over the scene for narrator and dialogue; typewriter at 25 ms/char; tap to complete, tap to dismiss. Persona lines are prefixed with the persona name.
+- **Message windows**: the panel described above carries narrator and dialogue text; typewriter at 25 ms/char; tap to complete, tap to dismiss. Persona lines are prefixed with the speaker's name (who speaks them depends on the class question in *Open items*).
 - **Prompts**: inside product screens and in some windows, choices appear as bracketed buttons: `[Run BubbleUp on slow sessions]`. Max three. One right, one plausible, one silly.
-- **Feedback**: right → short result animation + 100 points (first try) or 50 (after a wrong try); wrong → window with the narrator's jab, −0 points but no gain; the tried prompt greys out.
+- **Feedback**: right → short result animation and points (see *Scoring*); wrong → the narrator's jab, no points, and the tried prompt greys out. Nothing ever subtracts.
 
 ## The gamified Honeycomb
 
@@ -129,11 +141,19 @@ Personas and stats are shown as a Sierra character sheet at the start of each ch
 - *Hero feature*: **Team Agents + Agent Timeline**. Screen: a Team Agent **Finding** is already waiting — goal *Verify releases*: the deploy was checked for 30 minutes, a regression flagged, an incident channel opened. `[Open the Finding]` → Agent Timeline shows one conversation: a tool call retrying forty times → `[Approve the suggested fix]` or `[Check the evidence first]` (both win; checking scores more). Win line: three engineers on the team, and the fourth is an agent. This chapter is where Team Agents is front and centre.
 
 ### Final · Charity Majors
-Score tiers as v0.1 (0–5 solves, or 0–500 points mapped to six tiers), rewritten for the SCI voice in the script. Sunrise coda.
+Six verdict tiers, one per reachable score (see *Scoring*), rewritten for the SCI voice in the script. Presented as a **full-canvas portrait takeover** as in v0.1 (my call): the existing 640×428 portraits are cropped to 640×400 and the blink/talk patches offset accordingly, so Jessitron's pending frames and every other portrait asset carry over unchanged. The verdict text sits in the panel below. Then the sunrise coda.
 
 ## Scoring
 
-Sierra-style: `Score: N of 500`. 100 per chapter for a clean solve, 50 if a wrong prompt was tried first, +10 for each Look that reveals a joke line (optional "secret points", capped at 50 total so 500 remains reachable without them… or make the max 550 and let completionists have it — builder's call, documented). Charity's tier is derived from the score.
+Sierra-style: `Score: N of 300`, 100 per chapter. The rules (my call, so Rick can write the six verdicts against them):
+
+- **100** — the Honeycomb path solved with no wrong prompt *inside the Honeycomb screen*.
+- **50** — a wrong prompt was tried inside the Honeycomb screen first (at any step of a two-step screen).
+- **Visiting the old tool is free.** It is the joke, and the game is sized for a player who tries it once per chapter; a player who tries everything and then does the right thing still gets 100.
+- Chapter 5's two winning prompts: `[Check the evidence first]` = 100, `[Approve the suggested fix]` = 50.
+- **Look** lines give no points; they are their own reward. The score never goes down.
+
+Reachable totals are 0, 50, 100, 150, 200, 250, 300. Charity's six tiers: 300 · 250 · 200 · 150 · 100 · 50-or-less. The tier is derived from points, not from a count of solves.
 
 ## Intro and coda
 
@@ -150,7 +170,8 @@ Sierra-style: `Score: N of 500`. 100 per chapter for a clean solve, 50 if a wron
 ## Art
 
 - **Hero**: hand-pixelled parts system, 16×32 logical px (32×64 on canvas): hair ×6 styles, skin ×6, glasses ×3, top colour, accessory ×3; animations: idle, walk (4), sit-up, type at a keyboard (2), turn. Drawn in code from pixel maps so recolouring is free.
-- **Room backgrounds** ×5 + intro ×3 + title: generated with the Firefly/Gemini pipeline using a new SCI-VGA preamble (320×200, 1990 VGA, dithered, Sierra room composition with a clear floor band), then downsampled nearest-neighbour to 320×200 and palette-reduced to the scene's 64-colour set. Hotspot objects (laptop, terminal, Honeycomb workstation, old monitor, whiteboard) must be present in the generated art at known positions — the prompts state them; the builder measures hotspot rects after generation.
+- **Room backgrounds** ×5 + intro ×3 + title: generated with the Firefly/Gemini pipeline using a new SCI-VGA preamble (320×200, 1990 VGA, dithered, Sierra room composition with a clear floor band and an uncluttered desk/wall where objects will go), cropped from the generator's 3:2 to 16:10, downsampled nearest-neighbour to 320×200 and palette-reduced to the scene's 64-colour set.
+- **Hotspot objects are sprites, not part of the background** (my call): the laptop, the old-tool terminal, the Honeycomb workstation, the dusty "ask Einar" monitor, the whiteboard and the pager are hand-pixelled in the scene palette and composited at known positions, like SCI "views". The prompts therefore don't have to coax a generator into placing objects, no measuring or regeneration loop is needed, unvisited hotspots can glint, and hit rects are padded to 48 px however small the object is. Rooms are built against code-drawn placeholder backgrounds first and real backgrounds dropped in when generated.
 - **Product screens**: drawn in code from the shared kit, not generated — they must be crisp and data-driven.
 - **Claw Codez**: a small original robot sprite (a crab-claw-headed terminal on legs). Hand-pixelled. Never resembles any real mascot.
 - **Portraits**: v0.1's six narrator portraits reused for verdicts; Jessitron's frames when they land.
@@ -166,7 +187,8 @@ Carry over from v0.1: static layout shell, `text.js`, `claim.js` (form/complete)
 - `js/engine/statusbar.js` — score and title.
 - `js/engine/hero.js` — parts-based sprite renderer and animation.
 - `js/screens/` — product screens built from `js/kit/` (heatmap, waterfall, servicemap, bubbleup, timeline, canvas, finding).
-- `js/chapters/ch1..ch5.js` — data + glue per chapter; `js/script.js` — all copy, generated from the script document.
+- `js/chapters/ch1..ch5.js` — data + glue per chapter; `js/draw.js` — the deal (rules in *The draw*, `?ch=` override, `oq.seen`).
+- **Script pipeline**: the script is a slotted Markdown document, `script/script.md`, one key per line (`ch1.room.enter`, `ch1.look.laptop`, `ch1.hc.prompt2.wrong1`, `final.tier.300` …). The builder drafts every slot with placeholder copy; Rick edits in place; `tools/build_script.mjs` generates `js/script.js` from it and fails on a missing or unknown key. Revisions are a regenerate, not a retranscription. Rick's intro narration goes into the same document's `intro.*` slots.
 - `js/audio/opl.js` — OPL3 core + sequencer; `js/audio/music/*.js` — compositions; `js/audio/sfx.js`.
 - `js/intro.js`, `js/creator.js`, `js/final.js`.
 - Tests: unit (room pathing math, scoring, prompt state, composition data, hero part maps), e2e (full run on 390/360/430 and 375×548, reduced motion, budget, every hotspot reachable and every chapter finishable by the Honeycomb path alone, wrong prompts never block).
@@ -174,6 +196,7 @@ Carry over from v0.1: static layout shell, `text.js`, `claim.js` (form/complete)
 ## Verification before handoff
 
 - Every chapter finishable by tapping only Honeycomb prompts; every wrong prompt greys out and never blocks; every Look line renders; score reaches the max; Charity's tier matches the score.
+- Every one of the possible hands plays through (forced with `?ch=`); the draw rules hold over 1,000 simulated deals; PLAY AGAIN deals an unseen chapter when one exists and never shows the form twice.
 - Phone widths 360–430 and the 375×548 short viewport; landscape still usable.
 - Reduced motion: no walking animation, stills, instant text.
 - Audio: title theme, chapter motifs, stings verified on iOS Safari and Android Chrome from a real device (Rick), OPL core CPU use acceptable on a mid-range phone.
@@ -186,12 +209,14 @@ Carry over from v0.1: static layout shell, `text.js`, `claim.js` (form/complete)
 - Hero part-map format and the creator's layout details.
 - Product-screen kit internals; exact animations.
 - Hotspot rects after backgrounds are generated.
-- Whether secret Look points raise the max to 550 or stay inside 500.
 - Test harness details.
 
 ## Open items (Rick)
 
+- **Class: chosen once or worn per chapter?** The spec as written shows a class card at the start of each chapter (the hero "wears" that chapter's persona and stats). The alternative, closer to Hero's Quest and to what Rick asked for: the player **picks their class at character creation** — Platform Eng, Technical Decision Maker, DevOps/SRE, Dev, Build & Release Eng — keeps it all run, and that class's chapter is always one of the three dealt. The chosen class can also ride along to the form as a hidden field. The answer decides the creator screen, the draw, and who speaks the persona lines in the script (the hero in first person, or the narrator about the hero).
+- **The draw rule**: Team Agents (5) always dealt · at least one of Canvas (4) / Team Agents (5) always dealt · uniform. Uniform leaves one hand in ten with neither flagship.
 - **The script**: intro narration, every room's narrator lines, Look lines, persona lines, prompt labels, wrong-move jabs, win lines, Charity's six verdicts, class-card stats. A draft script document follows this spec for review; PMM review later.
+- **Six reference screenshots** of the real surfaces the kit renders — SLO burn chart, service map, Core Web Vitals / Web Launchpad, Canvas with an agent working, Team Agents Finding card, Agent Timeline — so the VGA versions have the real feature's shape.
 - **Fonts**: Goatmeal's reply on Sierra Font 004 / SCI Menu Font; GloryQuest TTF in `assets/fonts/`.
 - **Logo SVG** from the brand kit.
 - **Jessitron frames** (unchanged).
