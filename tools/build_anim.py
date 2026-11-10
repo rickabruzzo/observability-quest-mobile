@@ -87,7 +87,7 @@ def diff_mask(a, b, thresh):
     return m
 
 
-def union_bbox(mask, within, min_area=60, pad=4, grid=2):
+def union_bbox(mask, within, min_area=60, pad=8, grid=2):
     import cv2
     wx, wy, ww, wh = within
     m = np.zeros_like(mask)
@@ -114,19 +114,26 @@ def build_portraits(review):
             fr = shift(fr, dx, dy)
             bbox = union_bbox(diff_mask(plate, fr, thresh), win)
             if bbox is None:
-                print(f"  !! {who}_{kind}: no change found", file=sys.stderr)
+                print(f"  !! {who}_{kind}: no change found — removing any stale output", file=sys.stderr)
+                for ext in ("png", "json"):
+                    try: os.remove(os.path.join(OUT, f"portrait_{who}_{kind}.{ext}"))
+                    except FileNotFoundError: pass
                 continue
             x, y, w, h = bbox
+            region_plate = plate[y:y + h, x:x + w]
             patch = palette.snap(fr[y:y + h, x:x + w], palette.local_palette(plate, bbox))
-            save_sprite(f"portrait_{who}_{kind}", patch, bbox)
-            tiles.append(composite.paste(plate, patch, bbox))
+            # only paint pixels the model actually changed (dilated), so the rectangle never shows
+            alpha = composite.changed_alpha(region_plate, fr[y:y + h, x:x + w], thresh=thresh, dilate=2)
+            save_sprite(f"portrait_{who}_{kind}", patch, bbox, alpha)
+            shown = np.where(alpha[..., None] > 0, patch, region_plate)
+            tiles.append(composite.paste(plate, shown, bbox))
             print(f"  {who}_{kind}: shift=({dx},{dy}) bbox={bbox}")
         review.append(("portrait_" + who, tiles))
 
 
 def build_s3(review):
     plate = load(os.path.join(ASSETS, "s3_ecommerce.png"))
-    pal = palette.local_palette(plate, S3_PRODUCT, margin=0)
+    base_pal = palette.local_palette(plate, S3_PRODUCT, margin=0)
     x, y, w, h = S3_PRODUCT
     tiles = [plate]
     # guitar = the still itself
@@ -135,7 +142,12 @@ def build_s3(review):
         fr = load_frame(fname)
         dx, dy = composite.align(plate, fr, region=(220, 80, 380, 300), search=4)  # align on the unchanged right 2/3
         fr = shift(fr, dx, dy)
-        patch = palette.snap(fr[y:y + h, x:x + w], pal)
+        region = fr[y:y + h, x:x + w]
+        # quantise the new product's own colours (32) and add them to the panel palette, so e.g. the
+        # drum shells keep their red instead of snapping to the guitar's orange
+        q = Image.fromarray(region).quantize(32, method=Image.Quantize.MEDIANCUT).convert("RGB")
+        pal = np.unique(np.vstack([base_pal, palette.extract(np.array(q), max_colors=32)]), axis=0)
+        patch = palette.snap(region, pal)
         save_sprite(f"s3_product_{prod}", patch, S3_PRODUCT)
         tiles.append(composite.paste(plate, patch, S3_PRODUCT))
         print(f"  s3_{prod}: shift=({dx},{dy})")

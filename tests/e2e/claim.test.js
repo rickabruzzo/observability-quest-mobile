@@ -20,8 +20,8 @@ const screen = (page) => page.evaluate(() => document.body.dataset.screen);
 async function nextUntil(page, pred, max = 30) {
   for (let i = 0; i < max; i++) {
     if (await pred()) return;
-    await page.click('#btn-next'); // finishes typing on first tap, advances on the next
-    await page.waitForTimeout(20);
+    await page.click('#btn-next', { timeout: 1500 }).catch(() => {}); // finishes typing on first tap, advances on the next
+    await page.waitForTimeout(40);
   }
   throw new Error('nextUntil exhausted');
 }
@@ -94,9 +94,10 @@ test('fallback path when HubSpot is configured but unreachable', async () => {
   await page.route('**/js.hsforms.net/**', (r) => r.abort());
   await page.evaluate(() => { window.__oq.hubspot.portalId = '1'; window.__oq.hubspot.formId = 'x'; });
   await reachClaim(page);
-  await page.waitForSelector('#btn-claim-continue', { timeout: 10000 });
+  await page.waitForSelector('#claim-email', { timeout: 10000 });
   assert.match(await page.textContent('#textbox'), /grab your email at the booth/i);
-  await page.click('#btn-claim-continue');
+  await page.fill('#claim-email', 'a@b.co'); await page.click('#btn-claim-submit');
   assert.equal(await screen(page), 'COMPLETE');
+  assert.match(await page.textContent('#complete'), /a@b\.co/);
   await ctx.close();
 });

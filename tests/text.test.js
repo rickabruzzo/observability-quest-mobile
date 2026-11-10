@@ -67,3 +67,11 @@ test('longest real page fits at narrowest width', async () => {
     assert.ok(h <= 150, `page height ${h}`);
   }
 });
+
+test('ellipsis never pushes a line past maxWidth when measure is given', () => {
+  // "Your aggregate metrics are a" is exactly at the limit; adding "..." must move "a" down
+  const lines = ['Your aggregate metrics are a', 'beautiful lie'];
+  const p = paginate(lines, { lineHeight: 13, blankHeight: 6, boxHeight: 13, measure: mono8, maxWidth: 28 * 8 });
+  assert.deepEqual(p, [['Your aggregate metrics...'], ['...are a beautiful lie']]);
+  for (const pg of p) for (const l of pg) assert.ok(mono8(l) <= 28 * 8, l);
+});

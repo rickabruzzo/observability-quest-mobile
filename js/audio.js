@@ -145,6 +145,13 @@ export function createAudio() {
       if (master && !muted) master.gain.setTargetAtTime(volume, ctx.currentTime, 0.02);
     },
 
+    /** Page hidden → suspend the context (stops the loop playing under a locked phone); visible → resume. */
+    setHidden(hidden) {
+      if (!ctx) return;
+      if (hidden) { ctx.suspend?.().catch?.(() => {}); }
+      else if (running && !muted) { ctx.resume?.().catch?.(() => {}); }
+    },
+
     toggleMute() {
       muted = !muted;
       writeMuted(muted);

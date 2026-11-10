@@ -17,7 +17,7 @@ async function open(opts = {}) {
 }
 const screen = (page) => page.evaluate(() => document.body.dataset.screen);
 const canvas = (page) => page.evaluate(() => document.querySelector('#art').toDataURL());
-async function nextUntil(page, pred, max = 30) { for (let i = 0; i < max; i++) { if (await pred()) return; await page.click('#btn-next'); await page.waitForTimeout(20); } throw new Error('exhausted'); }
+async function nextUntil(page, pred, max = 40) { for (let i = 0; i < max; i++) { if (await pred()) return; await page.click('#btn-next', { timeout: 1500 }).catch(() => {}); await page.waitForTimeout(40); } throw new Error('exhausted'); }
 async function fullRun(page) {
   await page.click('#btn-start'); await page.click('#btn-begin');
   for (let i = 0; i < 5; i++) {

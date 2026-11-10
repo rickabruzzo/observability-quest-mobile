@@ -66,3 +66,16 @@ def changed_bbox(a: np.ndarray, b: np.ndarray, thresh: int = 40, pad: int = 4, g
     x0 -= x0 % grid; y0 -= y0 % grid
     x1 += (-x1) % grid; y1 += (-y1) % grid
     return (x0, y0, min(a.shape[1], x1) - x0, min(a.shape[0], y1) - y0)
+
+
+def changed_alpha(plate: np.ndarray, edit: np.ndarray, thresh: int = 40, dilate: int = 2) -> np.ndarray:
+    """uint8 alpha (0/255) marking pixels where edit differs from plate by more than `thresh`
+    (sum of |ΔR|+|ΔG|+|ΔB|), dilated by `dilate` pixels so anti-aliased edges are covered.
+    Used so a sprite patch only paints the pixels the model actually changed — no rectangle seams."""
+    import cv2
+    d = np.abs(plate[:, :, :3].astype(np.int32) - edit[:, :, :3].astype(np.int32)).sum(axis=2)
+    m = (d > thresh).astype(np.uint8) * 255
+    m = cv2.medianBlur(m, 3)   # drops isolated 1px JPEG speckle, keeps 2px-wide features (eyelid lines)
+    if dilate > 0:
+        m = cv2.dilate(m, np.ones((2 * dilate + 1, 2 * dilate + 1), np.uint8))
+    return m

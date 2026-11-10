@@ -70,7 +70,7 @@ function firstNonEmpty(page) { for (let i = 0; i < page.length; i++) if (page[i]
  * its own page. Where a page break falls mid-sentence, "..." is appended to the last
  * line of the page and prepended to the first line of the next.
  */
-export function paginate(lines, { lineHeight, blankHeight, boxHeight }) {
+export function paginate(lines, { lineHeight, blankHeight, boxHeight, measure = null, maxWidth = Infinity }) {
   const pages = [];
   let buf = [];
   let y = 0;
@@ -104,9 +104,47 @@ export function paginate(lines, { lineHeight, blankHeight, boxHeight }) {
     const endsSentence = SENTENCE_END.some((c) => a[la].trimEnd().endsWith(c));
     const startsLower = /^[a-z]/.test(b[fb]);
     if (!endsSentence && startsLower && !isCTA(b[fb])) {
+      // Make room for the trailing "..." by moving words down to the next page if needed.
+      if (measure) {
+        let words = a[la].split(' ');
+        while (words.length > 1 && measure(words.join(' ') + '...') > maxWidth) {
+          b[fb] = words.pop() + ' ' + b[fb];
+        }
+        a[la] = words.join(' ');
+      }
       a[la] = a[la] + '...';
       b[fb] = '...' + b[fb];
+      if (measure) reflow(b, fb, measure, maxWidth);
     }
   }
+  if (measure) fitPages(pages, { lineHeight, blankHeight, boxHeight });
   return pages;
+}
+
+// Re-wrap a page from line `from` so no line exceeds maxWidth (splits last words down).
+function reflow(page, from, measure, maxWidth) {
+  for (let i = from; i < page.length; i++) {
+    if (!page[i]) continue;
+    while (measure(page[i]) > maxWidth) {
+      const words = page[i].split(' ');
+      if (words.length < 2) break;
+      const w = words.pop();
+      page[i] = words.join(' ');
+      if (i + 1 < page.length && page[i + 1] !== '') page[i + 1] = w + ' ' + page[i + 1];
+      else page.splice(i + 1, 0, w);
+    }
+  }
+}
+
+// After reflow a page may be taller than the box: push trailing lines onto the next page.
+function fitPages(pages, { lineHeight, blankHeight, boxHeight }) {
+  const height = (pg) => pg.reduce((h, l) => h + (l === '' ? blankHeight : lineHeight), 0);
+  for (let i = 0; i < pages.length; i++) {
+    while (pages[i].length > 1 && height(pages[i]) > boxHeight) {
+      const moved = pages[i].pop();
+      if (i + 1 < pages.length && !isCTA(pages[i + 1][0] || '')) pages[i + 1].unshift(moved);
+      else pages.splice(i + 1, 0, [moved]);
+      while (pages[i].length && pages[i][pages[i].length - 1] === '') pages[i].pop();
+    }
+  }
 }

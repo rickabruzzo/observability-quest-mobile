@@ -10,7 +10,7 @@ import {
 import { createLayer } from './anim/layer.js';
 import { sceneFor } from './anim/scenes.js';
 import { createAudio } from './audio.js';
-import { HUBSPOT, mountClaimForm, getEventCode, redeemed } from './claim.js';
+import { HUBSPOT, mountClaimForm, getEventCode, redeemed, pendingEmail } from './claim.js';
 
 const COMPLETE_KEY = 'oq.complete';
 const EVENT_CODE = getEventCode(location.search);
@@ -46,9 +46,19 @@ let ready = false;
 let loaded = false;   // all scene art preloaded
 let countTimer = null;
 let layer = null;      // canvas animation layer (created at boot)
+let advanceGuardUntil = 0; // after a page finishes typing, NEXT stays a no-op briefly so a double-tap can't skip
+const ADVANCE_GUARD_MS = 350;
 
 /** Show a scene (still + its animation module, if any). */
-function showScene(name, state = {}) { layer.show(sceneFor(name), state); }
+function showScene(name, state = {}) {
+  if (!image(name)) {
+    // a still that failed to preload: fetch it now, then show (if we're still on this scene)
+    preload([name], { fonts: false }).then(() => { if (layer.scene?.still === name || currentArt === name) layer.show(sceneFor(name), state); }).catch(console.error);
+  }
+  currentArt = name;
+  layer.show(sceneFor(name), state);
+}
+let currentArt = null;
 function showStill(name) { layer.still(name); }
 
 // ---- helpers ----
@@ -61,8 +71,9 @@ function buildPages(texts, header) {
   const boxHeight = Math.max(m.lineHeight, m.innerH - hdrH);
   const out = [];
   for (const t of texts) {
-    const lines = wrap(t, m.innerW - 4, measure);
-    out.push(...paginate(lines, { lineHeight: m.lineHeight, blankHeight: m.blankHeight, boxHeight }));
+    const maxWidth = m.innerW - 4;
+    const lines = wrap(t, maxWidth, measure);
+    out.push(...paginate(lines, { lineHeight: m.lineHeight, blankHeight: m.blankHeight, boxHeight, measure, maxWidth }));
   }
   return out.length ? out : [[]];
 }
@@ -102,7 +113,7 @@ function stopCount() { if (countTimer) { clearInterval(countTimer); countTimer =
 // ---- controls ----
 function updateControls() {
   const last = isLastPage();
-  const typ = typing();
+  const typ = typing() || performance.now() < advanceGuardUntil;
   show(el.start, state === S.TITLE);
   show(el.begin, state === S.HOWTO);
   const paged = state === S.INTRO || state === S.WIN || state === S.LOSE || state === S.FINAL;
@@ -135,7 +146,13 @@ function showPage({ slide = false } = {}) {
   const els = setBoxLines(el.box, lines, { header, slide, ctaIndex });
   tw = typewrite(els, { msPerChar: TYPE_MS });
   layer.setState({ typing: tw.typing });
-  tw.done.then(() => { layer.setState({ typing: false }); if (pages[pageIdx] === lines) updateControls(); });
+  tw.done.then(() => {
+    layer.setState({ typing: false });
+    if (pages[pageIdx] !== lines) return;
+    advanceGuardUntil = performance.now() + ADVANCE_GUARD_MS;
+    updateControls();
+    setTimeout(() => { if (pages[pageIdx] === lines) updateControls(); }, ADVANCE_GUARD_MS + 10);
+  });
   updateControls();
 }
 
@@ -143,6 +160,7 @@ function finishTyping() { if (tw && tw.typing) tw.finishNow(); }
 
 function nextPage() {
   if (typing()) { finishTyping(); return false; }
+  if (performance.now() < advanceGuardUntil && isLastPage()) return false; // double-tap guard
   if (!isLastPage()) { pageIdx++; showPage(); audio.blip('advance'); return true; }
   return null; // at end
 }
@@ -229,11 +247,12 @@ function enterClaim() {
   flashBlack(el.flash);
   el.box.className = '';
   el.box.innerHTML = '';
+  el.box.scrollTop = 0;
   updateControls();
   mountClaimForm(el.box, {
     score,
     eventCode: EVENT_CODE,
-    onSubmitted: () => enterComplete(score),
+    onSubmitted: ({ mode }) => { if (mode !== 'fallback') pendingEmail.clear(); enterComplete(score); },
   }).then((mode) => { el.body.dataset.claimMode = mode; });
 }
 
@@ -254,14 +273,17 @@ function enterComplete(sc) {
       <div class="c-title">YOU FINISHED<br>OBSERVABILITY QUEST</div>
       <div class="c-score">SCORE <span class="score">${sc}/${TOTAL}</span></div>
       <div class="c-instr">SHOW THIS SCREEN TO<br>HONEYCOMB BOOTH STAFF</div>
+      ${pendingEmail.get() ? `<div class="c-pending">EMAIL NOT YET SENT — STAFF PLEASE RECORD:<br><span class="c-email"></span></div>` : ''}
       <div class="c-stamp" aria-hidden="true">REDEEMED</div>
       <div class="c-foot">
         <button id="btn-redeem" class="btn btn-small" type="button">STAFF: MARK REDEEMED</button>
         <button id="btn-play-again" class="btn btn-small btn-link" type="button">PLAY AGAIN</button>
       </div>
     </div>`;
+  el.box.scrollTop = 0;
   const panel = el.box.querySelector('#complete');
   const btn = el.box.querySelector('#btn-redeem');
+  const pe = el.box.querySelector('.c-email'); if (pe) pe.textContent = pendingEmail.get();
   const paintRedeemed = () => { panel.classList.add('redeemed'); btn.disabled = true; btn.textContent = 'REDEEMED'; };
   if (redeemed.get()) paintRedeemed();
   let armed = null;
@@ -278,19 +300,20 @@ function enterComplete(sc) {
     paintRedeemed();
     navigator.vibrate?.(30);
   });
-  el.box.querySelector('#btn-play-again').addEventListener('click', () => { clearComplete(); enterTitle(); });
+  el.box.querySelector('#btn-play-again').addEventListener('click', () => { clearComplete(); pendingEmail.clear(); enterTitle(); });
   updateControls();
 }
 
 // ---- events ----
 el.start.addEventListener('click', async () => {
   if (!(ready && loaded && state === S.TITLE)) return;
-  await audio.unlock();
+  audio.unlock().catch(() => {});   // creates the context synchronously inside the tap; resume may stay pending on iOS
   audio.playLoop();
   audio.blip('select');
   enterHowTo();
 });
 el.mute.addEventListener('click', () => { audio.toggleMute(); paintMute(); });
+document.addEventListener('visibilitychange', () => { audio.setHidden(document.hidden); });
 el.begin.addEventListener('click', () => {
   if (state !== S.HOWTO) return;
   if (LOOP_IN_GAME) audio.setLoopLevel(true); else audio.stopLoop();
@@ -317,7 +340,8 @@ let resizeT = null;
 window.addEventListener('resize', () => {
   clearTimeout(resizeT);
   resizeT = setTimeout(() => {
-    if (!pageSource) return;
+    const paged = state === S.INTRO || state === S.WIN || state === S.LOSE || state === S.FINAL || state === S.HOWTO;
+    if (!paged || !pageSource) return;
     const keep = Math.min(pageIdx, 9999);
     pages = buildPages(pageSource.texts, pageSource.header);
     pageIdx = Math.min(keep, pages.length - 1);

@@ -24,11 +24,12 @@ function loadImage(name) {
 /** Preload images by name; resolves when all are decoded. onProgress(done, total) per image. */
 export async function preload(names, { onProgress, fonts = true } = {}) {
   let done = 0;
-  await Promise.all(names.map(async (n) => {
+  const results = await Promise.allSettled(names.map(async (n) => {
     IMAGES[n] = await loadImage(n);
     done++;
     onProgress?.(done, names.length);
   }));
+  for (const r of results) if (r.status === 'rejected') console.error(r.reason);
   if (fonts && document.fonts?.load) {
     const cs = getComputedStyle(document.documentElement);
     const body = cs.getPropertyValue('--font-body').trim();
@@ -116,6 +117,7 @@ export function headerHeight(boxEl) {
 export function setBoxLines(boxEl, lines, { header = null, cobalt = false, slide = false, ctaIndex = -1 } = {}) {
   boxEl.className = cobalt ? 'cobalt' : '';
   boxEl.innerHTML = '';
+  boxEl.scrollTop = 0;
   if (header) {
     const h = document.createElement('div');
     h.className = 'hdr';
@@ -180,6 +182,7 @@ export function typewrite(lineEls, { msPerChar = 25, instant = false, onTick } =
 export function setChoiceMenu(boxEl, choiceA, choiceB, onPick, onSelect) {
   boxEl.className = 'cobalt';
   boxEl.innerHTML = '';
+  boxEl.scrollTop = 0;
   const menu = document.createElement('div');
   menu.className = 'menu';
   const mk = (id, c) => {

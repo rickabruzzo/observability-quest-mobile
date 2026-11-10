@@ -53,7 +53,7 @@ test('in the game, the narrator portrait animates on the outcome screen', async 
   await page.goto(server.baseURL);
   await page.waitForFunction(() => window.__oq?.ready === true, null, { timeout: 15000 });
   await page.click('#btn-start'); await page.click('#btn-begin');
-  for (let i = 0; i < 12 && (await page.evaluate(() => document.body.dataset.screen)) !== 'CHOICE'; i++) { await page.click('#btn-next'); await page.waitForTimeout(20); }
+  for (let i = 0; i < 20 && (await page.evaluate(() => document.body.dataset.screen)) !== 'CHOICE'; i++) { await page.click('#btn-next', { timeout: 1500 }).catch(() => {}); await page.waitForTimeout(40); }
   await page.click('#opt-a');
   await page.waitForFunction(() => document.body.dataset.screen === 'WIN');
   // while typing, the mouth should move: sample the canvas

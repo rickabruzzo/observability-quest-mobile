@@ -8,7 +8,7 @@ before(async () => { server = await startServer(); browser = await chromium.laun
 after(async () => { await browser?.close(); await server?.close(); });
 
 const screen = (page) => page.evaluate(() => document.body.dataset.screen);
-async function nextUntil(page, pred, max = 30) { for (let i = 0; i < max; i++) { if (await pred()) return; await page.click('#btn-next'); await page.waitForTimeout(20); } throw new Error('exhausted'); }
+async function nextUntil(page, pred, max = 40) { for (let i = 0; i < max; i++) { if (await pred()) return; await page.click('#btn-next', { timeout: 1500 }).catch(() => {}); await page.waitForTimeout(40); } throw new Error('exhausted'); }
 
 test('a full run transfers under 3 MB', async () => {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });

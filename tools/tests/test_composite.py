@@ -36,3 +36,13 @@ def test_cut_applies_alignment_offset():
     patch, bbox = composite.cut(plate, shifted, region=(8, 8, 16, 16), search=3)
     assert bbox == (8, 8, 16, 16)
     assert (patch == plate[8:24, 8:24]).all()
+
+
+def test_changed_alpha_is_transparent_where_the_edit_matches_the_plate():
+    plate = np.zeros((20, 20, 3), dtype=np.uint8); plate[:, :] = (37, 48, 62)
+    edit = plate.copy(); edit[8:12, 8:12] = (255, 176, 0)
+    alpha = composite.changed_alpha(plate, edit, thresh=40, dilate=1)
+    assert alpha.shape == (20, 20) and alpha.dtype == np.uint8
+    assert (alpha[9:11, 9:11] == 255).all()
+    assert (alpha[0, :] == 0).all() and (alpha[:, 0] == 0).all()   # border untouched → transparent
+    assert alpha[7, 9] == 255 and alpha[5, 9] == 0                  # dilated by one, not more

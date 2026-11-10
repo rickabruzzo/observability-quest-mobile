@@ -22,8 +22,8 @@ const oq = (page, expr) => page.evaluate((e) => Function('return (' + e + ')')()
 async function clickNextUntil(page, pred, max = 20) {
   for (let i = 0; i < max; i++) {
     if (await pred()) return;
-    await page.click('#btn-next');
-    await page.waitForTimeout(30);
+    await page.click('#btn-next', { timeout: 1500 }).catch(() => {});
+    await page.waitForTimeout(40);
   }
   throw new Error('clickNextUntil exhausted');
 }
@@ -119,14 +119,16 @@ for (const width of [360, 390, 430]) {
       await page.evaluate(() => window.__oq.finishTyping());
       while ((await screen(page)) === 'INTRO') {
         await check(`s${s + 1} intro p${await page.evaluate(() => window.__oq.page)}`);
-        await page.click('#btn-next'); await page.evaluate(() => window.__oq.finishTyping());
+        await page.click('#btn-next', { timeout: 1500 }).catch(() => {}); await page.evaluate(() => window.__oq.finishTyping());
+        await page.waitForTimeout(400); // let the advance guard pass
       }
       await page.click(s % 2 ? '#opt-a' : '#opt-b');
       await page.waitForFunction(() => ['WIN', 'LOSE'].includes(document.body.dataset.screen));
       await page.evaluate(() => window.__oq.finishTyping());
       while (!(await page.isVisible('#btn-continue'))) {
         await check(`s${s + 1} outcome p${await page.evaluate(() => window.__oq.page)}`);
-        await page.click('#btn-next'); await page.evaluate(() => window.__oq.finishTyping());
+        await page.click('#btn-next', { timeout: 1500 }).catch(() => {}); await page.evaluate(() => window.__oq.finishTyping());
+        await page.waitForTimeout(400);
       }
       await check(`s${s + 1} outcome last`);
       await page.click('#btn-continue');
