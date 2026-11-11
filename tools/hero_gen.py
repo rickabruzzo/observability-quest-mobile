@@ -162,7 +162,7 @@ def hero(body='masc', skin=0, hair='black', style='standard', beard='none',
     # ---- hair (one picker: mohawk, buzz, standard, shoulder, long, fro) ----
     hm = []
     if style == 'mohawk':
-        hm += rect(9, 5, 18, 8) + rect(11, 3, 16, 4) + [(12, 2), (14, 2), (15, 2), (13, 1)]   # buzzed sides, short textured top
+        hm += rect(12, 3, 15, 8) + [(13, 2), (14, 2)]                 # a narrow, short, pronounced strip
     else:
         hm += ellipse(cx, 7.0, b['head_rx'] + 0.8, 3.8)             # crown
         hm += rect(8, 6, 19, 8)                                      # band over the forehead
@@ -173,7 +173,9 @@ def hero(body='masc', skin=0, hair='black', style='standard', beard='none',
         elif style == 'long':
             hm += rect(6, 7, 7, 30) + rect(20, 7, 21, 30) + rect(5, 12, 5, 30) + rect(22, 12, 22, 30) + rect(4, 18, 4, 30) + rect(23, 18, 23, 30)
         elif style == 'fro':
-            hm += ellipse(cx, 7.5, b['head_rx'] + 3.0, 6.0) + rect(5, 8, 7, 13) + rect(20, 8, 22, 13)
+            outer = set(ellipse(cx, 6.5, b['head_rx'] + 3.4, 6.8)); inner = set(ellipse(cx, 6.5, b['head_rx'] + 2.6, 6.0))
+            hm += [p for p in outer if p in inner or (p[0] // 2 + p[1] // 2) % 2 == 0]   # 2-px curls round the edge
+            hm += rect(8, 6, 19, 9) + rect(5, 9, 7, 13) + rect(20, 9, 22, 13)         # low hairline, full sides
     c.fill('hair', hm)
     # ---- shading ----
     c.shade('legL', jean_r); c.shade('legR', jean_r)
@@ -203,10 +205,20 @@ def hero(body='masc', skin=0, hair='black', style='standard', beard='none',
     c.px(10, 10, EYE_WHITE); c.px(11, 10, OUTLINE); c.px(16, 10, EYE_WHITE); c.px(15, 10, OUTLINE)
     c.px(14, 12, skin_r['S']); c.px(14, 13, skin_r['S']); c.px(13, 13, skin_r['S'])
     for x in (12, 13, 14, 15): c.px(x, 15, skin_r['D'])
-    # beard (takes the hair colour): short to the chin, long down the chest
-    if beard in ('short', 'long'):
-        bot = 18 if beard == 'short' else 22
-        for (x, y) in rect(9, 13, 18, bot):
+    # hair texture: buzzed sides for the mohawk, dark curls dotted through the fro
+    if style == 'mohawk':
+        for (x, y) in [(8, 7), (9, 8), (8, 9), (19, 7), (18, 8), (19, 9)]: c.px(x, y, hair_r['S'])   # buzzed temples
+    if style == 'fro':
+        for (x, y) in hm:
+            if (x * 3 + y * 5) % 11 == 0 and c.part[y + c.oy][x] == 'hair': c.px(x, y, hair_r['D'])
+    # beard (takes the hair colour): short = stubble over the jaw with a solid chin; long = full, down the chest
+    if beard == 'short':
+        for (x, y) in rect(9, 13, 18, 18):
+            if (x, y) in {(12,15),(13,15),(14,15),(15,15)}: continue
+            if y >= 17 and 11 <= x <= 16: c.px(x, y, beard_r['B']); continue      # solid chin
+            if (x + y) % 2 == 0: c.px(x, y, beard_r['S'])                              # stubble
+    elif beard == 'long':
+        for (x, y) in rect(9, 13, 18, 22):
             if (x, y) in {(12,15),(13,15),(14,15),(15,15)}: continue
             if y >= 19 and (x < 10 + (y - 19) or x > 17 - (y - 19)): continue
             c.px(x, y, beard_r['S'] if x >= 17 else beard_r['B'])
