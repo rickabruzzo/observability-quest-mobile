@@ -2,7 +2,7 @@
 // Part masks → shading pass → detail stamps → silhouette outline. The Python file is the
 // reference; tests/hero.test.js proves this port byte for byte against its fixtures.
 
-import { BODIES, HAIR, HOODIE, JEANS, OUTLINE, SKIN, WALK } from './hero-parts.js';
+import { BODIES, HAIR, HOODIE, JEANS, OUTLINE, PJ, SIT_DY, SKIN, WALK } from './hero-parts.js';
 
 export const HERO_W = 28;
 export const HERO_H = 72;
@@ -94,29 +94,35 @@ function ellipse(cx, cy, rx, ry) {
 }
 
 /** Composes the 28×72 RGBA sprite for a hero config and pose. */
-export function composeHero(cfg, pose = 'idle') {
+export function composeHero(cfg, pose = 'idle', outfit = 'hoodie') {
   const { body = 'masc', skin = 0, hair = 'black', style = 'standard', beard = 'none',
     hoodie = 'ink', jeans = 'indigo', glasses = 'none', hold = 'laptop' } = cfg;
   const b = BODIES[body]; const c = new Grid();
   const skinR = ramp(SKIN[skin], 1.12, 0.8, 0.62);
   const hairR = ramp(HAIR[hair], 1.35, 0.7);
-  const hoodR = ramp(HOODIE[hoodie]); const jeanR = ramp(JEANS[jeans], 1.25, 0.72);
+  const pj = outfit === 'pj', sit = pose === 'situp';
+  const hoodR = ramp(pj ? PJ.top : HOODIE[hoodie]); const jeanR = ramp(pj ? PJ.bottom : JEANS[jeans], 1.25, 0.72);
   const beardR = ramp(HAIR[hair], 1.3, 0.7);
   const cx = 13.5;
-  const [legLdx, legRdx, shoeLdx, shoeRdx, bob, armLdy, armRdy] = WALK[pose] || WALK.idle;
+  const shoeR = pj ? skinR : SHOE;                                  // pyjamas go barefoot
+  const [legLdx, legRdx, shoeLdx, shoeRdx, bob0, armLdy, armRdy] = WALK[pose] || WALK.idle;
+  const bob = sit ? SIT_DY : bob0;                                  // sitting up: the whole upper body sits lower
+  const held = pj || sit ? null : hold;                               // nothing in hand in bed or in pyjamas
 
   // ---- legs & shoes (back; never bob) ----
   const legTop = 45, legBot = 66;
   c.oy = 0;
-  c.fill('legL', rect(b.legL[0] + legLdx, legTop, b.legL[1] + legLdx, legBot));
-  c.fill('legR', rect(b.legR[0] + legRdx, legTop, b.legR[1] + legRdx, legBot));
-  c.fill('shoeL', rect(b.shoeL[0] + shoeLdx, 66, b.shoeL[1] + shoeLdx, 71));
-  c.fill('shoeR', rect(b.shoeR[0] + shoeRdx, 66, b.shoeR[1] + shoeRdx, 71));
-  c.fill('legL', rect(b.hip[0], legTop, 13, 51)); c.fill('legR', rect(14, legTop, b.hip[1], 51));
+  if (!sit) {                                                       // sitting up: the legs are under the blanket
+    c.fill('legL', rect(b.legL[0] + legLdx, legTop, b.legL[1] + legLdx, legBot));
+    c.fill('legR', rect(b.legR[0] + legRdx, legTop, b.legR[1] + legRdx, legBot));
+    c.fill('shoeL', rect(b.shoeL[0] + shoeLdx, 66, b.shoeL[1] + shoeLdx, 71));
+    c.fill('shoeR', rect(b.shoeR[0] + shoeRdx, 66, b.shoeR[1] + shoeRdx, 71));
+    c.fill('legL', rect(b.hip[0], legTop, 13, 51)); c.fill('legR', rect(14, legTop, b.hip[1], 51));
+  }
 
   // ---- everything above the legs bobs with the walk ----
   c.oy = bob;
-  c.fill('hood', rect(9, 18, 18, 22));
+  if (!pj) c.fill('hood', rect(9, 18, 18, 22));                    // pyjamas have no hood
   for (let y = 20; y <= 45; y++) {
     let span;
     if (y <= 21) span = [b.shoulder[0] + (21 - y), b.shoulder[1] - (21 - y)];
@@ -151,23 +157,34 @@ export function composeHero(cfg, pose = 'idle') {
 
   // ---- shading ----
   c.shade('legL', jeanR); c.shade('legR', jeanR);
-  c.shade('shoeL', SHOE, 1, 1); c.shade('shoeR', SHOE, 1, 1);
+  c.shade('shoeL', shoeR, 1, 1); c.shade('shoeR', shoeR, 1, 1);
   c.shade('hood', { L: hoodR.S, B: hoodR.D, S: hoodR.D, D: hoodR.D }, 0, 0, false);
   c.shade('torso', hoodR, 2, 3); c.shade('armL', hoodR, 1, 1); c.shade('armR', hoodR, 1, 2);
   c.shade('handL', skinR, 1, 1); c.shade('handR', skinR, 1, 1);
   c.shade('neck', { L: skinR.S, B: skinR.S, S: skinR.D, D: skinR.D }, 0, 1, false);
   c.shade('head', skinR, 1, 2); c.shade('earL', skinR, 0, 0); c.shade('earR', skinR, 0, 1);
   c.shade('hair', hairR, 2, 3);
+  if (pj) {                                                         // pyjama stripes: every third row of the cloth
+    const stripe = hexc(PJ.stripe);
+    for (let y = 0; y < HERO_H; y += 3) for (let x = 0; x < HERO_W; x++) {
+      const p = c.part[y][x];
+      if (p === 'torso' || p === 'armL' || p === 'armR' || p === 'legL' || p === 'legR') c.col[y][x] = stripe;
+    }
+  }
 
   // ---- details ----
   for (let y = 23; y <= 43; y++) { c.px(b.torso[0], y, hoodR.S); c.px(b.torso[1], y, hoodR.D); }
-  for (let x = b.hip[0]; x <= b.hip[1]; x++) c.px(x, 45, hoodR.D);
-  const px0 = b.waist[0] + 2, px1 = b.waist[1] - 2;
-  for (let x = px0; x <= px1; x++) { c.px(x, 37, hoodR.S); c.px(x, 43, hoodR.S); }
-  for (let y = 37; y <= 43; y++) { c.px(px0, y, hoodR.S); c.px(px1, y, hoodR.S); }
-  for (let y = 22; y <= 30; y++) { c.px(12, y, hoodR.L); c.px(15, y, hoodR.L); }
-  for (let x = b.legL[0] + 1; x < b.legL[1]; x++) c.px(x, 57, jeanR.S);
-  for (let x = b.legR[0] + 1; x < b.legR[1]; x++) c.px(x, 57, jeanR.S);
+  if (!pj) {                                                        // hem, pocket, drawstrings: hoodie only
+    for (let x = b.hip[0]; x <= b.hip[1]; x++) c.px(x, 45, hoodR.D);
+    const px0 = b.waist[0] + 2, px1 = b.waist[1] - 2;
+    for (let x = px0; x <= px1; x++) { c.px(x, 37, hoodR.S); c.px(x, 43, hoodR.S); }
+    for (let y = 37; y <= 43; y++) { c.px(px0, y, hoodR.S); c.px(px1, y, hoodR.S); }
+    for (let y = 22; y <= 30; y++) { c.px(12, y, hoodR.L); c.px(15, y, hoodR.L); }
+  }
+  if (!sit) {
+    for (let x = b.legL[0] + 1; x < b.legL[1]; x++) c.px(x, 57, jeanR.S);
+    for (let x = b.legR[0] + 1; x < b.legR[1]; x++) c.px(x, 57, jeanR.S);
+  }
   // face
   const brow = hairR.D;
   for (const x of [10, 11, 12]) c.px(x, 9, brow);
@@ -200,24 +217,24 @@ export function composeHero(cfg, pose = 'idle') {
     for (const [x, y] of [[9, 10], [12, 10], [14, 10], [17, 10], [13, 10], [9, 11], [12, 11], [14, 11], [17, 11]]) c.px(x, y, g);
   }
   // held item rides with the left arm; the pager sits on the belt
-  c.oy = bob + (hold === 'pager' ? 0 : armLdy);
-  if (hold === 'laptop') {
+  c.oy = bob + (held === 'pager' ? 0 : armLdy);
+  if (held === 'laptop') {
     for (const [x, y] of rect(0, 33, 6, 42)) c.px(x, y, LAPTOP.B);
     for (let x = 0; x <= 6; x++) { c.px(x, 33, LAPTOP.L); c.px(x, 42, LAPTOP.S); }
     for (let y = 33; y <= 42; y++) c.px(6, y, LAPTOP.S);
     for (const [x, y] of [[2, 37], [3, 37], [2, 38], [3, 38]]) c.px(x, y, hexc('#FFB000'));
     for (const [x, y] of rect(0, 33, 6, 42)) if (x === 0 || y === 33 || y === 42) c.px(x, y, OUTLINE_C);
-  } else if (hold === 'coffee') {
+  } else if (held === 'coffee') {
     for (const [x, y] of rect(3, 42, 6, 47)) c.px(x, y, hexc('#F4F4F4'));
     for (let x = 3; x <= 6; x++) c.px(x, 42, hexc('#5C3A1E'));
     c.px(2, 44, hexc('#F4F4F4')); c.px(2, 45, hexc('#F4F4F4'));
-  } else if (hold === 'phone') {
+  } else if (held === 'phone') {
     for (const [x, y] of rect(3, 41, 6, 48)) c.px(x, y, OUTLINE_C);
     for (const [x, y] of rect(4, 42, 5, 47)) c.px(x, y, hexc('#64BA00'));
-  } else if (hold === 'duck') {
+  } else if (held === 'duck') {
     for (const [x, y] of rect(2, 42, 6, 46)) c.px(x, y, hexc('#F7D21B'));
     c.px(1, 44, hexc('#F96E10')); c.px(0, 44, hexc('#F96E10')); c.px(4, 43, OUTLINE_C);
-  } else if (hold === 'pager') {
+  } else if (held === 'pager') {
     for (const [x, y] of rect(7, 44, 11, 47)) c.px(x, y, OUTLINE_C);
     for (const [x, y] of rect(8, 45, 10, 46)) c.px(x, y, hexc('#64BA00'));
   }
@@ -228,16 +245,16 @@ export function composeHero(cfg, pose = 'idle') {
 
 // Small cache so a walk cycle doesn't recompose every frame.
 const cache = new Map();
-function composed(cfg, pose) {
-  const key = JSON.stringify([cfg, pose]);
+function composed(cfg, pose, outfit = 'hoodie') {
+  const key = JSON.stringify([cfg, pose, outfit]);
   let v = cache.get(key);
-  if (!v) { v = composeHero(cfg, pose); cache.set(key, v); if (cache.size > 64) cache.delete(cache.keys().next().value); }
+  if (!v) { v = composeHero(cfg, pose, outfit); cache.set(key, v); if (cache.size > 64) cache.delete(cache.keys().next().value); }
   return v;
 }
 
 /** Paints the hero at (x, y) with `scale` px per sprite pixel; flip mirrors about the sprite's centre. */
-export function drawHero(ctx, cfg, pose, x, y, scale = 1, { flip = false } = {}) {
-  const px = composed(cfg, pose);
+export function drawHero(ctx, cfg, pose, x, y, scale = 1, { flip = false, outfit = 'hoodie' } = {}) {
+  const px = composed(cfg, pose, outfit);
   for (let r = 0; r < HERO_H; r++) for (let c = 0; c < HERO_W; c++) {
     const i = (r * HERO_W + c) * 4;
     if (!px[i + 3]) continue;

@@ -41,7 +41,7 @@ def test_fixtures_cli_writes_json_rgba_png(tmp_path):
     assert 'masc-idle' in names and 'masc-walk3' in names and 'var-fro' in names
     for n in names:
         cfg = json.load(open(tmp_path / f'{n}.json'))
-        assert set(cfg) == set(hero_gen.CONFIG_KEYS) | {'pose'}
+        assert set(cfg) == set(hero_gen.CONFIG_KEYS) | {'pose', 'outfit'}
         assert os.path.getsize(tmp_path / f'{n}.rgba') == 28 * 72 * 4
         assert (tmp_path / f'{n}.png').exists()
 
@@ -69,3 +69,25 @@ def test_styles_differ_from_each_other():
         b = hero_gen.hero(**{**hero_gen.PRESETS['masc'], 'style': st}).tobytes()
         assert b not in seen, st
         seen.add(b)
+
+
+def test_pj_outfit_differs_and_drops_the_item():
+    base = hero_gen.hero(**hero_gen.PRESETS['masc'])
+    pj = hero_gen.hero(**hero_gen.PRESETS['masc'], outfit='pj')
+    assert pj.tobytes() != base.tobytes()
+    assert pj.getpixel((2, 37))[3] == 0            # where the laptop was
+    assert pj.getpixel((9, 70))[:3] != base.getpixel((9, 70))[:3]   # bare feet, not shoes
+
+
+def test_situp_has_no_legs_and_sits_lower():
+    im = hero_gen.hero(**hero_gen.PRESETS['masc'], pose='situp', outfit='pj')
+    top = next(y for y in range(72) if any(im.getpixel((x, y))[3] for x in range(28)))
+    assert top >= 20
+    idle = hero_gen.hero(**hero_gen.PRESETS['masc'], outfit='pj')
+    assert im.tobytes() != idle.tobytes()
+
+
+def test_new_fixture_names(tmp_path):
+    hero_gen.write_fixtures(str(tmp_path))
+    for n in ('masc-pj-idle', 'masc-pj-situp', 'fem-pj-walk1'):
+        assert (tmp_path / f'{n}.rgba').exists()

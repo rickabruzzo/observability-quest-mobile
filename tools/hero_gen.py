@@ -21,7 +21,10 @@ OPTIONS = {
     'hold': ['laptop', 'coffee', 'phone', 'duck', 'pager'],
 }
 CONFIG_KEYS = list(OPTIONS)
-POSES = ['idle', 'walk1', 'walk2', 'walk3', 'walk4']
+POSES = ['idle', 'walk1', 'walk2', 'walk3', 'walk4', 'situp']   # situp: upright in bed, legs under the blanket
+OUTFITS = ['hoodie', 'pj']
+PJ = {'top': '#A9C4EC', 'stripe': '#7F9CC4', 'bottom': '#A9C4EC'}
+SIT_DY = 20
 # per-pose offsets applied to the idle masks: (legL_dx, legR_dx, shoeL_dx, shoeR_dx, bob_dy, armL_dy, armR_dy)
 WALK = {'idle': (0, 0, 0, 0, 0, 0, 0), 'walk1': (-1, 1, -2, 2, 0, 1, -1), 'walk2': (0, 0, 0, 0, 1, 0, 0),
         'walk3': (1, -1, 2, -2, 0, -1, 1), 'walk4': (0, 0, 0, 0, 1, 0, 0)}
@@ -37,6 +40,7 @@ FIXTURES = {
     'fem-idle': (PRESETS['fem'], 'idle'), 'nb-idle': (PRESETS['nb'], 'idle'),
     'var-long-beard': (dict(body='masc', skin=2, hair='black', style='standard', beard='long', hoodie='honey', jeans='khaki', glasses='glasses', hold='duck'), 'idle'),
     'var-fro': (dict(body='nb', skin=1, hair='blonde', style='fro', beard='short', hoodie='lime', jeans='indigo', glasses='glasses', hold='laptop'), 'idle'),
+    'masc-pj-idle': (PRESETS['masc'], 'idle', 'pj'), 'masc-pj-situp': (PRESETS['masc'], 'situp', 'pj'), 'fem-pj-walk1': (PRESETS['fem'], 'walk1', 'pj'),
     'var-shoulder': (dict(body='fem', skin=3, hair='ginger', style='shoulder', beard='none', hoodie='indigo', jeans='light', glasses='none', hold='pager'), 'idle'),
 }
 
@@ -121,29 +125,33 @@ BODIES = {
 }
 
 def hero(body='masc', skin=0, hair='black', style='standard', beard='none',
-         hoodie='ink', jeans='indigo', glasses='none', hold='laptop', pose='idle'):
+         hoodie='ink', jeans='indigo', glasses='none', hold='laptop', pose='idle', outfit='hoodie'):
     b = BODIES[body]; c = Canvas()
     skin_r = ramp(SKIN[skin], light=1.12, shade=0.8, dark=0.62)
     hair_r = ramp(HAIR[hair], light=1.35, shade=0.7)
-    hood_r = ramp(HOODIE[hoodie]); jean_r = ramp(JEANS[jeans], light=1.25, shade=0.72)
+    pj = outfit == 'pj'; sit = pose == 'situp'
+    hood_r = ramp(PJ['top'] if pj else HOODIE[hoodie]); jean_r = ramp(PJ['bottom'] if pj else JEANS[jeans], light=1.25, shade=0.72)
+    shoe_r = skin_r if pj else SHOE                                # pyjamas go barefoot
     beard_r = ramp(HAIR[hair], light=1.3, shade=0.7)
     cx = 13.5
-    legL_dx, legR_dx, shoeL_dx, shoeR_dx, bob, armL_dy, armR_dy = WALK[pose]
+    legL_dx, legR_dx, shoeL_dx, shoeR_dx, bob, armL_dy, armR_dy = WALK.get(pose, WALK['idle'])
+    if sit: bob = SIT_DY                                            # the whole upper body sits lower
 
     # ---- legs & shoes (back; never bob) ----
     leg_top, leg_bot = 45, 66
     c.oy = 0
-    c.fill('legL', rect(b['leg_l'][0] + legL_dx, leg_top, b['leg_l'][1] + legL_dx, leg_bot))
-    c.fill('legR', rect(b['leg_r'][0] + legR_dx, leg_top, b['leg_r'][1] + legR_dx, leg_bot))
-    c.fill('shoeL', rect(b['shoe_l'][0] + shoeL_dx, 66, b['shoe_l'][1] + shoeL_dx, 71))
-    c.fill('shoeR', rect(b['shoe_r'][0] + shoeR_dx, 66, b['shoe_r'][1] + shoeR_dx, 71))
-    # crotch: jeans continuous above row 52
-    c.fill('legL', rect(b['hip'][0], leg_top, 13, 51)); c.fill('legR', rect(14, leg_top, b['hip'][1], 51))
+    if not sit:                                                     # sitting up: the legs are under the blanket
+        c.fill('legL', rect(b['leg_l'][0] + legL_dx, leg_top, b['leg_l'][1] + legL_dx, leg_bot))
+        c.fill('legR', rect(b['leg_r'][0] + legR_dx, leg_top, b['leg_r'][1] + legR_dx, leg_bot))
+        c.fill('shoeL', rect(b['shoe_l'][0] + shoeL_dx, 66, b['shoe_l'][1] + shoeL_dx, 71))
+        c.fill('shoeR', rect(b['shoe_r'][0] + shoeR_dx, 66, b['shoe_r'][1] + shoeR_dx, 71))
+        # crotch: jeans continuous above row 52
+        c.fill('legL', rect(b['hip'][0], leg_top, 13, 51)); c.fill('legR', rect(14, leg_top, b['hip'][1], 51))
 
     # ---- everything above the legs bobs with the walk ----
     c.oy = bob
-    # ---- hood (behind neck) ----
-    c.fill('hood', rect(9, 18, 18, 22))
+    # ---- hood (behind neck; pyjamas have none) ----
+    if not pj: c.fill('hood', rect(9, 18, 18, 22))
     # ---- torso ----
     for y in range(20, 46):
         if y <= 21: span = (b['shoulder'][0] + (21 - y), b['shoulder'][1] - (21 - y))
@@ -178,25 +186,34 @@ def hero(body='masc', skin=0, hair='black', style='standard', beard='none',
     c.fill('hair', hm)
     # ---- shading ----
     c.shade('legL', jean_r); c.shade('legR', jean_r)
-    c.shade('shoeL', SHOE, hl=1, sh=1); c.shade('shoeR', SHOE, hl=1, sh=1)
+    c.shade('shoeL', shoe_r, hl=1, sh=1); c.shade('shoeR', shoe_r, hl=1, sh=1)
     c.shade('hood', {'L': hood_r['S'], 'B': hood_r['D'], 'S': hood_r['D'], 'D': hood_r['D']}, hl=0, sh=0, top_light=False)
     c.shade('torso', hood_r, hl=2, sh=3); c.shade('armL', hood_r, hl=1, sh=1); c.shade('armR', hood_r, hl=1, sh=2)
     c.shade('handL', skin_r, hl=1, sh=1); c.shade('handR', skin_r, hl=1, sh=1)
     c.shade('neck', {'L': skin_r['S'], 'B': skin_r['S'], 'S': skin_r['D'], 'D': skin_r['D']}, hl=0, sh=1, top_light=False)
     c.shade('head', skin_r, hl=1, sh=2); c.shade('earL', skin_r, hl=0, sh=0); c.shade('earR', skin_r, hl=0, sh=1)
     c.shade('hair', hair_r, hl=2, sh=3)
+    # pyjama stripes: every third row of the cloth
+    if pj:
+        stripe = hexc(PJ['stripe'])
+        for y in range(H):
+            if y % 3: continue
+            for x in range(W):
+                if c.part[y][x] in ('torso', 'armL', 'armR', 'legL', 'legR'): c.col[y][x] = stripe
     # ---- details ----
-    # inner arm lines, hem, pocket, drawstrings
+    # inner arm lines; the hoodie also has a hem, a pocket and drawstrings
     for y in range(23, 44):
         c.px(b['torso'][0], y, hood_r['S']); c.px(b['torso'][1], y, hood_r['D'])
-    for x in range(b['hip'][0], b['hip'][1] + 1): c.px(x, 45, hood_r['D'])
-    px0, px1 = b['waist'][0] + 2, b['waist'][1] - 2
-    for x in range(px0, px1 + 1): c.px(x, 37, hood_r['S']); c.px(x, 43, hood_r['S'])
-    for y in range(37, 44): c.px(px0, y, hood_r['S']); c.px(px1, y, hood_r['S'])
-    for y in range(22, 31): c.px(12, y, hood_r['L']); c.px(15, y, hood_r['L'])
-    # knees & leg gap
-    for x in range(b['leg_l'][0] + 1, b['leg_l'][1]): c.px(x, 57, jean_r['S'])
-    for x in range(b['leg_r'][0] + 1, b['leg_r'][1]): c.px(x, 57, jean_r['S'])
+    if not pj:
+        for x in range(b['hip'][0], b['hip'][1] + 1): c.px(x, 45, hood_r['D'])
+        px0, px1 = b['waist'][0] + 2, b['waist'][1] - 2
+        for x in range(px0, px1 + 1): c.px(x, 37, hood_r['S']); c.px(x, 43, hood_r['S'])
+        for y in range(37, 44): c.px(px0, y, hood_r['S']); c.px(px1, y, hood_r['S'])
+        for y in range(22, 31): c.px(12, y, hood_r['L']); c.px(15, y, hood_r['L'])
+    # knees
+    if not sit:
+        for x in range(b['leg_l'][0] + 1, b['leg_l'][1]): c.px(x, 57, jean_r['S'])
+        for x in range(b['leg_r'][0] + 1, b['leg_r'][1]): c.px(x, 57, jean_r['S'])
     # face
     brow = hair_r['D']
     for x in (10, 11, 12): c.px(x, 9, brow)
@@ -230,6 +247,7 @@ def hero(body='masc', skin=0, hair='black', style='standard', beard='none',
         for (x, y) in [(9,10),(12,10),(14,10),(17,10),(13,10),(9,11),(12,11),(14,11),(17,11)]: c.px(x, y, g)
     # held item (viewer's left = hero's right hand side) rides with that arm; the pager sits on the belt
     c.oy = bob + (0 if hold == 'pager' else armL_dy)
+    if pj or sit: hold = None                                       # nothing in hand in bed or in pyjamas
     if hold == 'laptop':
         for (x, y) in rect(0, 33, 6, 42): c.px(x, y, LAPTOP['B'])
         for x in range(0, 7): c.px(x, 33, LAPTOP['L']); c.px(x, 42, LAPTOP['S'])
@@ -257,9 +275,10 @@ def hero(body='masc', skin=0, hair='black', style='standard', beard='none',
 def write_fixtures(d):
     """<name>.json (config + pose), <name>.rgba (28*72*4 bytes row-major), <name>.png for every fixture."""
     os.makedirs(d, exist_ok=True)
-    for name, (cfg, pose) in FIXTURES.items():
-        im = hero(**cfg, pose=pose)
-        with open(os.path.join(d, f'{name}.json'), 'w') as f: json.dump({**cfg, 'pose': pose}, f, indent=1, sort_keys=True)
+    for name, fx in FIXTURES.items():
+        cfg, pose, outfit = (fx + ('hoodie',))[:3]
+        im = hero(**cfg, pose=pose, outfit=outfit)
+        with open(os.path.join(d, f'{name}.json'), 'w') as f: json.dump({**cfg, 'pose': pose, 'outfit': outfit}, f, indent=1, sort_keys=True)
         with open(os.path.join(d, f'{name}.rgba'), 'wb') as f: f.write(im.tobytes())
         im.save(os.path.join(d, f'{name}.png'))
 
@@ -269,8 +288,8 @@ def write_contact(d, scale=6):
     names = list(FIXTURES)
     sheet = Image.new('RGBA', (len(names) * (W + 6) * scale, (H + 6) * scale), (43, 53, 72, 255))
     for i, n in enumerate(names):
-        cfg, pose = FIXTURES[n]
-        im = hero(**cfg, pose=pose).resize((W * scale, H * scale), Image.NEAREST)
+        cfg, pose, outfit = (FIXTURES[n] + ('hoodie',))[:3]
+        im = hero(**cfg, pose=pose, outfit=outfit).resize((W * scale, H * scale), Image.NEAREST)
         sheet.alpha_composite(im, (i * (W + 6) * scale + 3 * scale, 3 * scale))
     sheet.save(os.path.join(d, 'contact.png'))
 

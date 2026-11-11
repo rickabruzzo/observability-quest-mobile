@@ -11,9 +11,9 @@ test('fixtures exist', () => assert.ok(names.length >= 10));
 
 for (const n of names) {
   test(`matches Python fixture ${n}`, () => {
-    const { pose, ...cfg } = JSON.parse(readFileSync(DIR + n + '.json', 'utf8'));
+    const { pose, outfit = 'hoodie', ...cfg } = JSON.parse(readFileSync(DIR + n + '.json', 'utf8'));
     const want = readFileSync(DIR + n + '.rgba');
-    const got = Buffer.from(composeHero(cfg, pose).buffer);
+    const got = Buffer.from(composeHero(cfg, pose, outfit).buffer);
     assert.equal(got.length, HERO_W * HERO_H * 4);
     const firstDiff = got.findIndex((b, i) => b !== want[i]);
     assert.equal(firstDiff, -1, `first differing byte ${firstDiff} → pixel ${Math.floor(firstDiff / 4) % 28},${Math.floor(firstDiff / 4 / 28)}`);
@@ -43,4 +43,11 @@ test('drawHeroCrop paints only inside the crop', () => {
   const c = fakeCtx(); drawHeroCrop(c, PRESETS.masc, HEAD_CROP, 2);
   assert.ok(c.calls.length > 0);
   assert.ok(c.calls.every(([x, y]) => x < HEAD_CROP.w * 2 && y < HEAD_CROP.h * 2));
+});
+
+test('drawHero forwards the outfit', () => {
+  const a = fakeCtx(); drawHero(a, PRESETS.masc, 'idle', 0, 0, 1);
+  const b = fakeCtx(); drawHero(b, PRESETS.masc, 'idle', 0, 0, 1, { outfit: 'pj' });
+  const cols = (c) => [...new Set(c.calls.map((x) => x[4]))].sort().join();
+  assert.notEqual(cols(a), cols(b));
 });

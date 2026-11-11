@@ -13,7 +13,10 @@ export const OPTIONS = {
   hold: ['laptop', 'coffee', 'phone', 'duck', 'pager'],
 };
 export const CONFIG_KEYS = Object.keys(OPTIONS);
-export const POSES = ['idle', 'walk1', 'walk2', 'walk3', 'walk4'];
+export const POSES = ['idle', 'walk1', 'walk2', 'walk3', 'walk4', 'situp'];   // situp: upright in bed, legs under the blanket
+export const OUTFITS = ['hoodie', 'pj'];
+export const PJ = { top: '#A9C4EC', stripe: '#7F9CC4', bottom: '#A9C4EC' };
+export const SIT_DY = 20;
 // per-pose offsets applied to the idle masks: [legL_dx, legR_dx, shoeL_dx, shoeR_dx, bob_dy, armL_dy, armR_dy]
 export const WALK = {
   idle: [0, 0, 0, 0, 0, 0, 0],
