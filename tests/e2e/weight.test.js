@@ -50,3 +50,30 @@ test('game reaches ready with only those files reachable', async () => {
   assert.deepEqual(blocked.filter((p) => !p.endsWith('favicon.ico') && !p.endsWith('hc_logomark.png')), [], 'unexpected requests');
   await ctx.close();
 });
+
+// ---- intro: its pictures are a separate, lazy download ----
+import { readdirSync } from 'node:fs';
+const INTRO_BUDGET = 400 * 1024;
+
+test('intro assets total under 400 KB', () => {
+  const files = readdirSync('assets/intro');
+  assert.ok(files.includes('intro.json'), 'run python3 tools/build_intro.py');
+  const total = files.reduce((t, f) => t + statSync(join('assets/intro', f)).size, 0);
+  assert.ok(total <= INTRO_BUDGET, `${total} bytes`);
+});
+
+test('nothing under assets/intro is requested until the sheet opens', async () => {
+  const ctx = await browser.newContext({ viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true });
+  const page = await ctx.newPage();
+  const seen = [];
+  page.on('request', (r) => { const p = new URL(r.url()).pathname; if (p.startsWith('/assets/intro/')) seen.push(p); });
+  await page.goto(server.baseURL, { waitUntil: 'load' });
+  await page.waitForFunction(() => window.__oq?.ready === true);
+  await page.waitForTimeout(600);
+  assert.deepEqual(seen, [], 'intro assets fetched on the title');
+  await page.click('#btn-start');
+  await page.waitForFunction(() => document.body.dataset.screen === 'CREATOR');
+  await page.waitForFunction(() => true); await page.waitForTimeout(600);
+  assert.ok(seen.includes('/assets/intro/intro.json') && seen.some((p) => p.endsWith('.png')), `preload did not start: ${seen}`);
+  await ctx.close();
+});

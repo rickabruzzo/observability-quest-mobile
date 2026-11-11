@@ -37,7 +37,7 @@ block on. Test the restyle under `.hs-form` on a real phone.
 - Swipe-to-advance as a bonus input (buttons stay).
 
 ## Deferred from v2 sub-project 1 (shell + hero + creator), 2026-11-10
-- Hero poses `type1/type2`, `situp`, `turn` — needed by the intro and the room engine, not by the sheet; add to `tools/hero_gen.py` and the JS port together with new fixtures.
+- Hero poses `type1/type2`, `turn` — needed by the room engine; add to `tools/hero_gen.py` and the JS port together with new fixtures. (`situp` and the `pj` outfit shipped with the intro.)
 - Hand-finishing pass on faces and held items (the generator gives three pixels of expression).
 - Hero mirrored by `flip` keeps the left-side laptop on the leading hand; acceptable for now, revisit when rooms have a strong light direction.
 - The sheet's Body row uses text buttons (Masc / Fem / Enby); three small silhouettes would read better once we have a spare 44 px.
@@ -57,3 +57,11 @@ block on. Test the restyle under `.hs-form` on a real phone.
 
 ## Roster
 - Emily Nakashima is leaving Honeycomb (noted 2026-11-10). She stays as chapter 2's narrator placeholder — portrait, name, verdict — until a replacement is named; then rewrite `ch2.verdict`, generate the new portrait + blink/talk frames, and swap `portrait_emily`.
+
+## Intro (sub-project 2, 2026-11-11)
+- **Theme music**: shot 9 has no cue yet; the title theme arrives with the OPL soundtrack sub-project. Beep and lamp click are WebAudio stand-ins (`js/intro/sfx.js`).
+- **If the cuts feel too jerky in play-test** (Rick's rollback option): add in-between stills per shot in `js/intro/timeline.js` (`alt`/`altAt` already cut between two) — e.g. a second eyelid frame, the arm half-way — before considering tweened motion.
+- CTO message shot runs 8 s (storyboard table said ≈5) so the marquee is readable at ~10 characters/second; tune `ms` in `timeline.js` after play-test.
+- Bed, door, floor and wall positions are defaults until the real bedroom plate lands — set `scratch/intro_gen/intro.overrides.json` (README).
+- No mute control yet; `createSfx({ muted })` takes one when the audio sub-project adds it.
+- After the intro the game goes to the preview room; the chapter deal replaces that in the room-engine sub-project.

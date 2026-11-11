@@ -137,3 +137,23 @@ Jessitron has no frames yet (static until her variant is picked).
 - `s3_product_blank`, `s5_coin_blank_*`: the stills with the moving part removed.
 
 All PNGs are losslessly recompressed with `tools/optimize_png.py` (oxipng).
+
+## Intro stills (v2, branch `sci-adventure`)
+
+Prompts and the single-change edit rules: `briefs/intro-shots-brief.md`. Nine images, generated in Firefly/Gemini
+to match the narrator portraits, exported 640×400 into `scratch/intro_gen/`, built by `tools/build_intro.py`.
+
+| File | What | Tool / date / notes |
+|---|---|---|
+| `A_room_dark` | plate: dark bedroom, nightstand, lamp, sleeper | _pending_ |
+| `B_nightstand` | plate: pager close-up, **blank** green LCD | _pending_ |
+| `B_arm` | edit of B: arm reaching for the pager | _pending_ |
+| `B_lamp` | edit of B: hand on the lamp chain | _pending_ |
+| `C_face_asleep` | plate: sleeping face, drool | _pending_ |
+| `C_eye_crack` | edit of C: one eye cracked open | _pending_ |
+| `C_awake` | edit of C: eyes half open | _pending_ |
+| `C_misery` | edit of C_awake: brows and mouth | _pending_ |
+| `D_bedroom_vga` | plate: VGA bedroom, empty wall for the title, no person | _pending_ |
+
+`C_awake_lit` and `B_lamp_lit` are derived by the build (palette lifts), not generated. The LCD text and the wall
+title are drawn by the game. Fill in the right-hand column as each image is accepted.

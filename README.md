@@ -22,19 +22,42 @@ npm run serve          # http://localhost:8080  (any static server works)
 
 v2 is played **landscape**: on a desktop browser make the window wider than it is tall; on a phone on the
 same Wi-Fi open `http://<your-laptop-ip>:8080` and turn the phone sideways (portrait shows the rotate screen).
-Flow today: title → character sheet → preview room (tap the floor to walk). `anim-preview.html` still shows
+Flow today: title → character sheet → intro cutscene (tap to advance, **Skip** to jump) → preview room (tap the floor to walk). `anim-preview.html` still shows
 the v0.1 portrait animations.
 
 ## Test
 
 ```
 npm test               # unit tests: hero renderer vs Python fixtures, stage math, walk, creator state, fonts, shared v0.1 modules
-npm run e2e            # Playwright: landscape shell + rotate gate, character sheet, preview walk, weight budget
+npm run e2e            # Playwright: landscape shell + rotate gate, character sheet, intro cutscene, preview walk, weight budgets
 python3 -m pytest tools/tests -q   # asset tooling + the reference hero generator (regenerate fixtures: python3 tools/hero_gen.py --fixtures tests/fixtures/hero)
 ```
 
 `npm run e2e` needs Playwright: `npm i -D playwright && npx playwright install chromium`
 (or symlink a global install into `node_modules/`).
+
+## Intro art (when the generated images land)
+
+The intro cuts between nine stills. Until the real ones exist the game shows labelled placeholders.
+
+1. Generate the nine images from `briefs/intro-shots-brief.md` and export them at 640×400 into `scratch/intro_gen/`
+   (`A_room_dark`, `B_nightstand`, `B_arm`, `B_lamp`, `C_face_asleep`, `C_eye_crack`, `C_awake`, `C_misery`, `D_bedroom_vga`, all `.png`).
+2. `python3 tools/build_intro.py` — writes `assets/intro/*.png` + `intro.json` and prints `real art` or `PLACEHOLDERS`.
+   Any image that is missing stays a placeholder; an edit whose plate is missing is ignored.
+3. If it stops with *"differs from … over N% of the frame"*, that edit drifted from its plate — regenerate it as an
+   edit of the plate (same picture, one change). Edits are snapped onto their plate so cuts don't shimmer.
+4. Positions the code needs come from `intro.json`. The pager LCD is found automatically (the plate's bright-green
+   rectangle). The rest are defaults — set them for the real bedroom in `scratch/intro_gen/intro.overrides.json`:
+
+   ```json
+   { "wall": { "x": 24, "y": 14, "w": 232, "h": 44 },   "the empty wall the title is lettered on"
+     "bed": { "x": 60, "y": 96 },                       "hero's left edge in bed; y = the blanket line"
+     "door": { "x": 286 }, "floorY": 176,               "where the hero walks to; the row their feet stand on"
+     "lcd": { "x": 92, "y": 62, "w": 136, "h": 36 } }   "only if the LCD isn't found"
+   ```
+   (Plain JSON — leave the quoted notes out.) Coordinates are in 320×200 pixels.
+
+Shot order and timings: `js/intro/timeline.js`. LCD copy lives there too.
 
 ## Layout of the code
 
