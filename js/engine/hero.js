@@ -180,9 +180,12 @@ export function composeHero(cfg, pose = 'idle') {
   if (style === 'fro') for (const [x, y] of [[9, 3], [16, 2], [6, 7], [21, 6], [12, 5], [18, 5], [5, 12], [22, 11], [8, 14], [19, 14]]) if (c.part[y + c.oy]?.[x] === 'hair') c.px(x, y, hairR.D);   // a few darker curls
   // beard (takes the hair colour): short = stubble over the jaw with a solid chin; long = full, down the chest
   if (beard === 'short') {
-    // close-cropped: sideburns down the jaw, a solid line along the jaw and chin
-    for (const [x, y] of rect(9, 13, 9, 16).concat(rect(18, 13, 18, 16))) c.px(x, y, beardR.B);
-    for (const [x, y] of rect(9, 17, 18, 17).concat(rect(11, 18, 16, 18), [[10, 16], [17, 16]])) c.px(x, y, x >= 17 ? beardR.S : beardR.B);
+    // close-cropped, inside the face: sideburns, a moustache, a frame round the mouth, the jaw and a narrow chin
+    const pts = rect(9, 13, 9, 15).concat(rect(18, 13, 18, 15),            // sideburns
+      rect(11, 14, 16, 14),                                               // moustache (the mouth is row 15)
+      [[11, 15], [16, 15], [10, 16], [11, 16], [16, 16], [17, 16]],       // round the mouth to the jaw
+      rect(10, 17, 17, 17), rect(12, 18, 15, 18));                        // jaw line, chin brought in a pixel
+    for (const [x, y] of pts) c.px(x, y, x >= 16 ? beardR.S : beardR.B);
   } else if (beard === 'long') {
     for (const [x, y] of rect(9, 13, 18, 22)) {
       if (y === 15 && x >= 12 && x <= 15) continue;

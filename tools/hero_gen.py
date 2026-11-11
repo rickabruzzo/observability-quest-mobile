@@ -212,9 +212,12 @@ def hero(body='masc', skin=0, hair='black', style='standard', beard='none',
             if c.part[y + c.oy][x] == 'hair': c.px(x, y, hair_r['D'])        # a few darker curls
     # beard (takes the hair colour): short = stubble over the jaw with a solid chin; long = full, down the chest
     if beard == 'short':
-        # close-cropped: sideburns down the jaw, a solid line along the jaw and chin
-        for (x, y) in rect(9, 13, 9, 16) + rect(18, 13, 18, 16): c.px(x, y, beard_r['B'])
-        for (x, y) in rect(9, 17, 18, 17) + rect(11, 18, 16, 18) + [(10, 16), (17, 16)]: c.px(x, y, beard_r['S'] if x >= 17 else beard_r['B'])
+        # close-cropped, inside the face: sideburns, a moustache, a frame round the mouth, the jaw and a narrow chin
+        pts = rect(9, 13, 9, 15) + rect(18, 13, 18, 15)            # sideburns
+        pts += rect(11, 14, 16, 14)                                 # moustache (the mouth is row 15)
+        pts += [(11, 15), (16, 15), (10, 16), (11, 16), (16, 16), (17, 16)]   # round the mouth to the jaw
+        pts += rect(10, 17, 17, 17) + rect(12, 18, 15, 18)          # jaw line, chin brought in a pixel
+        for (x, y) in pts: c.px(x, y, beard_r['S'] if x >= 16 else beard_r['B'])
     elif beard == 'long':
         for (x, y) in rect(9, 13, 18, 22):
             if (x, y) in {(12,15),(13,15),(14,15),(15,15)}: continue
