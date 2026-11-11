@@ -98,12 +98,12 @@ export function createCreatorScreen(game) {
         <div class="sheet">
           <div class="sheet-top">
             <div class="sheet-name"><span class="lbl">Name :</span><button type="button" id="name-btn"></button></div>
+            <div class="hint">Tap a square to change · Random rolls the dice</div>
             <nav class="tabs" aria-label="Sheet pages"><button type="button" class="tab on" data-page="face">Face</button><button type="button" class="tab" data-page="kit">Kit</button></nav>
           </div>
           <div class="frame"><div class="jewel l" aria-hidden="true"></div><div class="jewel r" aria-hidden="true"></div>
             <div class="frame-inner"><canvas id="hero-view" width="28" height="72" aria-label="Your hero"></canvas></div></div>
           <div class="sheet-rows"></div>
-          <div class="hint">Tap a square to change. Random rolls the dice.</div>
         </div>`;
       els = { rows: ctx.overlay.querySelector('.sheet-rows'), nameBtn: ctx.overlay.querySelector('#name-btn') };
       heroCtx = ctx.overlay.querySelector('#hero-view').getContext('2d');

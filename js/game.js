@@ -3,6 +3,7 @@
 import { fitStage, applyStage, isPortrait } from './engine/stage.js';
 import { createTitleScreen } from './screens/title.js';
 import { createCreatorScreen } from './screens/creator.js';
+import { createPreviewScreen } from './screens/preview.js';
 import { sanitizeHero } from './creator-state.js';
 
 export const ADVANCE_GUARD_MS = 350;
@@ -28,8 +29,7 @@ const ctx = {
 const game = { go, screens: {}, ctx };
 game.screens.TITLE = createTitleScreen(game);
 game.screens.CREATOR = createCreatorScreen(game);
-// PREVIEW is filled by its own module (plan task 10); the placeholder keeps the flow testable.
-game.screens.PREVIEW = { enter() {}, exit() {} };
+game.screens.PREVIEW = createPreviewScreen(game);
 
 let current = null, currentName = 'LOADING', lastGo = -Infinity, transitions = 0;
 let paused = false, lastT = 0;
