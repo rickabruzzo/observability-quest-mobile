@@ -143,11 +143,8 @@ export function composeHero(cfg, pose = 'idle') {
     else if (style === 'shoulder') hm = hm.concat(rect(6, 7, 7, 20), rect(20, 7, 21, 20), rect(5, 14, 5, 20), rect(22, 14, 22, 20));
     else if (style === 'long') hm = hm.concat(rect(6, 7, 7, 30), rect(20, 7, 21, 30), rect(5, 12, 5, 30), rect(22, 12, 22, 30), rect(4, 18, 4, 30), rect(23, 18, 23, 30));
     else if (style === 'fro') {
-      const key = (p) => p[0] * 100 + p[1];
-      const inner = new Set(ellipse(cx, 6.5, b.headRx + 2.6, 6.0).map(key));
-      const outer = ellipse(cx, 6.5, b.headRx + 3.4, 6.8);
-      hm = hm.concat(outer.filter((p) => inner.has(key(p)) || (Math.floor(p[0] / 2) + Math.floor(p[1] / 2)) % 2 === 0));   // 2-px curls round the edge
-      hm = hm.concat(rect(8, 6, 19, 9), rect(5, 9, 7, 13), rect(20, 9, 22, 13));                                              // low hairline, full sides
+      // one big smooth round mass behind and around the face, down past the ears; the face stays clear below the brow line
+      hm = ellipse(cx, 8.0, b.headRx + 4.2, 8.2).filter(([x, y]) => !(y >= 8 && x >= 9 && x <= 18));
     }
   }
   c.fill('hair', hm);
@@ -180,14 +177,12 @@ export function composeHero(cfg, pose = 'idle') {
   for (const x of [12, 13, 14, 15]) c.px(x, 15, skinR.D);
   // hair texture: buzzed temples for the mohawk, dark curls dotted through the fro
   if (style === 'mohawk') for (const [x, y] of [[8, 7], [9, 8], [8, 9], [19, 7], [18, 8], [19, 9]]) c.px(x, y, hairR.S);
-  if (style === 'fro') for (const [x, y] of hm) if ((x * 3 + y * 5) % 11 === 0 && c.part[y + c.oy]?.[x] === 'hair') c.px(x, y, hairR.D);
+  if (style === 'fro') for (const [x, y] of [[9, 3], [16, 2], [6, 7], [21, 6], [12, 5], [18, 5], [5, 12], [22, 11], [8, 14], [19, 14]]) if (c.part[y + c.oy]?.[x] === 'hair') c.px(x, y, hairR.D);   // a few darker curls
   // beard (takes the hair colour): short = stubble over the jaw with a solid chin; long = full, down the chest
   if (beard === 'short') {
-    for (const [x, y] of rect(9, 13, 18, 18)) {
-      if (y === 15 && x >= 12 && x <= 15) continue;
-      if (y >= 17 && x >= 11 && x <= 16) { c.px(x, y, beardR.B); continue; }   // solid chin
-      if ((x + y) % 2 === 0) c.px(x, y, beardR.S);                               // stubble
-    }
+    // close-cropped: sideburns down the jaw, a solid line along the jaw and chin
+    for (const [x, y] of rect(9, 13, 9, 16).concat(rect(18, 13, 18, 16))) c.px(x, y, beardR.B);
+    for (const [x, y] of rect(9, 17, 18, 17).concat(rect(11, 18, 16, 18), [[10, 16], [17, 16]])) c.px(x, y, x >= 17 ? beardR.S : beardR.B);
   } else if (beard === 'long') {
     for (const [x, y] of rect(9, 13, 18, 22)) {
       if (y === 15 && x >= 12 && x <= 15) continue;

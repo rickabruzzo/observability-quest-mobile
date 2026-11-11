@@ -173,9 +173,8 @@ def hero(body='masc', skin=0, hair='black', style='standard', beard='none',
         elif style == 'long':
             hm += rect(6, 7, 7, 30) + rect(20, 7, 21, 30) + rect(5, 12, 5, 30) + rect(22, 12, 22, 30) + rect(4, 18, 4, 30) + rect(23, 18, 23, 30)
         elif style == 'fro':
-            outer = set(ellipse(cx, 6.5, b['head_rx'] + 3.4, 6.8)); inner = set(ellipse(cx, 6.5, b['head_rx'] + 2.6, 6.0))
-            hm += [p for p in outer if p in inner or (p[0] // 2 + p[1] // 2) % 2 == 0]   # 2-px curls round the edge
-            hm += rect(8, 6, 19, 9) + rect(5, 9, 7, 13) + rect(20, 9, 22, 13)         # low hairline, full sides
+            # one big smooth round mass behind and around the face, down past the ears; the face stays clear below the brow line
+            hm = [p for p in ellipse(cx, 8.0, b['head_rx'] + 4.2, 8.2) if not (p[1] >= 8 and 9 <= p[0] <= 18)]
     c.fill('hair', hm)
     # ---- shading ----
     c.shade('legL', jean_r); c.shade('legR', jean_r)
@@ -209,14 +208,13 @@ def hero(body='masc', skin=0, hair='black', style='standard', beard='none',
     if style == 'mohawk':
         for (x, y) in [(8, 7), (9, 8), (8, 9), (19, 7), (18, 8), (19, 9)]: c.px(x, y, hair_r['S'])   # buzzed temples
     if style == 'fro':
-        for (x, y) in hm:
-            if (x * 3 + y * 5) % 11 == 0 and c.part[y + c.oy][x] == 'hair': c.px(x, y, hair_r['D'])
+        for (x, y) in [(9, 3), (16, 2), (6, 7), (21, 6), (12, 5), (18, 5), (5, 12), (22, 11), (8, 14), (19, 14)]:
+            if c.part[y + c.oy][x] == 'hair': c.px(x, y, hair_r['D'])        # a few darker curls
     # beard (takes the hair colour): short = stubble over the jaw with a solid chin; long = full, down the chest
     if beard == 'short':
-        for (x, y) in rect(9, 13, 18, 18):
-            if (x, y) in {(12,15),(13,15),(14,15),(15,15)}: continue
-            if y >= 17 and 11 <= x <= 16: c.px(x, y, beard_r['B']); continue      # solid chin
-            if (x + y) % 2 == 0: c.px(x, y, beard_r['S'])                              # stubble
+        # close-cropped: sideburns down the jaw, a solid line along the jaw and chin
+        for (x, y) in rect(9, 13, 9, 16) + rect(18, 13, 18, 16): c.px(x, y, beard_r['B'])
+        for (x, y) in rect(9, 17, 18, 17) + rect(11, 18, 16, 18) + [(10, 16), (17, 16)]: c.px(x, y, beard_r['S'] if x >= 17 else beard_r['B'])
     elif beard == 'long':
         for (x, y) in rect(9, 13, 18, 22):
             if (x, y) in {(12,15),(13,15),(14,15),(15,15)}: continue
