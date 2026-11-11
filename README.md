@@ -20,14 +20,17 @@ text engine, audio, portrait animation, asset tooling) are unchanged.
 npm run serve          # http://localhost:8080  (any static server works)
 ```
 
-Open `anim-preview.html` to see every scene and portrait animating side by side.
+v2 is played **landscape**: on a desktop browser make the window wider than it is tall; on a phone on the
+same Wi-Fi open `http://<your-laptop-ip>:8080` and turn the phone sideways (portrait shows the rotate screen).
+Flow today: title → character sheet → preview room (tap the floor to walk). `anim-preview.html` still shows
+the v0.1 portrait animations.
 
 ## Test
 
 ```
-npm test               # unit tests: copy, text engine, audio data, animation timelines, claim logic
-npm run e2e            # Playwright: full game flows at 360/390/430, audio, claim/redeem, reduced motion, budget
-python3 -m pytest tools/tests -q   # asset tooling
+npm test               # unit tests: hero renderer vs Python fixtures, stage math, walk, creator state, fonts, shared v0.1 modules
+npm run e2e            # Playwright: landscape shell + rotate gate, character sheet, preview walk, weight budget
+python3 -m pytest tools/tests -q   # asset tooling + the reference hero generator (regenerate fixtures: python3 tools/hero_gen.py --fixtures tests/fixtures/hero)
 ```
 
 `npm run e2e` needs Playwright: `npm i -D playwright && npx playwright install chromium`

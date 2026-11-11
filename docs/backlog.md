@@ -35,3 +35,12 @@ block on. Test the restyle under `.hs-form` on a real phone.
 - Vercel Web Analytics for play count / drop-off per screen.
 - Score as a HubSpot hidden field (slot exists: `quest_score`).
 - Swipe-to-advance as a bonus input (buttons stay).
+
+## Deferred from v2 sub-project 1 (shell + hero + creator), 2026-11-10
+- Hero poses `type1/type2`, `situp`, `turn` — needed by the intro and the room engine, not by the sheet; add to `tools/hero_gen.py` and the JS port together with new fixtures.
+- Hand-finishing pass on faces and held items (the generator gives three pixels of expression).
+- Hero mirrored by `flip` keeps the left-side laptop on the leading hand; acceptable for now, revisit when rooms have a strong light direction.
+- The sheet's Body row uses text buttons (Masc / Fem / Enby); three small silhouettes would read better once we have a spare 44 px.
+- Icon bar (Look / Use / Help), message windows and score ticking belong to the room-engine sub-project.
+- Desktop (≥ 1024 px): thumb columns may be thinner than 56 px; the icon bar falls back to a row under the scene in the room-engine sub-project.
+- `#rotate` gate uses `max-width: 700px`; a small tablet in portrait never sees it (plays letterboxed) — fine, but confirm on an iPad mini.
