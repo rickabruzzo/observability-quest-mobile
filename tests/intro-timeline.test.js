@@ -3,8 +3,8 @@ import { SHOTS, frameAt, nextShot, TOTAL_MS, HERO_STEPS, heroAt, FLASH_MS } from
 
 test('shots are the storyboard, in order, with its timings', () => {
   assert.deepEqual(SHOTS.map((s) => s.id), ['dark', 'help', 'asleep', 'arm', 'lit', 'message', 'misery', 'lamp', 'bedroom']);
-  assert.deepEqual(SHOTS.map((s) => s.ms), [3000, 2500, 3000, 1500, 2000, 8000, 2000, 1500, 9000]);
-  assert.equal(TOTAL_MS, 32500);
+  assert.deepEqual(SHOTS.map((s) => s.ms), [3000, 2500, 3000, 1500, 2000, 8000, 2000, 1500, 12000]);
+  assert.equal(TOTAL_MS, 35500);
   assert.equal(SHOTS[1].text, 'Help!');
   assert.equal(SHOTS[5].text, 'Backend is down. Website is down. Database is down. Get in here! -CTO');
 });
@@ -29,15 +29,18 @@ test('reduced motion: nothing flashes', () => {
 });
 test('nextShot runs off the end', () => { assert.equal(nextShot(0), 1); assert.equal(nextShot(8), null); });
 test('out-of-range shot index is clamped, not thrown', () => { assert.equal(frameAt(99, 0).image, 'D_bedroom_vga'); assert.equal(frameAt(-1, 0).image, 'A_room_dark'); });
-test('hero script', () => {
-  assert.equal(heroAt(0).visible, false); assert.equal(heroAt(0).titled, false); assert.equal(heroAt(700).titled, true);
-  assert.deepEqual([heroAt(1700).pose, heroAt(1700).outfit, heroAt(1700).visible], ['situp', 'pj', true]);
-  assert.deepEqual([heroAt(3000).pose, heroAt(3000).outfit], ['idle', 'pj']);
-  assert.equal(heroAt(3650).flash, true); assert.equal(heroAt(3000).flash, false); assert.equal(heroAt(3800).flash, false);
-  assert.deepEqual([heroAt(3800).pose, heroAt(3800).outfit], ['idle', 'hoodie']);
-  // dressed first, then the item comes off the dresser into the hand, then the walk
-  assert.equal(heroAt(3000).holding, false); assert.equal(heroAt(3900).holding, false); assert.equal(heroAt(4300).holding, true);
-  assert.equal(heroAt(4600).walking, false); assert.equal(heroAt(4800).walking, true); assert.equal(heroAt(4800).holding, true);
+test('hero script: the room holds on the title, then up, dressed, a beat, the item, the door', () => {
+  const at = Object.fromEntries(HERO_STEPS.map((s) => [s.do || (s.walkTo ? 'walk' : s.take ? 'take' : s.flash ? 'flash' : `${s.pose}-${s.outfit}`), s.at]));
+  assert.equal(heroAt(0).visible, false); assert.equal(heroAt(0).titled, false); assert.equal(heroAt(at.title + 50).titled, true);
+  assert.ok(at['situp-pj'] - at.title >= 2500, 'the title gets at least 2.5 s alone on screen');
+  assert.equal(heroAt(at['situp-pj'] - 1).visible, false);
+  let h = heroAt(at['situp-pj'] + 100); assert.deepEqual([h.pose, h.outfit, h.visible], ['situp', 'pj', true]);
+  h = heroAt(at['idle-pj'] + 100); assert.deepEqual([h.pose, h.outfit, h.flash], ['idle', 'pj', false]);
+  assert.equal(heroAt(at.flash + 50).flash, true);
+  h = heroAt(at['idle-hoodie'] + 40); assert.deepEqual([h.pose, h.outfit, h.flash, h.holding], ['idle', 'hoodie', false, false]);
+  assert.ok(at.take - at['idle-hoodie'] >= 900, 'a beat between getting dressed and taking the item');
+  assert.equal(heroAt(at.take - 1).holding, false); assert.equal(heroAt(at.take + 1).holding, true);
+  assert.ok(at.walk - at.take >= 500); assert.equal(heroAt(at.walk - 1).walking, false); assert.equal(heroAt(at.walk + 1).walking, true);
   assert.ok(HERO_STEPS.every((s, i) => i === 0 || s.at > HERO_STEPS[i - 1].at));
 });
 test('no flash faster than 2 Hz', () => assert.ok(FLASH_MS >= 500));

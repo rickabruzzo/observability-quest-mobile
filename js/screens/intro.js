@@ -103,8 +103,15 @@ export function createIntroScreen(game) {
   let token = 0, assets = null, shot = 0, t = 0, out = false, done = false;
   let skip = null, onTap = null, sfx = null, titleEl = null;
   let lastOn = false, clicked = false, heroState = null, item = null;
+  let fired = new Set(), sounds = [];
 
-  function cut(i) { shot = i; t = 0; lastOn = false; clicked = false; heroState = null; }
+  function cut(i) { shot = i; t = 0; lastOn = false; clicked = false; heroState = null; fired = new Set(); }
+
+  /** Each action is heard once, the moment it happens. */
+  function sound(name, on = true) {
+    if (!on || fired.has(name)) return;
+    fired.add(name); sounds.push(name); sfx?.play(name);
+  }
 
   function finish() {            // idempotent; the game's double-tap guard may refuse the first go(), so tick retries
     out = true;
@@ -181,6 +188,8 @@ export function createIntroScreen(game) {
     if (pile) drawClothes(g, cfg, m.clothes.x, m.clothes.y);
     if (onDresser) for (const [dx, dy, c] of item) { g.fillStyle = c; g.fillRect(m.item.x + dx, m.item.y + dy, 1, 1); }
     heroState = { pose: h.pose, outfit: h.outfit, x: standX, visible: h.visible, pile, holding: h.holding, doorOpen: !!e?.doorOpen, plate };
+    sound('title', h.titled); sound('rustle', h.visible); sound('step', h.standing); sound('pickup', h.outfit === 'hoodie');
+    sound('take', h.holding); sound('door', !!e?.doorOpen); sound('shut', !!e && !e.visible && !e.doorOpen);
     if (e) {
       if (e.visible) drawHero(g, cfg, e.pose, e.x, e.y - HERO_H, 1, { flip: e.flip });
       Object.assign(heroState, { pose: e.pose, outfit: 'hoodie', x: e.x, visible: e.visible });
@@ -208,10 +217,10 @@ export function createIntroScreen(game) {
     // sound follows the picture: a beep each time the flash comes on, a click when the lamp does
     if (s.beepOnFlash && !ctx.reducedMotion) {
       const on = s.flash === 'black' ? !f.black : !!f.lcd?.on;
-      if (on && !lastOn) sfx?.beep();
+      if (on && !lastOn) { sfx?.beep(); sounds.push('beep'); }
       lastOn = on;
     }
-    if (s.clickAt != null && !clicked && t >= s.clickAt) { clicked = true; sfx?.click(); }
+    if (s.clickAt != null && !clicked && t >= s.clickAt) { clicked = true; sfx?.click(); sounds.push('click'); }
   }
 
   return {
@@ -219,7 +228,8 @@ export function createIntroScreen(game) {
       const mine = ++token;
       assets = null; out = false; done = false; cut(0);
       item = heldItem(ctx.hero);
-      sfx = createSfx();
+      sfx = createSfx(); sfx.unlock();                 // we are inside the Start tap: the one moment a phone lets sound begin
+      sounds = [];
       skip = colButton({ id: 'btn-skip', long: 'Skip', short: 'Skip', onClick: finish });
       ctx.colR.appendChild(skip);
       onTap = () => { if (assets && !out && t >= TAP_GUARD_MS) advance(); };
@@ -229,7 +239,7 @@ export function createIntroScreen(game) {
       if (window.__oq) {
         window.__oq.intro = {
           get shot() { return shot; }, get id() { return SHOTS[shot].id; }, get t() { return t; }, get done() { return done; },
-          get loaded() { return assets !== null; }, get manifest() { return assets?.manifest ?? null; }, get hero() { return heroState; },
+          get loaded() { return assets !== null; }, get manifest() { return assets?.manifest ?? null; }, get hero() { return heroState; }, get sounds() { return sounds; },
         };
       }
     },

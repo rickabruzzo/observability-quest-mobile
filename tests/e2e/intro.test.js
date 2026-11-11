@@ -122,7 +122,7 @@ test('the bedroom shot shows the title and walks the hero out', async () => {
   assert.ok(blue > 0.2, `wordmark not on the wall (${blue})`);
   const box = await page.locator('.intro-title').boundingBox(), sc = await page.locator('#scene').boundingBox();
   assert.ok(box.x >= sc.x && box.x + box.width <= sc.x + sc.width + 1 && box.y >= sc.y, 'title outside the scene');
-  await page.waitForFunction(() => window.__oq.intro.hero?.pose === 'situp');
+  await page.waitForFunction(() => window.__oq.intro.hero?.visible && window.__oq.intro.hero.pose === 'situp');
   // day clothes lie on the floor in the hero's own colours until the change, then they are on the hero
   const m = await page.evaluate(() => window.__oq.intro.manifest);
   const pileBox = { x: m.clothes.x, y: m.clothes.y - 10, w: 20, h: 10 };
@@ -144,6 +144,10 @@ test('the bedroom shot shows the title and walks the hero out', async () => {
   // out through the door: it opens, the hero is gone, then the next screen
   await page.waitForFunction(() => window.__oq.intro.hero?.doorOpen === true, null, { timeout: 6000 });
   await page.waitForFunction(() => window.__oq.intro.hero?.doorOpen === true && window.__oq.intro.hero.visible === false, null, { timeout: 3000 });
+  // every action is heard, in order: title, sitting up, feet on the floor, clothes on, item taken, door, door
+  await page.waitForFunction(() => window.__oq.intro.sounds.includes('shut') || document.body.dataset.screen !== 'INTRO', null, { timeout: 9000 }).catch(() => {});
+  const heard = await page.evaluate(() => window.__oq.intro.sounds.slice());
+  assert.deepEqual(heard.filter((n) => n !== 'beep' && n !== 'click'), ['title', 'rustle', 'step', 'pickup', 'take', 'door', 'shut']);
   await page.waitForFunction(() => document.body.dataset.screen === 'PREVIEW', null, { timeout: 9000 });
   await ctx.close();
 });
@@ -249,7 +253,7 @@ test('the dresser shows the hero\'s own item: the painted laptop for a laptop, o
     await page.click('#btn-start-game'); await running(page);
     if (!(await page.evaluate(() => !!window.__oq.intro.manifest.images.D_laptop_gone))) { await ctx.close(); return; }   // placeholder art has no such still
     for (let i = 0; i < 8; i++) { await page.waitForTimeout(300); await tapScene(page); }
-    await page.waitForFunction(() => window.__oq.intro.hero?.pose === 'situp');
+    await page.waitForFunction(() => window.__oq.intro.hero?.visible && window.__oq.intro.hero.pose === 'situp');
     assert.equal((await intro(page)).hero.plate, before, hold);
     await page.waitForFunction(() => window.__oq.intro.hero?.holding === true, null, { timeout: 6000 });
     assert.equal((await intro(page)).hero.plate, 'D_laptop_gone', hold);

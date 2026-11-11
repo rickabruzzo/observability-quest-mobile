@@ -14,7 +14,7 @@ export const SHOTS = [
   { id: 'message', ms: 8000, image: 'B_nightstand', lcd: 'marquee', text: CTO },
   { id: 'misery', ms: 2000, image: 'C_misery' },
   { id: 'lamp', ms: 1500, image: 'B_lamp', alt: 'B_lamp_lit', altAt: 700, clickAt: 700 },
-  { id: 'bedroom', ms: 9000, image: 'D_bedroom_vga', hero: true },
+  { id: 'bedroom', ms: 12000, image: 'D_bedroom_vga', hero: true },
 ];
 export const TOTAL_MS = SHOTS.reduce((n, s) => n + s.ms, 0);
 
@@ -34,13 +34,13 @@ export function frameAt(shotIndex, tMs, { reduced = false } = {}) {
 
 // Shot 9: the title comes up on the wall, the hero sits up, stands, flashes into day clothes and walks out.
 export const HERO_STEPS = [
-  { at: 600, do: 'title' },
-  { at: 1600, pose: 'situp', outfit: 'pj' },
-  { at: 2800, pose: 'idle', outfit: 'pj', stand: true },
-  { at: 3600, flash: true },
-  { at: 3760, pose: 'idle', outfit: 'hoodie' },
-  { at: 4200, take: true },                          // the item on the dresser is now in the hero's hand
-  { at: 4700, walkTo: 'door' },
+  { at: 600, do: 'title' },                          // then the room holds, so the title can be read
+  { at: 3400, pose: 'situp', outfit: 'pj' },
+  { at: 4600, pose: 'idle', outfit: 'pj', stand: true },
+  { at: 5400, flash: true },
+  { at: 5560, pose: 'idle', outfit: 'hoodie' },      // the clothes are off the floor and on the hero
+  { at: 6700, take: true },                          // a beat later the item on the dresser is in the hero's hand
+  { at: 7400, walkTo: 'door' },
 ];
 
 export function heroAt(tMs) {

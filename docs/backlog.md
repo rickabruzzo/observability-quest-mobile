@@ -59,7 +59,7 @@ block on. Test the restyle under `.hs-form` on a real phone.
 - Emily Nakashima is leaving Honeycomb (noted 2026-11-10). She stays as chapter 2's narrator placeholder — portrait, name, verdict — until a replacement is named; then rewrite `ch2.verdict`, generate the new portrait + blink/talk frames, and swap `portrait_emily`.
 
 ## Intro (sub-project 2, 2026-11-11)
-- **Theme music**: shot 9 has no cue yet; the title theme arrives with the OPL soundtrack sub-project. Beep and lamp click are WebAudio stand-ins (`js/intro/sfx.js`).
+- **Theme music**: shot 9 has no cue yet; the title theme arrives with the OPL soundtrack sub-project. Every intro action has a WebAudio stand-in in `js/intro/sfx.js` (`SOUNDS`: title, rustle, step, pickup, take, door, shut, plus the pager beep and lamp click) — replace with FM voices then. No footsteps on the walk yet.
 - **If the cuts feel too jerky in play-test** (Rick's rollback option): add in-between stills per shot in `js/intro/timeline.js` (`alt`/`altAt` already cut between two) — e.g. a second eyelid frame, the arm half-way — before considering tweened motion.
 - CTO message shot runs 8 s (storyboard table said ≈5) so the marquee is readable at ~10 characters/second; tune `ms` in `timeline.js` after play-test.
 - Real stills landed 2026-11-11 (Gemini, via the agent brief). Positions for the bedroom are in `scratch/intro_gen/intro.overrides.json` on Rick's machine and baked into `assets/intro/intro.json`.
@@ -72,7 +72,6 @@ block on. Test the restyle under `.hs-form` on a real phone.
 ## Deferred minors from the intro review (2026-11-11)
 - `build_intro.py` prints the total size but does not fail over 400 KB (the e2e weight test does); real dithered art may land near the limit.
 - Bedroom plate is cut to 32 colours like the EGA shots; consider 64–128 for `D_bedroom_vga` if it bands.
-- Sound on iPhone: the AudioContext is created lazily from a frame callback and may stay suspended; create/resume it inside the Start tap.
 - `composeHero` runs every frame during sit-up and flash; compute once per cut (and cache poses, as already noted).
 - A second load attempt can show up to 6 s of black with only Skip; add a hint or shorten the timeout.
 - `js/game.js` frame loop dies if a screen's `tick` throws; wrap in try/catch.
