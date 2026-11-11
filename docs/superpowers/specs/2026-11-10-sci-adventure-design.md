@@ -182,23 +182,25 @@ Reachable totals are 0, 50, 100, 150, 200, 250, 300. Charity's six tiers: 300 ·
 
 The intro follows `docs/intro-storyboard.md` (Rick, 2026-11-11), which supersedes the *Night Shift* mock. It comes **after** character creation, so the sleeper is the player's hero.
 
-**Two looks, one cut.** Shots 1–8 are **EGA-style cutscenes**: 320×200, large shapes, ordered (Bayer) dithering, a small per-shot palette (about 16 colours; it need not be exactly 16) plus the hero's own skin and hair colours, minimal animation. Shot 9 switches to the **gameplay VGA look**.
+**Two looks, one cut.** Shots 1–8 are **EGA-style cutscenes**: 320×200, large shapes, coarse ordered dithering, a small palette. Shot 9 switches to the **gameplay VGA look**.
 
-| # | Shot | What moves | ≈ s |
-|---|---|---|---|
-| 1 | Black. A small square light blinks mid-screen, each blink partly revealing a nightstand, a lamp and someone asleep | the blink (≤ 2 Hz) and its dithered pool of light | 3 |
-| 2 | Close-up: a 90s pager on the nightstand, green LCD, black text **Help!** flashing | text flash | 2.5 |
-| 3 | Close-up: sleepy face, a bit of drool; a bleary eye cracks open | eyelid, 3 frames | 3 |
-| 4 | An arm reaches out to the pager | arm sweep | 1.5 |
-| 5 | The face looking at the pager, lit by its flashing light | green light pulse | 2 |
-| 6 | Pager close-up, text scrolling: **Backend is down. Website is down. Database is down. Get in here! -CTO** | marquee | 5 |
-| 7 | The face, pager in hand: misery and hopelessness | expression change | 2 |
-| 8 | A hand turns on the lamp | hand, then the screen floods with light | 1.5 |
-| 9 | The original wide framing, now in VGA: the lit bedroom with **Observability Quest I: So you want to be on-call?** on the wall behind the bed. Theme plays. The hero gets out of bed in pyjamas, stands, instantly changes into the hoodie and jeans, walks out | title appears; sit-up → stand → outfit flash → walk off right | 8 |
+**Limited animation (Rick, 2026-11-11).** Shots 1–8 imitate what a late-80s PC could afford: **nothing moves**. Every beat is a cut between stills, and each still recycles the last with the smallest possible change — the nightstand shot again but with an arm in it, the same face with one eyelid different — as if the animator were saving disk space. The only time-based effects are the cheap ones: a two-state palette swap for a blinking or flashing light, flashing text, scrolling text. No tweened motion, no fades. Real animation begins only in shot 9, with the hero.
 
-- **Art**: shots 1–8 are **generated** in Firefly/Gemini to match the look of the narrator portraits (Rick's call 2026-11-11, after code-drawn faces fell short): one generic sleeper, half in shadow, the same for every player; the player's own hero appears in shot 9. Prompts and file names are in `briefs/intro-shots-brief.md`; the face shots are generated from one keeper image so the person stays consistent. The pager is generated with a **blank** LCD and its text ("Help!", the scrolling CTO message) is drawn in code with a built-in pixel font so it is crisp. Shot 9's bedroom is one generated VGA background with an empty wall; the title is lettered in code (GloryQuest for the title, VT323 for the subtitle). Code-drawn placeholders stand in until the images arrive.
+| # | Shot | Still | The only thing that changes | ≈ s |
+|---|---|---|---|---|
+| 1 | Black; a blinking light reveals nightstand, lamp, sleeper | plate A | black ↔ plate, on the blink (≤ 2 Hz) | 3 |
+| 2 | Pager close-up, **Help!** flashing | plate B | text on/off | 2.5 |
+| 3 | Sleepy face, drool; a bleary eye cracks open | plate C → C with one eyelid changed | one cut | 3 |
+| 4 | Arm at the pager | plate B with an arm added | nothing | 1.5 |
+| 5 | Face looking at the pager, lit by its flashing light | C, eyes half open | two-state green palette swap | 2 |
+| 6 | Pager, scrolling: **Backend is down. Website is down. Database is down. Get in here! -CTO** | plate B | marquee | 5 |
+| 7 | Misery and hopelessness | C, brows and mouth changed | nothing | 2 |
+| 8 | Hand turns on the lamp | plate B with a hand on the lamp chain | palette swaps to warm light after a beat | 1.5 |
+| 9 | VGA bedroom, **Observability Quest I: So you want to be on-call?** on the wall; theme; the hero gets up in pyjamas, changes instantly into hoodie and jeans, walks out | plate D + hero sprite | sprite animation | 8 |
+
+- **Art**: shots 1–8 are **generated** in Firefly/Gemini to match the look of the narrator portraits (Rick's call 2026-11-11, after code-drawn faces fell short): one generic sleeper, half in shadow, the same for every player; the player's own hero appears in shot 9. Four plates and five single-change edits of them (`briefs/intro-shots-brief.md`); the tooling keeps only the pixels an edit changed, as with the portrait frames, so recycled stills stay pixel-identical outside the change. The pager is generated with a **blank** LCD and its text ("Help!", the scrolling CTO message) is drawn in code with a built-in pixel font so it is crisp. Shot 9's bedroom is one generated VGA background with an empty wall; the title is lettered in code (GloryQuest for the title, VT323 for the subtitle). Code-drawn placeholders stand in until the images arrive.
 - **Hero additions**: a `pj` outfit (pale striped top and bottoms in place of hoodie and jeans, no pocket, drawstrings or hood) and a `situp` pose (upright in bed, legs under the blanket). The outfit change is a two-frame white flash, Sierra-style.
-- **Controls**: a tap advances to the next shot; **Skip** in the right thumb column jumps to the end. Reduced motion: each shot holds its final frame ~1.2 s, the light is steady rather than blinking, the pager text is static.
+- **Controls**: a tap advances to the next shot; **Skip** in the right thumb column jumps to the end. Reduced motion: no blinking or flashing (steady light, steady text), the pager message shown whole instead of scrolling.
 - **Sound**: pager beeps on the blinks, a lamp click, and a placeholder cue where the theme will go; the real theme arrives with the OPL soundtrack sub-project.
 - A storyboard of these shots lives on the design canvas for team comment.
 
