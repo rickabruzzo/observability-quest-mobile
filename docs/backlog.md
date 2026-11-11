@@ -80,3 +80,7 @@ block on. Test the restyle under `.hs-form` on a real phone.
 - Pyjama stripes sit on absolute rows, so they shift phase between sit-up and standing.
 - LCD copy exists only on canvas; mirror it in an `aria-live` node for screen readers.
 - Malformed values inside an override object (e.g. `"bed": {"x": "left"}`) are not validated.
+- Bedroom round 2 (2026-11-11): furnished plate and `D_door_open` to come from the personal account (`briefs/intro-bedroom-round2-agent-brief.md`); then re-measure `intro.overrides.json`. Until then the open door is a dark rectangle.
+- The 4×4 chest mark disappears into same-coloured hoodies (honey on honey, blue on teal, green on lime) — a pixel of outline or a light patch behind it would fix that.
+- Character sheet scales up on big windows now; the thumb-column buttons and the name sheet do not yet.
+- Title screen is still a text placeholder; use the wordmark (and title art) there in the title sub-project.

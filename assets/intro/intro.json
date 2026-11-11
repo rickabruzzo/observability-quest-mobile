@@ -37,9 +37,20 @@
   "x": 158
  },
  "door": {
-  "x": 261
+  "x": 261,
+  "y": 154
  },
  "floorY": 178,
+ "clothes": {
+  "x": 196,
+  "y": 188
+ },
+ "doorway": {
+  "x": 246,
+  "y": 27,
+  "w": 58,
+  "h": 126
+ },
  "lcdFound": true,
  "placeholder": false,
  "logo": {

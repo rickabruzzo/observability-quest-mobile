@@ -39,3 +39,13 @@ test('isPortrait', () => {
   assert.equal(isPortrait(390, 844), true);
   assert.equal(isPortrait(844, 390), false);
 });
+
+import { uiScale } from '../js/engine/stage.js';
+test('uiScale: 1 on phones, grows with the scene on big windows, never below 1', () => {
+  assert.equal(uiScale(fitStage(844, 390)), 1);
+  assert.equal(uiScale(fitStage(667, 375)), 1);
+  assert.equal(uiScale(fitStage(568, 320)), 1);
+  const big = fitStage(1700, 1100);
+  assert.ok(Math.abs(uiScale(big) - big.sceneW / 592) < 0.01 && uiScale(big) > 2.5);
+  assert.equal(uiScale({ sceneW: 0, sceneH: 0 }), 1);
+});

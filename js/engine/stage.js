@@ -24,11 +24,20 @@ export function fitStage(vw, vh, { statusH = STATUS_H, minCol = MIN_COL } = {}) 
   return { sceneW, sceneH, colW, scale: sceneW / SCENE_W };
 }
 
+export const UI_W = 592, UI_H = 370;      // the scene size the overlay screens (sheet, name sheet) are laid out for: 844x390
+
+/** How much to enlarge overlay UI so it fills a scene bigger than a phone's. Never below 1: touch targets stay 44 px. */
+export function uiScale(fit) {
+  const s = Math.min(fit.sceneW / UI_W, fit.sceneH / UI_H);
+  return Number.isFinite(s) && s > 1 ? s : 1;
+}
+
 /** Writes the fit as CSS custom properties on `root` (usually document.documentElement). */
 export function applyStage(root, fit) {
   root.style.setProperty('--scene-w', `${fit.sceneW}px`);
   root.style.setProperty('--scene-h', `${fit.sceneH}px`);
   root.style.setProperty('--col-w', `${fit.colW}px`);
+  root.style.setProperty('--ui-scale', String(uiScale(fit)));
 }
 
 export function isPortrait(w, h) {

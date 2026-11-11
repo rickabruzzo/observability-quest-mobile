@@ -220,3 +220,31 @@ def test_wall_logo_follows_an_overridden_wall(tmp_path):
 def test_no_title_screen_means_no_logo_and_still_builds(tmp_path):
     m = bi.build(str(tmp_path / 'nosrc'), str(tmp_path / 'out'), placeholders=True, logo_src=str(tmp_path / 'missing.png'))
     assert 'wall_logo' not in m['images'] and 'logo' not in m
+
+
+# ---- bedroom: clothes on the floor, a door to leave by ----
+def test_manifest_places_the_clothes_and_the_doorway(tmp_path):
+    m = bi.build(str(tmp_path / 'nosrc'), str(tmp_path / 'out'), placeholders=True)
+    assert set(m['clothes']) == {'x', 'y'} and set(m['doorway']) == {'x', 'y', 'w', 'h'}
+    assert m['door']['y'] == m['floorY']                               # by default the door is on the hero's own row
+    assert 'D_door_open' not in m['images']
+    src = tmp_path / 'src'; os.makedirs(src)
+    json.dump({'floorY': 170, 'clothes': {'x': 200, 'y': 190}, 'doorway': {'x': 246, 'y': 27, 'w': 58, 'h': 126}, 'door': {'x': 261, 'y': 153}}, open(src / 'intro.overrides.json', 'w'))
+    m = bi.build(str(src), str(tmp_path / 'out'), placeholders=True)
+    assert m['clothes'] == {'x': 200, 'y': 190} and m['doorway']['h'] == 126 and m['door'] == {'x': 261, 'y': 153}
+    json.dump({'floorY': 170}, open(src / 'intro.overrides.json', 'w'))
+    assert bi.build(str(src), str(tmp_path / 'out'), placeholders=True)['door']['y'] == 170    # follows an overridden floor
+
+
+def test_an_open_door_still_is_optional_and_snapped_to_the_bedroom(tmp_path):
+    src = _real_src(tmp_path); out = str(tmp_path / 'out')
+    m = bi.build(str(src), out)
+    assert 'D_door_open' not in m['images'] and m['placeholder'] is False
+    a = np.asarray(Image.open(src / 'D_bedroom_vga.png').convert('RGB')).astype(np.int16)
+    a = np.clip(a + np.random.default_rng(1).integers(-8, 9, a.shape), 0, 255).astype(np.uint8); a[100:300, 500:600] = (4, 4, 10)
+    Image.fromarray(a, 'RGB').save(src / 'D_door_open.png')
+    m = bi.build(str(src), out)
+    d = (_px(out, m, 'D_door_open') != _px(out, m, 'D_bedroom_vga')).any(axis=2); ys, xs = np.nonzero(d)
+    assert ys.min() >= 49 and ys.max() <= 150 and xs.min() >= 249 and xs.max() <= 300
+    os.remove(src / 'D_door_open.png')
+    assert 'D_door_open' not in bi.build(str(src), out)['images'] and not os.path.exists(os.path.join(out, 'D_door_open.png'))

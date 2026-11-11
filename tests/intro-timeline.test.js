@@ -3,8 +3,8 @@ import { SHOTS, frameAt, nextShot, TOTAL_MS, HERO_STEPS, heroAt, FLASH_MS } from
 
 test('shots are the storyboard, in order, with its timings', () => {
   assert.deepEqual(SHOTS.map((s) => s.id), ['dark', 'help', 'asleep', 'arm', 'lit', 'message', 'misery', 'lamp', 'bedroom']);
-  assert.deepEqual(SHOTS.map((s) => s.ms), [3000, 2500, 3000, 1500, 2000, 8000, 2000, 1500, 8000]);
-  assert.equal(TOTAL_MS, 31500);
+  assert.deepEqual(SHOTS.map((s) => s.ms), [3000, 2500, 3000, 1500, 2000, 8000, 2000, 1500, 9000]);
+  assert.equal(TOTAL_MS, 32500);
   assert.equal(SHOTS[1].text, 'Help!');
   assert.equal(SHOTS[5].text, 'Backend is down. Website is down. Database is down. Get in here! -CTO');
 });
@@ -45,4 +45,25 @@ test('sampled every ms, no shot changes picture more than 4 times a second', () 
     for (let t = 0; t < s.ms; t++) { const f = frameAt(i, t); const k = `${f.image}|${f.black}|${f.lcd?.on}`; if (last !== null && k !== last) changes++; last = k; }
     assert.ok(changes <= Math.ceil(s.ms / 250), `${s.id}: ${changes} changes in ${s.ms} ms`);
   });
+});
+
+import { exitPlan, exitAt } from '../js/intro/timeline.js';
+test('the way out: across the floor, up to the threshold, door opens, hero gone, door shuts', () => {
+  const p = exitPlan({ standX: 158, doorX: 261, floorY: 178, doorY: 153 });
+  assert.ok(p.total > 1500 && p.total < 3500, String(p.total));
+  const a = exitAt(p, 0); assert.deepEqual([a.x, a.y, a.visible, a.doorOpen, a.done], [158, 178, true, false, false]);
+  const mid = exitAt(p, p.across / 2); assert.ok(mid.x > 158 && mid.x < 261 && mid.y === 178 && /^walk/.test(mid.pose));
+  const up = exitAt(p, p.across + p.up / 2); assert.equal(up.x, 261); assert.ok(up.y < 178 && up.y > 153);
+  const open = exitAt(p, p.across + p.up + 10); assert.deepEqual([open.x, open.y, open.pose, open.visible, open.doorOpen], [261, 153, 'idle', true, true]);
+  const gone = exitAt(p, p.across + p.up + p.open + 10); assert.deepEqual([gone.visible, gone.doorOpen, gone.done], [false, true, false]);
+  const shut = exitAt(p, p.across + p.up + p.open + p.gone + 10); assert.deepEqual([shut.visible, shut.doorOpen, shut.done], [false, false, false]);
+  assert.equal(exitAt(p, p.total).done, true);
+});
+test('the way out with the door on the hero\'s own row skips the walk up; leftward doors flip', () => {
+  const p = exitPlan({ standX: 200, doorX: 40, floorY: 176, doorY: 176 });
+  assert.equal(p.up, 0); assert.equal(exitAt(p, 10).flip, true);
+});
+test('the hero script fits inside the bedroom shot with the exit', () => {
+  const p = exitPlan({ standX: 0, doorX: 292, floorY: 190, doorY: 150 });      // the longest walk a 320px room allows
+  assert.ok(HERO_STEPS.at(-1).at + p.total <= SHOTS.at(-1).ms, `${HERO_STEPS.at(-1).at + p.total}`);
 });

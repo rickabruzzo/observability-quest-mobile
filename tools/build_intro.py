@@ -15,10 +15,12 @@ PLATES = ['A_room_dark', 'B_nightstand', 'C_face_asleep', 'D_bedroom_vga']
 EDITS = {'B_arm': 'B_nightstand', 'B_lamp': 'B_nightstand', 'C_eye_crack': 'C_face_asleep',
          'C_awake': 'C_face_asleep', 'C_misery': 'C_awake'}                 # edit -> the still it is cut against
 SOURCES = PLATES + list(EDITS)
+OPTIONAL = {'D_door_open': 'D_bedroom_vga'}                            # extra edits: built when delivered, never a placeholder
 DERIVED = ['C_awake_lit', 'B_lamp_lit']
 MAX_DRIFT = 0.5                     # an edit may remove an object and add a hand; past half the frame it is another picture
 COLOURS = 32
-DEFAULTS = {'wall': {'x': 24, 'y': 14, 'w': 232, 'h': 44}, 'bed': {'x': 60, 'y': 96}, 'stand': {'x': 90}, 'door': {'x': 286}, 'floorY': 176}
+DEFAULTS = {'wall': {'x': 24, 'y': 14, 'w': 232, 'h': 44}, 'bed': {'x': 60, 'y': 96}, 'stand': {'x': 90}, 'door': {'x': 286}, 'floorY': 176,
+            'clothes': {'x': 126, 'y': 184}, 'doorway': {'x': 272, 'y': 60, 'w': 56, 'h': 116}}
 LCD_MIN = (40, 10)                  # anything smaller is a stray green speck, not the pager's LCD
 CHANGE_COLOURS = 16
 LCD_FALLBACK = (92, 62, 136, 36)
@@ -221,7 +223,7 @@ def build(src, out, placeholders=False, logo_src=LOGO_SRC):
     def warn(msg): print(f'build_intro: {msg}', file=sys.stderr)
 
     if not placeholders and os.path.isdir(src):
-        known = {f'{n}.png' for n in SOURCES} | {OVERRIDES}
+        known = {f'{n}.png' for n in SOURCES} | {f'{n}.png' for n in OPTIONAL} | {OVERRIDES}
         for f in sorted(os.listdir(src)):
             if f not in known and not f.startswith('.'):
                 warn(f'{f} is not one of the expected files and is ignored (names are case-sensitive, .png only)')
@@ -241,10 +243,7 @@ def build(src, out, placeholders=False, logo_src=LOGO_SRC):
         if n in fake: raw[n] = placeholder(n)
         done[n] = quantise(raw[n])
     refs = {n: raw[n] for n in PLATES}
-    for n, plate in EDITS.items():                  # dict order: C_awake before C_misery
-        if n in fake:                               # stand-in drawn on the finished still it is cut against
-            done[n] = placeholder(n, base=done[plate]); refs[n] = placeholder(n, base=refs[plate])
-            continue
+    def make_edit(n, plate):
         # compare in the generator's own colours (refs[]), but take unchanged pixels from the finished plate
         refs[n] = snap_to_plate(raw[n], refs[plate])[0]
         img, frac = snap_to_plate(raw[n], refs[plate], base=done[plate])
@@ -258,6 +257,19 @@ def build(src, out, placeholders=False, logo_src=LOGO_SRC):
             a[diff] = np.asarray(quantise(strip, CHANGE_COLOURS)).reshape(-1, 3)
             print(f'  {n}: {frac:.1%} of the frame changed, x {xs.min()}-{xs.max()}, y {ys.min()}-{ys.max()}')
         done[n] = Image.fromarray(a, 'RGB')
+
+    for n, plate in EDITS.items():                  # dict order: C_awake before C_misery
+        if n in fake:                               # stand-in drawn on the finished still it is cut against
+            done[n] = placeholder(n, base=done[plate]); refs[n] = placeholder(n, base=refs[plate])
+        else: make_edit(n, plate)
+    for n, plate in OPTIONAL.items():
+        path = os.path.join(src, f'{n}.png')
+        if placeholders or plate in fake or not os.path.exists(path):
+            if os.path.exists(os.path.join(out, f'{n}.png')): os.remove(os.path.join(out, f'{n}.png'))
+            continue
+        im = Image.open(path)
+        if im.width * H != im.height * W: raise SystemExit(f'build_intro: {n}.png is {im.width}x{im.height}; it must be 16:10 (640x400).')
+        raw[n] = downsample(im); make_edit(n, plate)
     if fake and not placeholders: warn('placeholders used for: ' + ', '.join(fake))
     done['C_awake_lit'] = lit_green(done['C_awake'])
     done['B_lamp_lit'] = lit_warm(done['B_lamp'])
@@ -278,9 +290,10 @@ def build(src, out, placeholders=False, logo_src=LOGO_SRC):
     ov = os.path.join(src, OVERRIDES)
     if os.path.exists(ov):
         for k, v in json.load(open(ov)).items():
-            if k in ('lcd', 'wall', 'bed', 'stand', 'door') and isinstance(v, dict): m[k] = {**m[k], **v}
+            if k in ('lcd', 'wall', 'bed', 'stand', 'door', 'clothes', 'doorway') and isinstance(v, dict): m[k] = {**m[k], **v}
             elif k == 'floorY' and isinstance(v, (int, float)): m[k] = v
-            else: warn(f'{OVERRIDES}: "{k}" ignored (expected lcd, wall, bed, stand, door as objects, or floorY as a number)')
+            else: warn(f'{OVERRIDES}: "{k}" ignored (expected lcd, wall, bed, stand, door, clothes, doorway as objects, or floorY as a number)')
+    m['door'].setdefault('y', m['floorY'])           # the row the hero's feet reach at the door; the floor line unless set
     # the title: the wordmark at the top of the wall, a line of text under it (placed after overrides moved the wall)
     wl = m['wall']
     logo = wall_logo(logo_src, max(8, min(LOGO_MAX_W, int(wl['w']) - 10) - 2), max(8, int(wl['h']) - 28))   # 6 above, 2 + a 16px text line + 2 below

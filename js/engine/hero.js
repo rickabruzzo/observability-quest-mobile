@@ -2,7 +2,7 @@
 // Part masks → shading pass → detail stamps → silhouette outline. The Python file is the
 // reference; tests/hero.test.js proves this port byte for byte against its fixtures.
 
-import { BODIES, HAIR, HOODIE, JEANS, OUTLINE, PJ, SIT_DY, SKIN, WALK } from './hero-parts.js';
+import { BODIES, HAIR, HC_MARK, HC_MARK_PIXELS, HOODIE, JEANS, OUTLINE, PJ, SIT_DY, SKIN, WALK } from './hero-parts.js';
 
 export const HERO_W = 28;
 export const HERO_H = 72;
@@ -180,6 +180,7 @@ export function composeHero(cfg, pose = 'idle', outfit = 'hoodie') {
     for (let x = px0; x <= px1; x++) { c.px(x, 37, hoodR.S); c.px(x, 43, hoodR.S); }
     for (let y = 37; y <= 43; y++) { c.px(px0, y, hoodR.S); c.px(px1, y, hoodR.S); }
     for (let y = 22; y <= 30; y++) { c.px(12, y, hoodR.L); c.px(15, y, hoodR.L); }
+    for (const [x, y, k] of HC_MARK_PIXELS) c.px(x, y, hexc(HC_MARK[k]));          // Honeycomb-branded hoodie
   }
   if (!sit) {
     for (let x = b.legL[0] + 1; x < b.legL[1]; x++) c.px(x, 57, jeanR.S);

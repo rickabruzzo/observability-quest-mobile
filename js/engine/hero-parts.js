@@ -43,3 +43,9 @@ export const BODIES = {
   fem: { shoulder: [7, 20], armL: [6, 7], armR: [20, 21], torso: [8, 19], waist: [9, 18], hip: [8, 19], legL: [9, 12], legR: [15, 18], shoeL: [7, 12], shoeR: [15, 20], neck: [12, 15], headRx: 5.3 },
   nb: { shoulder: [6, 21], armL: [5, 7], armR: [20, 22], torso: [8, 19], waist: [9, 18], hip: [8, 19], legL: [8, 12], legR: [15, 19], shoeL: [6, 12], shoeR: [15, 21], neck: [12, 15], headRx: 5.5 },
 };
+
+// The Honeycomb logomark on the hoodie's chest: assets/hc_logomark.png taken down to 4x4 sprite pixels —
+// the big blue hexagon top right, green beside it, orange at the left, honey below. Brand colours.
+export const HC_MARK = { blue: '#0298EC', green: '#64BA00', orange: '#F96E10', honey: '#FFB000' };
+export const HC_MARK_PIXELS = [[14, 32, 'blue'], [15, 32, 'blue'], [13, 33, 'green'], [14, 33, 'blue'], [15, 33, 'blue'],
+  [12, 34, 'orange'], [13, 34, 'green'], [13, 35, 'honey']];

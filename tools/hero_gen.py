@@ -60,6 +60,11 @@ JEANS = {'indigo': '#34497E', 'black': '#23232A', 'light': '#7F9CC4', 'grey': '#
 SHOE = ramp('#2E2E36', light=1.6, shade=0.8)
 LAPTOP = ramp('#8A94A6', light=1.25, shade=0.7)
 EYE_WHITE = hexc('#F2F2F2')
+# The Honeycomb logomark on the hoodie's chest: assets/hc_logomark.png taken down to 4x4 sprite pixels —
+# the big blue hexagon top right, green beside it, orange at the left, honey below. Brand colours.
+HC_MARK = {'blue': '#0298EC', 'green': '#64BA00', 'orange': '#F96E10', 'honey': '#FFB000'}
+HC_MARK_PIXELS = [(14, 32, 'blue'), (15, 32, 'blue'), (13, 33, 'green'), (14, 33, 'blue'), (15, 33, 'blue'),
+                  (12, 34, 'orange'), (13, 34, 'green'), (13, 35, 'honey')]
 
 class Canvas:
     def __init__(self):
@@ -210,6 +215,7 @@ def hero(body='masc', skin=0, hair='black', style='standard', beard='none',
         for x in range(px0, px1 + 1): c.px(x, 37, hood_r['S']); c.px(x, 43, hood_r['S'])
         for y in range(37, 44): c.px(px0, y, hood_r['S']); c.px(px1, y, hood_r['S'])
         for y in range(22, 31): c.px(12, y, hood_r['L']); c.px(15, y, hood_r['L'])
+        for (x, y, k) in HC_MARK_PIXELS: c.px(x, y, hexc(HC_MARK[k]))            # Honeycomb-branded hoodie
     # knees
     if not sit:
         for x in range(b['leg_l'][0] + 1, b['leg_l'][1]): c.px(x, 57, jean_r['S'])

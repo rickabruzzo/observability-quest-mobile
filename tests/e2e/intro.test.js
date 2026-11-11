@@ -123,7 +123,18 @@ test('the bedroom shot shows the title and walks the hero out', async () => {
   const box = await page.locator('.intro-title').boundingBox(), sc = await page.locator('#scene').boundingBox();
   assert.ok(box.x >= sc.x && box.x + box.width <= sc.x + sc.width + 1 && box.y >= sc.y, 'title outside the scene');
   await page.waitForFunction(() => window.__oq.intro.hero?.pose === 'situp');
+  // day clothes lie on the floor in the hero's own colours until the change, then they are on the hero
+  const m = await page.evaluate(() => window.__oq.intro.manifest);
+  const pileBox = { x: m.clothes.x, y: m.clothes.y - 10, w: 20, h: 10 };
+  const grab = (r) => page.evaluate((r) => [...document.getElementById('scene').getContext('2d').getImageData(r.x, r.y, r.w, r.h).data].join(), r);
+  assert.equal((await intro(page)).hero.pile, true);
+  const withPile = await grab(pileBox);
   await page.waitForFunction(() => window.__oq.intro.hero?.outfit === 'hoodie', null, { timeout: 5000 });
+  assert.equal((await intro(page)).hero.pile, false);
+  assert.notEqual(await grab(pileBox), withPile, 'the clothes are still on the floor');
+  // out through the door: it opens, the hero is gone, then the next screen
+  await page.waitForFunction(() => window.__oq.intro.hero?.doorOpen === true, null, { timeout: 6000 });
+  await page.waitForFunction(() => window.__oq.intro.hero?.doorOpen === true && window.__oq.intro.hero.visible === false, null, { timeout: 3000 });
   await page.waitForFunction(() => document.body.dataset.screen === 'PREVIEW', null, { timeout: 9000 });
   await ctx.close();
 });

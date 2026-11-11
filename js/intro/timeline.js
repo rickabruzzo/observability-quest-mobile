@@ -14,7 +14,7 @@ export const SHOTS = [
   { id: 'message', ms: 8000, image: 'B_nightstand', lcd: 'marquee', text: CTO },
   { id: 'misery', ms: 2000, image: 'C_misery' },
   { id: 'lamp', ms: 1500, image: 'B_lamp', alt: 'B_lamp_lit', altAt: 700, clickAt: 700 },
-  { id: 'bedroom', ms: 8000, image: 'D_bedroom_vga', hero: true },
+  { id: 'bedroom', ms: 9000, image: 'D_bedroom_vga', hero: true },
 ];
 export const TOTAL_MS = SHOTS.reduce((n, s) => n + s.ms, 0);
 
@@ -53,4 +53,29 @@ export function heroAt(tMs) {
     if (s.walkTo) h.walking = true;
   }
   return h;
+}
+
+// ---- the way out of the bedroom: across the floor to the door, up to its threshold, through it ----
+// Still limited animation: the door is two stills (shut, open), the hero is there and then is not.
+const AMBLE = 140, AMBLE_UP = 70;                     // px/s: a sleepy walk
+const DOOR_OPEN_MS = 350, DOOR_GONE_MS = 300, DOOR_SHUT_MS = 400;
+const STEP = ['walk1', 'walk2', 'walk3', 'walk4'];
+
+export function exitPlan({ standX, doorX, floorY, doorY = floorY }) {
+  const across = Math.round((Math.abs(doorX - standX) / AMBLE) * 1000);
+  const up = Math.round((Math.abs(floorY - doorY) / AMBLE_UP) * 1000);
+  return { standX, doorX, floorY, doorY, across, up, open: DOOR_OPEN_MS, gone: DOOR_GONE_MS, shut: DOOR_SHUT_MS, total: across + up + DOOR_OPEN_MS + DOOR_GONE_MS + DOOR_SHUT_MS };
+}
+
+/** Where the hero is tMs into the plan. x is the sprite's left edge, y the row the feet stand on. */
+export function exitAt(p, tMs) {
+  const t = Math.max(0, tMs), flip = p.doorX < p.standX, step = STEP[Math.floor(t / 100) % 4];
+  const at = (x, y, pose, visible, doorOpen, done = false) => ({ x, y, pose, flip, visible, doorOpen, done });
+  if (t < p.across) return at(Math.round(p.standX + (p.doorX - p.standX) * (t / p.across)), p.floorY, step, true, false);
+  let u = t - p.across;
+  if (u < p.up) return at(p.doorX, Math.round(p.floorY + (p.doorY - p.floorY) * (u / p.up)), step, true, false);
+  u -= p.up;
+  if (u < p.open) return at(p.doorX, p.doorY, 'idle', true, true);
+  if (u < p.open + p.gone) return at(p.doorX, p.doorY, 'idle', false, true);
+  return at(p.doorX, p.doorY, 'idle', false, false, t >= p.total);
 }

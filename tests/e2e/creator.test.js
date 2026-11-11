@@ -128,3 +128,20 @@ for (const [w, h] of [[667, 375], [800, 360], [844, 390], [932, 430]]) {
     await ctx.close();
   });
 }
+
+for (const [w, h] of [[1700, 1100], [1280, 800], [1240, 1044]]) {
+  test(`the sheet scales up on a ${w}x${h} desktop window: hero whole in its frame, rows use the width`, async () => {
+    const { ctx, page } = await openCreator({ viewport: { width: w, height: h }, hasTouch: false, isMobile: false });
+    const m = await page.evaluate(() => {
+      const r = (s) => { const b = document.querySelector(s).getBoundingClientRect(); return { x: b.x, y: b.y, w: b.width, h: b.height }; };
+      const opts = [...document.querySelectorAll('.opt')].map((e) => e.getBoundingClientRect());
+      return { hero: r('#hero-view'), inner: r('.frame-inner'), scene: r('#scene-box'), right: Math.max(...opts.map((b) => b.right)), bottom: Math.max(...opts.map((b) => b.bottom)) };
+    });
+    assert.ok(Math.abs(m.hero.w / m.hero.h - 28 / 72) < 0.02, `hero stretched: ${JSON.stringify(m.hero)}`);
+    // the sprite's empty side margins may tuck under the frame (as on a phone); the figure itself must not
+    assert.ok(m.hero.w <= m.inner.w * 1.15 && m.hero.h <= m.inner.h + 1 && m.hero.y >= m.inner.y - 1, `hero does not fit its frame: ${JSON.stringify(m)}`);
+    assert.ok(m.right > m.scene.x + m.scene.w * 0.6, `rows huddle in the corner: ${JSON.stringify(m)}`);
+    assert.ok(m.right <= m.scene.x + m.scene.w + 1 && m.bottom <= m.scene.y + m.scene.h + 1, `rows overflow: ${JSON.stringify(m)}`);
+    await ctx.close();
+  });
+}

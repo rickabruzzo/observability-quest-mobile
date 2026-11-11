@@ -167,3 +167,6 @@ Plates approved by Rick 2026-11-11; the five edits are awaiting his review.
 
 `C_awake_lit` and `B_lamp_lit` are derived by the build (palette lifts), not generated. The LCD text is drawn by the game. The wall title
 is the app's Observability Quest wordmark, cut from `assets/title_screen.png` by the build (`wall_logo.png`).
+
+Round 2 (pending): a furnished `D_bedroom_vga` made as an edit of the round-1 plate, and `D_door_open`, an edit of that —
+`briefs/intro-bedroom-round2-agent-brief.md`. The clothes on the floor and the Honeycomb mark on the hoodie are drawn by the game.
