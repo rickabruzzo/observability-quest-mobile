@@ -11,15 +11,13 @@ W, H = 28, 72
 
 # ---- normative data (js/engine/hero-parts.js copies these verbatim) ----
 OPTIONS = {
-    'body': ['masc', 'fem', 'nb'], 'skin': [0, 1, 2, 3, 4],
-    'hair': ['black', 'brown', 'blonde', 'ginger', 'violet'],
-    'length': ['buzz', 'short', 'medium', 'long'],
-    'style': ['straight', 'curly', 'spiky', 'locs', 'undercut'],
-    'beard': ['none', 'stubble', 'goatee', 'full', 'big'],
-    'beardCol': ['black', 'brown', 'blonde', 'ginger', 'violet'],
+    'body': ['masc', 'fem', 'nb'], 'skin': [0, 1, 2, 3],
+    'hair': ['black', 'brown', 'blonde', 'ginger', 'violet'],          # colour; the beard takes it too
+    'style': ['mohawk', 'standard', 'shoulder', 'long', 'fro'],           # mohawk = buzzed sides, short textured top
+    'beard': ['none', 'short', 'long'],
     'hoodie': ['honey', 'ink', 'teal', 'indigo', 'lime'],
     'jeans': ['indigo', 'black', 'light', 'grey', 'khaki'],
-    'glasses': ['none', 'round', 'square', 'thick'],
+    'glasses': ['none', 'glasses'],
     'hold': ['laptop', 'coffee', 'phone', 'duck', 'pager'],
 }
 CONFIG_KEYS = list(OPTIONS)
@@ -28,24 +26,18 @@ POSES = ['idle', 'walk1', 'walk2', 'walk3', 'walk4']
 WALK = {'idle': (0, 0, 0, 0, 0, 0, 0), 'walk1': (-1, 1, -2, 2, 0, 1, -1), 'walk2': (0, 0, 0, 0, 1, 0, 0),
         'walk3': (1, -1, 2, -2, 0, -1, 1), 'walk4': (0, 0, 0, 0, 1, 0, 0)}
 PRESETS = {
-    'masc': dict(body='masc', skin=1, hair='black', length='short', style='straight', beard='stubble', beardCol='black',
-                 hoodie='ink', jeans='indigo', glasses='none', hold='laptop'),
-    'fem': dict(body='fem', skin=2, hair='brown', length='long', style='straight', beard='none', beardCol='brown',
-                hoodie='honey', jeans='black', glasses='round', hold='coffee'),
-    'nb': dict(body='nb', skin=0, hair='violet', length='medium', style='undercut', beard='none', beardCol='violet',
-               hoodie='teal', jeans='grey', glasses='square', hold='phone'),
+    'masc': dict(body='masc', skin=0, hair='black', style='standard', beard='short', hoodie='ink', jeans='indigo', glasses='none', hold='laptop'),
+    'fem': dict(body='fem', skin=1, hair='brown', style='long', beard='none', hoodie='honey', jeans='black', glasses='glasses', hold='coffee'),
+    'nb': dict(body='nb', skin=0, hair='violet', style='mohawk', beard='none', hoodie='teal', jeans='grey', glasses='glasses', hold='phone'),
 }
 FIXTURES = {
     'masc-idle': (PRESETS['masc'], 'idle'),
     'masc-walk1': (PRESETS['masc'], 'walk1'), 'masc-walk2': (PRESETS['masc'], 'walk2'),
     'masc-walk3': (PRESETS['masc'], 'walk3'), 'masc-walk4': (PRESETS['masc'], 'walk4'),
     'fem-idle': (PRESETS['fem'], 'idle'), 'nb-idle': (PRESETS['nb'], 'idle'),
-    'var-full-beard': (dict(body='masc', skin=3, hair='black', length='buzz', style='straight', beard='full', beardCol='black',
-                            hoodie='honey', jeans='khaki', glasses='thick', hold='duck'), 'idle'),
-    'var-locs': (dict(body='nb', skin=2, hair='blonde', length='long', style='locs', beard='goatee', beardCol='blonde',
-                      hoodie='lime', jeans='indigo', glasses='round', hold='laptop'), 'idle'),
-    'var-curly': (dict(body='fem', skin=4, hair='ginger', length='medium', style='curly', beard='none', beardCol='ginger',
-                       hoodie='indigo', jeans='light', glasses='none', hold='pager'), 'idle'),
+    'var-long-beard': (dict(body='masc', skin=2, hair='black', style='standard', beard='long', hoodie='honey', jeans='khaki', glasses='glasses', hold='duck'), 'idle'),
+    'var-fro': (dict(body='nb', skin=1, hair='blonde', style='fro', beard='short', hoodie='lime', jeans='indigo', glasses='glasses', hold='laptop'), 'idle'),
+    'var-shoulder': (dict(body='fem', skin=3, hair='ginger', style='shoulder', beard='none', hoodie='indigo', jeans='light', glasses='none', hold='pager'), 'idle'),
 }
 
 def hexc(s):
@@ -57,7 +49,7 @@ def ramp(base, light=1.22, shade=0.74, dark=0.5):
     return {'L': f(light), 'B': (r, g, b, 255), 'S': f(shade), 'D': f(dark)}
 
 OUTLINE = hexc('#1a1424')
-SKIN = ['#F6D8BE', '#E5B48E', '#C2865A', '#8F5B38', '#5A3826']
+SKIN = ['#E5B48E', '#C2865A', '#8F5B38', '#5A3826']
 HAIR = {'black': '#262430', 'brown': '#5C3A1E', 'blonde': '#D9B85A', 'ginger': '#C0522A', 'violet': '#7B4FB8'}
 HOODIE = {'honey': '#E8A000', 'ink': '#2B3647', 'teal': '#1F8FD6', 'indigo': '#51368D', 'lime': '#5FA81A'}
 JEANS = {'indigo': '#34497E', 'black': '#23232A', 'light': '#7F9CC4', 'grey': '#5B5F66', 'khaki': '#B59B6A'}
@@ -128,13 +120,13 @@ BODIES = {
                  leg_l=(8, 12), leg_r=(15, 19), gap=(13, 14), shoe_l=(6, 12), shoe_r=(15, 21), neck=(12, 15), head_rx=5.5),
 }
 
-def hero(body='masc', skin=1, hair='black', length='short', style='straight', beard='none', beardCol=None,
+def hero(body='masc', skin=0, hair='black', style='standard', beard='none',
          hoodie='ink', jeans='indigo', glasses='none', hold='laptop', pose='idle'):
     b = BODIES[body]; c = Canvas()
     skin_r = ramp(SKIN[skin], light=1.12, shade=0.8, dark=0.62)
     hair_r = ramp(HAIR[hair], light=1.35, shade=0.7)
     hood_r = ramp(HOODIE[hoodie]); jean_r = ramp(JEANS[jeans], light=1.25, shade=0.72)
-    beard_r = ramp(HAIR[beardCol or hair], light=1.3, shade=0.7)
+    beard_r = ramp(HAIR[hair], light=1.3, shade=0.7)
     cx = 13.5
     legL_dx, legR_dx, shoeL_dx, shoeR_dx, bob, armL_dy, armR_dy = WALK[pose]
 
@@ -167,20 +159,21 @@ def hero(body='masc', skin=1, hair='black', length='short', style='straight', be
     c.fill('head', ellipse(cx, 11.5, b['head_rx'], 6.8))
     c.fill('head', rect(8, 15, 19, 16)); c.fill('head', rect(9, 17, 18, 17)); c.fill('head', rect(11, 18, 16, 18))  # jaw & chin
     c.fill('earL', rect(7, 10, 7, 12)); c.fill('earR', rect(20, 10, 20, 12))
-    # ---- hair ----
+    # ---- hair (one picker: mohawk, buzz, standard, shoulder, long, fro) ----
     hm = []
-    hm += ellipse(cx, 7.0, b['head_rx'] + 0.8, 3.8)          # crown
-    hm += rect(8, 6, 19, 8)                                   # band over forehead
-    if style == 'spiky': hm += [(9,2),(12,1),(15,2),(18,3),(11,2),(14,1),(17,2)]
-    if style == 'curly': hm += ellipse(cx, 6.5, b['head_rx'] + 1.8, 4.6)
-    if style == 'undercut': hm = [p for p in hm if not (p[1] >= 7 and (p[0] <= 8 or p[0] >= 19))] + rect(9, 2, 18, 4)
-    side_to = {'buzz': 7, 'short': 11, 'medium': 15, 'long': 30}[length]
-    if style != 'undercut' and length != 'buzz':
-        hm += rect(6, 7, 7, side_to) + rect(20, 7, 21, side_to)
-        if length == 'long': hm += rect(5, 12, 7, side_to) + rect(20, 12, 22, side_to)
-        if style == 'locs':
-            hm = [p for p in hm if not (p[1] > 9 and p[0] in (6, 21) and p[1] % 2 == 0)]
-    if length == 'buzz': hm = [p for p in hm if p[1] >= 4]
+    if style == 'mohawk':
+        hm += rect(9, 5, 18, 8) + rect(11, 3, 16, 4) + [(12, 2), (14, 2), (15, 2), (13, 1)]   # buzzed sides, short textured top
+    else:
+        hm += ellipse(cx, 7.0, b['head_rx'] + 0.8, 3.8)             # crown
+        hm += rect(8, 6, 19, 8)                                      # band over the forehead
+        if style == 'standard':
+            hm += rect(6, 7, 7, 11) + rect(20, 7, 21, 11)
+        elif style == 'shoulder':
+            hm += rect(6, 7, 7, 20) + rect(20, 7, 21, 20) + rect(5, 14, 5, 20) + rect(22, 14, 22, 20)
+        elif style == 'long':
+            hm += rect(6, 7, 7, 30) + rect(20, 7, 21, 30) + rect(5, 12, 5, 30) + rect(22, 12, 22, 30) + rect(4, 18, 4, 30) + rect(23, 18, 23, 30)
+        elif style == 'fro':
+            hm += ellipse(cx, 7.5, b['head_rx'] + 3.0, 6.0) + rect(5, 8, 7, 13) + rect(20, 8, 22, 13)
     c.fill('hair', hm)
     # ---- shading ----
     c.shade('legL', jean_r); c.shade('legR', jean_r)
@@ -210,25 +203,18 @@ def hero(body='masc', skin=1, hair='black', length='short', style='straight', be
     c.px(10, 10, EYE_WHITE); c.px(11, 10, OUTLINE); c.px(16, 10, EYE_WHITE); c.px(15, 10, OUTLINE)
     c.px(14, 12, skin_r['S']); c.px(14, 13, skin_r['S']); c.px(13, 13, skin_r['S'])
     for x in (12, 13, 14, 15): c.px(x, 15, skin_r['D'])
-    # beard
-    if beard == 'stubble':
-        for (x, y) in [(10,14),(12,16),(14,17),(16,14),(17,16),(11,17),(15,16),(9,13),(18,13),(13,17)]: c.px(x, y, skin_r['D'])
-    elif beard == 'goatee':
-        for (x, y) in rect(12, 16, 15, 18): c.px(x, y, beard_r['B'])
-        c.px(12, 16, beard_r['L'])
-    elif beard in ('full', 'big'):
-        bot = 18 if beard == 'full' else 22
+    # beard (takes the hair colour): short to the chin, long down the chest
+    if beard in ('short', 'long'):
+        bot = 18 if beard == 'short' else 22
         for (x, y) in rect(9, 13, 18, bot):
             if (x, y) in {(12,15),(13,15),(14,15),(15,15)}: continue
             if y >= 19 and (x < 10 + (y - 19) or x > 17 - (y - 19)): continue
             c.px(x, y, beard_r['S'] if x >= 17 else beard_r['B'])
         for y in range(13, 17): c.px(9, y, beard_r['L'])
-    # glasses
-    g = hexc('#C9D2E0') if glasses in ('round', 'square') else OUTLINE
-    if glasses != 'none':
-        pts = [(9,10),(12,10),(14,10),(17,10),(13,10)] + ([(9,11),(12,11),(14,11),(17,11)] if glasses != 'round' else [(10,11),(11,11),(15,11),(16,11)])
-        if glasses == 'thick': pts += [(10,9),(11,9),(15,9),(16,9)]
-        for (x, y) in pts: c.px(x, y, g)
+    # glasses: on or off, silver square frames
+    if glasses == 'glasses':
+        g = hexc('#C9D2E0')
+        for (x, y) in [(9,10),(12,10),(14,10),(17,10),(13,10),(9,11),(12,11),(14,11),(17,11)]: c.px(x, y, g)
     # held item (viewer's left = hero's right hand side) rides with that arm; the pager sits on the belt
     c.oy = bob + (0 if hold == 'pager' else armL_dy)
     if hold == 'laptop':

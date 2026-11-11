@@ -1,14 +1,12 @@
 {
  "beard": "none",
- "beardCol": "ginger",
  "body": "fem",
  "glasses": "none",
  "hair": "ginger",
  "hold": "pager",
  "hoodie": "indigo",
  "jeans": "light",
- "length": "medium",
  "pose": "idle",
- "skin": 4,
- "style": "curly"
+ "skin": 3,
+ "style": "shoulder"
 }

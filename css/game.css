@@ -70,8 +70,8 @@ body[data-cols="narrow"] .btn-sierra .long, body:not([data-cols="narrow"]) .btn-
 .frame-inner { width: 118px; height: 100%; background: var(--hero-bg); border: 2px solid var(--frame-light); display: flex; align-items: flex-end; justify-content: center; overflow: hidden; }
 #hero-view { display: block; height: calc(100% - 2px); width: auto; image-rendering: pixelated; image-rendering: crisp-edges; }
 .sheet-rows { position: absolute; left: 160px; top: 6px; right: 8px; display: flex; flex-direction: column; gap: 1px; }
-.sheet-row { display: flex; align-items: center; gap: 6px; height: 44px; }
-.sheet-label { width: 92px; flex: none; font-family: var(--font-display); font-size: 18px; color: var(--sheet-blue); line-height: 1; }
+.sheet-row { display: flex; align-items: center; gap: 4px; height: 44px; }
+.sheet-label { width: 88px; flex: none; font-family: var(--font-display); font-size: 18px; color: var(--sheet-blue); line-height: 1; }
 .opt { width: 44px; height: 44px; flex: none; padding: 0; background: var(--sheet-white); color: #111; border: 2px solid #111; display: flex; align-items: center; justify-content: center; cursor: pointer; font-family: var(--font-display); font-size: 16px; line-height: 1; }
 .opt.wide { width: 70px; }
 .opt.on, .opt[aria-pressed="true"] { border: 3px solid var(--sheet-red); }

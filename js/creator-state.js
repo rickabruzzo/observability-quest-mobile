@@ -4,10 +4,10 @@ import { OPTIONS, PRESETS } from './engine/hero-parts.js';
 
 export const NAME_MAX = 16;
 export const DEFAULT_NAME = 'the Engineer';
-export const FACE_ROWS = ['body', 'skin', 'hair', 'length', 'style', 'beard', 'beardCol'];
+export const FACE_ROWS = ['body', 'skin', 'hair', 'style', 'beard'];
 export const KIT_ROWS = ['hoodie', 'jeans', 'glasses', 'hold'];
 export const LABELS = {
-  body: 'Body', skin: 'Skin', hair: 'Hair', length: 'Length', style: 'Style', beard: 'Beard', beardCol: 'Beard col.',
+  body: 'Body', skin: 'Skin', hair: 'Hair col.', style: 'Hair', beard: 'Beard',
   hoodie: 'Hoodie', jeans: 'Jeans', glasses: 'Glasses', hold: 'Holding',
 };
 export const BODY_LABELS = { masc: 'Masc', fem: 'Fem', nb: 'Enby' };
@@ -29,21 +29,18 @@ function coerce(key, value) {
   return list.includes(v) ? v : undefined;
 }
 
-/** Sets one option; unknown key or value returns the same object. Hair drags beard colour until it is picked on its own. */
+/** Sets one option; unknown key or value returns the same object. */
 export function pick(hero, key, value) {
   if (key === 'body') return applyPreset(hero, value);
   const v = coerce(key, value);
   if (v === undefined) return hero;
-  const next = { ...hero, [key]: v };
-  if (key === 'hair' && hero.beardCol === hero.hair) next.beardCol = v;
-  return next;
+  return { ...hero, [key]: v };
 }
 
 export function randomHero(rng = Math.random) {
   const roll = (list) => list[Math.floor(rng() * list.length)];
   const h = { name: '' };
   for (const [k, list] of Object.entries(OPTIONS)) h[k] = roll(list);
-  h.beardCol = h.hair;
   return h;
 }
 

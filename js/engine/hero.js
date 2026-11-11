@@ -95,13 +95,13 @@ function ellipse(cx, cy, rx, ry) {
 
 /** Composes the 28×72 RGBA sprite for a hero config and pose. */
 export function composeHero(cfg, pose = 'idle') {
-  const { body = 'masc', skin = 1, hair = 'black', length = 'short', style = 'straight', beard = 'none', beardCol = null,
+  const { body = 'masc', skin = 0, hair = 'black', style = 'standard', beard = 'none',
     hoodie = 'ink', jeans = 'indigo', glasses = 'none', hold = 'laptop' } = cfg;
   const b = BODIES[body]; const c = new Grid();
   const skinR = ramp(SKIN[skin], 1.12, 0.8, 0.62);
   const hairR = ramp(HAIR[hair], 1.35, 0.7);
   const hoodR = ramp(HOODIE[hoodie]); const jeanR = ramp(JEANS[jeans], 1.25, 0.72);
-  const beardR = ramp(HAIR[beardCol || hair], 1.3, 0.7);
+  const beardR = ramp(HAIR[hair], 1.3, 0.7);
   const cx = 13.5;
   const [legLdx, legRdx, shoeLdx, shoeRdx, bob, armLdy, armRdy] = WALK[pose] || WALK.idle;
 
@@ -132,20 +132,18 @@ export function composeHero(cfg, pose = 'idle') {
   c.fill('head', rect(8, 15, 19, 16)); c.fill('head', rect(9, 17, 18, 17)); c.fill('head', rect(11, 18, 16, 18));
   c.fill('earL', rect(7, 10, 7, 12)); c.fill('earR', rect(20, 10, 20, 12));
 
-  // ---- hair ----
+  // ---- hair (one picker: mohawk, buzz, standard, shoulder, long, fro) ----
   let hm = [];
-  hm = hm.concat(ellipse(cx, 7.0, b.headRx + 0.8, 3.8));
-  hm = hm.concat(rect(8, 6, 19, 8));
-  if (style === 'spiky') hm = hm.concat([[9, 2], [12, 1], [15, 2], [18, 3], [11, 2], [14, 1], [17, 2]]);
-  if (style === 'curly') hm = hm.concat(ellipse(cx, 6.5, b.headRx + 1.8, 4.6));
-  if (style === 'undercut') hm = hm.filter(([x, y]) => !(y >= 7 && (x <= 8 || x >= 19))).concat(rect(9, 2, 18, 4));
-  const sideTo = { buzz: 7, short: 11, medium: 15, long: 30 }[length];
-  if (style !== 'undercut' && length !== 'buzz') {
-    hm = hm.concat(rect(6, 7, 7, sideTo), rect(20, 7, 21, sideTo));
-    if (length === 'long') hm = hm.concat(rect(5, 12, 7, sideTo), rect(20, 12, 22, sideTo));
-    if (style === 'locs') hm = hm.filter(([x, y]) => !(y > 9 && (x === 6 || x === 21) && y % 2 === 0));
+  if (style === 'mohawk') {
+    hm = rect(9, 5, 18, 8).concat(rect(11, 3, 16, 4), [[12, 2], [14, 2], [15, 2], [13, 1]]);   // buzzed sides, short textured top
+  } else {
+    hm = ellipse(cx, 7.0, b.headRx + 0.8, 3.8);                       // crown
+    hm = hm.concat(rect(8, 6, 19, 8));                                 // band over the forehead
+    if (style === 'standard') hm = hm.concat(rect(6, 7, 7, 11), rect(20, 7, 21, 11));
+    else if (style === 'shoulder') hm = hm.concat(rect(6, 7, 7, 20), rect(20, 7, 21, 20), rect(5, 14, 5, 20), rect(22, 14, 22, 20));
+    else if (style === 'long') hm = hm.concat(rect(6, 7, 7, 30), rect(20, 7, 21, 30), rect(5, 12, 5, 30), rect(22, 12, 22, 30), rect(4, 18, 4, 30), rect(23, 18, 23, 30));
+    else if (style === 'fro') hm = hm.concat(ellipse(cx, 7.5, b.headRx + 3.0, 6.0), rect(5, 8, 7, 13), rect(20, 8, 22, 13));
   }
-  if (length === 'buzz') hm = hm.filter(([, y]) => y >= 4);
   c.fill('hair', hm);
 
   // ---- shading ----
@@ -174,14 +172,9 @@ export function composeHero(cfg, pose = 'idle') {
   c.px(10, 10, EYE_WHITE); c.px(11, 10, OUTLINE_C); c.px(16, 10, EYE_WHITE); c.px(15, 10, OUTLINE_C);
   c.px(14, 12, skinR.S); c.px(14, 13, skinR.S); c.px(13, 13, skinR.S);
   for (const x of [12, 13, 14, 15]) c.px(x, 15, skinR.D);
-  // beard
-  if (beard === 'stubble') {
-    for (const [x, y] of [[10, 14], [12, 16], [14, 17], [16, 14], [17, 16], [11, 17], [15, 16], [9, 13], [18, 13], [13, 17]]) c.px(x, y, skinR.D);
-  } else if (beard === 'goatee') {
-    for (const [x, y] of rect(12, 16, 15, 18)) c.px(x, y, beardR.B);
-    c.px(12, 16, beardR.L);
-  } else if (beard === 'full' || beard === 'big') {
-    const bot = beard === 'full' ? 18 : 22;
+  // beard (takes the hair colour): short to the chin, long down the chest
+  if (beard === 'short' || beard === 'long') {
+    const bot = beard === 'short' ? 18 : 22;
     for (const [x, y] of rect(9, 13, 18, bot)) {
       if (y === 15 && x >= 12 && x <= 15) continue;
       if (y >= 19 && (x < 10 + (y - 19) || x > 17 - (y - 19))) continue;
@@ -189,13 +182,10 @@ export function composeHero(cfg, pose = 'idle') {
     }
     for (let y = 13; y <= 16; y++) c.px(9, y, beardR.L);
   }
-  // glasses
-  if (glasses !== 'none') {
-    const g = glasses === 'round' || glasses === 'square' ? hexc('#C9D2E0') : OUTLINE_C;
-    let pts = [[9, 10], [12, 10], [14, 10], [17, 10], [13, 10]];
-    pts = pts.concat(glasses !== 'round' ? [[9, 11], [12, 11], [14, 11], [17, 11]] : [[10, 11], [11, 11], [15, 11], [16, 11]]);
-    if (glasses === 'thick') pts = pts.concat([[10, 9], [11, 9], [15, 9], [16, 9]]);
-    for (const [x, y] of pts) c.px(x, y, g);
+  // glasses: on or off, silver square frames
+  if (glasses === 'glasses') {
+    const g = hexc('#C9D2E0');
+    for (const [x, y] of [[9, 10], [12, 10], [14, 10], [17, 10], [13, 10], [9, 11], [12, 11], [14, 11], [17, 11]]) c.px(x, y, g);
   }
   // held item rides with the left arm; the pager sits on the belt
   c.oy = bob + (hold === 'pager' ? 0 : armLdy);

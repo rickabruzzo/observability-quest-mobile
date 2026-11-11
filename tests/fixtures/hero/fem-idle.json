@@ -1,14 +1,12 @@
 {
  "beard": "none",
- "beardCol": "brown",
  "body": "fem",
- "glasses": "round",
+ "glasses": "glasses",
  "hair": "brown",
  "hold": "coffee",
  "hoodie": "honey",
  "jeans": "black",
- "length": "long",
  "pose": "idle",
- "skin": 2,
- "style": "straight"
+ "skin": 1,
+ "style": "long"
 }

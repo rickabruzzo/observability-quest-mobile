@@ -1,14 +1,12 @@
 {
  "beard": "none",
- "beardCol": "violet",
  "body": "nb",
- "glasses": "square",
+ "glasses": "glasses",
  "hair": "violet",
  "hold": "phone",
  "hoodie": "teal",
  "jeans": "grey",
- "length": "medium",
  "pose": "idle",
  "skin": 0,
- "style": "undercut"
+ "style": "mohawk"
 }

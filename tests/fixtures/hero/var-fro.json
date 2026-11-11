@@ -1,14 +1,12 @@
 {
- "beard": "goatee",
- "beardCol": "blonde",
+ "beard": "short",
  "body": "nb",
- "glasses": "round",
+ "glasses": "glasses",
  "hair": "blonde",
  "hold": "laptop",
  "hoodie": "lime",
  "jeans": "indigo",
- "length": "long",
  "pose": "idle",
- "skin": 2,
- "style": "locs"
+ "skin": 1,
+ "style": "fro"
 }

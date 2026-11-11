@@ -21,12 +21,12 @@ async function openCreator(opts = {}, init = null) {
 }
 const hero = (page) => page.evaluate(() => window.__oq.creator.hero);
 
-test('sheet: 7 FACE rows, 4 KIT rows, every option 44px+, hero drawn', async () => {
+test('sheet: 5 FACE rows, 5 KIT rows, every option 44px+, hero drawn', async () => {
   const { ctx, page } = await openCreator();
-  assert.equal(await page.locator('.sheet-row').count(), 7);
+  assert.equal(await page.locator('.sheet-row').count(), 5);
   const boxes = await page.locator('.opt').evaluateAll((els) => els.map((e) => e.getBoundingClientRect()).map((r) => [r.width, r.height]));
   assert.ok(boxes.every(([w, h]) => w >= 44 && h >= 44), JSON.stringify(boxes.filter(([w, h]) => w < 44 || h < 44)));
-  assert.ok(boxes.length <= 5 * 7 + 3);
+  assert.equal(boxes.length, 3 + 4 + 5 + 5 + 3); // body, skin, hair colour, hair, beard
   await page.click('.tab[data-page="kit"]');
   assert.equal(await page.locator('.sheet-row').count(), 5); // name row + hoodie, jeans, glasses, holding
   const painted = await page.evaluate(() => {
@@ -37,15 +37,16 @@ test('sheet: 7 FACE rows, 4 KIT rows, every option 44px+, hero drawn', async () 
   await ctx.close();
 });
 
-test('picking updates state; hair drags beard colour until beard colour is picked', async () => {
+test('picking updates state and the pressed marker; the beard follows the hair colour', async () => {
   const { ctx, page } = await openCreator();
   await page.click('.opt[data-key="hair"][data-value="ginger"]');
-  assert.equal((await hero(page)).beardCol, 'ginger');
-  await page.click('.opt[data-key="beardCol"][data-value="black"]');
-  await page.click('.opt[data-key="hair"][data-value="violet"]');
+  await page.click('.opt[data-key="style"][data-value="fro"]');
+  await page.click('.opt[data-key="beard"][data-value="long"]');
   const h = await hero(page);
-  assert.equal(h.hair, 'violet'); assert.equal(h.beardCol, 'black');
-  assert.equal(await page.locator('.opt[data-key="hair"][data-value="violet"]').getAttribute('aria-pressed'), 'true');
+  assert.equal(h.hair, 'ginger'); assert.equal(h.style, 'fro'); assert.equal(h.beard, 'long');
+  assert.ok(!('beardCol' in h));
+  assert.equal(await page.locator('.opt[data-key="style"][data-value="fro"]').getAttribute('aria-pressed'), 'true');
+  assert.equal(await page.locator('.opt[data-key="style"][data-value="standard"]').getAttribute('aria-pressed'), 'false');
   await ctx.close();
 });
 
@@ -91,8 +92,8 @@ test('START persists and goes to PREVIEW; reload keeps the hero', async () => {
 
 test('storage throwing does not break the creator or START', async () => {
   const { ctx, page } = await openCreator({}, () => { Object.defineProperty(window, 'sessionStorage', { get() { throw new Error('denied'); } }); });
-  await page.click('.opt[data-key="skin"][data-value="4"]');
-  assert.equal((await hero(page)).skin, 4);
+  await page.click('.opt[data-key="skin"][data-value="3"]');
+  assert.equal((await hero(page)).skin, 3);
   await page.click('#btn-start-game');
   await page.waitForFunction(() => document.body.dataset.screen === 'PREVIEW');
   await ctx.close();

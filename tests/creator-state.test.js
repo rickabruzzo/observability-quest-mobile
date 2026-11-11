@@ -18,27 +18,32 @@ test('pick validates key and value', () => {
 });
 
 test('pick coerces numeric options from DOM strings', () => {
-  assert.equal(pick(defaultHero(), 'skin', '4').skin, 4);
+  assert.equal(pick(defaultHero(), 'skin', '3').skin, 3);
+  const h = defaultHero();
+  assert.equal(pick(h, 'skin', '4'), h); // out of range: same object back
 });
 
-test('beard colour follows hair until changed on its own', () => {
-  let h = defaultHero(); h = pick(h, 'hair', 'ginger'); assert.equal(h.beardCol, 'ginger');
-  h = pick(h, 'beardCol', 'black'); h = pick(h, 'hair', 'violet'); assert.equal(h.beardCol, 'black');
+test('the simplified option lists: no beard colour, no length', () => {
+  assert.deepEqual(Object.keys(OPTIONS).sort(), ['beard', 'body', 'glasses', 'hair', 'hoodie', 'hold', 'jeans', 'skin', 'style'].sort());
+  assert.deepEqual(OPTIONS.style, ['mohawk', 'standard', 'shoulder', 'long', 'fro']);
+  assert.deepEqual(OPTIONS.beard, ['none', 'short', 'long']);
+  assert.deepEqual(OPTIONS.glasses, ['none', 'glasses']);
+  assert.deepEqual(OPTIONS.skin, [0, 1, 2, 3]);
 });
 
 test('random stays inside the option lists, 200 rolls', () => {
   for (let i = 0; i < 200; i++) {
     const h = randomHero();
     for (const [k, vs] of Object.entries(OPTIONS)) assert.ok(vs.includes(h[k]), k);
-    assert.equal(h.beardCol, h.hair);
   }
 });
 
 test('sanitize repairs garbage', () => {
   assert.deepEqual(sanitizeHero(null), defaultHero());
   assert.deepEqual(sanitizeHero('{not json'), defaultHero());
-  const h = sanitizeHero({ body: 'robot', hoodie: 'lime', len: 'long', name: 42 });
-  assert.equal(h.body, 'masc'); assert.equal(h.hoodie, 'lime'); assert.equal(h.length, defaultHero().length); assert.equal(h.name, '');
+  const h = sanitizeHero({ body: 'robot', hoodie: 'lime', length: 'long', beardCol: 'ginger', style: 'locs', name: 42 });
+  assert.equal(h.body, 'masc'); assert.equal(h.hoodie, 'lime'); assert.equal(h.style, defaultHero().style); assert.equal(h.name, '');
+  assert.ok(!('length' in h) && !('beardCol' in h), 'old keys dropped');
 });
 
 test('cleanName strips controls, trims, clamps to 16 code points', () => {

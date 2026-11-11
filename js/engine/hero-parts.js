@@ -3,15 +3,13 @@
 
 export const OPTIONS = {
   body: ['masc', 'fem', 'nb'],
-  skin: [0, 1, 2, 3, 4],
-  hair: ['black', 'brown', 'blonde', 'ginger', 'violet'],
-  length: ['buzz', 'short', 'medium', 'long'],
-  style: ['straight', 'curly', 'spiky', 'locs', 'undercut'],
-  beard: ['none', 'stubble', 'goatee', 'full', 'big'],
-  beardCol: ['black', 'brown', 'blonde', 'ginger', 'violet'],
+  skin: [0, 1, 2, 3],
+  hair: ['black', 'brown', 'blonde', 'ginger', 'violet'],          // colour; the beard takes it too
+  style: ['mohawk', 'standard', 'shoulder', 'long', 'fro'],           // mohawk = buzzed sides, short textured top
+  beard: ['none', 'short', 'long'],
   hoodie: ['honey', 'ink', 'teal', 'indigo', 'lime'],
   jeans: ['indigo', 'black', 'light', 'grey', 'khaki'],
-  glasses: ['none', 'round', 'square', 'thick'],
+  glasses: ['none', 'glasses'],
   hold: ['laptop', 'coffee', 'phone', 'duck', 'pager'],
 };
 export const CONFIG_KEYS = Object.keys(OPTIONS);
@@ -25,13 +23,13 @@ export const WALK = {
   walk4: [0, 0, 0, 0, 1, 0, 0],
 };
 export const PRESETS = {
-  masc: { body: 'masc', skin: 1, hair: 'black', length: 'short', style: 'straight', beard: 'stubble', beardCol: 'black', hoodie: 'ink', jeans: 'indigo', glasses: 'none', hold: 'laptop' },
-  fem: { body: 'fem', skin: 2, hair: 'brown', length: 'long', style: 'straight', beard: 'none', beardCol: 'brown', hoodie: 'honey', jeans: 'black', glasses: 'round', hold: 'coffee' },
-  nb: { body: 'nb', skin: 0, hair: 'violet', length: 'medium', style: 'undercut', beard: 'none', beardCol: 'violet', hoodie: 'teal', jeans: 'grey', glasses: 'square', hold: 'phone' },
+  masc: { body: 'masc', skin: 0, hair: 'black', style: 'standard', beard: 'short', hoodie: 'ink', jeans: 'indigo', glasses: 'none', hold: 'laptop' },
+  fem: { body: 'fem', skin: 1, hair: 'brown', style: 'long', beard: 'none', hoodie: 'honey', jeans: 'black', glasses: 'glasses', hold: 'coffee' },
+  nb: { body: 'nb', skin: 0, hair: 'violet', style: 'mohawk', beard: 'none', hoodie: 'teal', jeans: 'grey', glasses: 'glasses', hold: 'phone' },
 };
 
 export const OUTLINE = '#1a1424';
-export const SKIN = ['#F6D8BE', '#E5B48E', '#C2865A', '#8F5B38', '#5A3826'];
+export const SKIN = ['#E5B48E', '#C2865A', '#8F5B38', '#5A3826'];
 export const HAIR = { black: '#262430', brown: '#5C3A1E', blonde: '#D9B85A', ginger: '#C0522A', violet: '#7B4FB8' };
 export const HOODIE = { honey: '#E8A000', ink: '#2B3647', teal: '#1F8FD6', indigo: '#51368D', lime: '#5FA81A' };
 export const JEANS = { indigo: '#34497E', black: '#23232A', light: '#7F9CC4', grey: '#5B5F66', khaki: '#B59B6A' };

@@ -5,8 +5,8 @@ import { OPTIONS, SKIN, HAIR, HOODIE, JEANS } from '../engine/hero-parts.js';
 import { FACE_ROWS, KIT_ROWS, LABELS, BODY_LABELS, pick, randomHero, cleanName, displayName, sanitizeHero } from '../creator-state.js';
 import { colButton } from '../engine/ui.js';
 
-const SWATCH = { skin: (v) => SKIN[v], hair: (v) => HAIR[v], beardCol: (v) => HAIR[v], hoodie: (v) => HOODIE[v], jeans: (v) => JEANS[v] };
-const THUMB = { length: HEAD_CROP, style: HEAD_CROP, beard: HEAD_CROP, glasses: HEAD_CROP, hold: HAND_CROP };
+const SWATCH = { skin: (v) => SKIN[v], hair: (v) => HAIR[v], hoodie: (v) => HOODIE[v], jeans: (v) => JEANS[v] };
+const THUMB = { style: HEAD_CROP, beard: HEAD_CROP, glasses: HEAD_CROP, hold: HAND_CROP };
 
 export function createCreatorScreen(game) {
   let hero, page = 'face', els = {}, heroCtx = null, nameSheet = null;
@@ -16,10 +16,8 @@ export function createCreatorScreen(game) {
     const c = document.createElement('canvas');
     c.width = crop.w * 2; c.height = crop.h * 2;
     c.setAttribute('aria-hidden', 'true');
-    // a thumbnail previews the choice on the current hero; buzz hides style, so style thumbs use a visible length
-    let preview = pick(hero, key, value);
-    if (key === 'style' && preview.length === 'buzz') preview = { ...preview, length: 'short' };
-    drawHeroCrop(c.getContext('2d'), preview, crop, 2);
+    // a thumbnail previews the choice on the current hero
+    drawHeroCrop(c.getContext('2d'), pick(hero, key, value), crop, 2);
     return c;
   }
 

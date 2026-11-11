@@ -38,9 +38,34 @@ def test_deterministic():
 def test_fixtures_cli_writes_json_rgba_png(tmp_path):
     subprocess.run([sys.executable, 'tools/hero_gen.py', '--fixtures', str(tmp_path)], check=True)
     names = sorted(p[:-5] for p in os.listdir(tmp_path) if p.endswith('.json'))
-    assert 'masc-idle' in names and 'masc-walk3' in names and 'var-locs' in names
+    assert 'masc-idle' in names and 'masc-walk3' in names and 'var-fro' in names
     for n in names:
         cfg = json.load(open(tmp_path / f'{n}.json'))
         assert set(cfg) == set(hero_gen.CONFIG_KEYS) | {'pose'}
         assert os.path.getsize(tmp_path / f'{n}.rgba') == 28 * 72 * 4
         assert (tmp_path / f'{n}.png').exists()
+
+
+def test_simplified_option_lists():
+    o = hero_gen.OPTIONS
+    assert o['skin'] == [0, 1, 2, 3]                                  # the palest tone is gone
+    assert o['style'] == ['mohawk', 'standard', 'shoulder', 'long', 'fro']   # mohawk = buzzed sides, short top
+    assert o['beard'] == ['none', 'short', 'long']
+    assert o['glasses'] == ['none', 'glasses']
+    assert 'length' not in o and 'beardCol' not in o
+
+
+def test_beard_uses_hair_colour():
+    cfg = {**hero_gen.PRESETS['masc'], 'hair': 'ginger', 'beard': 'long'}
+    im = hero_gen.hero(**cfg)
+    ginger = hero_gen.hexc(hero_gen.HAIR['ginger'])[:3]
+    beard_px = im.getpixel((13, 20))[:3]                              # chin area of the long beard
+    assert beard_px == ginger or beard_px == hero_gen.ramp(hero_gen.HAIR['ginger'], light=1.3, shade=0.7)['S'][:3]
+
+
+def test_styles_differ_from_each_other():
+    seen = set()
+    for st in hero_gen.OPTIONS['style']:
+        b = hero_gen.hero(**{**hero_gen.PRESETS['masc'], 'style': st}).tobytes()
+        assert b not in seen, st
+        seen.add(b)

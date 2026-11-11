@@ -1,14 +1,12 @@
 {
- "beard": "stubble",
- "beardCol": "black",
+ "beard": "short",
  "body": "masc",
  "glasses": "none",
  "hair": "black",
  "hold": "laptop",
  "hoodie": "ink",
  "jeans": "indigo",
- "length": "short",
  "pose": "walk4",
- "skin": 1,
- "style": "straight"
+ "skin": 0,
+ "style": "standard"
 }
