@@ -1,0 +1,40 @@
+{
+ "size": [
+  320,
+  200
+ ],
+ "images": {
+  "A_room_dark": "A_room_dark.png",
+  "B_nightstand": "B_nightstand.png",
+  "C_face_asleep": "C_face_asleep.png",
+  "D_bedroom_vga": "D_bedroom_vga.png",
+  "B_arm": "B_arm.png",
+  "B_lamp": "B_lamp.png",
+  "C_eye_crack": "C_eye_crack.png",
+  "C_awake": "C_awake.png",
+  "C_misery": "C_misery.png",
+  "C_awake_lit": "C_awake_lit.png",
+  "B_lamp_lit": "B_lamp_lit.png"
+ },
+ "lcd": {
+  "x": 92,
+  "y": 62,
+  "w": 136,
+  "h": 36
+ },
+ "wall": {
+  "x": 24,
+  "y": 14,
+  "w": 232,
+  "h": 44
+ },
+ "bed": {
+  "x": 60,
+  "y": 96
+ },
+ "door": {
+  "x": 286
+ },
+ "floorY": 176,
+ "placeholder": true
+}
