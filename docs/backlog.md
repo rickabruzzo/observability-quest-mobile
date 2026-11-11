@@ -54,3 +54,6 @@ block on. Test the restyle under `.hs-form` on a real phone.
 - 40×42 thumbnails overdraw the 3-px pressed border by 1–2 px.
 - Length thumbnails are identical when style = undercut (the generator ignores length for undercut) — substitute a visible length in the sheet, or decide it in the generator.
 - Portrait tablets (> 700 px wide) never see the rotate gate and play letterboxed — fine, but confirm on an iPad mini.
+
+## Roster
+- Emily Nakashima is leaving Honeycomb (noted 2026-11-10). She stays as chapter 2's narrator placeholder — portrait, name, verdict — until a replacement is named; then rewrite `ch2.verdict`, generate the new portrait + blink/talk frames, and swap `portrait_emily`.

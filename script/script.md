@@ -215,7 +215,7 @@ CHRISTINE YEN: Twelve models, one cron job, found in minutes. That's what tracin
 
 ## Chapter 2 — Migrations · Fintech · Platform Engineer
 
-Inspired by a digital bank two years into a monolith-to-microservices migration. Company: **Kestrel Bank**. Narrator: Emily Nakashima.
+Inspired by a digital bank two years into a monolith-to-microservices migration. Company: **Kestrel Bank**. Narrator: Emily Nakashima — **placeholder: Emily is leaving Honeycomb; keep her lines and portrait until a replacement narrator is named** (2026-11-10).
 
 ### ch2.card.title
 PLATFORM ENGINEER
@@ -773,3 +773,4 @@ Three new stories, same hero. The prize is yours already.
 3. Chapter 5's two winning prompts: *Check the evidence first* = 100, *Approve the suggested fix* = 50 (spec). The 50-point result text makes the half-score explicit — too preachy?
 4. The intro slots are placeholders for your script; they show the beat and the length I'd aim for.
 5. Charity's `final.250` tier is new (v0.1 had five solves, not points) — happy to rewrite any of the six.
+6. Chapter 2's narrator: Emily is leaving. Her verdict, name and portrait stay as the placeholder; when the replacement is named, `ch2.verdict` gets rewritten in their voice and the portrait pipeline runs once more (same steps as Jessitron's).
