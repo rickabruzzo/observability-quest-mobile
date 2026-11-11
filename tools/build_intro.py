@@ -15,7 +15,9 @@ PLATES = ['A_room_dark', 'B_nightstand', 'C_face_asleep', 'D_bedroom_vga']
 EDITS = {'B_arm': 'B_nightstand', 'B_lamp': 'B_nightstand', 'C_eye_crack': 'C_face_asleep',
          'C_awake': 'C_face_asleep', 'C_misery': 'C_awake'}                 # edit -> the still it is cut against
 SOURCES = PLATES + list(EDITS)
-OPTIONAL = {'D_door_open': 'D_bedroom_vga'}                            # extra edits: built when delivered, never a placeholder
+# extra edits, in build order: built when delivered, never a placeholder. Each is cut against the first of its
+# candidate plates that exists (the door opens on the laptop-less room when there is one).
+OPTIONAL = {'D_laptop_gone': ['D_bedroom_vga'], 'D_door_open': ['D_laptop_gone', 'D_bedroom_vga']}
 DERIVED = ['C_awake_lit', 'B_lamp_lit']
 MAX_DRIFT = 0.5                     # an edit may remove an object and add a hand; past half the frame it is another picture
 COLOURS = 32
@@ -300,9 +302,10 @@ def build(src, out, placeholders=False, logo_src=LOGO_SRC):
         if n in fake:                               # stand-in drawn on the finished still it is cut against
             done[n] = placeholder(n, base=done[plate]); refs[n] = placeholder(n, base=refs[plate])
         else: make_edit(n, plate)
-    for n, plate in OPTIONAL.items():
+    for n, plates in OPTIONAL.items():
         path = os.path.join(src, f'{n}.png')
-        if placeholders or plate in fake or not os.path.exists(path):
+        plate = next((p for p in plates if p in done and p not in fake), None)
+        if placeholders or plate is None or not os.path.exists(path):
             if os.path.exists(os.path.join(out, f'{n}.png')): os.remove(os.path.join(out, f'{n}.png'))
             continue
         im = Image.open(path)

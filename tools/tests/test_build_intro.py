@@ -269,3 +269,23 @@ def test_manifest_places_the_item_on_the_dresser(tmp_path):
     assert set(m['item']) == {'x', 'y'}
     src = tmp_path / 'src'; os.makedirs(src); json.dump({'item': {'x': 190, 'y': 120}}, open(src / 'intro.overrides.json', 'w'))
     assert bi.build(str(src), str(tmp_path / 'out'), placeholders=True)['item'] == {'x': 190, 'y': 120}
+
+
+# ---- bedroom round 2: the laptop is painted on the dresser; taking it and opening the door are chained edits ----
+def test_laptop_gone_and_door_open_chain(tmp_path):
+    src = _real_src(tmp_path); out = str(tmp_path / 'out')
+    base = np.asarray(Image.open(src / 'D_bedroom_vga.png').convert('RGB')).copy()
+    base[160:200, 360:420] = (200, 200, 210)                            # a laptop on the dresser
+    Image.fromarray(base, 'RGB').save(src / 'D_bedroom_vga.png')
+    gone = base.copy(); gone[160:200, 360:420] = (90, 60, 30)           # ...taken
+    Image.fromarray(gone, 'RGB').save(src / 'D_laptop_gone.png')
+    door = gone.copy(); door[100:300, 500:600] = (4, 4, 10)             # the door open, built on the laptop-less room
+    Image.fromarray(door, 'RGB').save(src / 'D_door_open.png')
+    m = bi.build(str(src), out)
+    assert {'D_laptop_gone', 'D_door_open'} <= set(m['images'])
+    g, d, b = _px(out, m, 'D_laptop_gone'), _px(out, m, 'D_door_open'), _px(out, m, 'D_bedroom_vga')
+    ys, xs = np.nonzero((g != b).any(axis=2)); assert xs.min() >= 179 and xs.max() <= 210 and ys.min() >= 79 and ys.max() <= 100
+    ys, xs = np.nonzero((d != g).any(axis=2)); assert xs.min() >= 249 and xs.max() <= 300      # against the laptop-less room: only the door
+    os.remove(src / 'D_laptop_gone.png')                                # without it, the door edit is cut against the bedroom itself
+    m = bi.build(str(src), out)
+    assert 'D_laptop_gone' not in m['images'] and 'D_door_open' in m['images']

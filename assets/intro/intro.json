@@ -13,6 +13,8 @@
   "C_eye_crack": "C_eye_crack.png",
   "C_awake": "C_awake.png",
   "C_misery": "C_misery.png",
+  "D_laptop_gone": "D_laptop_gone.png",
+  "D_door_open": "D_door_open.png",
   "C_awake_lit": "C_awake_lit.png",
   "B_lamp_lit": "B_lamp_lit.png",
   "wall_logo": "wall_logo.png"
@@ -24,49 +26,49 @@
   "h": 36
  },
  "wall": {
-  "x": 41,
+  "x": 51,
   "y": 0,
-  "w": 198,
-  "h": 100
+  "w": 188,
+  "h": 89
  },
  "bed": {
-  "x": 74,
+  "x": 80,
   "y": 131
  },
  "stand": {
-  "x": 158
+  "x": 160
  },
  "door": {
-  "x": 261,
-  "y": 154
+  "x": 249,
+  "y": 152
  },
  "floorY": 178,
  "clothes": {
-  "x": 176,
-  "y": 190
+  "x": 108,
+  "y": 189
  },
  "item": {
-  "x": 140,
-  "y": 129
+  "x": 191,
+  "y": 110
  },
  "doorway": {
   "x": 246,
-  "y": 27,
-  "w": 58,
-  "h": 126
+  "y": 25,
+  "w": 34,
+  "h": 127
  },
  "lcdFound": true,
  "placeholder": false,
  "logo": {
-  "x": 46,
+  "x": 56,
   "y": 6,
-  "w": 188,
-  "h": 52
+  "w": 178,
+  "h": 49
  },
  "subtitle": {
-  "x": 41,
-  "y": 60,
-  "w": 198,
+  "x": 51,
+  "y": 57,
+  "w": 188,
   "h": 16
  }
 }

@@ -168,5 +168,17 @@ Plates approved by Rick 2026-11-11; the five edits are awaiting his review.
 `C_awake_lit` and `B_lamp_lit` are derived by the build (palette lifts), not generated. The LCD text is drawn by the game. The wall title
 is the app's Observability Quest wordmark, cut from `assets/title_screen.png` by the build (`wall_logo.png`).
 
-Round 2 (pending): a furnished `D_bedroom_vga` made as an edit of the round-1 plate, and `D_door_open`, an edit of that —
-`briefs/intro-bedroom-round2-agent-brief.md`. The clothes on the floor and the Honeycomb mark on the hoodie are drawn by the game.
+### Bedroom round 2 (2026-11-11)
+
+Gemini API `gemini-3.1-flash-image`, 3:2, 1K, on Rick's personal account, following `briefs/intro-bedroom-round2-agent-brief.md`
+plus Rick's direction in the session. Every frame is an edit of the one before it; exact text in `scratch/intro_gen/gen.py`
+(`FULL` entries `D_bedroom_vga`, `D_bedroom_r3`, `D_laptop_gone`, `D_door_open`). Earlier versions are in `scratch/intro_gen/raw/tries/`.
+
+| File | Built on | Tries → kept | Notes |
+|---|---|---|---|
+| `D_bedroom_vga` (final) | round-2 furnished room, itself an edit of the round-1 plate | 5 → `D_bedroom_r3_t3` | Wall shelf and two pictures on the left side wall; dresser one drawer taller, top drawer open with clothes spilling out, an open laptop on top; rug and plant. Title area is now 188×89. Pictures sit just below the shelf. |
+| `D_laptop_gone` | final `D_bedroom_vga` | 3 → t1 | Only the laptop removed (a faint mark remains on the wall above the dresser). |
+| `D_door_open` | `D_laptop_gone` | 3 → t9 | Door swung into the room, dark hallway. The leaf reaches the floor at y 171. |
+
+Not yet signed off by Rick. The clothes on the floor, the Honeycomb mark on the hoodie, and any carried item other than
+a laptop are drawn by the game.

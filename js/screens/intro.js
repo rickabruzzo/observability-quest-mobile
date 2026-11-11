@@ -33,7 +33,7 @@ export function preloadIntro() {
     if (!Number.isFinite(manifest.floorY)) throw new Error('intro.json: no floorY');
     const need = new Set(SHOTS.flatMap((s) => [s.image, s.alt].filter(Boolean)));
     if (manifest.images.wall_logo && manifest.logo && manifest.subtitle) need.add('wall_logo');
-    if (manifest.images.D_door_open) need.add('D_door_open');
+    for (const n of ['D_door_open', 'D_laptop_gone']) if (manifest.images[n]) need.add(n);
     const images = new Map();
     await Promise.all([...need].map((name) => new Promise((ok, fail) => {
       if (!manifest.images[name]) return fail(new Error(`intro.json: no image ${name}`));
@@ -157,6 +157,8 @@ export function createIntroScreen(game) {
     const g = ctx.ctx2d, cfg = ctx.hero;
     const standX = Number.isFinite(m.stand?.x) ? m.stand.x : m.bed.x + STAND_DX, standY = m.floorY - HERO_H;
     if (ctx.reducedMotion) {
+      const bareRoom = assets.images.get('D_laptop_gone');      // the hero already has their item
+      if (bareRoom) g.drawImage(bareRoom, 0, 0, 320, 200);
       showTitle(ctx, m, true);
       drawHero(g, cfg, 'idle', standX, standY, 1);
       heroState = { pose: 'idle', outfit: 'hoodie', x: standX, visible: true, pile: false, holding: true, doorOpen: false };
@@ -166,13 +168,19 @@ export function createIntroScreen(game) {
     const h = heroAt(t);
     const e = h.walking ? exitAt(exitPlan({ standX, doorX: m.door.x, floorY: m.floorY, doorY: Number.isFinite(m.door.y) ? m.door.y : m.floorY }), t - WALK_AT) : null;
     const pile = h.outfit === 'pj' && !!m.clothes;         // on the floor until the change puts them on the hero
-    const onDresser = !h.holding && !!m.item && !!item;    // the hero's item waits on the dresser until it is taken
+    // The room is painted with a laptop on the dresser, and again without it. A hero who carries a laptop gets
+    // the painted one until they take it; any other item is drawn on the bare dresser top instead.
+    const bareRoom = assets.images.get('D_laptop_gone');
+    const painted = !!bareRoom && cfg.hold === 'laptop';
+    const onDresser = !h.holding && !painted && !!m.item && !!item;
     const bare = h.holding ? cfg : { ...cfg, hold: 'none' };
-    if (e?.doorOpen) openDoor(g, m);
+    let plate = 'D_bedroom_vga';
+    if (bareRoom && (h.holding || !painted)) { g.drawImage(bareRoom, 0, 0, 320, 200); plate = 'D_laptop_gone'; }
+    if (e?.doorOpen) { openDoor(g, m); plate = assets.images.get('D_door_open') ? 'D_door_open' : plate; }
     showTitle(ctx, m, h.titled);
     if (pile) drawClothes(g, cfg, m.clothes.x, m.clothes.y);
     if (onDresser) for (const [dx, dy, c] of item) { g.fillStyle = c; g.fillRect(m.item.x + dx, m.item.y + dy, 1, 1); }
-    heroState = { pose: h.pose, outfit: h.outfit, x: standX, visible: h.visible, pile, holding: h.holding, doorOpen: !!e?.doorOpen };
+    heroState = { pose: h.pose, outfit: h.outfit, x: standX, visible: h.visible, pile, holding: h.holding, doorOpen: !!e?.doorOpen, plate };
     if (e) {
       if (e.visible) drawHero(g, cfg, e.pose, e.x, e.y - HERO_H, 1, { flip: e.flip });
       Object.assign(heroState, { pose: e.pose, outfit: 'hoodie', x: e.x, visible: e.visible });

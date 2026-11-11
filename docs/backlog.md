@@ -84,4 +84,4 @@ block on. Test the restyle under `.hs-form` on a real phone.
 - The 4×4 chest mark disappears into same-coloured hoodies (honey on honey, blue on teal, green on lime) — a pixel of outline or a light patch behind it would fix that.
 - Character sheet scales up on big windows now; the thumb-column buttons and the name sheet do not yet.
 - Title screen is still a text placeholder; use the wordmark (and title art) there in the title sub-project.
-- Until the furnished bedroom plate lands, the hero's item waits on the nightstand (`item` in the overrides) — move it to the dresser top with the new measurements.
+- Furnished bedroom, `D_laptop_gone` and `D_door_open` landed 2026-11-11 and are placed from the hand-back's measurements; awaiting Rick's sign-off. `D_laptop_gone` keeps a faint mark on the wall above the dresser — redo that edit if it shows on a phone.

@@ -237,3 +237,24 @@ test('the hero stands where the manifest says', async () => {
   assert.equal((await intro(page)).hero.x, 150);
   await ctx.close();
 });
+
+test('the dresser shows the hero\'s own item: the painted laptop for a laptop, otherwise theirs on a bare top', async () => {
+  for (const [hold, before] of [['laptop', 'D_bedroom_vga'], ['duck', 'D_laptop_gone']]) {
+    const ctx = await browser.newContext({ viewport: { width: 844, height: 390 }, deviceScaleFactor: 1, hasTouch: true, isMobile: true });
+    const page = await ctx.newPage();
+    await page.goto(server.baseURL, { waitUntil: 'load' });
+    await page.waitForFunction(() => window.__oq?.ready === true);
+    await page.click('#btn-start'); await page.waitForFunction(() => document.body.dataset.screen === 'CREATOR'); await page.waitForTimeout(400);
+    await page.click('.tab[data-page="kit"]'); await page.click(`.opt[data-key="hold"][data-value="${hold}"]`);
+    await page.click('#btn-start-game'); await running(page);
+    if (!(await page.evaluate(() => !!window.__oq.intro.manifest.images.D_laptop_gone))) { await ctx.close(); return; }   // placeholder art has no such still
+    for (let i = 0; i < 8; i++) { await page.waitForTimeout(300); await tapScene(page); }
+    await page.waitForFunction(() => window.__oq.intro.hero?.pose === 'situp');
+    assert.equal((await intro(page)).hero.plate, before, hold);
+    await page.waitForFunction(() => window.__oq.intro.hero?.holding === true, null, { timeout: 6000 });
+    assert.equal((await intro(page)).hero.plate, 'D_laptop_gone', hold);
+    await page.waitForFunction(() => window.__oq.intro.hero?.doorOpen === true, null, { timeout: 6000 });
+    assert.equal((await intro(page)).hero.plate, 'D_door_open', hold);
+    await ctx.close();
+  }
+});
