@@ -1,5 +1,7 @@
 // Title screen — placeholder card until the title-art sub-project. START → character creation.
 
+import { colButton } from '../engine/ui.js';
+
 export function createTitleScreen(game) {
   let startBtn = null;
   return {
@@ -15,9 +17,7 @@ export function createTitleScreen(game) {
           <h1>OBSERVABILITY<br>QUEST</h1>
           <p>Honeycomb presents a night on call</p>
         </div>`;
-      startBtn = document.createElement('button');
-      startBtn.type = 'button'; startBtn.id = 'btn-start'; startBtn.className = 'btn-sierra go'; startBtn.textContent = 'Start';
-      startBtn.addEventListener('click', () => game.go('CREATOR'));
+      startBtn = colButton({ id: 'btn-start', long: 'Start', short: 'Go', className: 'go', onClick: () => game.go('CREATOR') });
       ctx.colR.appendChild(startBtn);
     },
     exit(ctx) {

@@ -28,7 +28,7 @@ test('tap right: hero walks right over time, lands at the tap, ends idle', async
   const sc = await page.locator('#scene').boundingBox();
   const x0 = (await pv(page)).x;
   await page.mouse.click(sc.x + sc.width * 0.85, sc.y + sc.height * 0.9);
-  await page.waitForTimeout(150);
+  await page.waitForTimeout(90);
   const mid = await pv(page);
   assert.ok(mid.walking && mid.x > x0 && /^walk[1-4]$/.test(mid.pose), JSON.stringify(mid));
   await page.waitForFunction(() => window.__oq.preview.walking === false, null, { timeout: 6000 });
@@ -42,7 +42,7 @@ test('tap left flips the sprite', async () => {
   const { ctx, page } = await openPreview();
   const sc = await page.locator('#scene').boundingBox();
   await page.mouse.click(sc.x + sc.width * 0.1, sc.y + sc.height * 0.9);
-  await page.waitForTimeout(120);
+  await page.waitForTimeout(60);
   assert.equal((await pv(page)).flip, true);
   await ctx.close();
 });
@@ -60,15 +60,19 @@ test('reduced motion teleports', async () => {
 test('rotating to portrait mid-walk pauses; rotating back resumes from the same x', async () => {
   const { ctx, page } = await openPreview();
   const sc = await page.locator('#scene').boundingBox();
-  await page.mouse.click(sc.x + sc.width * 0.9, sc.y + sc.height * 0.9);
-  await page.waitForTimeout(120);
+  await page.mouse.click(sc.x + sc.width * 0.95, sc.y + sc.height * 0.9);
+  await page.waitForTimeout(60);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.waitForTimeout(50);
   const a = (await pv(page)).x;
+  assert.ok((await pv(page)).walking, 'still mid-walk when rotated');
   await page.waitForTimeout(300);
   const b = (await pv(page)).x;
-  assert.equal(a, b);
+  assert.equal(a, b, 'frozen while portrait');
   await page.setViewportSize({ width: 844, height: 390 });
+  await page.waitForTimeout(40);                      // one or two frames after resuming
+  const c = (await pv(page)).x;
+  assert.ok(c >= a && c - a <= 20, `resumed from ${a}, now ${c}`);  // continues from where it froze, no jump
   await page.waitForFunction(() => window.__oq.preview.walking === false, null, { timeout: 6000 });
   await ctx.close();
 });

@@ -14,12 +14,13 @@ export const MIN_COL = 56;
 export function fitStage(vw, vh, { statusH = STATUS_H, minCol = MIN_COL } = {}) {
   let sceneH = Math.max(0, vh - statusH);
   let sceneW = Math.floor(sceneH * (SCENE_W / SCENE_H));
-  // Height first; on a phone, shrink only when the thumb columns would get too thin.
-  if ((vw - sceneW) / 2 < minCol && vw < 1024) {
+  // Height first; shrink when the thumb columns would get thinner than minCol (any width —
+  // a 4:3 tablet or a squarish desktop window otherwise pushes the columns off-screen).
+  if ((vw - sceneW) / 2 < minCol) {
     sceneW = Math.max(0, vw - 2 * minCol);
     sceneH = Math.floor(sceneW / (SCENE_W / SCENE_H));
   }
-  const colW = Math.floor((vw - sceneW) / 2);
+  const colW = Math.max(0, Math.floor((vw - sceneW) / 2));
   return { sceneW, sceneH, colW, scale: sceneW / SCENE_W };
 }
 

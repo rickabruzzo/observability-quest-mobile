@@ -3,6 +3,7 @@
 import { drawHero, drawHeroCrop, HEAD_CROP, HAND_CROP } from '../engine/hero.js';
 import { OPTIONS, SKIN, HAIR, HOODIE, JEANS } from '../engine/hero-parts.js';
 import { FACE_ROWS, KIT_ROWS, LABELS, BODY_LABELS, pick, randomHero, cleanName, displayName, sanitizeHero } from '../creator-state.js';
+import { colButton } from '../engine/ui.js';
 
 const SWATCH = { skin: (v) => SKIN[v], hair: (v) => HAIR[v], beardCol: (v) => HAIR[v], hoodie: (v) => HOODIE[v], jeans: (v) => JEANS[v] };
 const THUMB = { length: HEAD_CROP, style: HEAD_CROP, beard: HEAD_CROP, glasses: HEAD_CROP, hold: HAND_CROP };
@@ -35,6 +36,14 @@ export function createCreatorScreen(game) {
 
   function renderRows() {
     els.rows.innerHTML = '';
+    if (page === 'kit') {
+      const row = document.createElement('div'); row.className = 'sheet-row name-row';
+      const label = document.createElement('span'); label.className = 'sheet-label'; label.textContent = 'Name';
+      const btn = document.createElement('button'); btn.type = 'button'; btn.id = 'name-btn';
+      btn.addEventListener('click', openNameSheet);
+      row.append(label, btn); els.rows.appendChild(row);
+      els.nameBtn = btn; renderName();
+    }
     for (const key of page === 'face' ? FACE_ROWS : KIT_ROWS) {
       const row = document.createElement('div'); row.className = 'sheet-row';
       const label = document.createElement('span'); label.className = 'sheet-label'; label.textContent = LABELS[key];
@@ -55,6 +64,7 @@ export function createCreatorScreen(game) {
   }
 
   function renderName() {
+    if (!els.nameBtn || !els.nameBtn.isConnected) return;
     els.nameBtn.textContent = hero.name || 'optional';
     els.nameBtn.classList.toggle('empty', !hero.name);
     els.nameBtn.setAttribute('aria-label', `Name: ${displayName(hero)}. Tap to change`);
@@ -76,17 +86,18 @@ export function createCreatorScreen(game) {
   }
 
   function openNameSheet() {
-    nameSheet = document.createElement('div');
-    nameSheet.id = 'name-sheet';
-    nameSheet.innerHTML = `
+    if (nameSheet) return;                      // a second tap while open does nothing
+    const sheet = nameSheet = document.createElement('div');
+    sheet.id = 'name-sheet';
+    sheet.innerHTML = `
       <div class="row"><span class="lbl">Name :</span><input type="text" maxlength="24" autocomplete="off" autocapitalize="words" enterkeyhint="done" aria-label="Hero name"></div>
       <div class="small">Up to 16 characters. Leave it blank to be “the Engineer”.</div>
       <div class="row"><button type="button" class="btn-sierra go">Done</button></div>`;
-    const input = nameSheet.querySelector('input'); input.value = hero.name;
-    const done = () => { update({ ...hero, name: cleanName(input.value) }); nameSheet.remove(); nameSheet = null; };
-    nameSheet.querySelector('button').addEventListener('click', done);
+    const input = sheet.querySelector('input'); input.value = hero.name;
+    const done = () => { if (!sheet.isConnected) return; update({ ...hero, name: cleanName(input.value) }); sheet.remove(); if (nameSheet === sheet) nameSheet = null; };
+    sheet.querySelector('button').addEventListener('click', done);
     input.addEventListener('keydown', (e) => { if (e.key === 'Enter') done(); });
-    document.body.appendChild(nameSheet);
+    document.body.appendChild(sheet);
     input.focus();
   }
 
@@ -96,29 +107,27 @@ export function createCreatorScreen(game) {
       page = 'face';
       ctx.overlay.innerHTML = `
         <div class="sheet">
-          <div class="sheet-top">
-            <div class="sheet-name"><span class="lbl">Name :</span><button type="button" id="name-btn"></button></div>
-            <div class="hint">Tap a square to change · Random rolls the dice</div>
-            <nav class="tabs" aria-label="Sheet pages"><button type="button" class="tab on" data-page="face">Face</button><button type="button" class="tab" data-page="kit">Kit</button></nav>
-          </div>
           <div class="frame"><div class="jewel l" aria-hidden="true"></div><div class="jewel r" aria-hidden="true"></div>
             <div class="frame-inner"><canvas id="hero-view" width="28" height="72" aria-label="Your hero"></canvas></div></div>
           <div class="sheet-rows"></div>
         </div>`;
-      els = { rows: ctx.overlay.querySelector('.sheet-rows'), nameBtn: ctx.overlay.querySelector('#name-btn') };
+      els = { rows: ctx.overlay.querySelector('.sheet-rows'), nameBtn: null };
       heroCtx = ctx.overlay.querySelector('#hero-view').getContext('2d');
-      for (const t of ctx.overlay.querySelectorAll('.tab')) t.addEventListener('click', () => {
-        page = t.dataset.page;
-        for (const x of ctx.overlay.querySelectorAll('.tab')) x.classList.toggle('on', x === t);
-        renderRows();
-      });
-      els.nameBtn.addEventListener('click', openNameSheet);
-      const random = document.createElement('button');
-      random.type = 'button'; random.id = 'btn-random'; random.className = 'btn-sierra'; random.textContent = 'Random';
-      random.addEventListener('click', () => update({ ...randomHero(), name: hero.name }, { rerender: true }));
-      const start = document.createElement('button');
-      start.type = 'button'; start.id = 'btn-start-game'; start.className = 'btn-sierra go'; start.textContent = 'Start';
-      start.addEventListener('click', () => { ctx.hero = hero; ctx.saveHero(hero); game.go('PREVIEW'); });
+      // page tabs sit in the left thumb column, above RANDOM
+      const tabs = document.createElement('nav'); tabs.className = 'tabs'; tabs.setAttribute('aria-label', 'Sheet pages');
+      for (const [id, label] of [['face', 'Face'], ['kit', 'Kit']]) {
+        const t = colButton({ id: `tab-${id}`, long: label, className: `tab${id === page ? ' on' : ''}` });
+        t.dataset.page = id;
+        t.addEventListener('click', () => {
+          page = id;
+          for (const x of tabs.querySelectorAll('.tab')) x.classList.toggle('on', x === t);
+          renderRows();
+        });
+        tabs.appendChild(t);
+      }
+      ctx.colL.appendChild(tabs); els.tabs = tabs;
+      const random = colButton({ id: 'btn-random', long: 'Random', short: 'Roll', onClick: () => update({ ...randomHero(), name: hero.name }, { rerender: true }) });
+      const start = colButton({ id: 'btn-start-game', long: 'Start', short: 'Go', className: 'go', onClick: () => { ctx.hero = hero; ctx.saveHero(hero); game.go('PREVIEW'); } });
       ctx.colL.appendChild(random); ctx.colR.appendChild(start);
       els.random = random; els.start = start;
       update(hero, { rerender: true });
@@ -126,7 +135,7 @@ export function createCreatorScreen(game) {
     },
     exit(ctx) {
       nameSheet?.remove(); nameSheet = null;
-      els.random?.remove(); els.start?.remove();
+      els.tabs?.remove(); els.random?.remove(); els.start?.remove();
       ctx.overlay.innerHTML = '';
       els = {}; heroCtx = null;
     },

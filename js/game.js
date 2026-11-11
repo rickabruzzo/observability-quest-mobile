@@ -53,6 +53,7 @@ function resize() {
   const vw = window.innerWidth, vh = window.innerHeight;
   ctx.fit = fitStage(vw, vh);
   applyStage(document.documentElement, ctx.fit);
+  document.body.dataset.cols = ctx.fit.colW < 96 ? 'narrow' : 'wide';
   paused = isPortrait(vw, vh) && vw <= 700;
 }
 

@@ -4,6 +4,7 @@
 
 import { drawHero, HERO_W, HERO_H } from '../engine/hero.js';
 import { planWalk, stepWalk } from '../engine/walk.js';
+import { colButton } from '../engine/ui.js';
 
 export const FLOOR_Y = 180;          // the hero's feet sit on this logical row
 const START_X = 146;
@@ -51,9 +52,7 @@ export function createPreviewScreen(game) {
       };
       // listen on the scene box: the overlay sits over the canvas and would swallow the tap
       ctx.canvas.parentElement.addEventListener('pointerdown', onTap);
-      redo = document.createElement('button');
-      redo.type = 'button'; redo.id = 'btn-redo'; redo.className = 'btn-sierra'; redo.textContent = 'Sheet';
-      redo.addEventListener('click', () => game.go('CREATOR'));
+      redo = colButton({ id: 'btn-redo', long: 'Sheet', short: 'Edit', onClick: () => game.go('CREATOR') });
       ctx.colR.appendChild(redo);
       paint(ctx);
       window.__oq && (window.__oq.preview = { get x() { return x; }, get pose() { return pose; }, get walking() { return plan !== null; }, get flip() { return flip; } });

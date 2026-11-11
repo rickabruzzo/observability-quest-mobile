@@ -16,16 +16,24 @@ async function open(width, height, opts = {}) {
   return { ctx, page };
 }
 const box = (page, sel) => page.locator(sel).boundingBox();
+/** Every column control must sit fully inside the viewport and be a real tap target. */
+async function assertOnScreen(page, sel, w, h) {
+  const b = await box(page, sel);
+  assert.ok(b, `${sel} missing`);
+  assert.ok(b.x >= 0 && b.y >= 0 && b.x + b.width <= w + 0.5 && b.y + b.height <= h + 0.5, `${sel} off-screen at ${w}x${h}: ${JSON.stringify(b)}`);
+  assert.ok(b.width >= 44 && b.height >= 44, `${sel} too small at ${w}x${h}: ${b.width}x${b.height}`);
+}
 
-for (const [w, h] of [[844, 390], [667, 375], [932, 430]]) {
-  test(`${w}x${h}: scene is 16:10 under the bar, columns >= 56, no overflow`, async () => {
-    const { ctx, page } = await open(w, h);
+for (const [w, h] of [[844, 390], [667, 375], [932, 430], [800, 360], [1024, 768], [1180, 820], [1280, 800]]) {
+  test(`${w}x${h}: scene is 16:10 under the bar, columns >= 56, START on screen`, async () => {
+    const { ctx, page } = await open(w, h, w >= 1024 ? { isMobile: false, hasTouch: false } : {});
     const sb = await box(page, '#statusbar'), sc = await box(page, '#scene'), cl = await box(page, '#col-l');
     assert.equal(Math.round(sb.height), 20);
     assert.ok(Math.abs(sc.width / sc.height - 1.6) < 0.02, `ratio ${sc.width / sc.height}`);
     assert.ok(sc.y >= 20 && sc.y + sc.height <= h + 1, `scene y ${sc.y} h ${sc.height}`);
     assert.ok(cl.width >= 56, `col ${cl.width}`);
-    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
+    assert.ok(sc.x + sc.width <= w + 0.5, `scene overflows: ${sc.x + sc.width} > ${w}`);
+    await assertOnScreen(page, '#btn-start', w, h);
     assert.equal(await page.evaluate(() => document.body.dataset.screen), 'TITLE');
     await ctx.close();
   });

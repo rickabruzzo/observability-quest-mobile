@@ -1,7 +1,7 @@
 // Walk planning and stepping along the floor line. Pure functions; the screen owns time.
 
 export const WALK_FPS = 10;
-export const WALK_SPEED = 60; // logical px per second
+export const WALK_SPEED = 300; // logical px per second — a full 320 px room in ≈1.07 s (spec: ≤ 1.2 s)
 const FRAMES = ['walk1', 'walk2', 'walk3', 'walk4'];
 
 /** @returns {{ fromX: number, toX: number, dir: 1|-1, duration: number }} duration in ms (0 when already there) */
