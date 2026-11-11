@@ -2,7 +2,7 @@
 
 **Date:** 2026-11-10
 **Owner:** Rick Abruzzo (Honeycomb Field & Events)
-**Status:** Reviewed by builder-check; awaiting Rick's approval
+**Status:** Approved by Rick 2026-11-10, with the expectation that the script will bring pivots; this document is updated as they land. Build order starts with character creation.
 **Supersedes:** the v0.1 CYOA port (tag `v0.1-cyoa`, branch `main`) — which stays deployable as the rollback.
 **Branch:** `sci-adventure`
 
@@ -60,7 +60,7 @@ This is **a game, not a toolkit**: we replicate the experience of an SCI-era gam
 0. **Rotate** — a portrait phone sees the *Rotate your phone* screen first; everything below is landscape.
 1. **Title** — new title art (generated, SCI-style), logo rendered crisp from the official SVG (never AI-generated), FM title theme on first tap, START.
 2. **Intro: *Night Shift*** — the character-driven sequence from mock 2, re-shot with real backgrounds: bedroom 3:02 AM → the walk → the wall of green dashboards → the hex on the horizon → "SO YOU WANT TO BE ON CALL?" Skippable. Script by Rick.
-3. **Character creation** — Sierra sheet: hero preview left, pickers right: hair (6 styles × 6 colours), skin (6), glasses (none/round/square), top colour (Honeycomb palette), accessory (headphones / lanyard / coffee). Dice button randomizes. Optional name, default "the Engineer". Choices persist for the session. **Appearance only** — the class is not chosen here (Rick's call); each chapter hands the hero its persona.
+3. **Character creation** — a Sierra character sheet, landscape: the hero large on the left, pickers on the right, RANDOM and DONE always visible. **Appearance only** — the class is not chosen here (Rick's call); each chapter hands the hero its persona. Details in *Character creation* below.
 4. **Three chapters**, drawn from the five (*The draw*, below), each:
    - **Class card**: the chapter's persona and silly stats (below), which the hero *wears* for this chapter — "Tonight you are the SRE." Tap to continue.
    - **Room**: a 320×200 scene with the hero, 3–5 hotspots, narrator line on entry.
@@ -71,6 +71,28 @@ This is **a game, not a toolkit**: we replicate the experience of an SCI-era gam
 6. **Claim** and **Complete** — as v0.1 (placeholder form → HubSpot embed after review; "SHOW THIS TO BOOTH STAFF"; staff REDEEMED tap; persisted), plus a **PLAY AGAIN** button on Complete. A replay keeps the hero, deals a new hand that prefers chapters this device hasn't seen (`oq.seen` in sessionStorage), ends on Charity's verdict, and returns to Complete without showing the form again.
 
 Target length: 2–3 minutes for a first-time player who tries one wrong thing per chapter.
+
+### Character creation
+
+Rick's brief: three starting heroes, then free customization, no picker with more than five choices, and a random button for people who don't want to get bogged down.
+
+- **Presets** (3): **masculine**, **feminine**, **nonbinary** — three body silhouettes (shoulders, waist, hips) with their own default hair, beard, hoodie and jeans. A preset is a starting point: every picker below stays open after choosing one (a feminine body may wear a full beard; nothing is gated).
+- **Pickers** (each ≤ 5 choices, Rick's rule):
+  - Skin: 5 tones.
+  - Hair colour: 5 — black, brown, blonde, ginger, violet (one dyed option; it's a dev game).
+  - Hair length: 4 — buzz, short, medium, long.
+  - Hair style: 5 — straight, curly, spiky, locs, undercut. Buzz ignores style.
+  - Beard: 5 — none, stubble, goatee, full, the big one.
+  - Beard colour: 5, the hair colours; defaults to the hair colour until changed.
+  - Hoodie colour: 5 from the Honeycomb palette.
+  - Jeans colour: 5 — indigo, black, light wash, grey, khaki.
+  - Holding: 5 dev tropes — laptop (generic, a hex sticker on the lid, no fruit), coffee, phone, rubber duck, pager. (Rick named the first three and asked for "other dev tropes"; the duck and pager are my proposals — swap freely.)
+  - Glasses: 4 — none, round, square, thick frames. (My addition — the dev trope that was in the earlier draft; drop it if the sheet feels long.)
+- **RANDOM** rerolls everything, preset included. **DONE** locks the hero for the session.
+- **No name field** (my call): typing on a landscape phone pops a keyboard over the whole game; the class cards address the player by class anyway. Can return later as an optional step.
+- **Sheet layout**: the hero preview stays on screen at all times at 4× logical scale (64×128 logical px, roughly a third of the scene width), pickers fill the rest as rows of ≤ 5 buttons, each button ≥ 44 CSS px; rows beyond what fits split across **two pages** of the sheet ("FACE" and "KIT"), never a scroll. RANDOM and DONE sit in the thumb columns.
+- **Sprite**: parts drawn in code from pixel maps so colours are free: 3 bodies × (hoodie + jeans recolour) ; 16 hair pieces (3 lengths × 5 styles + buzz) ; 4 beards ; 4 glasses ; 5 held items, each with a hand position per body. Animations (idle, walk ×4, type ×2, sit-up, turn) are defined on the body and parts follow anchor points, so a new hair piece needs no new animation frames. The coda puts shades on every hero regardless of glasses.
+- **Persistence**: the hero's choices live in `sessionStorage` (`oq.hero`) so a reload or a PLAY AGAIN keeps them; a new session starts fresh at the sheet.
 
 ### The draw
 
@@ -172,7 +194,7 @@ Reachable totals are 0, 50, 100, 150, 200, 250, 300. Charity's six tiers: 300 ·
 
 ## Art
 
-- **Hero**: hand-pixelled parts system, 16×32 logical px (32×64 on canvas): hair ×6 styles, skin ×6, glasses ×3, top colour, accessory ×3; animations: idle, walk (4), sit-up, type at a keyboard (2), turn. Drawn in code from pixel maps so recolouring is free.
+- **Hero**: hand-pixelled parts system, 16×32 logical px, as specified in *Character creation*: 3 bodies, 16 hair pieces, 4 beards, 4 glasses, 5 held items; animations idle, walk (4), sit-up, type at a keyboard (2), turn, defined once per body. Drawn in code from pixel maps so recolouring is free.
 - **Room backgrounds** ×5 + intro ×3 + title: generated with the Firefly/Gemini pipeline using a new SCI-VGA preamble (320×200, 1990 VGA, dithered, Sierra room composition with a clear floor band and an uncluttered desk/wall where objects will go), cropped from the generator's 3:2 to 16:10, downsampled nearest-neighbour to 320×200 and palette-reduced to the scene's 64-colour set.
 - **Hotspot objects are sprites, not part of the background** (my call): the laptop, the old-tool terminal, the Honeycomb workstation, the dusty "ask Einar" monitor, the whiteboard and the pager are hand-pixelled in the scene palette and composited at known positions, like SCI "views". The prompts therefore don't have to coax a generator into placing objects, no measuring or regeneration loop is needed, unvisited hotspots can glint, and hit rects are padded to 48 px however small the object is. Rooms are built against code-drawn placeholder backgrounds first and real backgrounds dropped in when generated.
 - **Product screens**: drawn in code from the shared kit, not generated — they must be crisp and data-driven.
