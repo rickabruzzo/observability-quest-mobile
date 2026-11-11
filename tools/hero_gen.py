@@ -5,10 +5,48 @@ This is the normative implementation: js/engine/hero.js must match it pixel for 
 and the --fixtures CLI; tools/tests/test_hero_gen.py covers it.
 """
 from PIL import Image
-import sys, os
+import json, sys, os
 
 W, H = 28, 72
-OUT = sys.argv[1] if len(sys.argv) > 1 else '.'
+
+# ---- normative data (js/engine/hero-parts.js copies these verbatim) ----
+OPTIONS = {
+    'body': ['masc', 'fem', 'nb'], 'skin': [0, 1, 2, 3, 4],
+    'hair': ['black', 'brown', 'blonde', 'ginger', 'violet'],
+    'length': ['buzz', 'short', 'medium', 'long'],
+    'style': ['straight', 'curly', 'spiky', 'locs', 'undercut'],
+    'beard': ['none', 'stubble', 'goatee', 'full', 'big'],
+    'beardCol': ['black', 'brown', 'blonde', 'ginger', 'violet'],
+    'hoodie': ['honey', 'ink', 'teal', 'indigo', 'lime'],
+    'jeans': ['indigo', 'black', 'light', 'grey', 'khaki'],
+    'glasses': ['none', 'round', 'square', 'thick'],
+    'hold': ['laptop', 'coffee', 'phone', 'duck', 'pager'],
+}
+CONFIG_KEYS = list(OPTIONS)
+POSES = ['idle', 'walk1', 'walk2', 'walk3', 'walk4']
+# per-pose offsets applied to the idle masks: (legL_dx, legR_dx, shoeL_dx, shoeR_dx, bob_dy, armL_dy, armR_dy)
+WALK = {'idle': (0, 0, 0, 0, 0, 0, 0), 'walk1': (-1, 1, -2, 2, 0, 1, -1), 'walk2': (0, 0, 0, 0, 1, 0, 0),
+        'walk3': (1, -1, 2, -2, 0, -1, 1), 'walk4': (0, 0, 0, 0, 1, 0, 0)}
+PRESETS = {
+    'masc': dict(body='masc', skin=1, hair='black', length='short', style='straight', beard='stubble', beardCol='black',
+                 hoodie='ink', jeans='indigo', glasses='none', hold='laptop'),
+    'fem': dict(body='fem', skin=2, hair='brown', length='long', style='straight', beard='none', beardCol='brown',
+                hoodie='honey', jeans='black', glasses='round', hold='coffee'),
+    'nb': dict(body='nb', skin=0, hair='violet', length='medium', style='undercut', beard='none', beardCol='violet',
+               hoodie='teal', jeans='grey', glasses='square', hold='phone'),
+}
+FIXTURES = {
+    'masc-idle': (PRESETS['masc'], 'idle'),
+    'masc-walk1': (PRESETS['masc'], 'walk1'), 'masc-walk2': (PRESETS['masc'], 'walk2'),
+    'masc-walk3': (PRESETS['masc'], 'walk3'), 'masc-walk4': (PRESETS['masc'], 'walk4'),
+    'fem-idle': (PRESETS['fem'], 'idle'), 'nb-idle': (PRESETS['nb'], 'idle'),
+    'var-full-beard': (dict(body='masc', skin=3, hair='black', length='buzz', style='straight', beard='full', beardCol='black',
+                            hoodie='honey', jeans='khaki', glasses='thick', hold='duck'), 'idle'),
+    'var-locs': (dict(body='nb', skin=2, hair='blonde', length='long', style='locs', beard='goatee', beardCol='blonde',
+                      hoodie='lime', jeans='indigo', glasses='round', hold='laptop'), 'idle'),
+    'var-curly': (dict(body='fem', skin=4, hair='ginger', length='medium', style='curly', beard='none', beardCol='ginger',
+                       hoodie='indigo', jeans='light', glasses='none', hold='pager'), 'idle'),
+}
 
 def hexc(s):
     s = s.lstrip('#'); return tuple(int(s[i:i+2], 16) for i in (0, 2, 4)) + (255,)
@@ -31,8 +69,10 @@ class Canvas:
     def __init__(self):
         self.part = [[None] * W for _ in range(H)]   # part id per pixel
         self.col = [[None] * W for _ in range(H)]    # final colour
+        self.oy = 0                                  # vertical offset for fills/px (walk bob)
     def fill(self, pid, mask):
         for (x, y) in mask:
+            y += self.oy
             if 0 <= x < W and 0 <= y < H:
                 self.part[y][x] = pid
     def shade(self, pid, rmp, hl=1, sh=2, top_light=True):
@@ -60,6 +100,7 @@ class Canvas:
                     if nx < 0 or ny < 0 or nx >= W or ny >= H or not sil[ny][nx]: edge = True
                 if edge: self.col[y][x] = OUTLINE
     def px(self, x, y, c):
+        y += self.oy
         if 0 <= x < W and 0 <= y < H: self.col[y][x] = c; self.part[y][x] = self.part[y][x] or 'detail'
     def image(self):
         im = Image.new('RGBA', (W, H), (0, 0, 0, 0))
@@ -87,31 +128,28 @@ BODIES = {
                  leg_l=(8, 12), leg_r=(15, 19), gap=(13, 14), shoe_l=(6, 12), shoe_r=(15, 21), neck=(12, 15), head_rx=5.5),
 }
 
-def hero(body='masc', skin=1, hair='black', length='short', style='straight', beard='none', beard_col=None,
+def hero(body='masc', skin=1, hair='black', length='short', style='straight', beard='none', beardCol=None,
          hoodie='ink', jeans='indigo', glasses='none', hold='laptop', pose='idle'):
     b = BODIES[body]; c = Canvas()
     skin_r = ramp(SKIN[skin], light=1.12, shade=0.8, dark=0.62)
     hair_r = ramp(HAIR[hair], light=1.35, shade=0.7)
     hood_r = ramp(HOODIE[hoodie]); jean_r = ramp(JEANS[jeans], light=1.25, shade=0.72)
-    beard_r = ramp(HAIR[beard_col or hair], light=1.3, shade=0.7)
+    beard_r = ramp(HAIR[beardCol or hair], light=1.3, shade=0.7)
     cx = 13.5
+    legL_dx, legR_dx, shoeL_dx, shoeR_dx, bob, armL_dy, armR_dy = WALK[pose]
 
-    # ---- legs & shoes (back) ----
+    # ---- legs & shoes (back; never bob) ----
     leg_top, leg_bot = 45, 66
-    if pose == 'walk':
-        # stride: left leg forward (viewer's left), right leg back
-        c.fill('legL', rect(b['leg_l'][0]-1, leg_top, b['leg_l'][1]-1, leg_bot-1))
-        c.fill('legR', rect(b['leg_r'][0]+1, leg_top, b['leg_r'][1]+1, leg_bot))
-        c.fill('shoeL', rect(b['shoe_l'][0]-2, 65, b['shoe_l'][1]-1, 69))
-        c.fill('shoeR', rect(b['shoe_r'][0]+1, 67, b['shoe_r'][1]+2, 71))
-    else:
-        c.fill('legL', rect(b['leg_l'][0], leg_top, b['leg_l'][1], leg_bot))
-        c.fill('legR', rect(b['leg_r'][0], leg_top, b['leg_r'][1], leg_bot))
-        c.fill('shoeL', rect(b['shoe_l'][0], 66, b['shoe_l'][1], 71))
-        c.fill('shoeR', rect(b['shoe_r'][0], 66, b['shoe_r'][1], 71))
+    c.oy = 0
+    c.fill('legL', rect(b['leg_l'][0] + legL_dx, leg_top, b['leg_l'][1] + legL_dx, leg_bot))
+    c.fill('legR', rect(b['leg_r'][0] + legR_dx, leg_top, b['leg_r'][1] + legR_dx, leg_bot))
+    c.fill('shoeL', rect(b['shoe_l'][0] + shoeL_dx, 66, b['shoe_l'][1] + shoeL_dx, 71))
+    c.fill('shoeR', rect(b['shoe_r'][0] + shoeR_dx, 66, b['shoe_r'][1] + shoeR_dx, 71))
     # crotch: jeans continuous above row 52
     c.fill('legL', rect(b['hip'][0], leg_top, 13, 51)); c.fill('legR', rect(14, leg_top, b['hip'][1], 51))
 
+    # ---- everything above the legs bobs with the walk ----
+    c.oy = bob
     # ---- hood (behind neck) ----
     c.fill('hood', rect(9, 18, 18, 22))
     # ---- torso ----
@@ -121,9 +159,9 @@ def hero(body='masc', skin=1, hair='black', length='short', style='straight', be
         elif y <= 38: span = (b['waist'][0], b['waist'][1])
         else: span = (b['hip'][0], b['hip'][1])
         c.fill('torso', rect(span[0], y, span[1], y))
-    # arms
-    c.fill('armL', rect(b['arm_l'][0], 22, b['arm_l'][1], 43)); c.fill('armR', rect(b['arm_r'][0], 22, b['arm_r'][1], 43))
-    c.fill('handL', rect(b['arm_l'][0], 44, b['arm_l'][1], 47)); c.fill('handR', rect(b['arm_r'][0], 44, b['arm_r'][1], 47))
+    # arms (each swings by its own dy)
+    c.fill('armL', rect(b['arm_l'][0], 22 + armL_dy, b['arm_l'][1], 43 + armL_dy)); c.fill('armR', rect(b['arm_r'][0], 22 + armR_dy, b['arm_r'][1], 43 + armR_dy))
+    c.fill('handL', rect(b['arm_l'][0], 44 + armL_dy, b['arm_l'][1], 47 + armL_dy)); c.fill('handR', rect(b['arm_r'][0], 44 + armR_dy, b['arm_r'][1], 47 + armR_dy))
     # ---- neck & head ----
     c.fill('neck', rect(b['neck'][0], 17, b['neck'][1], 20))
     c.fill('head', ellipse(cx, 11.5, b['head_rx'], 6.8))
@@ -191,7 +229,8 @@ def hero(body='masc', skin=1, hair='black', length='short', style='straight', be
         pts = [(9,10),(12,10),(14,10),(17,10),(13,10)] + ([(9,11),(12,11),(14,11),(17,11)] if glasses != 'round' else [(10,11),(11,11),(15,11),(16,11)])
         if glasses == 'thick': pts += [(10,9),(11,9),(15,9),(16,9)]
         for (x, y) in pts: c.px(x, y, g)
-    # held item (viewer's left = hero's right hand side)
+    # held item (viewer's left = hero's right hand side) rides with that arm; the pager sits on the belt
+    c.oy = bob + (0 if hold == 'pager' else armL_dy)
     if hold == 'laptop':
         for (x, y) in rect(0, 33, 6, 42): c.px(x, y, LAPTOP['B'])
         for x in range(0, 7): c.px(x, 33, LAPTOP['L']); c.px(x, 42, LAPTOP['S'])
@@ -212,28 +251,32 @@ def hero(body='masc', skin=1, hair='black', length='short', style='straight', be
     elif hold == 'pager':
         for (x, y) in rect(7, 44, 11, 47): c.px(x, y, OUTLINE)
         for (x, y) in rect(8, 45, 10, 46): c.px(x, y, hexc('#64BA00'))
+    c.oy = 0
     c.outline()
     return c.image()
 
-def save(im, name, scales=(1, 8)):
-    for s in scales:
-        big = im.resize((im.width * s, im.height * s), Image.NEAREST)
-        big.save(os.path.join(OUT, f'{name}@{s}x.png'))
+def write_fixtures(d):
+    """<name>.json (config + pose), <name>.rgba (28*72*4 bytes row-major), <name>.png for every fixture."""
+    os.makedirs(d, exist_ok=True)
+    for name, (cfg, pose) in FIXTURES.items():
+        im = hero(**cfg, pose=pose)
+        with open(os.path.join(d, f'{name}.json'), 'w') as f: json.dump({**cfg, 'pose': pose}, f, indent=1, sort_keys=True)
+        with open(os.path.join(d, f'{name}.rgba'), 'wb') as f: f.write(im.tobytes())
+        im.save(os.path.join(d, f'{name}.png'))
+
+def write_contact(d, scale=6):
+    """Contact sheet of every fixture at `scale` for eyeballing."""
+    os.makedirs(d, exist_ok=True)
+    names = list(FIXTURES)
+    sheet = Image.new('RGBA', (len(names) * (W + 6) * scale, (H + 6) * scale), (43, 53, 72, 255))
+    for i, n in enumerate(names):
+        cfg, pose = FIXTURES[n]
+        im = hero(**cfg, pose=pose).resize((W * scale, H * scale), Image.NEAREST)
+        sheet.alpha_composite(im, (i * (W + 6) * scale + 3 * scale, 3 * scale))
+    sheet.save(os.path.join(d, 'contact.png'))
 
 if __name__ == '__main__':
-    os.makedirs(OUT, exist_ok=True)
-    save(hero('masc', 1, 'black', 'short', 'straight', 'stubble', hoodie='ink', jeans='indigo', hold='laptop'), 'masc')
-    save(hero('masc', 1, 'black', 'short', 'straight', 'stubble', hoodie='ink', jeans='indigo', hold='laptop', pose='walk'), 'masc-walk')
-    save(hero('fem', 2, 'brown', 'long', 'straight', 'none', hoodie='honey', jeans='black', glasses='round', hold='coffee'), 'fem')
-    save(hero('nb', 0, 'violet', 'medium', 'undercut', 'none', hoodie='teal', jeans='grey', glasses='square', hold='phone'), 'nb')
-    save(hero('masc', 3, 'black', 'buzz', 'straight', 'full', hoodie='honey', jeans='khaki', glasses='thick', hold='duck'), 'var1')
-    save(hero('fem', 4, 'ginger', 'medium', 'curly', 'none', hoodie='indigo', jeans='light', hold='pager'), 'var2')
-    save(hero('nb', 2, 'blonde', 'long', 'locs', 'goatee', hoodie='lime', jeans='indigo', glasses='round', hold='laptop'), 'var3')
-    # contact sheet for my own check
-    names = ['masc', 'masc-walk', 'fem', 'nb', 'var1', 'var2', 'var3']
-    sheet = Image.new('RGBA', (len(names) * (W + 6) * 6, (H + 6) * 6), (43, 53, 72, 255))
-    for i, n in enumerate(names):
-        im = Image.open(os.path.join(OUT, f'{n}@1x.png')).resize((W * 6, H * 6), Image.NEAREST)
-        sheet.alpha_composite(im, (i * (W + 6) * 6 + 18, 18))
-    sheet.save(os.path.join(OUT, 'contact.png'))
-    print('ok')
+    args = sys.argv[1:]
+    if len(args) == 2 and args[0] == '--fixtures': write_fixtures(args[1])
+    elif len(args) == 2 and args[0] == '--contact': write_contact(args[1])
+    else: print('usage: hero_gen.py --fixtures DIR | --contact DIR', file=sys.stderr); sys.exit(2)
