@@ -75,11 +75,12 @@ test('name sheet cleans input and shows on the button', async () => {
   await ctx.close();
 });
 
-test('START persists and goes to PREVIEW; reload keeps the hero', async () => {
+test('START persists and (past the intro) goes to PREVIEW; reload keeps the hero', async () => {
   const { ctx, page } = await openCreator();
   await page.click('.tab[data-page="kit"]');
   await page.click('.opt[data-key="hoodie"][data-value="lime"]');
   await page.click('#btn-start-game');
+  await page.click('#btn-skip');
   await page.waitForFunction(() => document.body.dataset.screen === 'PREVIEW');
   assert.equal(await page.evaluate(() => JSON.parse(sessionStorage.getItem('oq.hero')).hoodie), 'lime');
   await page.reload({ waitUntil: 'load' });
@@ -95,6 +96,7 @@ test('storage throwing does not break the creator or START', async () => {
   await page.click('.opt[data-key="skin"][data-value="3"]');
   assert.equal((await hero(page)).skin, 3);
   await page.click('#btn-start-game');
+  await page.click('#btn-skip');
   await page.waitForFunction(() => document.body.dataset.screen === 'PREVIEW');
   await ctx.close();
 });

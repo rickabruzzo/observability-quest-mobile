@@ -3,8 +3,8 @@ import { SHOTS, frameAt, nextShot, TOTAL_MS, HERO_STEPS, heroAt, FLASH_MS } from
 
 test('shots are the storyboard, in order, with its timings', () => {
   assert.deepEqual(SHOTS.map((s) => s.id), ['dark', 'help', 'asleep', 'arm', 'lit', 'message', 'misery', 'lamp', 'bedroom']);
-  assert.deepEqual(SHOTS.map((s) => s.ms), [3000, 2500, 3000, 1500, 2000, 5000, 2000, 1500, 8000]);
-  assert.equal(TOTAL_MS, 28500);
+  assert.deepEqual(SHOTS.map((s) => s.ms), [3000, 2500, 3000, 1500, 2000, 8000, 2000, 1500, 8000]);
+  assert.equal(TOTAL_MS, 31500);
   assert.equal(SHOTS[1].text, 'Help!');
   assert.equal(SHOTS[5].text, 'Backend is down. Website is down. Database is down. Get in here! -CTO');
 });

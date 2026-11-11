@@ -11,7 +11,7 @@ export const SHOTS = [
   { id: 'asleep', ms: 3000, image: 'C_face_asleep', alt: 'C_eye_crack', altAt: 1800 },
   { id: 'arm', ms: 1500, image: 'B_arm' },
   { id: 'lit', ms: 2000, image: 'C_awake', alt: 'C_awake_lit', flash: 'alt' },
-  { id: 'message', ms: 5000, image: 'B_nightstand', lcd: 'marquee', text: CTO },
+  { id: 'message', ms: 8000, image: 'B_nightstand', lcd: 'marquee', text: CTO },
   { id: 'misery', ms: 2000, image: 'C_misery' },
   { id: 'lamp', ms: 1500, image: 'B_lamp', alt: 'B_lamp_lit', altAt: 700, clickAt: 700 },
   { id: 'bedroom', ms: 8000, image: 'D_bedroom_vga', hero: true },

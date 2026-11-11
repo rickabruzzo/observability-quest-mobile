@@ -4,6 +4,7 @@ import { drawHero, drawHeroCrop, HEAD_CROP, HAND_CROP } from '../engine/hero.js'
 import { OPTIONS, SKIN, HAIR, HOODIE, JEANS } from '../engine/hero-parts.js';
 import { FACE_ROWS, KIT_ROWS, LABELS, BODY_LABELS, pick, randomHero, cleanName, displayName, sanitizeHero } from '../creator-state.js';
 import { colButton } from '../engine/ui.js';
+import { preloadIntro } from './intro.js';
 
 const SWATCH = { skin: (v) => SKIN[v], hair: (v) => HAIR[v], hoodie: (v) => HOODIE[v], jeans: (v) => JEANS[v] };
 const THUMB = { style: HEAD_CROP, beard: HEAD_CROP, glasses: HEAD_CROP, hold: HAND_CROP };
@@ -103,6 +104,7 @@ export function createCreatorScreen(game) {
     enter(ctx) {
       hero = sanitizeHero(ctx.hero);
       page = 'face';
+      preloadIntro().catch(() => {});            // the intro's pictures load while the player picks a look
       ctx.overlay.innerHTML = `
         <div class="sheet">
           <div class="frame"><div class="jewel l" aria-hidden="true"></div><div class="jewel r" aria-hidden="true"></div>
@@ -125,7 +127,7 @@ export function createCreatorScreen(game) {
       }
       ctx.colL.appendChild(tabs); els.tabs = tabs;
       const random = colButton({ id: 'btn-random', long: 'Random', short: 'Roll', onClick: () => update({ ...randomHero(), name: hero.name }, { rerender: true }) });
-      const start = colButton({ id: 'btn-start-game', long: 'Start', short: 'Go', className: 'go', onClick: () => { ctx.hero = hero; ctx.saveHero(hero); game.go('PREVIEW'); } });
+      const start = colButton({ id: 'btn-start-game', long: 'Start', short: 'Go', className: 'go', onClick: () => { ctx.hero = hero; ctx.saveHero(hero); game.go('INTRO'); } });
       ctx.colL.appendChild(random); ctx.colR.appendChild(start);
       els.random = random; els.start = start;
       update(hero, { rerender: true });

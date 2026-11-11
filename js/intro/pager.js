@@ -23,3 +23,50 @@ export function drawLcd(ctx, lcd, text, x, scale, color = '#0F200F') {
   drawText(ctx, text, x, lcd.y + Math.floor((lcd.h - 7 * scale) / 2), scale, color);
   ctx.restore();
 }
+
+/** Scale for scrolling text: small enough that at least ten characters are on the LCD at once. */
+export function marqueeScale(lcd) { return Math.max(1, Math.min(lcdScale(lcd), Math.floor((lcd.w - 4) / 60))); }
+
+function wrap(sentence, cols) {
+  const lines = []; let line = '';
+  for (let word of sentence.split(/\s+/).filter(Boolean)) {
+    while (word.length > cols) {                                         // a word wider than the LCD is cut, never dropped
+      if (line) { lines.push(line); line = ''; }
+      lines.push(word.slice(0, cols)); word = word.slice(cols);
+    }
+    if (!word) continue;
+    if (line && line.length + 1 + word.length > cols) { lines.push(line); line = word; } else line = line ? `${line} ${word}` : word;
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+/**
+ * The same text without scrolling (reduced motion): one sentence per page, word-wrapped, at the
+ * largest scale where every page fits. On an LCD too small for that, pages are cut by line count.
+ * @returns {{ scale: number, pages: string[][] }}
+ */
+export function lcdPages(text, lcd) {
+  const sentences = String(text).split(/(?<=[.!?])\s+(?=[A-Za-z0-9])/).filter(Boolean);
+  for (let scale = lcdScale(lcd); scale >= 1; scale--) {
+    const cols = Math.max(1, Math.floor(((lcd.w - 4) / scale + 1) / 6));
+    const rows = Math.max(1, Math.floor(((lcd.h - 4) / scale + 1) / 8));
+    const pages = sentences.map((s) => wrap(s, cols));
+    if (pages.every((p) => p.length <= rows)) return { scale, pages };
+    if (scale === 1) {
+      const all = pages.flat(), cut = [];
+      for (let i = 0; i < all.length; i += rows) cut.push(all.slice(i, i + rows));
+      return { scale, pages: cut };
+    }
+  }
+  return { scale: 1, pages: [[String(text)]] };
+}
+
+/** Draws one static page, lines centred in the LCD. */
+export function drawLcdPage(ctx, lcd, lines, scale, color = '#0F200F') {
+  ctx.save();
+  ctx.beginPath(); ctx.rect(lcd.x, lcd.y, lcd.w, lcd.h); ctx.clip();
+  const pitch = 8 * scale, top = lcd.y + Math.floor((lcd.h - (lines.length * pitch - scale)) / 2);
+  lines.forEach((l, i) => drawText(ctx, l, lcd.x + Math.floor((lcd.w - textWidth(l, scale)) / 2), top + i * pitch, scale, color));
+  ctx.restore();
+}

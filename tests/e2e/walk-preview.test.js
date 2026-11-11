@@ -17,6 +17,7 @@ async function openPreview(opts = {}) {
   await page.waitForFunction(() => document.body.dataset.screen === 'CREATOR');
   await page.waitForTimeout(400);
   await page.click('#btn-start-game');
+  await page.click('#btn-skip');                      // START now opens the intro
   await page.waitForFunction(() => document.body.dataset.screen === 'PREVIEW');
   await page.waitForTimeout(400);
   return { ctx, page };
