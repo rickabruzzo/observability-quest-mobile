@@ -48,6 +48,8 @@ The intro cuts between nine stills. Until the real ones exist the game shows lab
    Each edit prints how much of the frame it changed and where — a quick check that only the intended part moved.
 3. If it stops with *"differs from … over N% of the frame"*, that edit drifted from its plate — regenerate it as an
    edit of the plate (same picture, one change). Edits are snapped onto their plate so cuts don't shimmer.
+   Generators redraw the whole frame on an edit, so the build keeps only the real change (stray flecks elsewhere
+   are dropped, a removed object leaves no ghost). An edit is refused only when over half the frame changed.
 4. Positions the code needs come from `intro.json`. The pager LCD is found automatically (the plate's bright-green
    rectangle). The rest are defaults — set them for the real bedroom in `scratch/intro_gen/intro.overrides.json`:
 
@@ -59,6 +61,10 @@ The intro cuts between nine stills. Until the real ones exist the game shows lab
      "lcd": { "x": 92, "y": 62, "w": 136, "h": 36 } }   "only if the LCD isn't found"
    ```
    (Plain JSON — leave the quoted notes out.) Coordinates are in 320×200 pixels.
+
+The title on the bedroom wall is the app's own **Observability Quest wordmark**, cut by the build out of
+`assets/title_screen.png` (letters only — no starscape, glow, rule or blue panel), sized to the `wall` rectangle, with
+the subtitle lettered under it. Replace that picture and rebuild to change the logo.
 
 Shot order and timings: `js/intro/timeline.js`. LCD copy lives there too.
 

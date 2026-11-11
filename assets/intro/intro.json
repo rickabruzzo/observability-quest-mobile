@@ -14,31 +14,44 @@
   "C_awake": "C_awake.png",
   "C_misery": "C_misery.png",
   "C_awake_lit": "C_awake_lit.png",
-  "B_lamp_lit": "B_lamp_lit.png"
+  "B_lamp_lit": "B_lamp_lit.png",
+  "wall_logo": "wall_logo.png"
  },
  "lcd": {
-  "x": 92,
-  "y": 62,
-  "w": 136,
+  "x": 103,
+  "y": 71,
+  "w": 110,
   "h": 36
  },
  "wall": {
-  "x": 24,
-  "y": 14,
-  "w": 232,
-  "h": 44
+  "x": 41,
+  "y": 0,
+  "w": 198,
+  "h": 100
  },
  "bed": {
-  "x": 60,
-  "y": 96
+  "x": 74,
+  "y": 131
  },
  "stand": {
-  "x": 90
+  "x": 158
  },
  "door": {
-  "x": 286
+  "x": 261
  },
- "floorY": 176,
+ "floorY": 178,
  "lcdFound": true,
- "placeholder": true
+ "placeholder": false,
+ "logo": {
+  "x": 46,
+  "y": 6,
+  "w": 188,
+  "h": 52
+ },
+ "subtitle": {
+  "x": 41,
+  "y": 60,
+  "w": 198,
+  "h": 16
+ }
 }

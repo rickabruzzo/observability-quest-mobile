@@ -34,7 +34,8 @@ test('drawLcd clips to the LCD and restores', () => {
   assert.deepEqual(log, ['save', ['rect', 92, 62, 136, 36], 'clip', 'restore']);
 });
 import { lcdPages, marqueeScale } from '../js/intro/pager.js';
-test('marquee text is small enough to show at least ten characters at once', () => {
+test('marquee text is small enough to show at least eight characters at once', () => {
+  assert.equal(marqueeScale({ x: 103, y: 71, w: 110, h: 36 }), 2);        // the real pager plate
   assert.equal(marqueeScale({ x: 92, y: 62, w: 136, h: 36 }), 2);
   assert.equal(marqueeScale({ x: 0, y: 0, w: 40, h: 36 }), 1);
   assert.equal(marqueeScale({ x: 0, y: 0, w: 600, h: 36 }), 4);        // never taller than the LCD

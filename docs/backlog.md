@@ -62,7 +62,10 @@ block on. Test the restyle under `.hs-form` on a real phone.
 - **Theme music**: shot 9 has no cue yet; the title theme arrives with the OPL soundtrack sub-project. Beep and lamp click are WebAudio stand-ins (`js/intro/sfx.js`).
 - **If the cuts feel too jerky in play-test** (Rick's rollback option): add in-between stills per shot in `js/intro/timeline.js` (`alt`/`altAt` already cut between two) — e.g. a second eyelid frame, the arm half-way — before considering tweened motion.
 - CTO message shot runs 8 s (storyboard table said ≈5) so the marquee is readable at ~10 characters/second; tune `ms` in `timeline.js` after play-test.
-- Bed, door, floor and wall positions are defaults until the real bedroom plate lands — set `scratch/intro_gen/intro.overrides.json` (README).
+- Real stills landed 2026-11-11 (Gemini, via the agent brief). Positions for the bedroom are in `scratch/intro_gen/intro.overrides.json` on Rick's machine and baked into `assets/intro/intro.json`.
+- The wordmark has no "I"; the numeral leads the subtitle line ("I: So you want to be on-call?"). If that reads oddly in play-test, letter an "I" in the wordmark's style or drop the numeral.
+- The sitting hero is drawn over the bed, not tucked behind the blanket; a foreground mask for the blanket would fix it.
+- `B_lamp_lit` lifts the black background to a warm brown along with the wood; limit the lift to non-black pixels if it looks muddy on a phone.
 - No mute control yet; `createSfx({ muted })` takes one when the audio sub-project adds it.
 - After the intro the game goes to the preview room; the chapter deal replaces that in the room-engine sub-project.
 

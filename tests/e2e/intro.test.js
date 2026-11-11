@@ -111,7 +111,15 @@ test('the bedroom shot shows the title and walks the hero out', async () => {
   for (let i = 0; i < 8; i++) { await page.waitForTimeout(300); await tapScene(page); }
   await page.waitForFunction(() => window.__oq.intro.id === 'bedroom');
   await page.waitForFunction(() => window.__oq.intro.t > 900);
-  assert.match(await page.locator('.intro-title').innerText(), /OBSERVABILITY QUEST I\s+So you want to be on-call\?/);
+  // the title is the app's own wordmark, drawn on the wall, with the subtitle lettered under it
+  assert.equal(await page.locator('.intro-title').getAttribute('aria-label'), 'Observability Quest I: So you want to be on-call?');
+  assert.match(await page.locator('.intro-title').innerText(), /^I: So you want to be on-call\?$/);
+  const blue = await page.evaluate(() => {
+    const r = window.__oq.intro.manifest.logo, d = document.getElementById('scene').getContext('2d').getImageData(r.x, r.y, r.w, r.h).data;
+    let n = 0; for (let i = 0; i < d.length; i += 4) if (d[i + 2] > 140 && d[i + 2] > d[i] + 50) n++;
+    return n / (d.length / 4);
+  });
+  assert.ok(blue > 0.2, `wordmark not on the wall (${blue})`);
   const box = await page.locator('.intro-title').boundingBox(), sc = await page.locator('#scene').boundingBox();
   assert.ok(box.x >= sc.x && box.x + box.width <= sc.x + sc.width + 1 && box.y >= sc.y, 'title outside the scene');
   await page.waitForFunction(() => window.__oq.intro.hero?.pose === 'situp');

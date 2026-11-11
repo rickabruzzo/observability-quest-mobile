@@ -24,8 +24,8 @@ export function drawLcd(ctx, lcd, text, x, scale, color = '#0F200F') {
   ctx.restore();
 }
 
-/** Scale for scrolling text: small enough that at least ten characters are on the LCD at once. */
-export function marqueeScale(lcd) { return Math.max(1, Math.min(lcdScale(lcd), Math.floor((lcd.w - 4) / 60))); }
+/** Scale for scrolling text: small enough that at least eight characters are on the LCD at once. */
+export function marqueeScale(lcd) { return Math.max(1, Math.min(lcdScale(lcd), Math.floor((lcd.w - 4) / 48))); }
 
 function wrap(sentence, cols) {
   const lines = []; let line = '';

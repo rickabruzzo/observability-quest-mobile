@@ -144,17 +144,26 @@ Prompts and the single-change edit rules: `briefs/intro-shots-brief.md` (for a p
 `briefs/intro-shots-agent-brief.md` (the same task as step-by-step instructions for a Claude session driving the generator). Nine images, generated in Firefly/Gemini
 to match the narrator portraits, exported 640×400 into `scratch/intro_gen/`, built by `tools/build_intro.py`.
 
-| File | What | Tool / date / notes |
-|---|---|---|
-| `A_room_dark` | plate: dark bedroom, nightstand, lamp, sleeper | _pending_ |
-| `B_nightstand` | plate: pager close-up, **blank** green LCD | _pending_ |
-| `B_arm` | edit of B: arm reaching for the pager | _pending_ |
-| `B_lamp` | edit of B: hand on the lamp chain | _pending_ |
-| `C_face_asleep` | plate: sleeping face, drool | _pending_ |
-| `C_eye_crack` | edit of C: one eye cracked open | _pending_ |
-| `C_awake` | edit of C: eyes half open | _pending_ |
-| `C_misery` | edit of C_awake: brows and mouth | _pending_ |
-| `D_bedroom_vga` | plate: VGA bedroom, empty wall for the title, no person | _pending_ |
+All nine: **Gemini API, model `gemini-3.1-flash-image`**, 3:2, 1K, 2026-11-11, generated on Rick's personal account by a
+Claude session following `briefs/intro-shots-agent-brief.md`. Prompts exactly as in the brief (preamble on A/B/C and their
+edits; the negative list appended as "Avoid: …"). Plates A–C also carried a narrator portrait as a style reference
+(`portrait_christine.png` on odd tries, `portrait_graham.png` on even) with: "Match the art style of the attached reference
+image exactly (pixel size, dithering, outline weight, palette); do not copy its subject." Each edit attached only its plate.
+Raw downloads (1264×848) and every rejected try are kept in `scratch/intro_gen/raw/` on Rick's machine.
 
-`C_awake_lit` and `B_lamp_lit` are derived by the build (palette lifts), not generated. The LCD text and the wall
-title are drawn by the game. Fill in the right-hand column as each image is accepted.
+| File | What | Tries → kept | Notes |
+|---|---|---|---|
+| `A_room_dark` | plate: dark bedroom, nightstand, lamp, sleeper | 2 → #1 | |
+| `B_nightstand` | plate: pager close-up, **blank** green LCD | 5 → #3 | Tries 3–5 added a framing sentence (straight-on, pager about half the frame wide, right third empty). LCD is 35% of the width, not 40%. Buttons differ from the prompt. |
+| `B_arm` | edit of B: arm reaching for the pager | 2 → #1 | #2 rejected: fingers covered the LCD |
+| `B_lamp` | edit of B: hand on the lamp chain, pager gone | 2 → #2 | #1 rejected: two hands |
+| `C_face_asleep` | plate: sleeping face, drool | 2 → #2 | |
+| `C_eye_crack` | edit of C: one eye cracked open | 2 → #1 | |
+| `C_awake` | edit of C: eyes half open | 2 → #1 | |
+| `C_misery` | edit of C_awake: brows and mouth | 3 → #2 | #1 rejected: the eyes moved |
+| `D_bedroom_vga` | plate: VGA bedroom, empty wall, no person | 2 → #2 | no preamble, no style reference. Blanket runs off the bottom-left corner. |
+
+Plates approved by Rick 2026-11-11; the five edits are awaiting his review.
+
+`C_awake_lit` and `B_lamp_lit` are derived by the build (palette lifts), not generated. The LCD text is drawn by the game. The wall title
+is the app's Observability Quest wordmark, cut from `assets/title_screen.png` by the build (`wall_logo.png`).

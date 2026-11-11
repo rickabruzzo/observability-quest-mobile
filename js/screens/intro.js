@@ -16,7 +16,9 @@ const STAND_DX = 30;                 // standing spot when the manifest has none
 const AMBLE = 140;                   // px/s — a sleepy walk to the door
 const REDUCED_BEDROOM_MS = 2500;
 const NEXT = 'PREVIEW';
-const TITLE = ['OBSERVABILITY QUEST I', 'So you want to be on-call?'];
+const TITLE = ['OBSERVABILITY QUEST I', 'So you want to be on-call?'];     // lettered whole when the wordmark picture is missing
+const SUBTITLE = 'I: So you want to be on-call?';                          // under the wordmark
+const TITLE_LABEL = 'Observability Quest I: So you want to be on-call?';
 
 let loading = null;
 
@@ -30,6 +32,7 @@ export function preloadIntro() {
     for (const k of ['images', 'lcd', 'wall', 'bed', 'door']) if (!manifest[k] || typeof manifest[k] !== 'object') throw new Error(`intro.json: no ${k}`);
     if (!Number.isFinite(manifest.floorY)) throw new Error('intro.json: no floorY');
     const need = new Set(SHOTS.flatMap((s) => [s.image, s.alt].filter(Boolean)));
+    if (manifest.images.wall_logo && manifest.logo && manifest.subtitle) need.add('wall_logo');
     const images = new Map();
     await Promise.all([...need].map((name) => new Promise((ok, fail) => {
       if (!manifest.images[name]) return fail(new Error(`intro.json: no image ${name}`));
@@ -74,15 +77,20 @@ export function createIntroScreen(game) {
     if (n === null) finish(); else cut(n);
   }
 
+  // The title on the wall: the app's wordmark (a picture, drawn on the canvas) with the subtitle under it as
+  // page text. Without the wordmark picture, both lines are lettered as text.
   function showTitle(ctx, m, on) {
+    const logo = assets?.images.get('wall_logo');
+    if (on && logo) ctx.ctx2d.drawImage(logo, m.logo.x, m.logo.y);
     if (on && !titleEl) {
       titleEl = document.createElement('div');
       titleEl.className = 'intro-title';
-      const w = m.wall;
-      Object.assign(titleEl.style, { left: `${(w.x / 320) * 100}%`, top: `${(w.y / 200) * 100}%`, width: `${(w.w / 320) * 100}%`, height: `${(w.h / 200) * 100}%` });
-      const h = document.createElement('div'); h.className = 'intro-title-h'; h.textContent = TITLE[0];
-      const s = document.createElement('div'); s.className = 'intro-title-s'; s.textContent = TITLE[1];
-      titleEl.append(h, s);
+      titleEl.setAttribute('role', 'img'); titleEl.setAttribute('aria-label', TITLE_LABEL);
+      const r = logo ? m.subtitle : m.wall;
+      Object.assign(titleEl.style, { left: `${(r.x / 320) * 100}%`, top: `${(r.y / 200) * 100}%`, width: `${(r.w / 320) * 100}%`, height: `${(r.h / 200) * 100}%` });
+      if (!logo) { const h = document.createElement('div'); h.className = 'intro-title-h'; h.textContent = TITLE[0]; titleEl.append(h); }
+      const s = document.createElement('div'); s.className = 'intro-title-s'; s.textContent = logo ? SUBTITLE : TITLE[1];
+      titleEl.append(s);
       ctx.overlay.appendChild(titleEl);
     } else if (!on && titleEl) { titleEl.remove(); titleEl = null; }
   }

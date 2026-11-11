@@ -16,13 +16,17 @@ EDITS = {'B_arm': 'B_nightstand', 'B_lamp': 'B_nightstand', 'C_eye_crack': 'C_fa
          'C_awake': 'C_face_asleep', 'C_misery': 'C_awake'}                 # edit -> the still it is cut against
 SOURCES = PLATES + list(EDITS)
 DERIVED = ['C_awake_lit', 'B_lamp_lit']
-MAX_DRIFT = 0.35
+MAX_DRIFT = 0.5                     # an edit may remove an object and add a hand; past half the frame it is another picture
 COLOURS = 32
 DEFAULTS = {'wall': {'x': 24, 'y': 14, 'w': 232, 'h': 44}, 'bed': {'x': 60, 'y': 96}, 'stand': {'x': 90}, 'door': {'x': 286}, 'floorY': 176}
 LCD_MIN = (40, 10)                  # anything smaller is a stray green speck, not the pager's LCD
 CHANGE_COLOURS = 16
 LCD_FALLBACK = (92, 62, 136, 36)
 OVERRIDES = 'intro.overrides.json'
+LOGO_SRC = 'assets/title_screen.png'   # the app's Observability Quest wordmark lives on the v0.1 title screen
+LOGO_BOX = (60, 172, 590, 318)         # the wordmark on that 640x428 picture, clear of the gold rule below it
+LOGO_MAX_W = 190
+LOGO_OUTLINE = (8, 14, 40, 255)
 
 _PH_BG = {'A': (14, 14, 26), 'B': (30, 30, 36), 'C': (52, 40, 44), 'D': (40, 44, 70)}
 _PH_CHANGE = {'B_arm': (176, 60, 304, 150), 'B_lamp': (24, 20, 80, 110), 'C_eye_crack': (110, 80, 210, 96),
@@ -43,12 +47,74 @@ def quantise(img, colours=COLOURS):
     return img.convert('RGB').quantize(colours, method=Image.MEDIANCUT, dither=Image.NONE).convert('RGB')
 
 
+MIN_CHANGE = 12                     # px: a changed patch smaller than this, away from any real change, is generator noise
+WEAK_TOL = 10                       # near a real change, differences this small still belong to it (soft edges, dark-on-dark)
+
+
+def _dilate(mask, r):
+    out = mask.copy()
+    for _ in range(r):
+        p = np.pad(out, 1)
+        out = p[1:-1, 1:-1] | p[:-2, 1:-1] | p[2:, 1:-1] | p[1:-1, :-2] | p[1:-1, 2:] | p[:-2, :-2] | p[:-2, 2:] | p[2:, :-2] | p[2:, 2:]
+    return out
+
+
+def _erode(mask, r):
+    return ~_dilate(~mask, r)
+
+
+def _components(mask):
+    """8-connected components as lists of (y, x)."""
+    seen = np.zeros_like(mask); out = []
+    hh, ww = mask.shape
+    for sy, sx in zip(*np.nonzero(mask)):
+        if seen[sy, sx]: continue
+        stack, comp = [(int(sy), int(sx))], []
+        seen[sy, sx] = True
+        while stack:
+            y, x = stack.pop(); comp.append((y, x))
+            for ny in (y - 1, y, y + 1):
+                for nx in (x - 1, x, x + 1):
+                    if 0 <= ny < hh and 0 <= nx < ww and mask[ny, nx] and not seen[ny, nx]:
+                        seen[ny, nx] = True; stack.append((ny, nx))
+        out.append(comp)
+    return out
+
+
+def _fill_holes(mask):
+    """Everything not reachable from the frame edge through unchanged pixels counts as changed."""
+    outside = np.zeros_like(mask); hh, ww = mask.shape
+    stack = [(y, x) for y in range(hh) for x in (0, ww - 1) if not mask[y, x]] + [(y, x) for x in range(ww) for y in (0, hh - 1) if not mask[y, x]]
+    for y, x in stack: outside[y, x] = True
+    while stack:
+        y, x = stack.pop()
+        for ny, nx in ((y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)):
+            if 0 <= ny < hh and 0 <= nx < ww and not mask[ny, nx] and not outside[ny, nx]:
+                outside[ny, nx] = True; stack.append((ny, nx))
+    return ~outside
+
+
+def clean_change(d, tol=24):
+    """The change an artist meant, from a noisy per-pixel difference `d` (generators redraw the whole
+    frame, so faint differences are everywhere). A real change has a core that differs a lot; take the
+    cores, what differs around them, close and fill the result (a removed dark object otherwise leaves a
+    ghost), and include its soft edges. Everything else is noise and stays the plate's."""
+    core = np.zeros(d.shape, bool)
+    for comp in _components(d > 2 * tol):
+        if len(comp) >= MIN_CHANGE:
+            ys, xs = zip(*comp); core[list(ys), list(xs)] = True
+    if not core.any(): return core
+    mask = (d > tol) & _dilate(core, 6)
+    mask = _fill_holes(_erode(_dilate(np.pad(mask, 4), 3), 3)[4:-4, 4:-4] | mask)
+    return mask | ((d > WEAK_TOL) & _dilate(mask, 1))
+
+
 def snap_to_plate(edit, plate, tol=24, base=None):
-    """Keep only what the edit changed. Pixels within `tol` per channel of the plate take the pixel from
-    `base` (the finished plate; defaults to `plate`). Returns (image, fraction of pixels that changed)."""
+    """Keep only what the edit changed. Pixels outside the (cleaned) change take the pixel from `base`
+    (the finished plate; defaults to `plate`). Returns (image, fraction of pixels that changed)."""
     e = np.asarray(edit.convert('RGB')).astype(np.int16)
     p = np.asarray(plate.convert('RGB')).astype(np.int16)
-    changed = (np.abs(e - p) > tol).any(axis=2)
+    changed = clean_change(np.abs(e - p).max(axis=2), tol)
     out = np.asarray((base or plate).convert('RGB')).copy()
     out[changed] = e[changed].astype(np.uint8)
     return Image.fromarray(out, 'RGB'), float(changed.mean())
@@ -104,6 +170,33 @@ def placeholder(name, base=None):
     return im
 
 
+def wall_logo(src=LOGO_SRC, width=LOGO_MAX_W, height=None):
+    """The Observability Quest wordmark alone — letters cut out of the title screen, without its starscape,
+    glow, rule or blue panel — sized for the bedroom wall, hard-edged, with a 1px dark outline. None if absent."""
+    if not os.path.exists(src): return None
+    c = Image.open(src).convert('RGB').crop(LOGO_BOX)
+    a = np.asarray(c).astype(np.int16)
+    edge = (a[..., 2] > 150) & (a[..., 1] > 90)                           # the letters' bright rims
+    keep = np.zeros_like(edge)
+    for comp in _components(edge):
+        if len(comp) >= 60: ys, xs = zip(*comp); keep[list(ys), list(xs)] = True   # stars are specks; letters are not
+    letters = _erode(_fill_holes(_dilate(keep, 1)), 1) | keep
+    ys, xs = np.nonzero(letters)
+    if not len(ys): return None
+    box = (int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1)
+    rgba = Image.fromarray(np.dstack([np.asarray(c), (letters * 255).astype(np.uint8)]), 'RGBA').crop(box)
+    w = max(8, min(width, rgba.width))
+    if height: w = max(8, min(w, int(height * rgba.width / rgba.height)))   # fit the wall's height too
+    h = max(1, round(rgba.height * w / rgba.width))
+    small = np.asarray(rgba.resize((w, h), Image.LANCZOS)).copy()
+    solid = small[..., 3] > 110
+    rgb = np.asarray(quantise(Image.fromarray(small[..., :3], 'RGB'), 24))
+    out = np.zeros((h + 2, w + 2, 4), np.uint8)
+    out[_dilate(np.pad(solid, 1), 1)] = LOGO_OUTLINE
+    inner = out[1:-1, 1:-1]; inner[solid] = np.dstack([rgb, np.full((h, w), 255, np.uint8)])[solid]
+    return Image.fromarray(out, 'RGBA')
+
+
 def lit_green(img):
     a = np.asarray(img.convert('RGB')).astype(np.float32)
     a[..., 0] *= 0.9; a[..., 1] *= 1.35; a[..., 2] *= 0.9
@@ -116,7 +209,7 @@ def lit_warm(img):
     return quantise(Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), 'RGB'))
 
 
-def build(src, out, placeholders=False):
+def build(src, out, placeholders=False, logo_src=LOGO_SRC):
     os.makedirs(out, exist_ok=True)
 
     def have(n):
@@ -188,6 +281,18 @@ def build(src, out, placeholders=False):
             if k in ('lcd', 'wall', 'bed', 'stand', 'door') and isinstance(v, dict): m[k] = {**m[k], **v}
             elif k == 'floorY' and isinstance(v, (int, float)): m[k] = v
             else: warn(f'{OVERRIDES}: "{k}" ignored (expected lcd, wall, bed, stand, door as objects, or floorY as a number)')
+    # the title: the wordmark at the top of the wall, a line of text under it (placed after overrides moved the wall)
+    wl = m['wall']
+    logo = wall_logo(logo_src, max(8, min(LOGO_MAX_W, int(wl['w']) - 10) - 2), max(8, int(wl['h']) - 28))   # 6 above, 2 + a 16px text line + 2 below
+    if logo is not None:
+        m['images']['wall_logo'] = 'wall_logo.png'
+        logo.save(os.path.join(out, 'wall_logo.png'), optimize=True)
+        lg = {'x': int(wl['x'] + (wl['w'] - logo.width) // 2), 'y': int(wl['y'] + 6), 'w': logo.width, 'h': logo.height}
+        m['logo'] = lg
+        top = lg['y'] + lg['h'] + 2
+        m['subtitle'] = {'x': int(wl['x']), 'y': top, 'w': int(wl['w']), 'h': max(0, min(16, int(wl['y'] + wl['h']) - top))}
+    elif os.path.exists(os.path.join(out, 'wall_logo.png')):
+        os.remove(os.path.join(out, 'wall_logo.png'))
     json.dump(m, open(os.path.join(out, 'intro.json'), 'w'), indent=1)
     return m
 

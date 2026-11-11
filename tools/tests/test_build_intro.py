@@ -104,7 +104,7 @@ def test_edits_equal_their_plate_outside_the_change(tmp_path):
     for n, plate in bi.EDITS.items():
         diff = (_px(out, m, n) != _px(out, m, plate)).any(axis=2)
         ys, xs = np.nonzero(diff)
-        y0, y1, x0, x1 = (50, 70, 100, 140) if n == 'C_misery' else (20, 40, 20, 60)
+        y0, y1, x0, x1 = (49, 71, 99, 141) if n == 'C_misery' else (19, 41, 19, 61)      # the change plus a 1px soft rim
         assert ys.min() >= y0 and ys.max() < y1 and xs.min() >= x0 and xs.max() < x1, (n, ys.min(), ys.max(), xs.min(), xs.max())
 
 
@@ -157,3 +157,66 @@ def test_manifest_has_a_stand_spot_and_overrides_move_it(tmp_path):
     assert m['stand'] == {'x': 90}
     src = tmp_path / 'src'; os.makedirs(src); json.dump({'stand': {'x': 150}}, open(src / 'intro.overrides.json', 'w'))
     assert bi.build(str(src), str(tmp_path / 'out'), placeholders=True)['stand'] == {'x': 150}
+
+
+# ---- real-art fixes (2026-11-11): generators redraw the whole frame, so strays and ghosts must go ----
+def test_snap_drops_stray_specks():
+    rng = np.random.default_rng(3)
+    plate = Image.fromarray(rng.integers(20, 90, (200, 320, 3), dtype=np.uint8), 'RGB')
+    a = np.asarray(plate).copy(); a[80:140, 200:300] = (230, 200, 40)
+    specks = [(int(y), int(x)) for y, x in zip(rng.integers(0, 70, 40), rng.integers(0, 190, 40))]
+    for y, x in specks: a[y, x] = (255, 255, 255)
+    out, frac = bi.snap_to_plate(Image.fromarray(a, 'RGB'), plate)
+    o, p = np.asarray(out), np.asarray(plate)
+    assert all((o[y, x] == p[y, x]).all() for y, x in specks)
+    assert (o[80:140, 200:300] == (230, 200, 40)).all()
+    assert abs(frac - 6000 / 64000) < 0.002
+
+
+def test_snap_removes_a_faint_ghost_inside_a_removed_object():
+    a = np.zeros((200, 320, 3), np.uint8)
+    a[60:120, 100:220] = (18, 18, 20)                                 # dark body: within tolerance of black
+    a[60:63, 100:220] = a[117:120, 100:220] = (120, 120, 120)         # lighter outline
+    a[60:120, 100:103] = a[60:120, 217:220] = (120, 120, 120)
+    a[80:100, 120:200] = (110, 220, 90)                               # LCD
+    plate = Image.fromarray(a, 'RGB'); edit = Image.new('RGB', (320, 200), (0, 0, 0))
+    out, _ = bi.snap_to_plate(edit, plate)
+    assert np.asarray(out)[60:120, 100:220].max() == 0, 'ghost of the removed object survives'
+
+
+def test_snap_keeps_soft_edges_of_the_change():
+    plate = Image.new('RGB', (320, 200), (10, 20, 30))
+    a = np.asarray(plate).copy(); a[80:140, 200:300] = (200, 180, 160); a[79, 200:300] = (24, 34, 44)   # a faint anti-aliased rim
+    out, _ = bi.snap_to_plate(Image.fromarray(a, 'RGB'), plate)
+    assert tuple(np.asarray(out)[79, 250]) == (24, 34, 44)
+
+
+def test_a_removed_object_plus_a_hand_is_not_drift(tmp_path):
+    assert bi.MAX_DRIFT >= 0.5
+
+
+# ---- the wall title is the app's own wordmark, cut out of the title screen ----
+def test_wall_logo_is_the_wordmark_alone(tmp_path):
+    out = tmp_path / 'out'; m = bi.build(str(tmp_path / 'nosrc'), str(out), placeholders=True)
+    im = Image.open(out / m['images']['wall_logo']).convert('RGBA'); a = np.asarray(im).astype(int)
+    assert (im.width, im.height) == (m['logo']['w'], m['logo']['h'])
+    op = a[..., 3] > 0
+    assert set(np.unique(a[..., 3])) <= {0, 255}                      # hard pixel edges, no soft alpha
+    assert 0.25 < op.mean() < 0.8                                     # letters, not a filled box
+    assert not op[-1, 0] and not op[-1, -1] and not op[-(im.height // 4):, :im.width // 8].any()   # QUEST is the narrower line: nothing fills the box behind it
+    r, g, b = a[..., 0][op], a[..., 1][op], a[..., 2][op]
+    assert ((b >= r) & (b >= g - 12)).mean() > 0.995                  # blue wordmark and its dark outline: no gold rule, no white stars
+    w = m['wall']; lg = m['logo']; st = m['subtitle']
+    assert w['x'] <= lg['x'] and lg['x'] + lg['w'] <= w['x'] + w['w'] and w['y'] <= lg['y']
+    assert st['y'] >= lg['y'] + lg['h'] and st['y'] + st['h'] <= w['y'] + w['h']
+
+
+def test_wall_logo_follows_an_overridden_wall(tmp_path):
+    src = tmp_path / 'src'; os.makedirs(src); json.dump({'wall': {'x': 41, 'y': 0, 'w': 120, 'h': 100}}, open(src / 'intro.overrides.json', 'w'))
+    m = bi.build(str(src), str(tmp_path / 'out'), placeholders=True)
+    assert m['logo']['w'] <= 120 and m['logo']['x'] >= 41
+
+
+def test_no_title_screen_means_no_logo_and_still_builds(tmp_path):
+    m = bi.build(str(tmp_path / 'nosrc'), str(tmp_path / 'out'), placeholders=True, logo_src=str(tmp_path / 'missing.png'))
+    assert 'wall_logo' not in m['images'] and 'logo' not in m
