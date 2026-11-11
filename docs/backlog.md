@@ -44,3 +44,13 @@ block on. Test the restyle under `.hs-form` on a real phone.
 - Icon bar (Look / Use / Help), message windows and score ticking belong to the room-engine sub-project.
 - Desktop (≥ 1024 px): thumb columns may be thinner than 56 px; the icon bar falls back to a row under the scene in the room-engine sub-project.
 - `#rotate` gate uses `max-width: 700px`; a small tablet in portrait never sees it (plays letterboxed) — fine, but confirm on an iPad mini.
+
+## Deferred minors from the sub-project 1 review (2026-11-10)
+- README claims the GloryQuest credit appears in the title's small print; the placeholder title has none yet — add it with the title art.
+- Name input `maxlength="24"` while the copy says 16 — characters 17–24 vanish on Done; set `maxlength="16"` (the clamp stays for paste).
+- Safe-area insets pad the thumb columns but `fitStage` doesn't know them; check a notch iPhone, or fold the inset into `minCol`.
+- Hero is drawn with ~1,400 `fillRect`s per frame while walking; cache each pose as an offscreen canvas before rooms add backgrounds and sprites.
+- `ctx.reducedMotion` is read once at boot; add a `matchMedia` change listener.
+- 40×42 thumbnails overdraw the 3-px pressed border by 1–2 px.
+- Length thumbnails are identical when style = undercut (the generator ignores length for undercut) — substitute a visible length in the sheet, or decide it in the generator.
+- Portrait tablets (> 700 px wide) never see the rotate gate and play letterboxed — fine, but confirm on an iPad mini.
