@@ -59,8 +59,8 @@ This is **a game, not a toolkit**: we replicate the experience of an SCI-era gam
 
 0. **Rotate** — a portrait phone sees the *Rotate your phone* screen first; everything below is landscape.
 1. **Title** — new title art (generated, SCI-style), logo rendered crisp from the official SVG (never AI-generated), FM title theme on first tap, START.
-2. **Intro: *Night Shift*** — the character-driven sequence from mock 2, re-shot with real backgrounds: bedroom 3:02 AM → the walk → the wall of green dashboards → the hex on the horizon → "SO YOU WANT TO BE ON CALL?" Skippable. Script by Rick.
-3. **Character creation** — a Sierra character sheet, landscape: the hero large on the left, pickers on the right, RANDOM and DONE always visible. **Appearance only** — the class is not chosen here (Rick's call); each chapter hands the hero its persona. Details in *Character creation* below.
+2. **Character creation** — a Sierra character sheet, landscape: the hero large on the left, pickers on the right, RANDOM and DONE always visible. **Appearance only** — the class is not chosen here (Rick's call); each chapter hands the hero its persona. Details in *Character creation* below.
+3. **Intro** — Rick's storyboard (`docs/intro-storyboard.md`): a dithered EGA cold open in the dark — the pager, the face, the arm — cutting to the VGA bedroom with the title on the wall, where *the hero the player just made* gets out of bed, changes into the hoodie and walks out. Skippable. Details in *Intro and coda*. (Order per Rick 2026-11-11: sheet first, to be judged in team play-tests.)
 4. **Three chapters**, drawn from the five (*The draw*, below), each:
    - **Class card**: the chapter's persona and silly stats (below), which the hero *wears* for this chapter — "Tonight you are the SRE." Tap to continue.
    - **Room**: a 320×200 scene with the hero, 3–5 hotspots, narrator line on entry.
@@ -180,7 +180,29 @@ Reachable totals are 0, 50, 100, 150, 200, 250, 300. Charity's six tiers: 300 ·
 
 ## Intro and coda
 
-*Night Shift* as mocked in `scratch/intro-mock2.html`, rebuilt on the v2 engine: three generated backgrounds (bedroom, street, dashboard wall), the horizon scene drawn in code, the hero from character creation **not** yet known — the intro uses the default hero, and the sheet that follows lets the player remake them (Sierra did the same: you watched the hero arrive, then rolled your character). Copy is Rick's script. The coda reuses the street background at dawn.
+The intro follows `docs/intro-storyboard.md` (Rick, 2026-11-11), which supersedes the *Night Shift* mock. It comes **after** character creation, so the sleeper is the player's hero.
+
+**Two looks, one cut.** Shots 1–8 are **EGA-style cutscenes**: 320×200, large shapes, ordered (Bayer) dithering, a small per-shot palette (about 16 colours; it need not be exactly 16) plus the hero's own skin and hair colours, minimal animation. Shot 9 switches to the **gameplay VGA look**.
+
+| # | Shot | What moves | ≈ s |
+|---|---|---|---|
+| 1 | Black. A small square light blinks mid-screen, each blink partly revealing a nightstand, a lamp and someone asleep | the blink (≤ 2 Hz) and its dithered pool of light | 3 |
+| 2 | Close-up: a 90s pager on the nightstand, green LCD, black text **Help!** flashing | text flash | 2.5 |
+| 3 | Close-up: sleepy face, a bit of drool; a bleary eye cracks open | eyelid, 3 frames | 3 |
+| 4 | An arm reaches out to the pager | arm sweep | 1.5 |
+| 5 | The face looking at the pager, lit by its flashing light | green light pulse | 2 |
+| 6 | Pager close-up, text scrolling: **Backend is down. Website is down. Database is down. Get in here! -CTO** | marquee | 5 |
+| 7 | The face, pager in hand: misery and hopelessness | expression change | 2 |
+| 8 | A hand turns on the lamp | hand, then the screen floods with light | 1.5 |
+| 9 | The original wide framing, now in VGA: the lit bedroom with **Observability Quest I: So you want to be on-call?** on the wall behind the bed. Theme plays. The hero gets out of bed in pyjamas, stands, instantly changes into the hoodie and jeans, walks out | title appears; sit-up → stand → outfit flash → walk off right | 8 |
+
+- **Art**: shots 1–8 are **drawn in code** (Rick's call 2026-11-11), parametrised by the hero — skin tone, hair colour and style silhouette, beard, glasses off — so the close-up face is the person the player made. A Python reference generator with golden fixtures and a pixel-exact JS port, as for the sprite. The pager's LCD text uses a built-in 5×7 pixel font so it is crisp. Shot 9's bedroom is **one generated background** (Rick runs it; prompt in `ASSET_PROMPTS.md`), with the title lettered in code on a clear stretch of wall (GloryQuest for the title, VT323 for the subtitle); a code-drawn placeholder room stands in until it arrives.
+- **Hero additions**: a `pj` outfit (pale striped top and bottoms in place of hoodie and jeans, no pocket, drawstrings or hood) and a `situp` pose (upright in bed, legs under the blanket). The outfit change is a two-frame white flash, Sierra-style.
+- **Controls**: a tap advances to the next shot; **Skip** in the right thumb column jumps to the end. Reduced motion: each shot holds its final frame ~1.2 s, the light is steady rather than blinking, the pager text is static.
+- **Sound**: pager beeps on the blinks, a lamp click, and a placeholder cue where the theme will go; the real theme arrives with the OPL soundtrack sub-project.
+- A storyboard of these shots lives on the design canvas for team comment.
+
+The **coda** (after Charity) is unchanged in intent: the hero walks out into dawn, shades on; its background is decided with the room art.
 
 ## Audio
 
@@ -213,7 +235,7 @@ Carry over from v0.1: static layout shell, `text.js`, `claim.js` (form/complete)
 - `js/chapters/ch1..ch5.js` — data + glue per chapter; `js/draw.js` — the deal (rules in *The draw*, `?ch=` override, `oq.seen`).
 - **Script pipeline**: the script is a slotted Markdown document, `script/script.md`, one key per line (`ch1.room.enter`, `ch1.look.laptop`, `ch1.hc.prompt2.wrong1`, `final.tier.300` …). The builder drafts every slot with placeholder copy; Rick edits in place; `tools/build_script.mjs` generates `js/script.js` from it and fails on a missing or unknown key. Revisions are a regenerate, not a retranscription. Rick's intro narration goes into the same document's `intro.*` slots.
 - `js/audio/opl.js` — OPL3 core + sequencer; `js/audio/music/*.js` — compositions; `js/audio/sfx.js`.
-- `js/intro.js`, `js/creator.js`, `js/final.js`.
+- `js/intro/` (timeline, face, pager, room shots), `js/screens/creator.js`, `js/final.js`.
 - Tests: unit (room pathing math, scoring, prompt state, composition data, hero part maps), e2e (full run on landscape phones 844×390, 667×375, 932×430 and on a 1280×800 desktop; the rotate screen appears at 390×844 and clears on rotation; reduced motion; budget; every hotspot reachable and every chapter finishable by the Honeycomb path alone; wrong prompts never block).
 
 ## Verification before handoff
