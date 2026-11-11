@@ -14,21 +14,30 @@ plate), not a fresh generation, so the bed, nightstand, lamp, door and floor sta
 
 > Identical image — same framing, same bed, nightstand, lamp, door, wall and floor, same Sierra SCI
 > VGA 256-color pixel-art style — except the room is now furnished and lived in. Add: a wooden
-> dresser with a few things on top against the wall between the nightstand and the door; a small
-> round rug on the floor in front of the bed; a tall narrow bookshelf with books at the far left
-> behind the bed's headboard; a small framed picture or two low on the wall near the dresser; a
-> houseplant in a pot beside the door. Keep the upper half of the wall above the bed and dresser
-> completely plain and empty. Keep the floor in front of the door and a wide strip of floor from the
-> bed to the door clear. The door stays closed. No people, no clothing on the floor, no text.
+> dresser against the wall between the nightstand and the door, about waist high, with one or two
+> drawers pulled partly open and clothes spilling out of them and hanging over the drawer fronts;
+> the dresser's top is flat and has a clear empty space in the middle; a small round rug on the
+> floor in front of the bed; a tall narrow bookshelf with books at the far left behind the bed's
+> headboard; a small framed picture or two low on the wall near the dresser; a houseplant in a pot
+> beside the door. Keep the upper half of the wall above the bed and dresser completely plain and
+> empty. Keep the floor in front of the door and a wide strip of floor from the bed to the door
+> clear and bare. The door stays closed. No people, no laptop or computer, no clothing or shoes on
+> the floor, no text.
 
 Accept when:
 - bed, nightstand, lamp and door have **not moved or changed size** (flip between old and new);
-- the **top half of the wall from the left edge of the nightstand's column to the door frame is still
-  plain** — the game puts its title there (on the 320×200 picture: x 41–239, y 0–100);
-- furniture sits **against the back wall**, nothing taller than about half the wall under the title;
-- the floor has a clear walking strip from beside the nightstand to the door, and an empty patch of
-  floor roughly in the middle (the game draws a small pile of clothes there itself — **do not** add
-  clothes);
+- the **dresser is partly open with clothes spilling out**, stands against the back wall between
+  the nightstand and the door, is about waist high for a person (the door is the height guide: the
+  dresser top should be around 40–50% of the door's height), and its **top has an empty flat patch
+  at least 12 px wide on the 320×200 picture** — the game sets the hero's laptop (or coffee, phone…)
+  there itself and makes it vanish into their hand, so **do not** put a laptop or anything else in
+  that space;
+- the **top half of the wall from the nightstand's column to the door frame is still plain** — the
+  game puts its title there (on the 320×200 picture: x 41–239, y 0–100);
+- nothing else is taller than about half the wall under the title;
+- the floor has a clear walking strip from beside the nightstand to the door, and a bare patch of
+  floor about 55×12 px in the middle — the game draws the hero's jeans, hoodie and shoes there in
+  the player's own colours, so **do not** add clothes or shoes to the floor;
 - the door is closed; no person; no text, posters with lettering, clocks with digits, or logos.
 
 At most 5 tries. Save the raw download as `raw/D_bedroom_vga.png` (move the old one to
@@ -63,6 +72,7 @@ y 20-155` — a box around the door only. A box covering the room means the edit
 - Measured on `assets/intro/D_bedroom_vga.png` (320×200), because furniture may have shifted things:
   the plain wall rectangle still free for the title (x, y, w, h); the bed's blanket line (y) and a
   spot to sit (x); an x beside the bed/nightstand where a person can stand clear of furniture; an
-  empty floor spot for a 20×10 px clothes pile (x of its left edge, y of the floor row under it);
+  empty floor spot for a 55×12 px row of clothes (x of its left edge, y of the floor row under it);
+  the empty patch on the dresser top (x of its left edge, y of the dresser's top surface);
   the door opening (x, y, w, h), the x that centres a 28 px-wide person in it, and the y of the
   threshold; the y of the floor row a person walks along.

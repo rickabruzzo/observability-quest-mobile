@@ -20,7 +20,7 @@ DERIVED = ['C_awake_lit', 'B_lamp_lit']
 MAX_DRIFT = 0.5                     # an edit may remove an object and add a hand; past half the frame it is another picture
 COLOURS = 32
 DEFAULTS = {'wall': {'x': 24, 'y': 14, 'w': 232, 'h': 44}, 'bed': {'x': 60, 'y': 96}, 'stand': {'x': 90}, 'door': {'x': 286}, 'floorY': 176,
-            'clothes': {'x': 126, 'y': 184}, 'doorway': {'x': 272, 'y': 60, 'w': 56, 'h': 116}}
+            'clothes': {'x': 126, 'y': 184}, 'item': {'x': 200, 'y': 150}, 'doorway': {'x': 272, 'y': 60, 'w': 56, 'h': 116}}
 LCD_MIN = (40, 10)                  # anything smaller is a stray green speck, not the pager's LCD
 CHANGE_COLOURS = 16
 LCD_FALLBACK = (92, 62, 136, 36)
@@ -172,7 +172,43 @@ def placeholder(name, base=None):
     return im
 
 
-def wall_logo(src=LOGO_SRC, width=LOGO_MAX_W, height=None):
+def _runs(flags):
+    out, start = [], None
+    for i, f in enumerate(list(flags) + [False]):
+        if f and start is None: start = i
+        elif not f and start is not None: out.append((start, i - 1)); start = None
+    return out
+
+
+def _append_numeral(art, letters):
+    """OBSERVABILITY QUEST -> OBSERVABILITY QUEST I: the wordmark's own letter I (from OBSERVABILITY), enlarged
+    to QUEST's height and set a word-space after the T. Returns (art, letters) unchanged if it cannot be found."""
+    rows = letters.sum(axis=1); ys = np.nonzero(rows)[0]
+    y0, y1 = int(ys.min()), int(ys.max())
+    lo, hi = y0 + (y1 - y0) * 3 // 10, y0 + (y1 - y0) * 7 // 10
+    split = lo + int(np.argmin(rows[lo:hi + 1]))                       # the thinnest row between the two lines
+    top = np.nonzero(letters[:split].any(axis=1))[0]; bot = np.nonzero(letters[split:].any(axis=1))[0] + split
+    if not len(top) or not len(bot): return art, letters
+    t0, t1, b0, b1 = int(top.min()), int(top.max()), int(bot.min()), int(bot.max())
+    band = letters[t0:t1 + 1]
+    # letters touch through their outlines, so find the I by its bright face: the one narrow, lone upright
+    face = (art[t0:t1 + 1, :, 2].astype(int) > 200) & (art[t0:t1 + 1, :, 1].astype(int) > 120) & band
+    eyes = [(a, b) for a, b in _runs(face.any(axis=0)) if 10 <= b - a + 1 <= 30]
+    if not eyes: return art, letters
+    a, b = eyes[-1]; a, b = max(0, a - 1), min(letters.shape[1] - 1, b + 1)     # with its outline
+    scale = (b1 - b0 + 1) / (t1 - t0 + 1)
+    gw, gh = max(1, round((b - a + 1) * scale)), b1 - b0 + 1
+    glyph = Image.fromarray(art[t0:t1 + 1, a:b + 1], 'RGB').resize((gw, gh), Image.LANCZOS)
+    gmask = Image.fromarray((band[:, a:b + 1] * 255).astype(np.uint8), 'L').resize((gw, gh), Image.NEAREST)
+    qx1 = int(np.nonzero(letters[b0:b1 + 1].any(axis=0))[0].max())
+    x = qx1 + 1 + round((b - a + 1) * 0.7)                              # a word space
+    if x + gw > letters.shape[1]: return art, letters
+    art = art.copy(); letters = letters.copy(); m = np.asarray(gmask) > 127
+    art[b0:b1 + 1, x:x + gw][m] = np.asarray(glyph)[m]; letters[b0:b1 + 1, x:x + gw] |= m
+    return art, letters
+
+
+def wall_logo(src=LOGO_SRC, width=LOGO_MAX_W, height=None, numeral=True):
     """The Observability Quest wordmark alone — letters cut out of the title screen, without its starscape,
     glow, rule or blue panel — sized for the bedroom wall, hard-edged, with a 1px dark outline. None if absent."""
     if not os.path.exists(src): return None
@@ -185,8 +221,10 @@ def wall_logo(src=LOGO_SRC, width=LOGO_MAX_W, height=None):
     letters = _erode(_fill_holes(_dilate(keep, 1)), 1) | keep
     ys, xs = np.nonzero(letters)
     if not len(ys): return None
+    art = np.asarray(c).copy()
+    if numeral: art, letters = _append_numeral(art, letters)
     box = (int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1)
-    rgba = Image.fromarray(np.dstack([np.asarray(c), (letters * 255).astype(np.uint8)]), 'RGBA').crop(box)
+    rgba = Image.fromarray(np.dstack([art, (letters * 255).astype(np.uint8)]), 'RGBA').crop(box)
     w = max(8, min(width, rgba.width))
     if height: w = max(8, min(w, int(height * rgba.width / rgba.height)))   # fit the wall's height too
     h = max(1, round(rgba.height * w / rgba.width))
@@ -290,9 +328,9 @@ def build(src, out, placeholders=False, logo_src=LOGO_SRC):
     ov = os.path.join(src, OVERRIDES)
     if os.path.exists(ov):
         for k, v in json.load(open(ov)).items():
-            if k in ('lcd', 'wall', 'bed', 'stand', 'door', 'clothes', 'doorway') and isinstance(v, dict): m[k] = {**m[k], **v}
+            if k in ('lcd', 'wall', 'bed', 'stand', 'door', 'clothes', 'item', 'doorway') and isinstance(v, dict): m[k] = {**m[k], **v}
             elif k == 'floorY' and isinstance(v, (int, float)): m[k] = v
-            else: warn(f'{OVERRIDES}: "{k}" ignored (expected lcd, wall, bed, stand, door, clothes, doorway as objects, or floorY as a number)')
+            else: warn(f'{OVERRIDES}: "{k}" ignored (expected lcd, wall, bed, stand, door, clothes, item, doorway as objects, or floorY as a number)')
     m['door'].setdefault('y', m['floorY'])           # the row the hero's feet reach at the door; the floor line unless set
     # the title: the wordmark at the top of the wall, a line of text under it (placed after overrides moved the wall)
     wl = m['wall']

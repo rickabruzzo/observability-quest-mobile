@@ -40,6 +40,7 @@ FIXTURES = {
     'fem-idle': (PRESETS['fem'], 'idle'), 'nb-idle': (PRESETS['nb'], 'idle'),
     'var-long-beard': (dict(body='masc', skin=2, hair='black', style='standard', beard='long', hoodie='honey', jeans='khaki', glasses='glasses', hold='duck'), 'idle'),
     'var-fro': (dict(body='nb', skin=1, hair='blonde', style='fro', beard='short', hoodie='lime', jeans='indigo', glasses='glasses', hold='laptop'), 'idle'),
+    'masc-nohold-idle': ({**PRESETS['masc'], 'hold': 'none'}, 'idle'),      # empty-handed: before the item is picked up
     'masc-pj-idle': (PRESETS['masc'], 'idle', 'pj'), 'masc-pj-situp': (PRESETS['masc'], 'situp', 'pj'), 'fem-pj-walk1': (PRESETS['fem'], 'walk1', 'pj'),
     'var-shoulder': (dict(body='fem', skin=3, hair='ginger', style='shoulder', beard='none', hoodie='indigo', jeans='light', glasses='none', hold='pager'), 'idle'),
 }
@@ -62,9 +63,10 @@ LAPTOP = ramp('#8A94A6', light=1.25, shade=0.7)
 EYE_WHITE = hexc('#F2F2F2')
 # The Honeycomb logomark on the hoodie's chest: assets/hc_logomark.png taken down to 4x4 sprite pixels —
 # the big blue hexagon top right, green beside it, orange at the left, honey below. Brand colours.
+# High on the chest, wearer's right of the drawstrings.
 HC_MARK = {'blue': '#0298EC', 'green': '#64BA00', 'orange': '#F96E10', 'honey': '#FFB000'}
-HC_MARK_PIXELS = [(14, 32, 'blue'), (15, 32, 'blue'), (13, 33, 'green'), (14, 33, 'blue'), (15, 33, 'blue'),
-                  (12, 34, 'orange'), (13, 34, 'green'), (13, 35, 'honey')]
+HC_MARK_PIXELS = [(11, 23, 'blue'), (12, 23, 'blue'), (10, 24, 'green'), (11, 24, 'blue'), (12, 24, 'blue'),
+                  (9, 25, 'orange'), (10, 25, 'green'), (10, 26, 'honey')]
 
 class Canvas:
     def __init__(self):

@@ -248,3 +248,24 @@ def test_an_open_door_still_is_optional_and_snapped_to_the_bedroom(tmp_path):
     assert ys.min() >= 49 and ys.max() <= 150 and xs.min() >= 249 and xs.max() <= 300
     os.remove(src / 'D_door_open.png')
     assert 'D_door_open' not in bi.build(str(src), out)['images'] and not os.path.exists(os.path.join(out, 'D_door_open.png'))
+
+
+def test_wordmark_carries_the_numeral_after_quest():
+    plain = np.asarray(bi.wall_logo(numeral=False)); num = np.asarray(bi.wall_logo(numeral=True))
+    assert plain.shape == num.shape                                    # the I sits inside the wordmark's own width
+    hh = plain.shape[0]
+    def right_edge(a): return int(np.nonzero((a[hh * 6 // 10:, :, 3] > 0).any(axis=0))[0].max())    # QUEST's row
+    def top_rows(a): return a[:hh * 4 // 10]
+    assert right_edge(num) >= right_edge(plain) + 8
+    assert (top_rows(num)[..., 3] == top_rows(plain)[..., 3]).all()    # OBSERVABILITY untouched (colours may shift a shade in the shared palette)
+    assert np.abs(top_rows(num).astype(int) - top_rows(plain).astype(int)).mean() < 8
+    extra = num[hh * 6 // 10:, right_edge(plain) + 2:, :]
+    op = extra[..., 3] > 0; r, g, b = extra[..., 0][op].astype(int), extra[..., 1][op].astype(int), extra[..., 2][op].astype(int)
+    assert op.sum() > 40 and ((b >= r) & (b >= g - 12)).mean() > 0.99  # the same blue lettering, not a new font
+
+
+def test_manifest_places_the_item_on_the_dresser(tmp_path):
+    m = bi.build(str(tmp_path / 'nosrc'), str(tmp_path / 'out'), placeholders=True)
+    assert set(m['item']) == {'x', 'y'}
+    src = tmp_path / 'src'; os.makedirs(src); json.dump({'item': {'x': 190, 'y': 120}}, open(src / 'intro.overrides.json', 'w'))
+    assert bi.build(str(src), str(tmp_path / 'out'), placeholders=True)['item'] == {'x': 190, 'y': 120}

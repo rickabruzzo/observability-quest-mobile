@@ -113,7 +113,7 @@ test('the bedroom shot shows the title and walks the hero out', async () => {
   await page.waitForFunction(() => window.__oq.intro.t > 900);
   // the title is the app's own wordmark, drawn on the wall, with the subtitle lettered under it
   assert.equal(await page.locator('.intro-title').getAttribute('aria-label'), 'Observability Quest I: So you want to be on-call?');
-  assert.match(await page.locator('.intro-title').innerText(), /^I: So you want to be on-call\?$/);
+  assert.match(await page.locator('.intro-title').innerText(), /^So you want to be on-call\?$/);     // the I is in the wordmark, after QUEST
   const blue = await page.evaluate(() => {
     const r = window.__oq.intro.manifest.logo, d = document.getElementById('scene').getContext('2d').getImageData(r.x, r.y, r.w, r.h).data;
     let n = 0; for (let i = 0; i < d.length; i += 4) if (d[i + 2] > 140 && d[i + 2] > d[i] + 50) n++;
@@ -132,6 +132,15 @@ test('the bedroom shot shows the title and walks the hero out', async () => {
   await page.waitForFunction(() => window.__oq.intro.hero?.outfit === 'hoodie', null, { timeout: 5000 });
   assert.equal((await intro(page)).hero.pile, false);
   assert.notEqual(await grab(pileBox), withPile, 'the clothes are still on the floor');
+  // the hero's item waits on the dresser and is taken once they are dressed, Sierra inventory style
+  const itemBox = { x: m.item.x, y: m.item.y - 12, w: 10, h: 12 };
+  const dressed = await intro(page);
+  if (!dressed.hero.holding) {
+    const onDresser = await grab(itemBox);
+    await page.waitForFunction(() => window.__oq.intro.hero?.holding === true, null, { timeout: 3000 });
+    assert.notEqual(await grab(itemBox), onDresser, 'the item is still on the dresser');
+  }
+  await page.waitForFunction(() => window.__oq.intro.hero?.holding === true, null, { timeout: 3000 });
   // out through the door: it opens, the hero is gone, then the next screen
   await page.waitForFunction(() => window.__oq.intro.hero?.doorOpen === true, null, { timeout: 6000 });
   await page.waitForFunction(() => window.__oq.intro.hero?.doorOpen === true && window.__oq.intro.hero.visible === false, null, { timeout: 3000 });

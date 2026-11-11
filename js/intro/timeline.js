@@ -39,17 +39,19 @@ export const HERO_STEPS = [
   { at: 2800, pose: 'idle', outfit: 'pj', stand: true },
   { at: 3600, flash: true },
   { at: 3760, pose: 'idle', outfit: 'hoodie' },
-  { at: 4400, walkTo: 'door' },
+  { at: 4200, take: true },                          // the item on the dresser is now in the hero's hand
+  { at: 4700, walkTo: 'door' },
 ];
 
 export function heroAt(tMs) {
-  const h = { visible: false, pose: 'situp', outfit: 'pj', flash: false, titled: false, walking: false, standing: false };
+  const h = { visible: false, pose: 'situp', outfit: 'pj', flash: false, titled: false, walking: false, standing: false, holding: false };
   for (const s of HERO_STEPS) {
     if (tMs < s.at) break;
     if (s.do === 'title') h.titled = true;
     if (s.pose) { h.visible = true; h.pose = s.pose; h.outfit = s.outfit; h.flash = false; }
     if (s.stand) h.standing = true;
     if (s.flash) h.flash = true;
+    if (s.take) h.holding = true;
     if (s.walkTo) h.walking = true;
   }
   return h;

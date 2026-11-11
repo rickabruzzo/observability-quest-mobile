@@ -97,8 +97,16 @@ def test_hoodie_carries_the_honeycomb_mark_and_pyjamas_do_not():
     im = hero_gen.hero(**hero_gen.PRESETS['masc'])
     got = {im.getpixel((x, y))[:3] for (x, y, _) in hero_gen.HC_MARK_PIXELS}
     assert got == {hero_gen.hexc(c)[:3] for c in hero_gen.HC_MARK.values()}
-    assert len(hero_gen.HC_MARK_PIXELS) == 8 and all(12 <= x <= 15 and 32 <= y <= 35 for x, y, _ in hero_gen.HC_MARK_PIXELS)
+    assert len(hero_gen.HC_MARK_PIXELS) == 8 and all(9 <= x <= 12 and 23 <= y <= 26 for x, y, _ in hero_gen.HC_MARK_PIXELS)   # high on the chest (Rick, 2026-11-11)
     pj = hero_gen.hero(**hero_gen.PRESETS['masc'], outfit='pj')
     assert not ({pj.getpixel((x, y))[:3] for (x, y, _) in hero_gen.HC_MARK_PIXELS} & got)
     walk = hero_gen.hero(**hero_gen.PRESETS['masc'], pose='walk2')            # the mark rides the body's bob
-    assert walk.getpixel((14, 33 + 1))[:3] == hero_gen.hexc(hero_gen.HC_MARK['blue'])[:3]
+    assert walk.getpixel((11, 24 + 1))[:3] == hero_gen.hexc(hero_gen.HC_MARK['blue'])[:3]
+
+
+def test_empty_handed_hero_for_the_moment_before_the_item_is_picked_up(tmp_path):
+    full = hero_gen.hero(**hero_gen.PRESETS['masc'])
+    bare = hero_gen.hero(**{**hero_gen.PRESETS['masc'], 'hold': 'none'})
+    assert bare.getpixel((2, 37))[3] == 0 and full.getpixel((2, 37))[3] == 255
+    hero_gen.write_fixtures(str(tmp_path))
+    assert (tmp_path / 'masc-nohold-idle.rgba').exists()

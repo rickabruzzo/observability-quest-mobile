@@ -57,7 +57,8 @@ The intro cuts between nine stills. Until the real ones exist the game shows lab
    { "wall": { "x": 24, "y": 14, "w": 232, "h": 44 },   "the empty wall the title is lettered on"
      "bed": { "x": 60, "y": 96 },                       "hero's left edge in bed; y = the blanket line"
      "stand": { "x": 90 },                              "hero's left edge once out of bed (clear of the bed)"
-     "clothes": { "x": 126, "y": 184 },                 "left edge and floor row of the clothes pile the game draws"
+     "clothes": { "x": 126, "y": 184 },                 "left edge and floor row of the jeans, hoodie and shoes the game draws"
+     "item": { "x": 200, "y": 150 },                    "left edge and resting row of the hero's item on the dresser top"
      "door": { "x": 286, "y": 154 }, "floorY": 176,     "hero's left edge at the door and the threshold row; the row they walk along"
      "doorway": { "x": 246, "y": 27, "w": 58, "h": 126 },  "the door opening (drawn dark when there is no D_door_open still)"
      "lcd": { "x": 92, "y": 62, "w": 136, "h": 36 } }   "only if the LCD isn't found"
@@ -65,7 +66,7 @@ The intro cuts between nine stills. Until the real ones exist the game shows lab
    (Plain JSON — leave the quoted notes out.) Coordinates are in 320×200 pixels.
 
 The title on the bedroom wall is the app's own **Observability Quest wordmark**, cut by the build out of
-`assets/title_screen.png` (letters only — no starscape, glow, rule or blue panel), sized to the `wall` rectangle, with
+`assets/title_screen.png` (letters only — no starscape, glow, rule or blue panel; the build adds the **I** after QUEST from the wordmark's own letter I), sized to the `wall` rectangle, with
 the subtitle lettered under it. Replace that picture and rebuild to change the logo.
 
 An optional tenth still, `D_door_open.png` (an edit of the bedroom with the door open), is used for the hero's exit

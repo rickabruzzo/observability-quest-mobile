@@ -35,7 +35,9 @@ test('hero script', () => {
   assert.deepEqual([heroAt(3000).pose, heroAt(3000).outfit], ['idle', 'pj']);
   assert.equal(heroAt(3650).flash, true); assert.equal(heroAt(3000).flash, false); assert.equal(heroAt(3800).flash, false);
   assert.deepEqual([heroAt(3800).pose, heroAt(3800).outfit], ['idle', 'hoodie']);
-  assert.equal(heroAt(4300).walking, false); assert.equal(heroAt(4500).walking, true);
+  // dressed first, then the item comes off the dresser into the hand, then the walk
+  assert.equal(heroAt(3000).holding, false); assert.equal(heroAt(3900).holding, false); assert.equal(heroAt(4300).holding, true);
+  assert.equal(heroAt(4600).walking, false); assert.equal(heroAt(4800).walking, true); assert.equal(heroAt(4800).holding, true);
   assert.ok(HERO_STEPS.every((s, i) => i === 0 || s.at > HERO_STEPS[i - 1].at));
 });
 test('no flash faster than 2 Hz', () => assert.ok(FLASH_MS >= 500));

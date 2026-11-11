@@ -17,7 +17,7 @@ const WALK_AT = HERO_STEPS.find((s) => s.walkTo).at;
 const REDUCED_BEDROOM_MS = 2500;
 const NEXT = 'PREVIEW';
 const TITLE = ['OBSERVABILITY QUEST I', 'So you want to be on-call?'];     // lettered whole when the wordmark picture is missing
-const SUBTITLE = 'I: So you want to be on-call?';                          // under the wordmark
+const SUBTITLE = 'So you want to be on-call?';                             // under the wordmark, which carries the I
 const TITLE_LABEL = 'Observability Quest I: So you want to be on-call?';
 
 let loading = null;
@@ -66,21 +66,43 @@ function shade(hex, f) {
   return `rgb(${c(n >> 16)},${c((n >> 8) & 255)},${c(n & 255)})`;
 }
 
-/** Yesterday's clothes in a heap, in the hero's own colours: jeans under a crumpled Honeycomb hoodie. (x, y) = left, floor row. */
+const SHOE = '#2E2E36';
+
+/** Day clothes on the floor, in the hero's own colours: jeans, the Honeycomb hoodie in a heap, a pair of shoes. (x, y) = left, floor row. */
 export function drawClothes(g, cfg, x, y) {
   const hood = HOODIE[cfg.hoodie] || HOODIE.ink, jean = JEANS[cfg.jeans] || JEANS.indigo;
   const R = (c, dx, dy, w, h) => { g.fillStyle = c; g.fillRect(x + dx, y + dy, w, h); };
-  for (const [dx, dy, w, h] of [[0, -4, 13, 4], [10, -3, 10, 3], [3, -9, 14, 6], [5, -10, 5, 1], [15, -6, 5, 3]]) R(OUTLINE, dx - 1, dy - 1, w + 2, h + 2);
-  R(jean, 0, -4, 13, 4); R(jean, 10, -3, 10, 3); R(shade(jean, 0.7), 0, -1, 20, 1); R(shade(jean, 1.25), 11, -3, 8, 1);   // jeans, one leg trailing
-  R(hood, 3, -9, 14, 6); R(hood, 5, -10, 5, 1); R(hood, 15, -6, 5, 3);                                                   // hoodie body, hood, a sleeve
-  R(shade(hood, 1.3), 3, -9, 14, 1); R(shade(hood, 0.7), 3, -4, 14, 1); R(shade(hood, 0.7), 15, -4, 5, 1);
-  for (const [mx, my, k] of HC_MARK_PIXELS) R(HC_MARK[k], 8 + (mx - 12), -8 + (my - 32), 1, 1);                           // the mark, face up
+  const shapes = [
+    [jean, 0, -5, 16, 4], [jean, 2, -3, 6, 3], [jean, 10, -3, 6, 3],                    // jeans: waist and two legs, dropped flat
+    [hood, 19, -9, 14, 7], [hood, 21, -10, 5, 1], [hood, 31, -6, 5, 4],                 // hoodie: body, hood, a sleeve
+    [SHOE, 38, -4, 6, 4], [SHOE, 45, -3, 6, 3],                                         // shoes, kicked off
+  ];
+  for (const [, dx, dy, w, h] of shapes) R(OUTLINE, dx - 1, dy - 1, w + 2, h + 2);
+  for (const [c, dx, dy, w, h] of shapes) R(c, dx, dy, w, h);
+  R(shade(jean, 1.25), 0, -5, 16, 1); R(shade(jean, 0.7), 8, -3, 2, 3);
+  R(shade(hood, 1.3), 19, -9, 14, 1); R(shade(hood, 0.7), 19, -3, 14, 1); R(shade(hood, 0.7), 31, -3, 5, 1);
+  R(shade(SHOE, 1.6), 38, -4, 6, 1); R(shade(SHOE, 1.6), 45, -3, 6, 1);
+  const mx0 = Math.min(...HC_MARK_PIXELS.map((p) => p[0])), my0 = Math.min(...HC_MARK_PIXELS.map((p) => p[1]));
+  for (const [mx, my, k] of HC_MARK_PIXELS) R(HC_MARK[k], 24 + (mx - mx0), -8 + (my - my0), 1, 1);   // the mark, face up
+}
+
+/** What the hero carries, alone: the pixels that differ between the hero with it and without. */
+function heldItem(cfg) {
+  const a = composeHero(cfg, 'idle'), b = composeHero({ ...cfg, hold: 'none' }, 'idle'), px = [];
+  for (let i = 0; i < HERO_W * HERO_H; i++) {
+    if (a[i * 4] !== b[i * 4] || a[i * 4 + 1] !== b[i * 4 + 1] || a[i * 4 + 2] !== b[i * 4 + 2] || a[i * 4 + 3] !== b[i * 4 + 3]) {
+      if (a[i * 4 + 3]) px.push([i % HERO_W, Math.floor(i / HERO_W), `rgb(${a[i * 4]},${a[i * 4 + 1]},${a[i * 4 + 2]})`]);
+    }
+  }
+  if (!px.length) return null;
+  const x0 = Math.min(...px.map((p) => p[0])), y1 = Math.max(...px.map((p) => p[1]));
+  return px.map(([x, y, c]) => [x - x0, y - y1, c]);                 // relative to its left edge and its bottom row
 }
 
 export function createIntroScreen(game) {
   let token = 0, assets = null, shot = 0, t = 0, out = false, done = false;
   let skip = null, onTap = null, sfx = null, titleEl = null;
-  let lastOn = false, clicked = false, heroState = null;
+  let lastOn = false, clicked = false, heroState = null, item = null;
 
   function cut(i) { shot = i; t = 0; lastOn = false; clicked = false; heroState = null; }
 
@@ -137,17 +159,20 @@ export function createIntroScreen(game) {
     if (ctx.reducedMotion) {
       showTitle(ctx, m, true);
       drawHero(g, cfg, 'idle', standX, standY, 1);
-      heroState = { pose: 'idle', outfit: 'hoodie', x: standX, visible: true, pile: false, doorOpen: false };
+      heroState = { pose: 'idle', outfit: 'hoodie', x: standX, visible: true, pile: false, holding: true, doorOpen: false };
       if (t >= REDUCED_BEDROOM_MS) finish();
       return;
     }
     const h = heroAt(t);
     const e = h.walking ? exitAt(exitPlan({ standX, doorX: m.door.x, floorY: m.floorY, doorY: Number.isFinite(m.door.y) ? m.door.y : m.floorY }), t - WALK_AT) : null;
     const pile = h.outfit === 'pj' && !!m.clothes;         // on the floor until the change puts them on the hero
+    const onDresser = !h.holding && !!m.item && !!item;    // the hero's item waits on the dresser until it is taken
+    const bare = h.holding ? cfg : { ...cfg, hold: 'none' };
     if (e?.doorOpen) openDoor(g, m);
     showTitle(ctx, m, h.titled);
     if (pile) drawClothes(g, cfg, m.clothes.x, m.clothes.y);
-    heroState = { pose: h.pose, outfit: h.outfit, x: standX, visible: h.visible, pile, doorOpen: !!e?.doorOpen };
+    if (onDresser) for (const [dx, dy, c] of item) { g.fillStyle = c; g.fillRect(m.item.x + dx, m.item.y + dy, 1, 1); }
+    heroState = { pose: h.pose, outfit: h.outfit, x: standX, visible: h.visible, pile, holding: h.holding, doorOpen: !!e?.doorOpen };
     if (e) {
       if (e.visible) drawHero(g, cfg, e.pose, e.x, e.y - HERO_H, 1, { flip: e.flip });
       Object.assign(heroState, { pose: e.pose, outfit: 'hoodie', x: e.x, visible: e.visible });
@@ -162,7 +187,7 @@ export function createIntroScreen(game) {
       return;
     }
     if (h.flash) drawSilhouette(g, composeHero(cfg, 'idle', h.outfit), standX, standY, '#FFFFFF');
-    else drawHero(g, cfg, 'idle', standX, standY, 1, { outfit: h.outfit });
+    else drawHero(g, bare, 'idle', standX, standY, 1, { outfit: h.outfit });
   }
 
   function paint(ctx, dt = 0) {
@@ -185,6 +210,7 @@ export function createIntroScreen(game) {
     enter(ctx) {
       const mine = ++token;
       assets = null; out = false; done = false; cut(0);
+      item = heldItem(ctx.hero);
       sfx = createSfx();
       skip = colButton({ id: 'btn-skip', long: 'Skip', short: 'Skip', onClick: finish });
       ctx.colR.appendChild(skip);
