@@ -140,7 +140,8 @@ All PNGs are losslessly recompressed with `tools/optimize_png.py` (oxipng).
 
 ## Intro stills (v2, branch `sci-adventure`)
 
-Prompts and the single-change edit rules: `briefs/intro-shots-brief.md`. Nine images, generated in Firefly/Gemini
+Prompts and the single-change edit rules: `briefs/intro-shots-brief.md` (for a person) and
+`briefs/intro-shots-agent-brief.md` (the same task as step-by-step instructions for a Claude session driving the generator). Nine images, generated in Firefly/Gemini
 to match the narrator portraits, exported 640×400 into `scratch/intro_gen/`, built by `tools/build_intro.py`.
 
 | File | What | Tool / date / notes |
