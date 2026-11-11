@@ -65,3 +65,15 @@ block on. Test the restyle under `.hs-form` on a real phone.
 - Bed, door, floor and wall positions are defaults until the real bedroom plate lands — set `scratch/intro_gen/intro.overrides.json` (README).
 - No mute control yet; `createSfx({ muted })` takes one when the audio sub-project adds it.
 - After the intro the game goes to the preview room; the chapter deal replaces that in the room-engine sub-project.
+
+## Deferred minors from the intro review (2026-11-11)
+- `build_intro.py` prints the total size but does not fail over 400 KB (the e2e weight test does); real dithered art may land near the limit.
+- Bedroom plate is cut to 32 colours like the EGA shots; consider 64–128 for `D_bedroom_vga` if it bands.
+- Sound on iPhone: the AudioContext is created lazily from a frame callback and may stay suspended; create/resume it inside the Start tap.
+- `composeHero` runs every frame during sit-up and flash; compute once per cut (and cache poses, as already noted).
+- A second load attempt can show up to 6 s of black with only Skip; add a hint or shorten the timeout.
+- `js/game.js` frame loop dies if a screen's `tick` throws; wrap in try/catch.
+- Intro PNG URLs carry no version; placeholders may be cached when real art lands — add `?v=` from the manifest.
+- Pyjama stripes sit on absolute rows, so they shift phase between sit-up and standing.
+- LCD copy exists only on canvas; mirror it in an `aria-live` node for screen readers.
+- Malformed values inside an override object (e.g. `"bed": {"x": "left"}`) are not validated.
