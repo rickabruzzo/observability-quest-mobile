@@ -32,9 +32,13 @@
   "x": 60,
   "y": 96
  },
+ "stand": {
+  "x": 90
+ },
  "door": {
   "x": 286
  },
  "floorY": 176,
+ "lcdFound": true,
  "placeholder": true
 }

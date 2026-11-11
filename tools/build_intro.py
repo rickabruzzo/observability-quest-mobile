@@ -18,7 +18,9 @@ SOURCES = PLATES + list(EDITS)
 DERIVED = ['C_awake_lit', 'B_lamp_lit']
 MAX_DRIFT = 0.35
 COLOURS = 32
-DEFAULTS = {'wall': {'x': 24, 'y': 14, 'w': 232, 'h': 44}, 'bed': {'x': 60, 'y': 96}, 'door': {'x': 286}, 'floorY': 176}
+DEFAULTS = {'wall': {'x': 24, 'y': 14, 'w': 232, 'h': 44}, 'bed': {'x': 60, 'y': 96}, 'stand': {'x': 90}, 'door': {'x': 286}, 'floorY': 176}
+LCD_MIN = (40, 10)                  # anything smaller is a stray green speck, not the pager's LCD
+CHANGE_COLOURS = 16
 LCD_FALLBACK = (92, 62, 136, 36)
 OVERRIDES = 'intro.overrides.json'
 
@@ -30,7 +32,9 @@ _PH_TINT = {'B_arm': (200, 150, 120), 'B_lamp': (150, 140, 90), 'C_eye_crack': (
 
 
 def downsample(img):
-    """640x400 (or anything) -> 320x200, nearest: the art is already pixel art at 2x."""
+    """640x400 (or anything 16:10) -> 320x200, nearest: the art is already pixel art at 2x. Transparency goes to black."""
+    if img.mode in ('RGBA', 'LA', 'P'):
+        img = img.convert('RGBA'); bg = Image.new('RGBA', img.size, (0, 0, 0, 255)); img = Image.alpha_composite(bg, img)
     img = img.convert('RGB')
     return img if img.size == (W, H) else img.resize((W, H), Image.NEAREST)
 
@@ -51,10 +55,13 @@ def snap_to_plate(edit, plate, tol=24, base=None):
 
 
 def find_lcd(img):
-    """Bounding box of the largest connected bright-green region, inset 2px. None when there is none."""
-    a = np.asarray(img.convert('RGB')).astype(np.int16)
+    """Bounding box of the largest connected green region, inset 2px. None when there is none big enough.
+    Works on a 3x3 box blur so a dithered LCD is one region, and takes olive as well as bright green."""
+    a = np.asarray(img.convert('RGB')).astype(np.float32)
+    pad = np.pad(a, ((1, 1), (1, 1), (0, 0)), mode='edge')
+    a = sum(pad[dy:dy + a.shape[0], dx:dx + a.shape[1]] for dy in range(3) for dx in range(3)) / 9
     r, g, b = a[..., 0], a[..., 1], a[..., 2]
-    mask = (g > 150) & (g > r + 40) & (g > b + 40)
+    mask = (g > 110) & (g > r + 12) & (g > b + 30)
     seen = np.zeros_like(mask)
     best, best_n = None, 0
     for sy, sx in zip(*np.nonzero(mask)):
@@ -72,13 +79,13 @@ def find_lcd(img):
     if not best: return None
     x0, y0, x1, y1 = (int(v) for v in best)
     w, h = x1 - x0 + 1 - 4, y1 - y0 + 1 - 4
-    return (x0 + 2, y0 + 2, w, h) if w > 0 and h > 0 else None
+    return (x0 + 2, y0 + 2, w, h) if w >= LCD_MIN[0] and h >= LCD_MIN[1] else None
 
 
-def placeholder(name):
-    """Flat labelled stand-in. Edits are their plate plus one changed block, so they survive snapping."""
+def placeholder(name, base=None):
+    """Flat labelled stand-in. Edits are their plate (`base` when the real one exists) plus one changed block."""
     if name in EDITS:
-        im = placeholder(EDITS[name])
+        im = base.copy() if base is not None else placeholder(EDITS[name])
         d = ImageDraw.Draw(im)
         x0, y0, x1, y1 = _PH_CHANGE[name]
         d.rectangle((x0, y0, x1 - 1, y1 - 1), fill=_PH_TINT[name])
@@ -118,28 +125,47 @@ def build(src, out, placeholders=False):
     def real(n):                                    # an edit is only real when the still it is cut against is too
         return have(n) and (n not in EDITS or real(EDITS[n]))
 
+    def warn(msg): print(f'build_intro: {msg}', file=sys.stderr)
+
+    if not placeholders and os.path.isdir(src):
+        known = {f'{n}.png' for n in SOURCES} | {OVERRIDES}
+        for f in sorted(os.listdir(src)):
+            if f not in known and not f.startswith('.'):
+                warn(f'{f} is not one of the expected files and is ignored (names are case-sensitive, .png only)')
+
     raw, done, fake = {}, {}, []
     for n in SOURCES:
         if real(n):
-            raw[n] = downsample(Image.open(os.path.join(src, f'{n}.png')))
+            im = Image.open(os.path.join(src, f'{n}.png'))
+            if im.width * H != im.height * W:
+                raise SystemExit(f'build_intro: {n}.png is {im.width}x{im.height}; it must be 16:10 (640x400). '
+                                 'Crop or re-export it — a stretched edit will not line up with its plate.')
+            raw[n] = downsample(im)
         else:
-            if have(n): print(f'build_intro: {n} ignored — its plate {EDITS[n]} is missing', file=sys.stderr)
-            raw[n] = placeholder(n); fake.append(n)
+            if have(n): warn(f'{n} ignored — its plate {EDITS[n]} is missing')
+            fake.append(n)
     for n in PLATES:
+        if n in fake: raw[n] = placeholder(n)
         done[n] = quantise(raw[n])
     refs = {n: raw[n] for n in PLATES}
     for n, plate in EDITS.items():                  # dict order: C_awake before C_misery
+        if n in fake:                               # stand-in drawn on the finished still it is cut against
+            done[n] = placeholder(n, base=done[plate]); refs[n] = placeholder(n, base=refs[plate])
+            continue
         # compare in the generator's own colours (refs[]), but take unchanged pixels from the finished plate
-        src_img = quantise(raw[n]) if n in fake else raw[n]
-        refs[n] = snap_to_plate(src_img, refs[plate])[0]
-        img, frac = snap_to_plate(src_img, refs[plate], base=done[plate])
+        refs[n] = snap_to_plate(raw[n], refs[plate])[0]
+        img, frac = snap_to_plate(raw[n], refs[plate], base=done[plate])
         if frac > MAX_DRIFT:
             raise SystemExit(f'build_intro: {n}.png differs from {plate} over {frac:.0%} of the frame (limit {MAX_DRIFT:.0%}). '
                              f'It must be the same picture with one change — regenerate it as an edit of {plate}.')
-        if n not in fake:                           # limit the colours the change itself brought in
-            q = np.asarray(quantise(img)); a = np.asarray(img).copy(); b = np.asarray(done[plate])
-            diff = (a != b).any(axis=2); a[diff] = q[diff]; img = Image.fromarray(a, 'RGB')
-        done[n] = img
+        a = np.asarray(img).copy(); diff = (a != np.asarray(done[plate])).any(axis=2)
+        if diff.any():                              # the change gets its own small palette, so a tiny edit keeps its colours
+            ys, xs = np.nonzero(diff)
+            strip = Image.fromarray(a[diff].reshape(1, -1, 3), 'RGB')
+            a[diff] = np.asarray(quantise(strip, CHANGE_COLOURS)).reshape(-1, 3)
+            print(f'  {n}: {frac:.1%} of the frame changed, x {xs.min()}-{xs.max()}, y {ys.min()}-{ys.max()}')
+        done[n] = Image.fromarray(a, 'RGB')
+    if fake and not placeholders: warn('placeholders used for: ' + ', '.join(fake))
     done['C_awake_lit'] = lit_green(done['C_awake'])
     done['B_lamp_lit'] = lit_warm(done['B_lamp'])
 
@@ -152,14 +178,16 @@ def build(src, out, placeholders=False):
     if not lcd:
         print('build_intro: no green LCD found in B_nightstand; using the default box '
               f'(set "lcd" in {OVERRIDES} to place it)', file=sys.stderr)
-        lcd = LCD_FALLBACK
+        lcd, found = LCD_FALLBACK, False
+    else: found = True
     m = {'size': [W, H], 'images': images, 'lcd': dict(zip('xywh', lcd)), **json.loads(json.dumps(DEFAULTS)),
-         'placeholder': bool(fake)}
+         'lcdFound': found, 'placeholder': bool(fake)}
     ov = os.path.join(src, OVERRIDES)
     if os.path.exists(ov):
         for k, v in json.load(open(ov)).items():
-            if k in ('lcd', 'wall', 'bed', 'door'): m[k] = {**m[k], **v}
-            elif k == 'floorY': m[k] = v
+            if k in ('lcd', 'wall', 'bed', 'stand', 'door') and isinstance(v, dict): m[k] = {**m[k], **v}
+            elif k == 'floorY' and isinstance(v, (int, float)): m[k] = v
+            else: warn(f'{OVERRIDES}: "{k}" ignored (expected lcd, wall, bed, stand, door as objects, or floorY as a number)')
     json.dump(m, open(os.path.join(out, 'intro.json'), 'w'), indent=1)
     return m
 
@@ -172,5 +200,5 @@ if __name__ == '__main__':
     a = ap.parse_args()
     man = build(a.src, a.out, a.placeholders)
     size = sum(os.path.getsize(os.path.join(a.out, f)) for f in os.listdir(a.out))
-    print(f"intro: {len(man['images'])} stills, {size // 1024} KB, lcd {man['lcd']}, "
+    print(f"intro: {len(man['images'])} stills, {size // 1024} KB, lcd {man['lcd']}{'' if man['lcdFound'] else ' (FALLBACK — not found)'}, "
           f"{'PLACEHOLDERS' if man['placeholder'] else 'real art'}")

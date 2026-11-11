@@ -39,3 +39,10 @@ test('hero script', () => {
   assert.ok(HERO_STEPS.every((s, i) => i === 0 || s.at > HERO_STEPS[i - 1].at));
 });
 test('no flash faster than 2 Hz', () => assert.ok(FLASH_MS >= 500));
+test('sampled every ms, no shot changes picture more than 4 times a second', () => {
+  SHOTS.forEach((s, i) => {
+    let last = null, changes = 0;
+    for (let t = 0; t < s.ms; t++) { const f = frameAt(i, t); const k = `${f.image}|${f.black}|${f.lcd?.on}`; if (last !== null && k !== last) changes++; last = k; }
+    assert.ok(changes <= Math.ceil(s.ms / 250), `${s.id}: ${changes} changes in ${s.ms} ms`);
+  });
+});

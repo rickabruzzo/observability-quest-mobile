@@ -132,7 +132,8 @@ test('rotating to portrait freezes the intro; rotating back resumes the same sho
   assert.equal(b.t, a.t); assert.equal(b.shot, a.shot);
   await page.setViewportSize({ width: 844, height: 390 });
   await page.waitForFunction((t) => window.__oq.intro.t > t || window.__oq.intro.shot > 0, a.t);
-  assert.ok((await intro(page)).shot <= a.shot + 1);
+  const c = await intro(page);
+  assert.ok(c.shot === a.shot ? c.t > a.t : c.shot === a.shot + 1, JSON.stringify([a, c]));
   await ctx.close();
 });
 
@@ -168,5 +169,43 @@ test('Skip is a full-size target on a small phone', async () => {
   const b = await page.locator('#btn-skip').boundingBox();
   assert.ok(b.width >= 44 && b.height >= 44, JSON.stringify(b));
   assert.ok(b.x >= 0 && b.x + b.width <= 667 && b.y >= 0 && b.y + b.height <= 375, JSON.stringify(b));
+  await ctx.close();
+});
+
+test('if a picture never arrives the game still reaches the preview', async () => {
+  const { ctx, page } = await openIntro({}, (page) => page.route('**/assets/intro/C_misery.png', () => { /* never answered */ }));
+  await page.waitForFunction(() => document.body.dataset.screen === 'PREVIEW', null, { timeout: 9000 });
+  await ctx.close();
+});
+
+test('back to the sheet and Start again: one Skip, one title, taps still advance one shot', async () => {
+  const { ctx, page } = await openIntro();
+  for (let round = 0; round < 2; round++) {
+    await running(page);
+    await page.click('#btn-skip');
+    await page.waitForFunction(() => document.body.dataset.screen === 'PREVIEW');
+    await page.waitForTimeout(400); await page.click('#btn-redo');
+    await page.waitForFunction(() => document.body.dataset.screen === 'CREATOR');
+    await page.waitForTimeout(400); await page.click('#btn-start-game');
+    await page.waitForFunction(() => document.body.dataset.screen === 'INTRO');
+  }
+  await running(page);
+  assert.equal(await page.locator('#btn-skip').count(), 1);
+  assert.equal(await page.locator('.intro-title').count(), 0);
+  assert.equal((await intro(page)).shot, 0);
+  await page.waitForTimeout(300); await tapScene(page); await page.waitForTimeout(80);
+  assert.equal((await intro(page)).shot, 1);
+  await ctx.close();
+});
+
+test('the hero stands where the manifest says', async () => {
+  const { ctx, page } = await openIntro({}, (page) => page.route('**/assets/intro/intro.json', async (r) => {
+    const res = await r.fetch(); const m = await res.json(); m.stand = { x: 150 };
+    await r.fulfill({ response: res, json: m });
+  }));
+  await running(page);
+  for (let i = 0; i < 8; i++) { await page.waitForTimeout(300); await tapScene(page); }
+  await page.waitForFunction(() => window.__oq.intro.hero?.pose === 'idle', null, { timeout: 5000 });
+  assert.equal((await intro(page)).hero.x, 150);
   await ctx.close();
 });

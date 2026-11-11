@@ -12,7 +12,7 @@ import { colButton } from '../engine/ui.js';
 const BASE = 'assets/intro/';
 const LOAD_TIMEOUT_MS = 6000;
 const TAP_GUARD_MS = 250;            // a tap this soon after a cut is the tail of the last tap
-const STAND_DX = 30;                 // standing spot, right of the bed
+const STAND_DX = 30;                 // standing spot when the manifest has none: just right of the bed's left edge
 const AMBLE = 140;                   // px/s — a sleepy walk to the door
 const REDUCED_BEDROOM_MS = 2500;
 const NEXT = 'PREVIEW';
@@ -100,7 +100,7 @@ export function createIntroScreen(game) {
 
   function paintHero(ctx, m, dt) {
     const g = ctx.ctx2d, cfg = ctx.hero;
-    const standX = m.bed.x + STAND_DX, standY = m.floorY - HERO_H;
+    const standX = Number.isFinite(m.stand?.x) ? m.stand.x : m.bed.x + STAND_DX, standY = m.floorY - HERO_H;
     if (ctx.reducedMotion) {
       showTitle(ctx, m, true);
       drawHero(g, cfg, 'idle', standX, standY, 1);

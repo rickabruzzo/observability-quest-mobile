@@ -43,7 +43,9 @@ The intro cuts between nine stills. Until the real ones exist the game shows lab
 1. Generate the nine images from `briefs/intro-shots-brief.md` and export them at 640×400 into `scratch/intro_gen/`
    (`A_room_dark`, `B_nightstand`, `B_arm`, `B_lamp`, `C_face_asleep`, `C_eye_crack`, `C_awake`, `C_misery`, `D_bedroom_vga`, all `.png`).
 2. `python3 tools/build_intro.py` — writes `assets/intro/*.png` + `intro.json` and prints `real art` or `PLACEHOLDERS`.
-   Any image that is missing stays a placeholder; an edit whose plate is missing is ignored.
+   Any image that is missing stays a placeholder (the build lists them); an edit whose plate is missing is ignored.
+   Sources must be 16:10 `.png` with exactly these names; anything else in the folder is called out and skipped.
+   Each edit prints how much of the frame it changed and where — a quick check that only the intended part moved.
 3. If it stops with *"differs from … over N% of the frame"*, that edit drifted from its plate — regenerate it as an
    edit of the plate (same picture, one change). Edits are snapped onto their plate so cuts don't shimmer.
 4. Positions the code needs come from `intro.json`. The pager LCD is found automatically (the plate's bright-green
@@ -52,6 +54,7 @@ The intro cuts between nine stills. Until the real ones exist the game shows lab
    ```json
    { "wall": { "x": 24, "y": 14, "w": 232, "h": 44 },   "the empty wall the title is lettered on"
      "bed": { "x": 60, "y": 96 },                       "hero's left edge in bed; y = the blanket line"
+     "stand": { "x": 90 },                              "hero's left edge once out of bed (clear of the bed)"
      "door": { "x": 286 }, "floorY": 176,               "where the hero walks to; the row their feet stand on"
      "lcd": { "x": 92, "y": 62, "w": 136, "h": 36 } }   "only if the LCD isn't found"
    ```
