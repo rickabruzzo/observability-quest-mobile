@@ -60,8 +60,11 @@ tools/                build_anim.py (frames → patches), optimize_png.py, rende
   Styling for the embedded form lives under `.hs-form` in `css/game.css`.
 - **Per-event QR attribution:** link to `/?e=<eventcode>` — it is passed to HubSpot as `quest_event`.
 - **Music:** edit `js/audio/title-loop.js`; preview with `node tools/render-loop.mjs out.wav`.
-- **Fonts:** tokens `--font-*` in `css/game.css`. Bundled (OFL): Pixelify Sans (body), Silkscreen
-  (labels), plus VT323 and Press Start 2P for comparison.
+- **Fonts (v2):** tokens `--font-text` / `--font-display` in `css/game.css`. **VT323** (SIL OFL,
+  `assets/fonts/LICENSE-vt323.txt`) for everything a player reads; **GloryQuest** for headings and the
+  character sheet's labels — a FontStruction by **the12thdoctor**, https://fontstruct.com/fontstructions/show/115072,
+  licensed CC BY-SA 3.0; its `license.txt` and `readme.txt` ship beside it in `assets/fonts/gloryquest/`
+  and the credit appears in the title's small print. The other OFL files in `assets/fonts/` are v0.1 leftovers.
 - **Regenerate animation patches:** put Gemini edit frames in `scratch/anim_gen/`, run
   `python3 tools/build_anim.py`, check `scratch/anim_review.png`, then `python3 tools/optimize_png.py`.
 
