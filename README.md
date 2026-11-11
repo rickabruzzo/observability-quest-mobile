@@ -6,6 +6,14 @@ Scan a QR at the booth, play five customer-story scenarios, claim a prize.
 Plain HTML/CSS/JS, no build step, no framework. Design: `docs/superpowers/specs/`. Plan:
 `docs/superpowers/plans/`. Animation concept and coordinates: `docs/animation-handoff.md`.
 
+## v2 (branch `sci-adventure`)
+
+This branch is the SCI-style point-and-click rebuild — landscape, a hero you create, rooms
+you click, a gamified Honeycomb. Spec: `docs/superpowers/specs/2026-11-10-sci-adventure-design.md`.
+The v0.1 choose-your-own-adventure port stays deployable from `main` (tag `v0.1-cyoa`); its
+game loop and end-to-end tests were retired here. Modules both versions share (prize claim,
+text engine, audio, portrait animation, asset tooling) are unchanged.
+
 ## Run it
 
 ```

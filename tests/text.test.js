@@ -56,18 +56,6 @@ test('trailing blank lines are trimmed from pages; blanks count at blankHeight',
   assert.deepEqual(p, [['a.', '', 'b.'], ['c']]);
 });
 
-test('longest real page fits at narrowest width', async () => {
-  const { SCENARIOS } = await import('../js/scenarios.js');
-  const { header, body } = parseIntro(SCENARIOS[3].intro[0]);
-  const lines = wrap(introLead(header.role, header.company) + body, 328, (s) => s.length * 9);
-  const pages = paginate(lines, { lineHeight: 22, blankHeight: 10, boxHeight: 150 });
-  assert.ok(pages.length >= 1);
-  for (const pg of pages) {
-    const h = pg.filter((l) => l !== '').length * 22 + pg.filter((l) => l === '').length * 10;
-    assert.ok(h <= 150, `page height ${h}`);
-  }
-});
-
 test('ellipsis never pushes a line past maxWidth when measure is given', () => {
   // "Your aggregate metrics are a" is exactly at the limit; adding "..." must move "a" down
   const lines = ['Your aggregate metrics are a', 'beautiful lie'];
