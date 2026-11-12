@@ -39,10 +39,27 @@ test('a room is checked: rects inside the scene and at least MIN_HIT, stand poin
   assert.ok(problems.some((p) => /nope/.test(p)), problems.join('\n'));
 });
 
-test('chapter 1 room: five things, all checked against the real script', () => {
-  assert.deepEqual(ROOM.hotspots.map((h) => h.id).sort(), ['contract', 'laptop', 'terminal', 'wallscreen', 'workstation']);
+test('chapter 1 room: the PC, the monitor and the CTO, from the art hand-back, checked against the real script', () => {
+  const by = Object.fromEntries(ROOM.hotspots.map((h) => [h.id, h]));
+  assert.deepEqual(Object.keys(by).sort(), ['cto', 'monitor', 'pc']);
+  assert.deepEqual(by.pc.rect, { x: 0, y: 75, w: 135, h: 111 }); assert.equal(by.pc.standX, 87);
+  assert.deepEqual(by.monitor.rect, { x: 114, y: 26, w: 92, h: 50 }); assert.equal(by.monitor.walk, false);
+  assert.deepEqual(by.cto.rect, { x: 206, y: 82, w: 100, h: 102 }); assert.equal(by.cto.standX, 176);
+  assert.equal(ROOM.floorY, 192); assert.deepEqual(ROOM.walk, [0, 292]);
   assert.deepEqual(checkRoom(ROOM, SCRIPT), []);
+  for (const h of ROOM.hotspots) assert.ok(h.rect.w >= MIN_HIT && h.rect.h >= MIN_HIT, h.id);
   assert.ok(MIN_HIT >= 28);
+});
+
+test('chapter 1 room: where the PC and the monitor overlap, the monitor wins; each is reachable at its centre', () => {
+  assert.equal(hotspotAt(ROOM, 120, 75).id, 'monitor');           // inside both rects
+  for (const h of ROOM.hotspots) assert.equal(hotspotAt(ROOM, h.rect.x + h.rect.w / 2, h.rect.y + h.rect.h / 2).id, h.id);
+  assert.equal(hotspotAt(ROOM, 160, 150), null, 'the floor between the cube and the desk walks');
+});
+
+test('a hotspot that does not walk needs no stand point', () => {
+  const r = { floorY: 192, walk: [0, 292], start: 142, hotspots: [{ id: 'm', rect: { x: 10, y: 10, w: 40, h: 40 }, walk: false, look: 'k' }] };
+  assert.deepEqual(checkRoom(r, { k: 'x' }), []);
 });
 
 test('chapter 1: every script key the chapter names exists', () => {

@@ -227,7 +227,7 @@ Your CTO, on the phone with a customer who has been waiting on Otto. The Cave Lo
 CTO: No — no, he IS helping you. He's been "happy to" for eleven minutes.
 
 ### ch1.cto.call.2
-CTO: I understand. Yes. I'm looking at the man who is going to fix it right now.
+CTO: I understand. Yes. I'm looking at the person who is going to fix it right now.
 
 ### ch1.cto.call.3
 CTO: (to you, hand over the phone) Tell me what to buy. Go look, then tell me.
@@ -297,30 +297,6 @@ The pen touches paper. On the wall, Otto says "I'd be happy to". The CTO looks a
 
 ### ch1.decide.hc.show
 CTO: Honeycomb. Fine. Show me what it finds — now, on my clock.
-
-### ch1.retired — this slot and the seven below it belong to the placeholder room and go when the new room is built (Warp brief 03)
-Retired.
-
-### ch1.look.laptop
-Your laptop. Forty-one unread messages, thirty-nine of them from the same person, all of them the word "Otto?" with increasing punctuation.
-
-### ch1.use.laptop
-Fourth outage this week. Twelve different models answer behind Otto, and when one of them stalls, Otto stalls, and the SLO burns. The Cave Logs renewal is on your desk, due Friday, and it is the only thing in the room that isn't on fire.
-
-### ch1.look.contract
-A renewal contract from Cave Logs Inc. Three years. The number has a comma in a place you didn't expect.
-
-### ch1.use.contract
-You pick up the pen. You put down the pen. Not yet.
-
-### ch1.look.wallscreen
-Otto, mid-sentence. If you squint, the cursor is blinking in a way that feels judgmental.
-
-### ch1.look.terminal
-A terminal logged into Cave Logs Inc. The prompt is already there, waiting, like it knows you.
-
-### ch1.look.workstation
-A workstation showing a honeycomb-shaped logo. Someone on the platform team set this up and keeps mentioning it in standup.
 
 ### ch1.old.title
 CAVE LOGS INC.

@@ -1,66 +1,78 @@
-// Chapter 1 — LLM Observability · Enterprise · Technical Decision Maker (spec: Chapters › 1).
-// Data and placeholder pictures only; js/screens/chapter.js plays it. Every word is a script key.
+// Chapter 1 — LLM Observability · Enterprise · Technical Decision Maker (spec: Chapters › 1, the 2026-11-12
+// redesign). Data and the two product-screen pictures; js/screens/chapter.js plays it, the rules are
+// js/engine/scenario.js and js/engine/vitals.js. Every word is a script key.
 //
-// PLACEHOLDER ART: the room is flat code-drawn shapes, built for a timing run. When the real background
-// arrives, replace ROOM.paint (and, if the objects move, the rects and stand points in ROOM.hotspots) —
-// nothing else reads positions.
+// Positions are the art hand-back's measurements on the 320x200 scene (assets/rooms/, built by
+// tools/build_rooms.py); areas are { x0, x1, y0, y1 } inclusive.
 
-export const FLOOR_Y = 186;          // the hero's feet
-
-const PLACES = {                     // logical px on the 320x200 scene; standX is the hero's left edge
-  wallscreen:  { rect: { x: 96, y: 12, w: 96, h: 56 }, standX: 130 },
-  laptop:      { rect: { x: 18, y: 76, w: 42, h: 36 }, standX: 26 },
-  contract:    { rect: { x: 62, y: 84, w: 40, h: 32 }, standX: 68 },
-  terminal:    { rect: { x: 198, y: 62, w: 40, h: 58 }, standX: 204 },
-  workstation: { rect: { x: 252, y: 56, w: 60, h: 64 }, standX: 262 },
-};
-
-function label(g, text, x, y) {     // tiny placeholder tags, drawn as blocks of the label colour
-  g.fillStyle = 'rgba(0,0,0,0.55)'; g.fillRect(x, y, text.length * 4 + 3, 7);
-  g.fillStyle = '#FFE9A8';
-  for (let i = 0; i < text.length; i++) if (text[i] !== ' ') g.fillRect(x + 2 + i * 4, y + 2, 3, 3);
-}
-
-function paintRoom(g) {
-  g.fillStyle = '#1B2333'; g.fillRect(0, 0, 320, 120);            // the exec floor at night: dark wall
-  g.fillStyle = '#26324A';                                          // glass wall panels
-  for (let x = 4; x < 320; x += 52) g.fillRect(x, 6, 46, 100);
-  g.fillStyle = '#0E1420'; g.fillRect(0, 106, 320, 14);             // skirting
-  g.fillStyle = '#4B4E5C'; g.fillRect(0, 120, 320, 80);             // floor band
-  g.fillStyle = '#3E414E'; for (let y = 128; y < 200; y += 12) g.fillRect(0, y, 320, 1);
-  // the wall screen: Otto frozen mid-sentence
-  g.fillStyle = '#0A0D14'; g.fillRect(100, 16, 88, 48);
-  g.fillStyle = '#E8ECF4'; g.fillRect(104, 20, 80, 40);
-  g.fillStyle = '#5A8FD8'; g.fillRect(108, 26, 46, 6);
-  g.fillStyle = '#9AA6B8'; g.fillRect(108, 36, 60, 4); g.fillRect(108, 44, 38, 4);
-  g.fillStyle = '#20242E'; g.fillRect(148, 44, 2, 5);                // the cursor
-  // the desk with the laptop and the contract
-  g.fillStyle = '#6B4A30'; g.fillRect(12, 104, 96, 10); g.fillStyle = '#4A321E'; g.fillRect(16, 114, 6, 30); g.fillRect(98, 114, 6, 30);
-  g.fillStyle = '#C8CCD4'; g.fillRect(24, 88, 30, 16); g.fillStyle = '#304060'; g.fillRect(26, 90, 26, 12);   // laptop
-  g.fillStyle = '#F2EEDC'; g.fillRect(68, 96, 26, 8); g.fillStyle = '#B01818'; g.fillRect(70, 98, 8, 2);       // contract
-  // the Cave Logs terminal on its stand
-  g.fillStyle = '#2A2A2A'; g.fillRect(202, 66, 32, 26); g.fillStyle = '#081008'; g.fillRect(205, 69, 26, 20);
-  g.fillStyle = '#3CC83C'; g.fillRect(207, 72, 12, 2); g.fillRect(207, 76, 18, 2); g.fillRect(207, 80, 8, 2);
-  g.fillStyle = '#333'; g.fillRect(214, 92, 8, 26); g.fillRect(206, 116, 24, 4);
-  // the Honeycomb workstation
-  g.fillStyle = '#6B4A30'; g.fillRect(250, 100, 66, 8); g.fillStyle = '#4A321E'; g.fillRect(254, 108, 6, 36); g.fillRect(306, 108, 6, 36);
-  g.fillStyle = '#10141C'; g.fillRect(258, 60, 50, 38); g.fillStyle = '#1F2A3C'; g.fillRect(261, 63, 44, 32);
-  g.fillStyle = '#FFB000'; g.fillRect(278, 70, 8, 8); g.fillStyle = '#0298EC'; g.fillRect(270, 82, 24, 3);   // a hex-ish mark
-  label(g, 'OTTO', 104, 66); label(g, 'LAPTOP', 18, 78); label(g, 'CONTRACT', 62, 86); label(g, 'CAVE LOGS', 196, 56); label(g, 'HONEYCOMB', 256, 50);
-}
+export const MANIFEST = 'assets/rooms/ch1.json';
 
 export const ROOM = {
-  paint: paintRoom,
-  floorY: FLOOR_Y,
-  walk: [0, 292],
-  start: 142,
+  image: 'R1_exec_floor',
+  floorY: 192,                         // the hero's feet
+  walk: [0, 292],                      // the hero's left edge
+  start: 142,                          // between the cube and the CTO's desk
+  // listed in drawing order: where two overlap the later one wins, so the monitor beats the PC at its corner
   hotspots: [
-    { id: 'wallscreen', ...PLACES.wallscreen, look: 'ch1.look.wallscreen' },
-    { id: 'laptop', ...PLACES.laptop, look: 'ch1.look.laptop', use: 'ch1.use.laptop' },
-    { id: 'contract', ...PLACES.contract, look: 'ch1.look.contract', use: 'ch1.use.contract' },
-    { id: 'terminal', ...PLACES.terminal, look: 'ch1.look.terminal', use: { tool: 'old' } },
-    { id: 'workstation', ...PLACES.workstation, look: 'ch1.look.workstation', use: { tool: 'hc' } },
+    { id: 'pc', rect: { x: 0, y: 75, w: 135, h: 111 }, standX: 87, look: 'ch1.look.pc', use: { scene: 'pc' } },
+    { id: 'cto', rect: { x: 206, y: 82, w: 100, h: 102 }, standX: 176, look: 'ch1.look.cto', use: { action: 'cto' } },
+    { id: 'monitor', rect: { x: 114, y: 26, w: 92, h: 50 }, walk: false, look: 'ch1.look.monitor', use: { scene: 'monitor' } },
   ],
+  // the CTO on the phone: room → talk_1 → room → talk_2, drawn at the manifest's patch position
+  talk: ['R1_cto_talk_1', 'R1_cto_talk_2'],
+};
+
+/** Otto's vitals monitor: where the game draws, in the room and close up. */
+export const MONITOR = {
+  image: 'R1_monitor_closeup',
+  chart: 'ch1.monitor.chart',
+  pool: Array.from({ length: 10 }, (_, i) => `ch1.vitals.stat.${i + 1}`),
+  okPool: Array.from({ length: 5 }, (_, i) => `ch1.vitals.ok.${i + 1}`),
+  output: 'ch1.vitals.output',
+  outputOk: 'ch1.vitals.output.ok',
+  // Nudged from the art hand-back (Warp brief 03): the traces sit inside their panel's frame rather than on
+  // it (room lane 118–180 × 30–50 → 120–178 × 32–48; close-up 27–224 × 26–91 → 29–222 × 29–88), and the
+  // lights cover the art's chips exactly: room (120,54) (142,54) (164,54) → (119,54) (141,54) (163,54); close-up
+  // (31,104) (100,104) (169,104) → one row lower, (31,105) (100,105) (169,105), 10×5 inside each chip's rim.
+  room: {
+    lane: { x0: 120, x1: 178, y0: 32, y1: 48 },
+    lights: [[119, 54], [141, 54], [163, 54]], lightSize: [4, 2],
+    output: { x0: 183, x1: 203, y0: 30, y1: 72 },
+  },
+  close: {
+    lane: { x0: 29, x1: 222, y0: 29, y1: 88 },
+    boxes: [{ x0: 27, x1: 87, y0: 116, y1: 164 }, { x0: 95, x1: 156, y0: 116, y1: 164 }, { x0: 164, x1: 224, y0: 116, y1: 164 }],
+    boxHits: [{ x0: 27, x1: 87, y0: 100, y1: 164 }, { x0: 95, x1: 156, y0: 100, y1: 164 }, { x0: 164, x1: 224, y0: 100, y1: 164 }],
+    lights: [[31, 105], [100, 105], [169, 105]], lightSize: [10, 5],
+    output: { x0: 232, x1: 293, y0: 26, y1: 164 },
+    screen: { x0: 18, x1: 301, y0: 16, y1: 174 },     // a tap outside the glass goes back to the room
+  },
+};
+
+/** The hero's 80s PC: everything is drawn inside its screen. */
+export const PC = {
+  image: 'R1_pc_closeup',
+  screen: { x0: 66, x1: 254, y0: 30, y1: 162 },
+  title: 'ch1.pc.title',
+  menu: [
+    { id: 'email', key: 'ch1.pc.menu.email' },
+    { id: 'vitals', key: 'ch1.pc.menu.vitals' },
+    { id: 'old', key: 'ch1.pc.menu.old' },
+    { id: 'hc', key: 'ch1.pc.menu.hc' },
+    { id: 'leave', key: 'ch1.pc.menu.leave' },
+  ],
+  emails: [1, 2, 3, 4, 5].map((i) => `ch1.pc.email.${i}`),
+  reply: 'ch1.pc.email.reply',
+  vitals: { before: 'ch1.pc.vitals.before', old: 'ch1.pc.vitals.old', hc: 'ch1.pc.vitals.hc' },
+  leave: 'ch1.pc.leave', locked: 'ch1.pc.leave.locked',
+};
+
+/** The CTO, on the phone with the Cave Logs renewal. */
+export const CTO = {
+  calls: [1, 2, 3].map((i) => `ch1.cto.call.${i}`),
+  ask: 'ch1.cto.ask',
+  sign: 'ch1.decide.sign', hc: 'ch1.decide.hc',
+  jab: 'ch1.decide.sign.jab', show: 'ch1.decide.hc.show',
 };
 
 // ---- product-screen pictures (left half of the scene; the prompts take the right) ----
@@ -89,7 +101,7 @@ function paintHc(g, stage, p = 1) {
   const bx = PIC.x + 10, by = PIC.y + 18, bw = PIC.w - 20;
   if (stage === 0) {
     g.fillStyle = '#2A3346'; for (let i = 0; i < 5; i++) g.fillRect(bx, by + i * 28, bw, 1);
-    g.fillStyle = "#F96E10";                                         // the burn rate climbing, faster at the end
+    g.fillStyle = '#F96E10';                                         // the burn rate climbing, faster at the end
     for (let x = 0; x < bw; x++) { const y = Math.round(118 * Math.pow(x / bw, 2.2)); g.fillRect(bx + x, by + 128 - y, 2, 2); }
     g.fillStyle = '#E04040'; g.fillRect(bx, by + 2, 40, 4);
     return;
@@ -116,9 +128,13 @@ const step = (n) => ({
 
 export const CH1 = {
   id: 1,
+  manifest: MANIFEST,
   card: { title: 'ch1.card.title', stats: 'ch1.card.stats', line: 'ch1.card.line' },
   enter: 'ch1.room.enter',
   room: ROOM,
+  monitor: MONITOR,
+  pc: PC,
+  cto: CTO,
   tools: {
     old: {
       kind: 'old', title: 'ch1.old.title', intro: 'ch1.old.intro', exit: 'ch1.old.exit',
