@@ -193,7 +193,7 @@ The intro follows `docs/intro-storyboard.md` (Rick, 2026-11-11), which supersede
 | 3 | Sleepy face, drool; a bleary eye cracks open | plate C → C with one eyelid changed | one cut | 3 |
 | 4 | Arm at the pager | plate B with an arm added | nothing | 1.5 |
 | 5 | Face looking at the pager, lit by its flashing light | C, eyes half open | two-state green palette swap | 2 |
-| 6 | Pager, scrolling: **Backend is down. Front end is down. Database is down. Get in here! -CTO** | plate B | marquee | 8 |
+| 6 | Pager, scrolling: **Backend is down. Front end is down. Database is down. Get in here! -CTO** | plate B | marquee | 10 |
 | 7 | Misery and hopelessness | C, brows and mouth changed | nothing | 2 |
 | 8 | Back to the wide dark room, steady in the pager's glow (Rick, 2026-11-11: the lamp close-up is cut — the light coming on *is* the cut to shot 9) | plate A | none | 1.4 |
 | 9 | Click — the light is on: the VGA bedroom with the hero already sitting up in bed (never an empty bed), **Observability Quest I: So you want to be on-call?** on the wall; theme; the hero gets up in pyjamas; their jeans, Honeycomb hoodie and shoes lie on the floor (drawn in their own colours) and vanish from it as the hero flashes into them; the item they carry waits on the dresser and jumps to their hand once they are dressed, like an inventory pick-up; a dresser stands half open with clothes spilling out; the hero walks to the bedroom door, it opens, they go through, it shuts | plate D (+ optional door-open edit) + hero sprite | sprite animation; the door is a two-still cut; the room holds ~3 s on the title first, and every action has a sound | 15 |

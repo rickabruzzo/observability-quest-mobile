@@ -18,10 +18,10 @@
   "wall_logo": "wall_logo.png"
  },
  "lcd": {
-  "x": 103,
-  "y": 71,
-  "w": 110,
-  "h": 36
+  "x": 161,
+  "y": 82,
+  "w": 65,
+  "h": 22
  },
  "wall": {
   "x": 51,
@@ -46,8 +46,8 @@
   "y": 189
  },
  "item": {
-  "x": 191,
-  "y": 110
+  "x": 200,
+  "y": 150
  },
  "doorway": {
   "x": 246,
@@ -56,7 +56,7 @@
   "h": 127
  },
  "lcdFound": true,
- "darkTitle": false,
+ "darkTitle": true,
  "placeholder": false,
  "logo": {
   "x": 56,

@@ -183,5 +183,16 @@ plus Rick's direction in the session. Every frame is an edit of the one before i
 Not yet signed off by Rick. The clothes on the floor, the Honeycomb mark on the hoodie, and any carried item other than
 a laptop are drawn by the game.
 
-Round 3 (pending): `A_room_dark` remade as the bedroom with the light off (an edit of `D_bedroom_vga`), and a new
-`B_nightstand` / `B_arm` with a smaller pager and the hand coming in from the left — `briefs/intro-round3-agent-brief.md`.
+### Round 3 (2026-11-11)
+
+Gemini API `gemini-3.1-flash-image`, 3:2, 1K, on Rick's personal account, following `briefs/intro-round3-agent-brief.md`.
+Exact text in `scratch/intro_gen/gen.py` (`FULL['A_room_dark']`, `FULL['B_arm']`, `P['B_nightstand']` and its `EXTRA`).
+Earlier versions are in `scratch/intro_gen/raw/tries/` (`*_round1`).
+
+| File | Built on | Tries → kept | Notes |
+|---|---|---|---|
+| `A_room_dark` | `D_bedroom_vga` | 3 → t3 | The bedroom with the light off; lines up with the lit room at zero offset. Prompt plus one sentence keeping the wall plain. |
+| `B_nightstand` | — (plate) | 5 → t7, Rick's pick | Smaller pager, lamp at the right. LCD is about 67×23 clean green (brief asked 80×24); the nightstand looks lamp-lit; cyan/purple rim on the pager. Tries 9–10 added a size sentence. |
+| `B_arm` | new `B_nightstand` | 3 → t4 | Arm from the left, hand cupping the pager's left end; LCD untouched. |
+
+`B_lamp` is retired (not generated again, not built).

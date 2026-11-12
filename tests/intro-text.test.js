@@ -34,11 +34,17 @@ test('drawLcd clips to the LCD and restores', () => {
   assert.deepEqual(log, ['save', ['rect', 92, 62, 136, 36], 'clip', 'restore']);
 });
 import { lcdPages, marqueeScale } from '../js/intro/pager.js';
-test('marquee text is small enough to show at least eight characters at once', () => {
-  assert.equal(marqueeScale({ x: 103, y: 71, w: 110, h: 36 }), 2);        // the real pager plate
+test('marquee text: eight characters at once where the LCD allows, but never smaller than double size if five fit', () => {
   assert.equal(marqueeScale({ x: 92, y: 62, w: 136, h: 36 }), 2);
-  assert.equal(marqueeScale({ x: 0, y: 0, w: 40, h: 36 }), 1);
-  assert.equal(marqueeScale({ x: 0, y: 0, w: 600, h: 36 }), 4);        // never taller than the LCD
+  assert.equal(marqueeScale({ x: 161, y: 82, w: 65, h: 22 }), 2);        // the real pager: a small screen, so bigger dots, fewer letters
+  assert.equal(marqueeScale({ x: 0, y: 0, w: 30, h: 36 }), 1);
+  assert.equal(marqueeScale({ x: 0, y: 0, w: 600, h: 36 }), 4);          // never taller than the LCD
+  assert.equal(marqueeScale({ x: 0, y: 0, w: 65, h: 12 }), 1);
+});
+test('both LCD strings fit the real pager without scrolling off its edge when static', () => {
+  const lcd = { x: 161, y: 82, w: 65, h: 22 };
+  assert.deepEqual(lcdPages('Help!', lcd), { scale: 2, pages: [['Help!']] });
+  const p = lcdPages(MSG, lcd); assert.equal(p.pages.flat().join(' ').replace(/\s+/g, ' '), MSG);
 });
 test('static paging: one sentence per page, word-wrapped, at the largest scale that fits', () => {
   const p = lcdPages(MSG, { x: 92, y: 62, w: 136, h: 36 });

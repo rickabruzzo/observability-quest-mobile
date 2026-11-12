@@ -11,7 +11,7 @@ export const SHOTS = [
   { id: 'asleep', ms: 3000, image: 'C_face_asleep', alt: 'C_eye_crack', altAt: 1800 },
   { id: 'arm', ms: 1500, image: 'B_arm' },
   { id: 'lit', ms: 2000, image: 'C_awake', alt: 'C_awake_lit', flash: 'alt' },
-  { id: 'message', ms: 8000, image: 'B_nightstand', lcd: 'marquee', text: CTO },
+  { id: 'message', ms: 10000, image: 'B_nightstand', lcd: 'marquee', text: CTO },
   { id: 'misery', ms: 2000, image: 'C_misery' },
   { id: 'wide', ms: 1400, image: 'A_room_dark', title: 'dim' },                       // back to the wide dark room, steady in the pager's glow…
   { id: 'bedroom', ms: 15000, image: 'D_bedroom_vga', hero: true, clickAt: 0 },   // …click: the light is on, and this is the room
