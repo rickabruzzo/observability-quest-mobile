@@ -80,7 +80,7 @@ the reference image's background in Photoshop first (quick select → fill black
 ## portrait_jessitron.png — Jessitron (generated 2026-11-09)
 **Tool:** Adobe Firefly → **Gemini 3.1 (Nano Banana 2)**, aspect **Wide (3:2)**, resolution **1K** (output 1264×848). Gemini API was not reachable from the build environment, so Firefly was used (same model as the other portraits).
 **Reference images (3):** (1) `source/reference/jessitron_reference.jpg` (likeness), (2) `portrait_christine.png`, (3) `portrait_charity.png` (style).
-**Variants:** 4 generated, one per run (`scratch/exports/jessitron/portrait_jessitron_1k_1..4.png`). Final pick pending Jess's choice.
+**Variants:** 4 generated, one per run (`scratch/exports/jessitron/portrait_jessitron_1k_1..4.png`). **Jess picked variant 3** (2026-11-12); installed as `assets/portrait_jessitron.png`.
 **Post-processing:** center-crop to 1264×843 (exact 3:2), then Pillow `resize((640, 428), Image.NEAREST)`.
 **Changes from the brief's starting prompt:** added the sentence tying reference 1 to likeness and references 2–3 to style; added "no rainbows" to the background clause; replaced em dashes with colons (Firefly's prompt box dropped the first paste). No negative prompt (Firefly has no field for this model).
 **Prompt:**
@@ -127,7 +127,7 @@ Common suffix on every edit prompt:
 
 Notes: christine_talk1 barely differs from her still (the game alternates still/talk1/talk2 so it
 reads as a two-frame flap); graham's talk frames carry a slight skin-tone shift inside the patch.
-Jessitron has no frames yet (static until her variant is picked).
+Jessitron's frames: Gemini API `gemini-3.1-flash-image`, 2026-11-12, on Rick's personal account; each an edit of the chosen 1K portrait, 2 tries each (kept: blink t1, talk1 t1, talk2 t2), only the changed pixels composited back. Exact prompts in `scratch/jess_anim/gen.py`; tries in `scratch/jess_anim/tries/`.
 
 ### Derived in code (`tools/build_anim.py`, no model)
 - `s5_coin_gold` cut from the still; `s5_coin_silver` / `s5_coin_copper` by luminance-mapping the
@@ -196,3 +196,16 @@ Earlier versions are in `scratch/intro_gen/raw/tries/` (`*_round1`).
 | `B_arm` | new `B_nightstand` | 3 → t4 | Arm from the left, hand cupping the pager's left end; LCD untouched. |
 
 `B_lamp` is retired (not generated again, not built).
+
+## Chapter 1 room: the exec floor (2026-11-12)
+
+Gemini API `gemini-3.1-flash-image`, 3:2, 1K, on Rick's personal account, following `scratch/room-ch1-round2-agent-brief.md`
+(round 2; round 1's room is retired). Exact text in `scratch/room_gen/gen_room.py` and `gen_r2.py`; every try in
+`scratch/room_gen/raw/tries/`. Built into `assets/rooms/` by `tools/build_rooms.py`.
+
+| File | Built on | Tries → kept | Notes |
+|---|---|---|---|
+| `R1_exec_floor` | — (plate; the bedroom as style reference) | 5 → t4 | **Rick's Photoshop composite**: the try 4 room with the try 5 cubicle (`scratch/room_gen/psd/`). A little fringe on the cables and in tight corners; the shadow edge lacks the checker dither. Accepted as is. |
+| `R1_cto_talk_1`, `R1_cto_talk_2` | the composite plate | 2 each → t1 | Only the CTO's figure differs; the game swaps one 63×40 patch. The CTO is a fictional person. |
+| `R1_pc_closeup` | — (plate as style reference) | 2 → t1 | Blank screen; the game draws on it. |
+| `R1_monitor_closeup` | — (plate as style reference) | 3 → t3 | All panels blank; the game draws the vitals. |

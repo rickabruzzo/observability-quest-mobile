@@ -21,10 +21,9 @@ composition says otherwise), then resize.
 - [x] `portrait_christine.png` — 640×428 — Christine Yen, CEO & Co-Founder — exported 2026-11-09 as exact 2× nearest-neighbor of the approved 320×214 badge file (the widened 3:2 1K original is not in Firefly; Firefly only has the square original) → `scratch/exports/`
 - [x] `portrait_emily.png` — 640×428 — Emily Nakashima, Sr VP Operations — exported 2026-11-09 as exact 2× nearest-neighbor of the approved 320×214 badge file (the widened 3:2 1K original is not in Firefly; Firefly only has the square original) → `scratch/exports/`
 - [x] `portrait_graham.png` — 640×428 — Graham Siener, SVP Product — exported 2026-11-09 as exact 2× nearest-neighbor of the approved 320×214 badge file (the widened 3:2 1K original is not in Firefly; Firefly only has the square original) → `scratch/exports/`
-- [ ] `portrait_jessitron.png` — 640×428 — **NEW** — Jessitron, Eng Manager of Developer Relations — see ASSET_PROMPTS.md
+- [x] `portrait_jessitron.png` — 640×428 — **NEW** (variant 3, Jess's pick, 2026-11-12; blink and talk frames in `assets/anim/`) — Jessitron, Eng Manager of Developer Relations — see ASSET_PROMPTS.md
 - [x] `portrait_matt.png` — 640×428 — Matt Nelson, President, Go-To-Market — exported 2026-11-09 as exact 2× nearest-neighbor of the approved 320×214 badge file (the widened 3:2 1K original is not in Firefly; Firefly only has the square original) → `scratch/exports/`
 - [x] `portrait_charity.png` — 640×428 — Charity Majors, CTO & Co-Founder — exported 2026-11-09 as exact 2× nearest-neighbor of the approved 320×214 badge file (the widened 3:2 1K original is not in Firefly; Firefly only has the square original) → `scratch/exports/`
-- [ ] `portrait_julie.png` — placeholder only; not exported. Removed once Jessitron is approved.
 
 ## Logos (already have, no export needed)
 - [x] `hc_logo_white.png` — 163×48 (from badge; may be re-exported from brand source at 2× if a crisp version exists)

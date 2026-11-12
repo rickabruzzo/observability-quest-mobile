@@ -146,7 +146,7 @@ One story down. The prize is yours — or the night is young.
 
 ## Chapter 1 — LLM Observability · Enterprise · Technical Decision Maker
 
-Inspired by a customer-service platform that wired a dozen models into its support bot. Company: **Converso**, assistant: **Otto**. Narrator portrait at the verdict: Christine Yen.
+Inspired by a customer-service platform that wired a dozen models into its support bot. Company: **Converso**, assistant: **Otto** (the patient). You are the Technical Decision Maker, who advises; the **CTO** is the buyer, who signs. Room: your cube and its 80s PC, Otto's vitals monitor on the wall, the CTO at her desk. Vitals stats are two short lines split at ` / ` (15 characters a line at most). Narrator portrait at the verdict: Christine Yen.
 
 ### ch1.card.title
 TECHNICAL DECISION MAKER
@@ -158,7 +158,148 @@ Budget 3 · Vendor Skepticism 17 · Meetings Survived 19 · Grep 2
 Tonight you are the Technical Decision Maker at Converso. You decide what the company buys. The company would like you to decide faster.
 
 ### ch1.room.enter
-The exec floor at Converso, 3:14 AM. Glass walls, one lamp, and a wall screen where Otto — the AI support assistant — is frozen halfway through the sentence "I'd be happy to". It has been happy to for eleven minutes.
+The exec floor at Converso, 3:14 AM. Glass walls, one lamp, and your CTO on the phone, not enjoying it. On the wall, a screen the size of a door shows the vitals of Otto — the AI support assistant — who is frozen halfway through the sentence "I'd be happy to". He has been happy to for eleven minutes.
+
+### ch1.look.monitor
+Otto's vitals, on a screen someone bought to make the support bot feel important. The line is supposed to go up and down. It is mostly going down.
+
+### ch1.monitor.chart
+The chart reads like a hospital drama. Response time: critical. Models responding: ten of twelve. SLO budget: bleeding out. Last words: "I'd be happy to".
+
+### ch1.vitals.stat.1
+CONFIDENCE 100% / ANSWERS 0
+
+### ch1.vitals.stat.2
+MODELS AWAKE / 10 OF 12
+
+### ch1.vitals.stat.3
+SLO BUDGET / GONE
+
+### ch1.vitals.stat.4
+"HAPPY TO" / x847
+
+### ch1.vitals.stat.5
+PULSE / YES-ISH
+
+### ch1.vitals.stat.6
+TICKETS OPEN / ALL OF THEM
+
+### ch1.vitals.stat.7
+CUSTOMERS / ON HOLD
+
+### ch1.vitals.stat.8
+DASHBOARDS / ALL GREEN
+
+### ch1.vitals.stat.9
+TIME TO ANSWER / PENDING
+
+### ch1.vitals.stat.10
+MOOD / HAPPY TO
+
+### ch1.vitals.ok.1
+PULSE / STEADY
+
+### ch1.vitals.ok.2
+MODELS AWAKE / 12 OF 12
+
+### ch1.vitals.ok.3
+SLO BUDGET / RECOVERING
+
+### ch1.vitals.ok.4
+CRON JOBS / 1 EVICTED
+
+### ch1.vitals.ok.5
+ANSWERS / SEVERAL
+
+### ch1.vitals.output
+I'd be happy to
+
+### ch1.vitals.output.ok
+I'd be happy to help! Your refund is on its way.
+
+### ch1.look.pc
+Your cube, and a beige computer older than most of the company. It runs everything you need and nothing you want.
+
+### ch1.look.cto
+Your CTO, on the phone with a customer who has been waiting on Otto. The Cave Logs renewal is on her desk — three years, with a comma in a place you didn't expect — and her pen is closer to it than you'd like.
+
+### ch1.cto.call.1
+CTO: No — no, he IS helping you. He's been "happy to" for eleven minutes.
+
+### ch1.cto.call.2
+CTO: I understand. Yes. I'm looking at the man who is going to fix it right now.
+
+### ch1.cto.call.3
+CTO: (to you, hand over the phone) Tell me what to buy. Go look, then tell me.
+
+### ch1.pc.title
+CONVERSO · WORKSTATION 7
+
+### ch1.pc.menu.email
+[Read email]
+
+### ch1.pc.menu.vitals
+[Check Otto's vitals]
+
+### ch1.pc.menu.old
+[Open Cave Logs]
+
+### ch1.pc.menu.hc
+[Open Honeycomb]
+
+### ch1.pc.menu.leave
+[Leave computer]
+
+### ch1.pc.email.1
+Otto?
+
+### ch1.pc.email.2
+RE: Otto???
+
+### ch1.pc.email.3
+Cave Logs renewal — sign by Friday (3 yrs)
+
+### ch1.pc.email.4
+FYI: the platform team set up a Honeycomb free tier
+
+### ch1.pc.email.5
+Whoever is microwaving fish at 3 AM
+
+### ch1.pc.email.reply
+Otto is dying. You don't have time for office email.
+
+### ch1.pc.vitals.before
+OTTO: CRITICAL. Stalled mid-sentence. Fourth outage this week. Twelve models answer behind him; when one stalls, he stalls, and the SLO burns. Cause: unknown.
+
+### ch1.pc.vitals.old
+OTTO: STILL CRITICAL. You now have 40,000 lines of JSON about it. Cause: somewhere in the JSON, presumably.
+
+### ch1.pc.vitals.hc
+OTTO: STABLE. A nightly export cron was starving one model's threads at 3 AM. Cause: found.
+
+### ch1.pc.leave.locked
+You stand up. You have looked at nothing and learned nothing, and the CTO can tell from across the room. Try a tool first.
+
+### ch1.pc.leave
+You push back from the desk. Time to go tell someone with a pen what to do with it.
+
+### ch1.cto.ask
+CTO: Well? Otto is failing customers and this contract is due Friday. What's your advice?
+
+### ch1.decide.sign
+[Sign the contract]
+
+### ch1.decide.hc
+[Get Honeycomb]
+
+### ch1.decide.sign.jab
+The pen touches paper. On the wall, Otto says "I'd be happy to". The CTO looks at the screen, then at you, then puts the pen down. "Try again."
+
+### ch1.decide.hc.show
+CTO: Honeycomb. Fine. Show me what it finds — now, on my clock.
+
+### ch1.retired — this slot and the seven below it belong to the placeholder room and go when the new room is built (Warp brief 03)
+Retired.
 
 ### ch1.look.laptop
 Your laptop. Forty-one unread messages, thirty-nine of them from the same person, all of them the word "Otto?" with increasing punctuation.
@@ -177,6 +318,9 @@ Otto, mid-sentence. If you squint, the cursor is blinking in a way that feels ju
 
 ### ch1.look.terminal
 A terminal logged into Cave Logs Inc. The prompt is already there, waiting, like it knows you.
+
+### ch1.look.workstation
+A workstation showing a honeycomb-shaped logo. Someone on the platform team set this up and keeps mentioning it in standup.
 
 ### ch1.old.title
 CAVE LOGS INC.
@@ -203,10 +347,7 @@ The new dashboard is beautiful. It is also green. Everything is green. Otto is f
 You have solved nothing, but you have solved it for three years.
 
 ### ch1.old.exit
-You close the terminal. The terminal does not close you. Small victories.
-
-### ch1.look.workstation
-A workstation showing a honeycomb-shaped logo. Someone on the platform team set this up and keeps mentioning it in standup.
+You close Cave Logs. Cave Logs does not close you. Small victories.
 
 ### ch1.hc.title
 HONEYCOMB · SLOs
@@ -251,7 +392,7 @@ Otto: "I'd be happy to". Otto has been happy to for fourteen minutes now.
 BubbleUp compares the slow traces against the rest and one attribute lights up: a nightly export cron, running on the same pool, quietly eating every thread at 3 AM. Fixed before customers noticed. SLO: recovering.
 
 ### ch1.win
-You trace every LLM call, you find a cron job, and you let the Cave Logs renewal lapse. The pen stays down.
+You traced every LLM call and found a cron job. The CTO slides the Cave Logs renewal into a drawer, unsigned, and tells the customer Otto is back. The pen stays down.
 
 ### ch1.hero.line
 TDM: Three years of grep, or one query. I'll take the query.

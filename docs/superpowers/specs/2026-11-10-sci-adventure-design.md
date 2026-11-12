@@ -135,10 +135,12 @@ Personas and stats are shown as a Sierra character sheet at the start of each ch
 - *Inspired by* Intercom / Fin AI. Company: a fictional enterprise customer-service platform.
 - *Persona note*: the ICP calls this role "Buyer"; in-game it is the **Technical Decision Maker** (TDM) so the sheet reads as an engineer with a budget, not a sales target.
 - *Stats*: Budget 3 · Vendor Skepticism 17 · Meetings Survived 19 · Grep 2.
-- *Room*: a glass-walled exec floor at night; the support bot's chat window frozen on a wall screen; a renewal contract on the desk.
-- *Situation (laptop)*: the AI assistant stalls mid-answer; fourth outage this week; the logs vendor's renewal is due Friday.
+- *Cast (2026-11-12 redesign)*: the hero is the TDM, who advises. The **CTO** is a non-player character, the Buyer, who signs. **The patient is Otto**, the AI support assistant: he stalls mid-answer because one of twelve model calls is starved by a nightly cron job, and his SLO burns.
+- *Room*: a glass-walled exec floor at night, three thumb-sized hotspots: the hero's cube with an 80s desktop **PC**; a wall **monitor** showing Otto's vitals like a sci-fi sickbay readout (a heartbeat lane, three readout boxes cycling jokey stats, and his frozen output "I'd be happy to"); the **CTO** at her desk on the phone, the Cave Logs renewal in front of her. Art: `assets/rooms/` (`tools/build_rooms.py`, manifest `ch1.json`).
+- *Flow*: look at the monitor (a close-up; the vitals read like a doctor's chart) → sit at the PC (a close-up; menu: Read email · Check Otto's vitals · Open Cave Logs · Open Honeycomb · Leave computer) → **Leave computer** unlocks once either tool has been tried → walk to the CTO and advise: **[Sign the contract]** or **[Get Honeycomb]**.
+- *Decision*: **[Get Honeycomb]** wins. If the Honeycomb investigation is not finished yet, the CTO says "show me" and it opens on the spot; finishing it wins. **[Sign the contract]** gets a jab and costs points like any wrong prompt, and the choice comes back: a wrong choice never blocks. After the investigation the monitor recovers (steady heartbeat, green lights, Otto finishes his sentence).
 - *Old tool*: **Cave Logs Inc.** — `[grep 40,000 lines of JSON]` `[Add another dashboard]` `[Renew for 3 years]`.
-- *Hero feature*: **SLOs + tracing every LLM call**. Screen: an SLO burn chart with `[Open the burning SLO]` → trace waterfall of 12 model calls → `[Find what's starving the threads]` → one nightly cron job glows. Win: SLO recovered; you let the Cave Logs renewal lapse.
+- *Hero feature*: **SLOs + tracing every LLM call**. Screen: an SLO burn chart with `[Open the burning SLO]` → trace waterfall of 12 model calls → `[Find what's starving the threads]` → one nightly cron job glows. Win: SLO recovered; the CTO leaves the Cave Logs renewal unsigned.
 
 ### 2 · Migrations · Fintech · **Platform Eng**
 - *Inspired by* Nubank. Company: a fictional digital bank, two years into a monolith → 350-service migration.

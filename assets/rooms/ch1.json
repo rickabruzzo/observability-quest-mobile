@@ -1,0 +1,21 @@
+{
+ "size": [
+  320,
+  200
+ ],
+ "images": {
+  "R1_exec_floor": "R1_exec_floor.png",
+  "R1_monitor_closeup": "R1_monitor_closeup.png",
+  "R1_pc_closeup": "R1_pc_closeup.png",
+  "R1_cto_talk_1": "R1_cto_talk_1.png",
+  "R1_cto_talk_2": "R1_cto_talk_2.png"
+ },
+ "patches": {
+  "R1_exec_floor": {
+   "x": 241,
+   "y": 89,
+   "w": 63,
+   "h": 40
+  }
+ }
+}
