@@ -16,7 +16,7 @@ This is **a game, not a toolkit**: we replicate the experience of an SCI-era gam
 
 ## Goals
 
-- Five authored chapters mapping to Honeycomb's five use cases × five industries, each with a distinct ICP persona and a distinct hero feature as the "good solve". A run plays **three**, drawn at random under the rules in *The draw*; a run is 2–3 minutes.
+- Five authored scenarios mapping to Honeycomb's five use cases × five industries, each with a distinct ICP persona and a distinct hero feature as the "good solve". **One scenario is a win** (Rick, 2026-11-11, after timing the script: three scenarios ran to about seven minutes): the player picks one from a menu after the intro, finishes it in 2–3 minutes, and can claim the prize — or pick another. The game tracks which are done. See *The scenario menu*.
 - Replayable: PLAY AGAIN deals a different hand. The prize is claimed once.
 - Character creation: the player customizes their hero's appearance; the hero persists through every chapter.
 - SCI-era presentation: 320×200 logical VGA scenes, pixel hero with a walk cycle, popup message windows, top status bar with score, icon bar, narrator voice.
@@ -50,7 +50,7 @@ This is **a game, not a toolkit**: we replicate the experience of an SCI-era gam
 - **Logical resolution 320×200**, `image-rendering: pixelated`. The canvas backing store is 320×200; CSS scales it to the largest 16:10 box that fits the landscape viewport height under the status bar (≈ 590×370 on an 844×390 phone, ≈ 570×355 on a 667×375 one), letterboxed in black at the sides. Scale is non-integer; at phone pixel densities (≥ 2×) that's ≤ 1 device pixel of unevenness per logical pixel and reads as crisp (my call; the v0.1 integer-scale rule is retired). The message windows and prompts are DOM over the canvas, in a pixel font.
 - Fonts: **VT323** (OFL, already in `assets/fonts/`) for everything that is read — dialogue, status bar, stats, prompts, terminals — the team's pick from the comparison sheets (`scratch/fonts/`) for legibility: 24 px in message windows, 20 px in the status bar and on class cards, line-height 1.1, never below 18 px. **GloryQuest** (CC BY-SA 3.0, `assets/fonts/gloryquest/` with its licence and readme, credit "GloryQuest by the12thdoctor, FontStruct" in the README and the title's small print) for display headings — title card, chapter title cards, THE END — and for the character sheet's labels and buttons (no numerals there), at 32 px or 24 px on a 2× screen, where its 16-brick grid stays crisp; 16–18 px is acceptable on the sheet where the labels are short words. Sierra Font 004 may replace GloryQuest in the display slots if Goatmeal grants permission. Pixelify Sans, Silkscreen, Jersey and Press Start 2P are not used.
 - **Legibility is a requirement, not a taste** (team feedback on v0.1: numbers were illegible). Body text renders at ≥ 16 CSS px on a phone; every digit 0–9 must be unambiguous at the size it is used (score bar, stats, "3 of 5"); 1/7, 4/9, 6/8/0, 3/8 and 5/S pairs are checked by eye on a phone before a font is accepted (Silkscreen and Pixelify Sans failed 5/S on the comparison sheet). The e2e suite screenshots the status bar and a class card at 844×390 so a regression is visible in review.
-- Weight budget **4 MB shipped in total**; a run downloads only what it plays (title, intro, creator, its three chapters, final — target ≤ 3 MB). Title interactive < 2 s on 4G; the run's assets preload behind START with a progress readout, after the draw is made.
+- Weight budget **4 MB shipped in total**; a run downloads only what it plays (title, intro, creator, the chosen scenario, final — target ≤ 2 MB for a one-scenario run). Title interactive < 2 s on 4G; the run's assets preload behind START with a progress readout, after the draw is made.
 - Reduced motion: scenes still, hero teleports instead of walking, no screen shakes.
 - All copy transcribed from the approved **script** (separate document, Rick authors; see Open items).
 - Legal naming: competitor parodies and "Claw Codez" are fixed in the script; the code never contains a real competitor name.
@@ -61,16 +61,16 @@ This is **a game, not a toolkit**: we replicate the experience of an SCI-era gam
 1. **Title** — new title art (generated, SCI-style), logo rendered crisp from the official SVG (never AI-generated), FM title theme on first tap, START.
 2. **Character creation** — a Sierra character sheet, landscape: the hero large on the left, pickers on the right, RANDOM and DONE always visible. **Appearance only** — the class is not chosen here (Rick's call); each chapter hands the hero its persona. Details in *Character creation* below.
 3. **Intro** — Rick's storyboard (`docs/intro-storyboard.md`): a dithered EGA cold open in the dark — the pager, the face, the arm — cutting to the VGA bedroom with the title on the wall, where *the hero the player just made* gets out of bed, changes into the hoodie and walks out. Skippable. Details in *Intro and coda*. (Order per Rick 2026-11-11: sheet first, to be judged in team play-tests.)
-4. **Three chapters**, drawn from the five (*The draw*, below), each:
+4. **Scenario menu**, then **one scenario** of the player's choosing (*The scenario menu*, below). A scenario is:
    - **Class card**: the chapter's persona and silly stats (below), which the hero *wears* for this chapter — "Tonight you are the SRE." Tap to continue.
    - **Room**: a 320×200 scene with the hero, 3–5 hotspots, narrator line on entry.
    - **Hotspots**: tapping one walks the hero there (or teleports under reduced motion) and triggers it.
    - **Solve**: the Honeycomb hotspot opens the gamified product screen; the right prompt animates the result; narrator declares the win; score ticks up in the status bar.
-   - **Verdict**: short popup from the chapter's narrator portrait (the v0.1 portraits), then NEXT.
-5. **Final** — Charity's score verdict (tiers reuse the v0.1 six, rewritten to the SCI voice in the script) with a **sunrise coda**: the hero walks out into daylight, shades on.
-6. **Claim** and **Complete** — as v0.1 (placeholder form → HubSpot embed after review; "SHOW THIS TO BOOTH STAFF"; staff REDEEMED tap; persisted), plus a **PLAY AGAIN** button on Complete. A replay keeps the hero, deals a new hand that prefers chapters this device hasn't seen (`oq.seen` in sessionStorage), ends on Charity's verdict, and returns to Complete without showing the form again.
+   - **Verdict**: short popup from the scenario's narrator portrait (the v0.1 portraits), then a choice: **CLAIM YOUR PRIZE** or **ANOTHER SCENARIO** (back to the menu).
+5. **Final**, on CLAIM — Charity's verdict on the night so far (see *Scoring*) with a **sunrise coda**: the hero walks out into daylight, shades on.
+6. **Claim** and **Complete** — as v0.1 (placeholder form → HubSpot embed after review; "SHOW THIS TO BOOTH STAFF"; staff REDEEMED tap; persisted), plus a **PLAY MORE** button on Complete that returns to the scenario menu with the hero and the completion marks kept. The form is never shown twice.
 
-Target length: 2–3 minutes for a first-time player who tries one wrong thing per chapter.
+Target length: **2–3 minutes for one scenario**, for a first-time player who tries one wrong thing. The sheet and the (skippable) intro add about a minute before it; the claim form comes after.
 
 ### Character creation
 
@@ -92,20 +92,29 @@ Rick's brief: three starting heroes, then free customization, no picker with mor
 - **Sprite**: **28×72 logical px**, about a third of a 320×200 room's height, where SCI1 egos stood. Drawn the Sierra VGA way — a dark silhouette outline (`#1A1424`), light from the upper-left (a highlight column on the left edge of every part, a shade band on the right), three-tone ramps per colour, interior lines for arm/torso, pocket, drawstrings, knees and the hoodie hem. Built **procedurally from part masks** rather than hand-typed pixel maps: each part is a mask (ellipses and spans), a shading pass colours it, details are stamped on top, the outline pass runs last. The reference implementation is `scratch/hero/gen.py` (the approved contact sheet came from it); the game's renderer in `js/engine/hero.js` reproduces it pixel for pixel, proven by golden-image tests against PNGs the Python generator emits. Parts: 3 bodies × (hoodie + jeans recolour) ; 5 hair styles × 5 colours ; 3 beards (hair-coloured) ; glasses on/off ; 5 held items. Animations (idle, walk ×4, type ×2, sit-up, turn) are defined on the body masks (leg and arm spans per frame); parts ride along, so a new hair style needs no new frames. The coda puts shades on every hero regardless of glasses. Faces and held items get a hand-finishing pass once the renderer matches the generator.
 - **Persistence**: the hero's choices live in `sessionStorage` (`oq.hero`) so a reload or a PLAY AGAIN keeps them; a new session starts fresh at the sheet.
 
-### The draw
+### The scenario menu
 
-Three of the five chapters per run, dealt when the player taps START (so only those three preload). Rules, in priority order:
+(Replaces *the draw* — three of five dealt at random — which Rick dropped on 2026-11-11.)
 
-1. **At least one flagship chapter in every hand** — 4 (Canvas with Claw Codez) or 5 (Team Agents). Rick's call.
-2. Prefer chapters not in `oq.seen`; when fewer than three remain unseen, fill from the seen ones. Rule 1 still holds on a replay.
-3. Otherwise uniform random. Play order is the chapter number order (1→5), so the stories escalate the same way every run.
+After the intro the player chooses. A Sierra-style window lists the **five scenarios**, each a row: the class
+the hero will play, the problem in a few words, and — once played — a tick and its score.
 
-`?ch=1,4,5` in the URL forces a hand (for QA and for the booth demo loop); malformed values are ignored.
+- **One finished scenario is a win.** After its verdict the player is offered **CLAIM YOUR PRIZE** or
+  **ANOTHER SCENARIO**. Until the prize is claimed, the menu also carries a CLAIM YOUR PRIZE button as soon as
+  one scenario is done.
+- **Completion is tracked** in `sessionStorage` (`oq.done`: scenario → best score), with the hero. Done
+  scenarios stay on the menu, ticked, and can be replayed; a replay keeps the better score.
+- Rows are thumb-sized (44 px), the list fits a 667×375 phone without scrolling, and the order is always 1→5.
+- Only the chosen scenario's assets download.
+- `?ch=N` in the URL goes straight into scenario N after the intro (QA and booth demos); a malformed value is
+  ignored and the menu shows.
+- *My proposal, for Rick and PMM:* the claim form carries the list of scenarios finished and the score as
+  hidden fields, so the lead record shows which use case the attendee chose.
 
 ## Interface (SCI grammar, phone-sized)
 
 - **Layout in landscape** (my call, given Rick's landscape decision): status bar across the full width at the top; the scene centred below it; the black letterbox columns either side become the **thumb zones** — the icon bar stacks vertically in the right column (Look / Use / Help), the mute toggle sits in the left. Both thumbs hold the phone, both columns are under them. Message windows open **over the scene**, SCI-style (white, black border, drop shadow), centred, up to five lines, and prompt buttons stack inside the window; on a 375-px-tall phone a window holds three lines and paginates with a tap. Hotspots near the middle of the scene are a short reach from either thumb. Product screens take over the scene box and show their prompts the same way. The right-hand icon column must fit at a 667×375 viewport (three 44-px icons in a 50-px column); if a viewport is too narrow for the columns the icon bar falls back to a row under the scene.
-- **Status bar** (top, DOM): `Observability Quest` left, `Score: 120 of 300` right, in the small pixel font on a light grey bar — the SCI0/SCI1 look.
+- **Status bar** (top, DOM): `Observability Quest` left, `Score: 100 of 500` right, in the small pixel font on a light grey bar — the SCI0/SCI1 look.
 - **Icon bar**: SCI1-style icons — **Look** (eye), **Use** (hand), **Help** (?) — in the right thumb column. Default mode is Use; tapping Look then a hotspot gives a descriptive line instead of acting, and the mode returns to Use. Help explains the three icons in one window. No inventory icon in v2.0 (a pager and a coffee appear as *props*, not inventory).
 - **Tap to act**: tapping anywhere walkable makes the hero walk there; tapping a hotspot walks to it and triggers it. Walkable area is a floor line per room (one y, min/max x); hotspots have a stand point. Walking is a Sierra stroll in profile: about three steps a second, some five seconds across the whole room (Rick, 2026-11-11 — 1.2 s read as far too fast; the cadence follows the drawn stride).
 - **Message windows**: the windows described above carry narrator and dialogue text; typewriter at 25 ms/char; tap to complete, tap to dismiss. Narrator lines carry no prefix. The hero's own lines, spoken in that chapter's class, are prefixed with the class name (`SRE:`), and the script addresses the player in the second person ("you let the renewal lapse"). Other characters in a room (the manager who runs in, Einar on the phone) are prefixed with their name and need no sprite — they speak from off-screen or from a prop.
@@ -168,7 +177,7 @@ Six verdict tiers, one per reachable score (see *Scoring*), rewritten for the SC
 
 ## Scoring
 
-Sierra-style: `Score: N of 300`, 100 per chapter. The rules (my call, so Rick can write the six verdicts against them):
+Sierra-style: `Score: N of 500`, 100 per scenario; the total is what all five would give, so playing more is visibly worth more. The rules (my call):
 
 - **100** — the Honeycomb path solved with no wrong prompt *inside the Honeycomb screen*.
 - **50** — a wrong prompt was tried inside the Honeycomb screen first (at any step of a two-step screen).
@@ -176,7 +185,7 @@ Sierra-style: `Score: N of 300`, 100 per chapter. The rules (my call, so Rick ca
 - Chapter 5's two winning prompts: `[Check the evidence first]` = 100, `[Approve the suggested fix]` = 50.
 - **Look** lines give no points; they are their own reward. The score never goes down.
 
-Reachable totals are 0, 50, 100, 150, 200, 250, 300. Charity's six tiers: 300 · 250 · 200 · 150 · 100 · 50-or-less. The tier is derived from points, not from a count of solves.
+**Charity's verdict** can no longer go by a fixed total, because the player decides how many scenarios to play. *My proposal, for Rick to write against:* three tiers by how cleanly the played scenarios went — **clean** (every scenario played scored 100), **mixed** (some 50s), **rough** (all 50s) — plus one line that depends on how many are done (one … all five). The script's six `final.*` slots get rewritten to that shape.
 
 ## Intro and coda
 
@@ -235,7 +244,7 @@ Carry over from v0.1: static layout shell, `text.js`, `claim.js` (form/complete)
 - `js/engine/statusbar.js` — score and title.
 - `js/engine/hero.js` — parts-based sprite renderer and animation.
 - `js/screens/` — product screens built from `js/kit/` (heatmap, waterfall, servicemap, bubbleup, timeline, canvas, finding).
-- `js/chapters/ch1..ch5.js` — data + glue per chapter; `js/draw.js` — the deal (rules in *The draw*, `?ch=` override, `oq.seen`).
+- `js/chapters/ch1..ch5.js` — data + glue per chapter; `js/menu.js` — the scenario menu and completion (rules in *The scenario menu*, `?ch=` override, `oq.done`).
 - **Script pipeline**: the script is a slotted Markdown document, `script/script.md`, one key per line (`ch1.room.enter`, `ch1.look.laptop`, `ch1.hc.prompt2.wrong1`, `final.tier.300` …). The builder drafts every slot with placeholder copy; Rick edits in place; `tools/build_script.mjs` generates `js/script.js` from it and fails on a missing or unknown key. Revisions are a regenerate, not a retranscription. Rick's intro narration goes into the same document's `intro.*` slots.
 - `js/audio/opl.js` — OPL3 core + sequencer; `js/audio/music/*.js` — compositions; `js/audio/sfx.js`.
 - `js/intro/` (timeline, face, pager, room shots), `js/screens/creator.js`, `js/final.js`.
@@ -244,7 +253,7 @@ Carry over from v0.1: static layout shell, `text.js`, `claim.js` (form/complete)
 ## Verification before handoff
 
 - Every chapter finishable by tapping only Honeycomb prompts; every wrong prompt greys out and never blocks; every Look line renders; score reaches the max; Charity's tier matches the score.
-- Every one of the possible hands plays through (forced with `?ch=`); the draw rules hold over 1,000 simulated deals; PLAY AGAIN deals an unseen chapter when one exists and never shows the form twice.
+- Each of the five scenarios plays through from the menu and from `?ch=N`; completion marks and best scores persist across a reload; CLAIM is offered after one scenario and the form is never shown twice; PLAY MORE returns to the menu.
 - Landscape phones from 667×375 (the shortest) to 932×430, with the notch on either side (safe-area insets respected in both thumb columns); the rotate screen in portrait; Claim and Complete usable in both orientations with the keyboard open; desktop and tablet fine without ever seeing the rotate screen.
 - Reduced motion: no walking animation, stills, instant text.
 - Audio: title theme, chapter motifs, stings verified on iOS Safari and Android Chrome from a real device (Rick), OPL core CPU use acceptable on a mid-range phone.

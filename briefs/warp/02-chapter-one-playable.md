@@ -1,4 +1,4 @@
-# Warp brief 02 — chapter 1, playable, with a stopwatch
+# Warp brief 02 — the scenario menu and scenario 1, playable, with a stopwatch
 
 Read `briefs/warp/PROTOCOL.md` first. Branch: **`warp/chapter-one`**, cut from `sci-adventure`.
 
@@ -11,11 +11,15 @@ git config user.name Claude && git config user.email noreply@anthropic.com    # 
 
 ## Why
 
-Rick has read the script (`script/script.md`) and thinks the chapters are **too long**. The design's target is
-2–3 minutes for a *whole run of three chapters*; a word count says chapter 1 alone is about 2¼ minutes on the
-shortest path and about 4 if you poke at everything. Before cutting, he wants to **play chapter 1 exactly as
-written and see what the clock says**. Nothing after the intro is playable yet, so this brief builds the first
-real room: the smallest honest version of the room engine, chapter 1 on top of it, and a stopwatch.
+Rick has read the script (`script/script.md`) and timed it by word count: one scenario is about 2¼ minutes on
+the shortest path and about 4 if you poke at everything, so the old plan — three scenarios per run — came to
+seven minutes or more. **His decision (2026-11-11): one finished scenario is a win.** After the intro the player
+**picks a scenario from a menu**; finishing it offers the prize; playing more is optional; the game tracks which
+are done. That makes it a 2–3 minute engagement.
+
+Nothing after the intro is playable yet, so this brief builds the menu, the first real room — the smallest
+honest version of the room engine — scenario 1 on top of it, and a **stopwatch**, so Rick and his team can play
+scenario 1 exactly as written and see what the clock says.
 
 This is a **timing build with placeholder pictures**. The room's real art is being generated separately; your
 room is flat code-drawn shapes. Do not spend time on looks. Spend it on the mechanics being the real ones, so
@@ -24,10 +28,11 @@ chapters get built on.
 
 ## Read first
 
-- `docs/superpowers/specs/2026-11-10-sci-adventure-design.md` — sections **Flow** (step 4), **Interface**,
-  **The gamified Honeycomb**, **Chapters › 1**, **Scoring**. The spec is the authority; where this brief and
+- `docs/superpowers/specs/2026-11-10-sci-adventure-design.md` — sections **Flow** (steps 4–6), **The scenario
+  menu**, **Interface**, **The gamified Honeycomb**, **Chapters › 1**, **Scoring**. The spec is the authority; where this brief and
   the spec disagree, say so in the hand-back and follow the spec.
-- `script/script.md` — its header (conventions) and **Chapter 1** (`ch1.*` slots). Every word the player reads
+- `script/script.md` — its header (conventions), **Scenario menu** (`menu.*`, `after.*`) and **Chapter 1**
+  (`ch1.*` slots). Every word the player reads
   comes from there, unchanged.
 - The existing engine: `js/game.js` (state machine, `go()`, `ctx`, `window.__oq`), `js/engine/walk.js`,
   `js/engine/hero.js` + `hero-side.js`, `js/engine/cursor.js` (`actionAt`, tap marker, hover cursors),
@@ -59,8 +64,8 @@ A room is **data**: background painter (or image, later), floor row, walk range,
   up to three bracketed prompt buttons. A wrong prompt shows its jab and greys out; a right one shows the
   result. Multi-step (the Honeycomb screen has two steps). The old-tool screen has only wrong prompts and an
   exit.
-- **Score** in the status bar per the spec's Scoring section (100 clean; 50 if any wrong prompt was tried
-  inside the Honeycomb screen; the old tool is free; never goes down).
+- **Score** in the status bar, `Score: N of 500`, per the spec's Scoring section (100 clean; 50 if any wrong
+  prompt was tried inside the Honeycomb screen; the old tool is free; never goes down).
 Keep the pure parts pure and unit-tested (hotspot lookup, the prompt/score state machine, pagination,
 typewriter progress); the screen module does DOM and canvas.
 
@@ -86,16 +91,27 @@ Per spec **Chapters › 1** and the `ch1.*` slots:
 (first entry until the Honeycomb screen opens), old tool, Honeycomb screen, win + verdict** — plus counts:
 message windows shown, taps, walks and total walking time, wrong prompts, Look uses, hotspots visited. Time
 spent under the rotate gate or with the tab hidden does not count.
-- After the verdict, a **summary window**: total time for the chapter as `m:ss`, the per-phase breakdown, the
-  counts, the score, and two buttons: **Play again** (same hero, straight to the class card) and **Copy
-  results** (plain text to the clipboard, also printed to the console as one JSON line so several people's
+- After the verdict, a **summary window**: total time for the scenario as `m:ss`, the per-phase breakdown, the
+  counts, the score, and the buttons described in section 5, including **Copy results** (plain text to the clipboard, also printed to the console as one JSON line so several people's
   runs can be pasted into a chat and compared).
 - `window.__oq.run` exposes the same object for the tests.
 
-### 5. Flow
-Title → sheet → intro (Skip works as now) → **chapter 1** (instead of the preview room). Keep the preview room
-reachable at `?preview=1` for the walk and cursor tests. `?ch=1` may be accepted and ignored for now; do not
-build the three-of-five draw.
+### 5. The scenario menu and the flow
+Title → sheet → intro (Skip works as now) → **scenario menu** → the chosen scenario → verdict → the choice.
+- **Menu** (`js/menu.js` for the pure part, a screen for the rest), per the spec's *The scenario menu*: a
+  Sierra window titled `menu.title` with `menu.hint`, and five rows — `menu.chN.name` and `menu.chN.hook`.
+  Rows are ≥ 44 px, the list fits 667×375 without scrolling. **Only scenario 1 exists**: rows 2–5 are shown
+  but disabled, visibly ("coming soon" is fine — that string is yours, flag it in the hand-back).
+- **Completion** in `sessionStorage` under `oq.done` (scenario → best score), surviving a reload. A finished
+  scenario's row shows `menu.done` and its score, and can be replayed; a replay keeps the better score. The
+  status-bar score is the sum of best scores.
+- **After the verdict**: the timing summary (section 4), whose buttons are `after.claim` and `after.more`
+  under `after.prompt`, plus **Copy results**. `after.more` returns to the menu. `after.claim` has nowhere to
+  go yet (Charity's final and the claim form are a later brief): show a one-line placeholder window saying so
+  and return to the menu. Once one scenario is done and the prize is unclaimed, the menu itself also carries
+  the claim button.
+- `?ch=1` skips the menu and goes straight into scenario 1 after the intro; any other value shows the menu.
+- Keep the preview room reachable at `?preview=1` for the walk and cursor tests.
 
 ### 6. Tests
 Unit tests for every pure part. Browser tests, at 844×390 touch and at 667×375:
@@ -106,13 +122,15 @@ Unit tests for every pure part. Browser tests, at 844×390 touch and at 667×375
 - a long line paginates at 667×375 and nothing overflows the scene; all icon-bar and prompt targets ≥ 44 px;
 - rotate to portrait mid-room: paused, the clock stops, resumes on rotate back;
 - reduced motion: no walking animation, same results;
-- Play again returns to the card with the score and the clock reset.
+- the menu: five rows, only the first enabled; finishing scenario 1 ticks it and shows its score; the mark and
+  score survive a reload; a replay with a worse result keeps the better score; `?ch=1` skips the menu;
+- replaying from the menu starts at the class card with the clock reset.
 Update the existing tests that expect the intro to land in the preview room.
 
 ## Yours / not yours
 
-**Yours:** `tools/build_script.py` (+ test), `js/script.js`, `js/engine/room.js` and any new engine modules,
-`js/engine/runlog.js`, `js/chapters/ch1.js`, a new `js/screens/chapter.js`, the wiring in `js/game.js`, the one
+**Yours:** `tools/build_script.py` (+ test), `js/script.js`, `js/menu.js`, `js/engine/room.js` and any new engine modules,
+`js/engine/runlog.js`, `js/chapters/ch1.js`, new `js/screens/menu.js` and `js/screens/chapter.js`, the wiring in `js/game.js`, the one
 line in `js/screens/intro.js` that names the next screen, `css/game.css` (additions for the window, icon bar,
 tool screen, summary), `index.html` `?v=`, tests, README, `docs/backlog.md`, the one tool-name line in the
 script header.
@@ -135,6 +153,6 @@ renderers and `tools/hero_gen.py`; `js/intro/`, `tools/build_intro.py`; `js/crea
 
 ## Not in this brief
 
-Chapters 2–5, the draw, Charity's final, claim/complete, real room art, the product-screen kit beyond the two
+Scenarios 2–5, Charity's final, claim/complete, real room art, the product-screen kit beyond the two
 simple pictures, music, the hand-pulse on entering a room. Do not cut or rewrite script lines to make the
 chapter shorter — measuring it as written is the whole point.

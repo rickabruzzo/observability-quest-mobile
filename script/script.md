@@ -89,10 +89,58 @@ Start
 
 ---
 
-## Chapter deal
+## Scenario menu
 
-### deal.window
-Three stories tonight, dealt from five. Every one of them really happened to somebody. The names have been changed to protect the guilty tools.
+Shown after the intro (Rick, 2026-11-11: the player picks; one finished scenario wins the prize; more are
+optional). One row per scenario: the class you play, and the trouble in a few words. Draft copy — yours to fix.
+
+### menu.title
+PICK YOUR NIGHT SHIFT
+
+### menu.hint
+Five stories. Every one of them really happened to somebody. Finish one and the prize is yours.
+
+### menu.ch1.name
+TECHNICAL DECISION MAKER
+
+### menu.ch1.hook
+The AI support bot keeps freezing. The logs renewal is due Friday.
+
+### menu.ch2.name
+PLATFORM ENGINEER
+
+### menu.ch2.hook
+A bank, mid-migration. Something in the old monolith is still answering.
+
+### menu.ch3.name
+DEVELOPER
+
+### menu.ch3.hook
+Checkout is slow, but only for some people. Nobody knows which.
+
+### menu.ch4.name
+DEVOPS / SRE
+
+### menu.ch4.hook
+Launch night. Fleet battles are lagging. One engineer understands the code.
+
+### menu.ch5.name
+BUILD & RELEASE ENGINEER
+
+### menu.ch5.hook
+Three people, a fleet of AI agents, and a release that went out at 3 AM.
+
+### menu.done
+DONE
+
+### after.prompt
+One story down. The prize is yours — or the night is young.
+
+### after.claim
+[Claim your prize]
+
+### after.more
+[Another scenario]
 
 ---
 
@@ -689,7 +737,7 @@ MATT NELSON: You gave an agent one clear goal and it caught your Friday deploy b
 
 ## Final — Charity Majors
 
-Tiers by points. The verdict window is a full-portrait takeover with the text in a window below. Score shown as `{score} of 300`.
+Tiers by points. The verdict window is a full-portrait takeover with the text in a window below. Score shown as `{score} of 500`. **These six tiers were written for a three-scenario run and need rewriting** now that one scenario wins: see the spec's Scoring section for the proposed shape (clean / mixed / rough, plus a line for how many are done).
 
 ### final.header
 CHARITY MAJORS · CTO & CO-FOUNDER
