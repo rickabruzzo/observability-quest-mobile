@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { wrapLines, paginate, typedChars, createMessage, stepMessage, tapMessage, linesFor, MS_PER_CHAR } from '../js/engine/message.js';
+import { wrapLines, paginate, typedChars, createMessage, stepMessage, tapMessage, linesFor, hugWidth, MAX_LINE_PX, MS_PER_CHAR } from '../js/engine/message.js';
 
 const mono = (s) => s.length * 10;            // a fake monospace font: 10 px a character
 
@@ -55,9 +55,16 @@ test('instant text (reduced motion) shows each page whole at once', () => {
   assert.equal(tapMessage(m), 'closed');
 });
 
-test('lines a window holds: three on a 375-px phone, more when there is room', () => {
-  assert.equal(linesFor(346), 3);           // 667x375
-  assert.equal(linesFor(370), 4);           // 844x390
-  assert.equal(linesFor(410), 5);           // 932x430
-  assert.equal(linesFor(800), 5);
+test('lines a window holds: a narrow window is allowed to be taller, five lines on a 375-px phone', () => {
+  assert.equal(linesFor(346), 5);           // 667x375
+  assert.equal(linesFor(370), 6);           // 844x390
+  assert.equal(linesFor(410), 7);           // 932x430
+  assert.equal(linesFor(800), 7);
+});
+
+test('a window is as wide as its longest line on any page, never wider than the reading measure', () => {
+  assert.equal(hugWidth([['short', 'a longer line'], ['mid line']], mono), 130);
+  assert.equal(hugWidth([['x'.repeat(200)]], mono), MAX_LINE_PX);
+  assert.ok(MAX_LINE_PX >= 300 && MAX_LINE_PX <= 380);     // about 32 to 38 characters of VT323 at 24 px
+  assert.equal(hugWidth([], mono), 0);
 });

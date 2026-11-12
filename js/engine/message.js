@@ -34,11 +34,21 @@ export function typedChars(text, elapsedMs, msPerChar = MS_PER_CHAR) {
   return Math.max(0, Math.min(text.length, Math.floor(elapsedMs / msPerChar)));
 }
 
-/** Lines one window holds for a scene this tall (CSS px): three on a 375-px phone (spec: Interface), up to five. */
+/** Lines one window holds for a scene this tall (CSS px). The window is narrow (MAX_LINE_PX), so it may be tall. */
 export function linesFor(sceneH) {
-  if (sceneH < 360) return 3;
-  if (sceneH < 400) return 4;
-  return 5;
+  if (sceneH < 360) return 5;
+  if (sceneH < 400) return 6;
+  return 7;
+}
+
+/** The longest line a window sets, in CSS px: about 36 characters of VT323 at 24 px. Longer lines lose the reader. */
+export const MAX_LINE_PX = 346;
+
+/** The text width a window needs: its longest line on any page, capped at the reading measure. */
+export function hugWidth(pages, measure) {
+  let w = 0;
+  for (const page of pages) for (const line of page) w = Math.max(w, measure(line));
+  return Math.min(MAX_LINE_PX, Math.ceil(w));
 }
 
 const pageText = (m) => m.pages[m.page].join(' ');

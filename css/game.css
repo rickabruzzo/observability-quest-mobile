@@ -104,8 +104,8 @@ body[data-cols="narrow"] .btn-sierra .long, body:not([data-cols="narrow"]) .btn-
 .intro-title.dim { opacity: 0.16; }
 
 /* ---- SCI message windows (js/engine/window.js): white, black border, hard shadow, VT323 24px ---- */
-.msg { position: absolute; left: 16px; right: 16px; top: 50%; transform: translateY(-50%); z-index: 4; background: var(--sheet-white); color: #111; border: 3px solid #000; outline: 2px solid var(--sheet-white); box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.85); padding: 8px 14px 10px; font-family: var(--font-text); font-size: 24px; line-height: 1.1; cursor: pointer; }
-.msg.bottom { top: auto; bottom: 10px; transform: none; }
+.msg { position: absolute; left: 50%; width: calc(100% - 32px); top: 50%; transform: translate(-50%, -50%); z-index: 4; background: var(--sheet-white); color: #111; border: 3px solid #000; outline: 2px solid var(--sheet-white); box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.85); padding: 8px 14px 10px; font-family: var(--font-text); font-size: 24px; line-height: 1.1; cursor: pointer; }
+.msg.bottom { top: auto; bottom: 10px; transform: translateX(-50%); }
 .msg-line { min-height: 1.1em; white-space: pre; overflow: hidden; }
 .msg.more::after, .card.more::after { content: ''; position: absolute; right: 8px; bottom: 6px; border: 6px solid transparent; border-top: 8px solid #111; border-bottom: 0; animation: oq-blink 1s steps(2, start) infinite; }
 @keyframes oq-blink { to { visibility: hidden; } }

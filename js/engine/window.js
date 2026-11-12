@@ -3,7 +3,7 @@
 // typing are js/engine/message.js; this module measures, draws and routes taps. Time comes from tick(),
 // so a paused game (the rotate gate) freezes the typing too.
 
-import { paginate, createMessage, stepMessage, tapMessage, visibleLines, linesFor } from './message.js';
+import { paginate, createMessage, stepMessage, tapMessage, visibleLines, linesFor, hugWidth, MAX_LINE_PX } from './message.js';
 
 const FONT_PX = 24;
 
@@ -55,9 +55,12 @@ export function createWindows(ctx, { onShow } = {}) {
       el.innerHTML = '<div class="msg-body"></div>';
       (layer || ctx.overlay).appendChild(el);
       const cs = getComputedStyle(el);
-      const width = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      const pad = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+      const width = Math.min(MAX_LINE_PX, el.clientWidth - pad - 2);        // never wider than the reading measure
       const maxLines = linesFor(ctx.fit?.sceneH ?? 370);
-      msg = createMessage(paginate(text, measureFn(), width - 2, maxLines), { instant: ctx.reducedMotion });
+      const pages = paginate(text, measureFn(), width, maxLines);
+      el.style.width = `${hugWidth(pages, measureFn()) + 2 + pad + (el.offsetWidth - el.clientWidth)}px`;      // and no wider than its longest line
+      msg = createMessage(pages, { instant: ctx.reducedMotion });
       el.dataset.text = text;
       layout();
       return new Promise((r) => { resolve = r; });
