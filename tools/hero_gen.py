@@ -273,14 +273,45 @@ def hero(body='masc', skin=0, hair='black', style='standard', beard='none',
 # ---- profile view (facing right; the game mirrors it for left) --------------------------------------
 # DRAFT for Rick's approval (2026-11-11): not ported to the game yet. Standing plus a four-frame walk:
 # stride, passing, stride with the other leg forward, passing.
-SIDE_POSES = ['stand', 'step1', 'step2', 'step3', 'step4']
-#            (front-leg swing, back-leg swing, bob, arm swing)   swing = px the foot leads (+) or trails (-) the hip
-SIDE_WALK = {'stand': (0, 0, 0, 0), 'step1': (5, -5, 0, -3), 'step2': (1, -1, -1, 0), 'step3': (-5, 5, 0, 3), 'step4': (-1, 1, -1, 0)}
+SIDE_POSES = ['stand'] + [f'w{i}' for i in range(1, 9)]
+# The walk, as joint angles in degrees from straight down (+ = forward). One leg's eight frames; the other leg
+# and the arms use the same table half a cycle away. Studied from how adventure-game figures of the era walk:
+# the front leg reaches out nearly straight and lands on the heel, the back leg trails with the knee bent and
+# the heel lifting, the swinging leg folds at the knee as it passes, and each arm swings against its own leg
+# with the elbow a little bent. The body dips on the two wide frames.
+#          thigh, shin
+SIDE_LEG = [(26, 12), (16, 2), (2, -4), (-12, -22), (-22, -46), (-8, -62), (12, -48), (26, -10)]
+SIDE_BOB = [1, 0, 0, 0, 1, 0, 0, 0]
+THIGH, SHIN, UPPER, FORE = 11, 11, 10, 9
 
 
-def _slant(x0, x1, y0, y1, lean):
-    """A limb: columns x0..x1 at the top row, leaning `lean` px by the bottom row."""
-    return [(x + round(lean * (y - y0) / max(1, y1 - y0)), y) for y in range(y0, y1 + 1) for x in range(x0, x1 + 1)]
+def _limb(x, y, length, deg, width):
+    """A thick segment from (x, y), `deg` from straight down. Returns (pixels, end point)."""
+    import math
+    dx, dy = math.sin(math.radians(deg)) * length, math.cos(math.radians(deg)) * length
+    steps = max(1, int(round(length)))
+    px = set()
+    for i in range(steps + 1):
+        cx, cy = x + dx * i / steps, y + dy * i / steps
+        for w in range(width): px.add((int(round(cx - (width - 1) / 2 + w)), int(round(cy))))
+    return sorted(px), (x + dx, y + dy)
+
+
+def _leg(c, tag, hip_x, hip_y, thigh, shin, width=5):
+    up, knee = _limb(hip_x, hip_y, THIGH, thigh, width)
+    low, ankle = _limb(knee[0], knee[1], SHIN, shin, width)
+    c.fill('leg' + tag, up + low)
+    ax, ay = int(round(ankle[0])), int(round(ankle[1]))
+    lift = 1 if shin < -30 else 0                                       # a trailing foot points its toe down
+    c.fill('shoe' + tag, rect(ax - 2, ay, ax + 4, ay + 3) + rect(ax + 3, ay + 1 + lift, ax + 5, ay + 3 + lift))
+
+
+def _arm(c, tag, sh_x, sh_y, swing, width=4):
+    up, elbow = _limb(sh_x, sh_y, UPPER, swing, width)
+    low, wrist = _limb(elbow[0], elbow[1], FORE, swing + (18 if swing >= 0 else 8), width)   # the elbow stays a little bent
+    c.fill('arm' + tag, up + low)
+    wx, wy = int(round(wrist[0])), int(round(wrist[1]))
+    c.fill('hand' + tag, rect(wx - 1, wy, wx + 2, wy + 3))
 
 
 def hero_side(body='masc', skin=0, hair='black', style='standard', beard='none',
@@ -291,15 +322,20 @@ def hero_side(body='masc', skin=0, hair='black', style='standard', beard='none',
     pj = outfit == 'pj'
     hood_r = ramp(PJ['top'] if pj else HOODIE[hoodie]); jean_r = ramp(PJ['bottom'] if pj else JEANS[jeans], light=1.25, shade=0.72)
     shoe_r = skin_r if pj else SHOE
-    front, back, bob, arm = SIDE_WALK[pose]
+    if pose == 'stand':
+        near, far, bob, swing = (0, 0), (0, 0), 0, 4
+    else:
+        i = SIDE_POSES.index(pose) - 1
+        near, far, bob = SIDE_LEG[i], SIDE_LEG[(i + 4) % 8], SIDE_BOB[i]
+        swing = -near[0] * 0.9                                           # each arm swings against its own leg
     slim = body == 'fem'
     t0, t1 = (10, 18) if slim else (9, 18)                              # torso, side on
 
-    # legs: the far one first (darker), then the near one; shoes point the way the hero faces
-    c.oy = 0
-    c.fill('legB', _slant(10, 14, 45, 66, back)); c.fill('shoeB', [(x + back, y) for (x, y) in rect(10, 67, 17, 71)])
-    c.fill('legF', _slant(11, 15, 45, 66, front)); c.fill('shoeF', [(x + front, y) for (x, y) in rect(11, 67, 18, 71)])
+    # far arm and far leg first (darker), then the near leg; shoes point the way the hero faces
     c.oy = bob
+    if pose != 'stand': _arm(c, 'B', 14, 23, -swing)
+    _leg(c, 'B', 13, 45, *far)
+    _leg(c, 'F', 14, 45, *near)
     # back hair behind the body, hood behind the neck
     if style == 'shoulder': c.fill('hair', rect(7, 8, 12, 21))
     elif style == 'long': c.fill('hair', rect(6, 8, 12, 31))
@@ -324,15 +360,16 @@ def hero_side(body='masc', skin=0, hair='black', style='standard', beard='none',
         elif style == 'long': hm += rect(6, 8, 11, 31) + rect(12, 7, 12, 9)
     c.fill('hair', hm)
     # the near arm, over the torso; it swings against the legs
-    c.fill('arm', _slant(11, 15, 22, 43, arm)); c.fill('hand', [(x + arm, y) for (x, y) in rect(11, 44, 15, 47)])
+    _arm(c, 'F', 13, 23, swing)
 
     c.shade('legB', {k: jean_r['S'] if k != 'D' else jean_r['D'] for k in 'LBSD'}, hl=0, sh=1, top_light=False)
     c.shade('shoeB', {k: shoe_r['S'] for k in 'LBSD'}, hl=0, sh=0, top_light=False)
     c.shade('legF', jean_r, hl=1, sh=1, top_light=False); c.shade('shoeF', shoe_r, hl=1, sh=1)
     c.shade('hood', {'L': hood_r['S'], 'B': hood_r['D'], 'S': hood_r['D'], 'D': hood_r['D']}, hl=0, sh=0, top_light=False)
     c.shade('torso', hood_r, hl=1, sh=2, top_light=False)
-    c.shade('arm', {'L': hood_r['S'], 'B': hood_r['B'], 'S': hood_r['S'], 'D': hood_r['D']}, hl=1, sh=1, top_light=False)
-    c.shade('hand', skin_r, hl=1, sh=1, top_light=False)
+    c.shade('armB', {k: hood_r['D'] for k in 'LBSD'}, hl=0, sh=0, top_light=False); c.shade('handB', {k: skin_r['S'] for k in 'LBSD'}, hl=0, sh=0, top_light=False)
+    c.shade('armF', {'L': hood_r['S'], 'B': hood_r['B'], 'S': hood_r['S'], 'D': hood_r['D']}, hl=1, sh=1, top_light=False)
+    c.shade('handF', skin_r, hl=1, sh=1, top_light=False)
     c.shade('neck', {'L': skin_r['S'], 'B': skin_r['S'], 'S': skin_r['D'], 'D': skin_r['D']}, hl=0, sh=1, top_light=False)
     c.shade('head', skin_r, hl=1, sh=1); c.shade('ear', {k: skin_r['S'] for k in 'LBSD'}, hl=0, sh=0, top_light=False)
     c.shade('hair', hair_r, hl=2, sh=2)
@@ -341,7 +378,7 @@ def hero_side(body='masc', skin=0, hair='black', style='standard', beard='none',
         for y in range(H):
             if y % 3: continue
             for x in range(W):
-                if c.part[y][x] in ('torso', 'arm', 'legF', 'legB'): c.col[y][x] = stripe
+                if c.part[y][x] in ('torso', 'armF', 'armB', 'legF', 'legB'): c.col[y][x] = stripe
     else:
         for x in range(t0, t1 + 1): c.px(x, 45, hood_r['D'])            # hem
         for (x, y, k) in HC_MARK_PIXELS: c.px(x + 5, y, hexc(HC_MARK[k]))   # the mark, on the chest's leading side
