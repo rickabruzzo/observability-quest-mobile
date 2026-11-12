@@ -11,13 +11,13 @@ async function openPreview(opts = {}) {
   const ctx = await browser.newContext({ viewport: { width: 844, height: 390 }, deviceScaleFactor: 1, hasTouch: true, isMobile: true, ...opts });
   const page = await ctx.newPage();
   page.on('pageerror', (e) => { throw e; });
-  await page.goto(server.baseURL, { waitUntil: 'load' });
+  await page.goto(server.baseURL + '?preview=1', { waitUntil: 'load' });
   await page.waitForFunction(() => window.__oq?.ready === true);
   await page.click('#btn-start');
   await page.waitForFunction(() => document.body.dataset.screen === 'CREATOR');
   await page.waitForTimeout(400);
   await page.click('#btn-start-game');
-  await page.click('#btn-skip');                      // START now opens the intro
+  await page.click('#btn-skip');                      // START opens the intro; ?preview=1 sends its end to the test room
   await page.waitForFunction(() => document.body.dataset.screen === 'PREVIEW');
   await page.waitForTimeout(400);
   return { ctx, page };

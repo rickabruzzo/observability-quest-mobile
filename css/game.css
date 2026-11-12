@@ -102,3 +102,56 @@ body[data-cols="narrow"] .btn-sierra .long, body:not([data-cols="narrow"]) .btn-
 .intro-title-h { font-family: var(--font-display); font-size: calc(var(--scene-h) * 0.085); line-height: 1; color: var(--honey); text-shadow: 1px 1px 0 #000; white-space: nowrap; }
 .intro-title-s { font-family: var(--font-text); font-size: calc(var(--scene-h) * 0.085); line-height: 1; color: #DCF0FF; text-shadow: 1px 1px 0 #000; white-space: nowrap; }
 .intro-title.dim { opacity: 0.16; }
+
+/* ---- SCI message windows (js/engine/window.js): white, black border, hard shadow, VT323 24px ---- */
+.msg { position: absolute; left: 16px; right: 16px; top: 50%; transform: translateY(-50%); z-index: 4; background: var(--sheet-white); color: #111; border: 3px solid #000; outline: 2px solid var(--sheet-white); box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.85); padding: 8px 14px 10px; font-family: var(--font-text); font-size: 24px; line-height: 1.1; cursor: pointer; }
+.msg.bottom { top: auto; bottom: 10px; transform: none; }
+.msg-line { min-height: 1.1em; white-space: pre; overflow: hidden; }
+.msg.more::after, .card.more::after { content: ''; position: absolute; right: 8px; bottom: 6px; border: 6px solid transparent; border-top: 8px solid #111; border-bottom: 0; animation: oq-blink 1s steps(2, start) infinite; }
+@keyframes oq-blink { to { visibility: hidden; } }
+
+/* ---- class card ---- */
+.card { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(520px, calc(100% - 32px)); background: var(--sheet-white); color: #111; border-top: 6px solid #000; border-bottom: 6px solid #000; box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.85); padding: 10px 16px 14px; cursor: pointer; }
+.card h2 { margin: 0 0 6px; font-family: var(--font-display); font-size: 24px; font-weight: normal; color: var(--sheet-blue); text-align: center; line-height: 1.1; }
+.card-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18px; font-size: 20px; }
+.card .stat { display: flex; justify-content: space-between; border-bottom: 1px dotted #999; }
+.card .stat b { color: var(--sheet-red); font-weight: normal; }
+.card p { margin: 8px 0 0; font-size: 20px; }
+
+/* ---- icon bar (right thumb column): Look / Use / Help ---- */
+.btn-sierra[aria-pressed="true"] { color: var(--sheet-red); border-color: var(--sheet-red); }
+.col #btn-look, .col #btn-use, .col #btn-help { min-height: 44px; }
+
+/* ---- tool screens: title bar, picture on the canvas's left half, prompts on the right ---- */
+.tool { position: absolute; inset: 0; }
+.tool-title { position: absolute; left: 0; right: 0; top: 0; height: 9%; min-height: 24px; display: flex; align-items: center; justify-content: center; background: var(--bar); color: #000; font-size: 22px; line-height: 1; letter-spacing: 1px; }
+.tool.old .tool-title { background: #0A120A; color: #3CC83C; border-bottom: 2px solid #3CC83C; }
+.tool-prompts { position: absolute; left: 50%; right: 8px; top: 11%; bottom: 8px; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+.tool-prompts[hidden] { display: none; }
+.prompt { min-height: 44px; padding: 2px 10px; background: var(--sheet-white); color: #111; border: 2px solid #111; box-shadow: 3px 3px 0 #555; font-family: var(--font-text); font-size: 20px; line-height: 1.1; text-align: left; cursor: pointer; }
+.prompt:active:not([disabled]) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #555; }
+.prompt[disabled] { background: #B8B8B8; color: #666; border-color: #777; box-shadow: none; cursor: default; text-decoration: line-through; }
+.prompt.exit { background: #E8E8E8; }
+
+/* ---- scenario menu ---- */
+.menu { position: absolute; left: 8px; right: 8px; top: 6px; bottom: 6px; display: flex; flex-direction: column; background: var(--sheet-white); color: #111; border-top: 6px solid #000; border-bottom: 6px solid #000; padding: 4px 10px 6px; }
+.menu h2 { margin: 0; font-family: var(--font-display); font-size: 24px; font-weight: normal; color: var(--sheet-blue); text-align: center; line-height: 1.1; }
+.menu-hint { margin: 0 0 4px; font-size: 18px; line-height: 1.05; text-align: center; }
+.menu-rows { flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 3px; min-height: 0; }
+.menu-row { flex: 1; min-height: 44px; max-height: 60px; display: grid; grid-template-columns: 18.5ch 1fr 6ch; align-items: center; gap: 6px; padding: 0 6px; background: var(--sheet-white); color: #111; border: 2px solid #111; box-shadow: 3px 3px 0 #555; font-family: var(--font-text); font-size: 18px; line-height: 1.05; text-align: left; cursor: pointer; }
+.menu-row:active:not([disabled]) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #555; }
+.menu-row .mr-name { color: var(--sheet-blue); }
+.menu-row .mr-mark { text-align: right; color: var(--sheet-red); }
+.menu-row .mr-mark b { display: block; font-weight: normal; }
+.menu-row[disabled] { color: #888; border-color: #999; box-shadow: none; cursor: default; }
+.menu-row[disabled] .mr-name, .menu-row[disabled] .mr-mark { color: #888; }
+
+/* ---- timing summary ---- */
+.summary { position: absolute; left: 8px; right: 8px; top: 6px; bottom: 6px; display: flex; flex-direction: column; background: var(--sheet-white); color: #111; border-top: 6px solid #000; border-bottom: 6px solid #000; padding: 4px 12px 8px; font-size: 18px; line-height: 1.05; }
+.summary h2 { margin: 0 0 4px; font-family: var(--font-text); font-size: 24px; font-weight: normal; color: var(--sheet-blue); text-align: center; }
+.sum-grid { display: grid; grid-template-columns: 1fr 1.25fr; gap: 0 16px; }
+.sum-row { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px dotted #bbb; }
+.sum-row b { font-weight: normal; color: var(--sheet-red); white-space: nowrap; }
+.sum-prompt { margin: auto 0 6px; text-align: center; font-size: 20px; }
+.sum-btns { display: flex; gap: 8px; justify-content: center; }
+.sum-btns .prompt { flex: 1; text-align: center; padding: 0 4px; }

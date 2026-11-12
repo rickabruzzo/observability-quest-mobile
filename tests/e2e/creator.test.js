@@ -76,13 +76,13 @@ test('name sheet cleans input and shows on the button', async () => {
   await ctx.close();
 });
 
-test('START persists and (past the intro) goes to PREVIEW; reload keeps the hero', async () => {
+test('START persists and (past the intro) goes to the scenario menu; reload keeps the hero', async () => {
   const { ctx, page } = await openCreator();
   await page.click('.tab[data-page="kit"]');
   await page.click('.opt[data-key="hoodie"][data-value="lime"]');
   await page.click('#btn-start-game');
   await page.click('#btn-skip');
-  await page.waitForFunction(() => document.body.dataset.screen === 'PREVIEW');
+  await page.waitForFunction(() => document.body.dataset.screen === 'MENU');
   assert.equal(await page.evaluate(() => JSON.parse(sessionStorage.getItem('oq.hero')).hoodie), 'lime');
   await page.reload({ waitUntil: 'load' });
   await page.waitForFunction(() => window.__oq?.ready === true);
@@ -98,7 +98,7 @@ test('storage throwing does not break the creator or START', async () => {
   assert.equal((await hero(page)).skin, 3);
   await page.click('#btn-start-game');
   await page.click('#btn-skip');
-  await page.waitForFunction(() => document.body.dataset.screen === 'PREVIEW');
+  await page.waitForFunction(() => document.body.dataset.screen === 'MENU');
   await ctx.close();
 });
 

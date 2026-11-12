@@ -1,7 +1,7 @@
 # Observability Quest — Script (v2, SCI adventure)
 
 **Draft 1 for Rick's review · 2026-11-10.** Every line the game shows lives here, one slot per `###` heading;
-the text under a heading (up to the next heading) is the slot's copy. `tools/build_script.mjs` (next
+the text under a heading (up to the next heading) is the slot's copy. `tools/build_script.py` (next
 sub-project) turns this file into `js/script.js`, so edit the words here, not in code.
 
 Conventions: the narrator speaks with no prefix. The hero speaks as the chapter's class (`SRE:`). Other
