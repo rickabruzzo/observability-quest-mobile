@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { planWalk, stepWalk, WALK_SPEED } from '../js/engine/walk.js';
+import { planWalk, stepWalk, STRIDE_PX, WALK_SPEED } from '../js/engine/walk.js';
+import { SIDE_POSES } from '../js/engine/hero-side.js';
 
 test('a Sierra stroll, not a sprint: a full room takes about three seconds (Rick, 2026-11-11: "walking is way too fast")', () => {
   const d = planWalk(0, 292).duration;
@@ -18,17 +19,60 @@ test('direction and flip', () => {
   assert.equal(stepWalk(planWalk(100, 20), 10).flip, true);
 });
 
-test('pose cycles at 6 fps and x interpolates', () => {
-  const p = planWalk(0, 300, { speed: 300 }); // 1000 ms at 300 px/s
-  assert.equal(stepWalk(p, 0).pose, 'walk1');
-  assert.equal(stepWalk(p, 200).pose, 'walk2');
-  assert.equal(stepWalk(p, 520).pose, 'walk4');
-  assert.equal(stepWalk(p, 700).pose, 'walk1');
-  assert.equal(stepWalk(p, 500).x, 150);
+// ---- the walk is the profile view, and the frame comes from distance, not the clock ----
+
+test('walking is the side view; standing still is the front view', () => {
+  const p = planWalk(0, 300, { speed: 300 });
+  assert.equal(stepWalk(p, 100).view, 'side');
+  assert.ok(SIDE_POSES.includes(stepWalk(p, 100).pose));
+  const end = stepWalk(p, 1000);
+  assert.equal(end.view, 'front'); assert.equal(end.pose, 'idle');
 });
 
-test('done at the end, idle, exact target', () => {
+test('one full cycle of eight frames per STRIDE_PX of travel', () => {
+  assert.equal(STRIDE_PX, 38);
+  const p = planWalk(0, 1000, { speed: 1000 });                 // 1 px per ms: elapsed ms == px travelled
+  const seen = [];
+  for (let d = 0; d < STRIDE_PX; d++) seen.push(stepWalk(p, d).pose);
+  assert.deepEqual([...new Set(seen)], ['w1', 'w2', 'w3', 'w4', 'w5', 'w6', 'w7', 'w8'], 'all eight, in order');
+  assert.equal(stepWalk(p, 0).pose, 'w1');
+  assert.equal(stepWalk(p, STRIDE_PX).pose, 'w1', 'the cycle starts over after one stride');
+  assert.equal(stepWalk(p, STRIDE_PX * 3).pose, 'w1');
+});
+
+test('the same distance gives the same frame whatever the speed — feet do not slide', () => {
+  const slow = planWalk(0, 300, { speed: 50 }), fast = planWalk(0, 300, { speed: 400 });
+  for (const travelled of [1, 7, 19, 25, 38, 60, 123, 250]) {
+    const a = stepWalk(slow, (travelled / 50) * 1000);
+    const b = stepWalk(fast, (travelled / 400) * 1000);
+    assert.equal(a.x, b.x, `x at ${travelled} px`);
+    assert.equal(a.pose, b.pose, `pose at ${travelled} px`);
+  }
+});
+
+test('walking left runs the same cycle, mirrored', () => {
+  const left = planWalk(300, 0, { speed: 1000 }), right = planWalk(0, 300, { speed: 1000 });
+  for (const t of [0, 5, 12, 30, 76]) {
+    assert.equal(stepWalk(left, t).pose, stepWalk(right, t).pose, `t=${t}`);
+    assert.equal(stepWalk(left, t).flip, true);
+    assert.equal(stepWalk(right, t).flip, false);
+  }
+});
+
+test('x interpolates', () => {
+  assert.equal(stepWalk(planWalk(0, 300, { speed: 300 }), 500).x, 150);
+});
+
+test('done at the end, front-facing idle, exact target', () => {
   const s = stepWalk(planWalk(0, 300, { speed: 300 }), 1000);
-  assert.equal(s.done, true); assert.equal(s.pose, 'idle'); assert.equal(s.x, 300);
+  assert.equal(s.done, true); assert.equal(s.pose, 'idle'); assert.equal(s.view, 'front'); assert.equal(s.x, 300);
   assert.equal(stepWalk(planWalk(0, 300, { speed: 300 }), 5000).x, 300);
+  const nowhere = stepWalk(planWalk(50, 50), 0);
+  assert.deepEqual([nowhere.done, nowhere.pose, nowhere.view], [true, 'idle', 'front']);
+});
+
+test('a negative or zero elapsed time is the first frame, not a crash', () => {
+  const p = planWalk(0, 300, { speed: 300 });
+  assert.equal(stepWalk(p, -50).pose, 'w1');
+  assert.equal(stepWalk(p, -50).x, 0);
 });

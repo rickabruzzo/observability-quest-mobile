@@ -5,7 +5,7 @@ This is the normative implementation: js/engine/hero.js must match it pixel for 
 and the --fixtures CLI; tools/tests/test_hero_gen.py covers it.
 """
 from PIL import Image
-import json, sys, os
+import json, math, sys, os
 
 W, H = 28, 72
 
@@ -271,8 +271,9 @@ def hero(body='masc', skin=0, hair='black', style='standard', beard='none',
     return c.image()
 
 # ---- profile view (facing right; the game mirrors it for left) --------------------------------------
-# DRAFT for Rick's approval (2026-11-11): not ported to the game yet. Standing plus a four-frame walk:
-# stride, passing, stride with the other leg forward, passing.
+# Approved by Rick 2026-11-11 and ported to js/engine/hero-side.js, which must match this pixel for pixel
+# (golden fixtures in tests/fixtures/hero-side). Standing plus an eight-frame walk: stride, passing,
+# stride with the other leg forward, passing.
 SIDE_POSES = ['stand'] + [f'w{i}' for i in range(1, 9)]
 # The walk, as joint angles in degrees from straight down (+ = forward). One leg's eight frames; the other leg
 # and the arms use the same table half a cycle away. Studied from how adventure-game figures of the era walk:
@@ -284,16 +285,41 @@ SIDE_LEG = [(26, 12), (16, 2), (2, -4), (-12, -22), (-22, -46), (-8, -62), (12, 
 SIDE_BOB = [1, 0, 0, 0, 1, 0, 0, 0]
 THIGH, SHIN, UPPER, FORE = 11, 11, 10, 9
 
+# Golden fixtures for js/engine/hero-side.js (tests/fixtures/hero-side, tests/hero-side.test.js).
+# One hero through all nine poses, then one of every hair style, every beard, glasses, every body, pyjamas.
+SIDE_FIXTURES = {
+    **{f'nb-{p}': (PRESETS['nb'], p) for p in SIDE_POSES},               # mohawk, glasses, no beard — nine poses
+    'masc-stand': (PRESETS['masc'], 'stand'),                            # masc body, standard hair, short beard
+    'masc-w3': (PRESETS['masc'], 'w3'),
+    'fem-stand': (PRESETS['fem'], 'stand'),                              # fem body, long hair, glasses
+    'fem-w7': (PRESETS['fem'], 'w7'),
+    'var-shoulder-w2': (dict(body='fem', skin=3, hair='ginger', style='shoulder', beard='none', hoodie='indigo', jeans='light', glasses='none'), 'w2'),
+    'var-fro-w5': (dict(body='nb', skin=1, hair='blonde', style='fro', beard='short', hoodie='lime', jeans='indigo', glasses='glasses'), 'w5'),
+    'var-long-beard-stand': (dict(body='masc', skin=2, hair='black', style='standard', beard='long', hoodie='honey', jeans='khaki', glasses='glasses'), 'stand'),
+    'masc-pj-stand': (PRESETS['masc'], 'stand', 'pj'),                   # barefoot, striped, no hood and no mark
+    'masc-pj-w4': (PRESETS['masc'], 'w4', 'pj'),
+}
+
+
+def _r(v):
+    """Round half up — the one rule the whole profile view uses, in both languages.
+
+    Python's built-in round() is banker's rounding (round(2.5) == 2) and JavaScript's Math.round
+    is half up (Math.round(2.5) === 3), so a limb whose joint lands exactly on .5 would land on a
+    different pixel in js/engine/hero-side.js. floor(v + 0.5) is what Math.round does, negatives
+    included, so the port can match byte for byte.
+    """
+    return math.floor(v + 0.5)
+
 
 def _limb(x, y, length, deg, width):
     """A thick segment from (x, y), `deg` from straight down. Returns (pixels, end point)."""
-    import math
     dx, dy = math.sin(math.radians(deg)) * length, math.cos(math.radians(deg)) * length
-    steps = max(1, int(round(length)))
+    steps = max(1, _r(length))
     px = set()
     for i in range(steps + 1):
         cx, cy = x + dx * i / steps, y + dy * i / steps
-        for w in range(width): px.add((int(round(cx - (width - 1) / 2 + w)), int(round(cy))))
+        for w in range(width): px.add((_r(cx - (width - 1) / 2 + w), _r(cy)))
     return sorted(px), (x + dx, y + dy)
 
 
@@ -301,7 +327,7 @@ def _leg(c, tag, hip_x, hip_y, thigh, shin, width=5):
     up, knee = _limb(hip_x, hip_y, THIGH, thigh, width)
     low, ankle = _limb(knee[0], knee[1], SHIN, shin, width)
     c.fill('leg' + tag, up + low)
-    ax, ay = int(round(ankle[0])), int(round(ankle[1]))
+    ax, ay = _r(ankle[0]), _r(ankle[1])
     lift = 1 if shin < -30 else 0                                       # a trailing foot points its toe down
     c.fill('shoe' + tag, rect(ax - 2, ay, ax + 4, ay + 3) + rect(ax + 3, ay + 1 + lift, ax + 5, ay + 3 + lift))
 
@@ -310,7 +336,7 @@ def _arm(c, tag, sh_x, sh_y, swing, width=4):
     up, elbow = _limb(sh_x, sh_y, UPPER, swing, width)
     low, wrist = _limb(elbow[0], elbow[1], FORE, swing + (18 if swing >= 0 else 8), width)   # the elbow stays a little bent
     c.fill('arm' + tag, up + low)
-    wx, wy = int(round(wrist[0])), int(round(wrist[1]))
+    wx, wy = _r(wrist[0]), _r(wrist[1])
     c.fill('hand' + tag, rect(wx - 1, wy, wx + 2, wy + 3))
 
 
@@ -418,6 +444,16 @@ def write_fixtures(d):
         with open(os.path.join(d, f'{name}.rgba'), 'wb') as f: f.write(im.tobytes())
         im.save(os.path.join(d, f'{name}.png'))
 
+def write_side_fixtures(d):
+    """Same three files per fixture as write_fixtures, for the profile view."""
+    os.makedirs(d, exist_ok=True)
+    for name, fx in SIDE_FIXTURES.items():
+        cfg, pose, outfit = (fx + ('hoodie',))[:3]
+        im = hero_side(**cfg, pose=pose, outfit=outfit)
+        with open(os.path.join(d, f'{name}.json'), 'w') as f: json.dump({**cfg, 'pose': pose, 'outfit': outfit}, f, indent=1, sort_keys=True)
+        with open(os.path.join(d, f'{name}.rgba'), 'wb') as f: f.write(im.tobytes())
+        im.save(os.path.join(d, f'{name}.png'))
+
 def write_contact(d, scale=6):
     """Contact sheet of every fixture at `scale` for eyeballing."""
     os.makedirs(d, exist_ok=True)
@@ -432,5 +468,6 @@ def write_contact(d, scale=6):
 if __name__ == '__main__':
     args = sys.argv[1:]
     if len(args) == 2 and args[0] == '--fixtures': write_fixtures(args[1])
+    elif len(args) == 2 and args[0] == '--side-fixtures': write_side_fixtures(args[1])
     elif len(args) == 2 and args[0] == '--contact': write_contact(args[1])
-    else: print('usage: hero_gen.py --fixtures DIR | --contact DIR', file=sys.stderr); sys.exit(2)
+    else: print('usage: hero_gen.py --fixtures DIR | --side-fixtures DIR | --contact DIR', file=sys.stderr); sys.exit(2)

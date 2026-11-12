@@ -3,6 +3,7 @@
 // cycle, flipping, reduced motion and the pause under the rotate gate.
 
 import { drawHero, HERO_W, HERO_H } from '../engine/hero.js';
+import { drawHeroSide, SIDE_FOOT_DY } from '../engine/hero-side.js';
 import { planWalk, stepWalk } from '../engine/walk.js';
 import { colButton } from '../engine/ui.js';
 import { actionAt, applyCursor, drawIcon, MARKER_MS } from '../engine/cursor.js';
@@ -15,7 +16,7 @@ const HOTSPOTS = [{ id: 'desk', x: 166, y: 64, w: 110, h: 68, standX: 150, text:
 const HINT = 'Tap the floor to walk';
 
 export function createPreviewScreen(game) {
-  let hero, x = START_X, pose = 'idle', flip = false, plan = null, elapsed = 0;
+  let hero, x = START_X, pose = 'idle', view = 'front', flip = false, plan = null, elapsed = 0;
   let redo = null, onTap = null, onMove = null, cursor = null, marker = null, pending = null;
   const say = (ctx, text) => { const el = ctx.overlay.querySelector('.room-ui'); if (el) el.textContent = text; };
 
@@ -34,13 +35,15 @@ export function createPreviewScreen(game) {
   function paint(ctx) {
     const g = ctx.ctx2d;
     paintRoom(g);
-    drawHero(g, hero, pose, x, FLOOR_Y - HERO_H, 1, { flip });
+    // side on while walking (mirrored when heading left), facing the player when stopped
+    if (view === 'side') drawHeroSide(g, hero, pose, x, FLOOR_Y - HERO_H + SIDE_FOOT_DY, 1, { flip });
+    else drawHero(g, hero, pose, x, FLOOR_Y - HERO_H, 1, { flip });
     if (marker) drawIcon(g, marker.icon, marker.x, marker.y);        // where the tap landed, and what it will do
   }
 
   function walkTo(ctx, targetX) {
     const tx = Math.max(MIN_X, Math.min(MAX_X, targetX));
-    if (ctx.reducedMotion) { if (tx !== x) flip = tx < x; x = tx; pose = 'idle'; plan = null; paint(ctx); return; }
+    if (ctx.reducedMotion) { if (tx !== x) flip = tx < x; x = tx; pose = 'idle'; view = 'front'; plan = null; paint(ctx); return; }
     plan = planWalk(x, tx); elapsed = 0;
     if (plan.duration === 0) { plan = null; return; }
     flip = plan.dir < 0;
@@ -49,7 +52,7 @@ export function createPreviewScreen(game) {
   return {
     enter(ctx) {
       hero = ctx.hero;
-      x = START_X; pose = 'idle'; flip = false; plan = null; elapsed = 0;
+      x = START_X; pose = 'idle'; view = 'front'; flip = false; plan = null; elapsed = 0;
       ctx.overlay.innerHTML = `<div class="room-ui">${HINT}</div>`;
       marker = null; pending = null; cursor = null;
       const box = ctx.canvas.parentElement;
@@ -72,7 +75,7 @@ export function createPreviewScreen(game) {
       redo = colButton({ id: 'btn-redo', long: 'Sheet', short: 'Edit', onClick: () => game.go('CREATOR') });
       ctx.colR.appendChild(redo);
       paint(ctx);
-      window.__oq && (window.__oq.preview = { get x() { return x; }, get pose() { return pose; }, get walking() { return plan !== null; }, get flip() { return flip; }, get cursor() { return cursor; }, get marker() { return marker && { icon: marker.icon, x: marker.x, y: marker.y }; } });
+      window.__oq && (window.__oq.preview = { get x() { return x; }, get pose() { return pose; }, get view() { return view; }, get walking() { return plan !== null; }, get flip() { return flip; }, get cursor() { return cursor; }, get marker() { return marker && { icon: marker.icon, x: marker.x, y: marker.y }; } });
     },
     tick(dt, ctx) {
       if (!plan && !marker) return;
@@ -80,7 +83,7 @@ export function createPreviewScreen(game) {
       if (plan) {
         elapsed += dt;
         const s = stepWalk(plan, elapsed);
-        x = s.x; pose = s.pose; flip = s.flip;
+        x = s.x; pose = s.pose; view = s.view; flip = s.flip;
         if (s.done) { plan = null; if (pending) { say(ctx, pending.text); pending = null; } }
       }
       paint(ctx);

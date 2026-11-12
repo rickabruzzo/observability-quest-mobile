@@ -155,3 +155,62 @@ def test_every_style_shows_a_forehead():
         im = _head(style=style)
         rows = [y for y in (6, 7, 8) if all(im.getpixel((x, y))[:3] in skin for x in range(11, 17))]
         assert len(rows) >= (1 if style == 'fro' else 2), (style, rows)      # clear skin between hair and brows (the fro, approved as is, sits lower)
+
+
+# ---- profile view (hero_side) ----
+
+def test_side_rounding_is_half_up_not_bankers():
+    """The port in js/engine/hero-side.js uses Math.round; Python's round() is banker's.
+    hero_side goes through one explicit rule, floor(x + 0.5), so both sides agree at .5."""
+    assert hero_gen._r(2.5) == 3 and hero_gen._r(3.5) == 4        # banker's round() gives 2 and 4
+    assert hero_gen._r(0.5) == 1 and hero_gen._r(1.5) == 2
+    assert hero_gen._r(-2.5) == -2 and hero_gen._r(-3.5) == -3    # exactly what JS Math.round does
+    assert hero_gen._r(2.49) == 2 and hero_gen._r(2.51) == 3
+
+
+def test_side_poses_are_stand_plus_an_eight_frame_walk():
+    assert hero_gen.SIDE_POSES == ['stand', 'w1', 'w2', 'w3', 'w4', 'w5', 'w6', 'w7', 'w8']
+
+
+def test_every_side_pose_renders_and_differs_from_standing():
+    base = hero_gen.hero_side(**hero_gen.PRESETS['nb'], pose='stand').tobytes()
+    for p in hero_gen.SIDE_POSES[1:]:
+        im = hero_gen.hero_side(**hero_gen.PRESETS['nb'], pose=p)
+        assert im.size == (28, 72) and im.mode == 'RGBA'
+        assert im.tobytes() != base, p
+
+
+def test_side_fixtures_cover_the_whole_character_sheet():
+    """One hero in all nine poses, plus every hair style, every beard, glasses, every body, pyjamas."""
+    fx = hero_gen.SIDE_FIXTURES
+    for p in hero_gen.SIDE_POSES:
+        assert any(pose == p for cfg, pose, *_ in fx.values()), p
+    for key in ('style', 'beard', 'body'):
+        covered = {cfg[key] for cfg, *_ in fx.values()}
+        assert covered == set(hero_gen.OPTIONS[key]), (key, covered)
+    assert any(cfg['glasses'] == 'glasses' for cfg, *_ in fx.values())
+    assert any(len(v) > 2 and v[2] == 'pj' for v in fx.values())
+
+
+def test_side_fixtures_cli_writes_json_rgba_png(tmp_path):
+    subprocess.run([sys.executable, 'tools/hero_gen.py', '--side-fixtures', str(tmp_path)], check=True)
+    names = sorted(p[:-5] for p in os.listdir(tmp_path) if p.endswith('.json'))
+    assert names == sorted(hero_gen.SIDE_FIXTURES)
+    for n in names:
+        cfg = json.load(open(tmp_path / f'{n}.json'))
+        assert set(cfg) == set(hero_gen.CONFIG_KEYS) | {'pose', 'outfit'}
+        assert cfg['pose'] in hero_gen.SIDE_POSES
+        assert os.path.getsize(tmp_path / f'{n}.rgba') == 28 * 72 * 4
+        assert (tmp_path / f'{n}.png').exists()
+
+
+def test_side_fixtures_cli_does_not_touch_the_front_view_fixtures(tmp_path):
+    """--side-fixtures and --fixtures write to different directories and different names."""
+    assert not (set(hero_gen.FIXTURES) & set(hero_gen.SIDE_FIXTURES))
+
+
+def test_side_faces_right_and_the_near_shoe_leads():
+    """Facing right: the nose is the rightmost thing on the head's rows."""
+    im = hero_gen.hero_side(**hero_gen.PRESETS['masc'])
+    xs = [x for x in range(28) if im.getpixel((x, 12))[3]]
+    assert xs[-1] >= 20                                      # the nose reaches past the skull

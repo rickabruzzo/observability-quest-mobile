@@ -1,6 +1,8 @@
 // The intro as data: nine shots, each a still (or two stills it cuts between). Limited animation, as on a
 // 1990 PC: nothing tweens, the picture is replaced whole. Pure — the screen module does the drawing.
 import { flashOn } from './pager.js';
+import { SIDE_POSES } from '../engine/hero-side.js';
+import { STRIDE_PX } from '../engine/walk.js';
 
 export const FLASH_MS = 500;                          // one on/off cycle; 2Hz is the ceiling for anything that flashes
 const CTO = 'Backend is down. Front end is down. Database is down. Get in here! -CTO';
@@ -61,9 +63,14 @@ export function heroAt(tMs) {
 
 // ---- the way out of the bedroom: across the floor to the door, up to its threshold, through it ----
 // Still limited animation: the door is two stills (shut, open), the hero is there and then is not.
+// The whole exit is the profile view — there is no back view, so the few steps up to the threshold are
+// walked side on too, and the hero stays side on at the door rather than turning to face the player for
+// one beat before vanishing. The frame comes from distance travelled, the same rule the room walk uses.
 const AMBLE = 60, AMBLE_UP = 40;                      // px/s: a sleepy walk
 const DOOR_OPEN_MS = 350, DOOR_GONE_MS = 300, DOOR_SHUT_MS = 400;
-const STEP = ['walk1', 'walk2', 'walk3', 'walk4'];
+const STEP = SIDE_POSES.slice(1);                     // w1..w8
+const PER_FRAME_PX = STRIDE_PX / STEP.length;
+const frameAfter = (px) => STEP[Math.floor(Math.abs(px) / PER_FRAME_PX) % STEP.length];
 
 export function exitPlan({ standX, doorX, floorY, doorY = floorY }) {
   const across = Math.round((Math.abs(doorX - standX) / AMBLE) * 1000);
@@ -73,13 +80,20 @@ export function exitPlan({ standX, doorX, floorY, doorY = floorY }) {
 
 /** Where the hero is tMs into the plan. x is the sprite's left edge, y the row the feet stand on. */
 export function exitAt(p, tMs) {
-  const t = Math.max(0, tMs), flip = p.doorX < p.standX, step = STEP[Math.floor(t / 170) % 4];
-  const at = (x, y, pose, visible, doorOpen, done = false) => ({ x, y, pose, flip, visible, doorOpen, done });
-  if (t < p.across) return at(Math.round(p.standX + (p.doorX - p.standX) * (t / p.across)), p.floorY, step, true, false);
+  const t = Math.max(0, tMs), flip = p.doorX < p.standX;
+  const at = (x, y, pose, visible, doorOpen, done = false) => ({ x, y, pose, view: 'side', flip, visible, doorOpen, done });
+  if (t < p.across) {
+    const x = Math.round(p.standX + (p.doorX - p.standX) * (t / p.across));
+    return at(x, p.floorY, frameAfter(x - p.standX), true, false);
+  }
   let u = t - p.across;
-  if (u < p.up) return at(p.doorX, Math.round(p.floorY + (p.doorY - p.floorY) * (u / p.up)), step, true, false);
+  const acrossPx = Math.abs(p.doorX - p.standX);
+  if (u < p.up) {
+    const y = Math.round(p.floorY + (p.doorY - p.floorY) * (u / p.up));
+    return at(p.doorX, y, frameAfter(acrossPx + Math.abs(y - p.floorY)), true, false);   // the cycle carries on up
+  }
   u -= p.up;
-  if (u < p.open) return at(p.doorX, p.doorY, 'idle', true, true);
-  if (u < p.open + p.gone) return at(p.doorX, p.doorY, 'idle', false, true);
-  return at(p.doorX, p.doorY, 'idle', false, false, t >= p.total);
+  if (u < p.open) return at(p.doorX, p.doorY, 'stand', true, true);
+  if (u < p.open + p.gone) return at(p.doorX, p.doorY, 'stand', false, true);
+  return at(p.doorX, p.doorY, 'stand', false, false, t >= p.total);
 }

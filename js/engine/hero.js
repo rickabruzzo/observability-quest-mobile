@@ -1,6 +1,8 @@
 // Hero sprite renderer — a line-for-line port of tools/hero_gen.py.
 // Part masks → shading pass → detail stamps → silhouette outline. The Python file is the
 // reference; tests/hero.test.js proves this port byte for byte against its fixtures.
+// The canvas (Grid), the colour ramps and the mask helpers are exported for js/engine/hero-side.js,
+// which is the same renderer seen from the side; nothing here may change the front view's output.
 
 import { BODIES, HAIR, HC_MARK, HC_MARK_PIXELS, HOODIE, JEANS, OUTLINE, PJ, SIT_DY, SKIN, WALK } from './hero-parts.js';
 
@@ -8,21 +10,21 @@ export const HERO_W = 28;
 export const HERO_H = 72;
 export const HEAD_CROP = { x: 4, y: 0, w: 20, h: 21 };
 
-function hexc(s) {
+export function hexc(s) {
   const h = s.replace('#', '');
   return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16), 255];
 }
-function ramp(base, light = 1.22, shade = 0.74, dark = 0.5) {
+export function ramp(base, light = 1.22, shade = 0.74, dark = 0.5) {
   const [r, g, b] = hexc(base);
   const f = (k) => [Math.min(255, Math.trunc(r * k)), Math.min(255, Math.trunc(g * k)), Math.min(255, Math.trunc(b * k)), 255];
   return { L: f(light), B: [r, g, b, 255], S: f(shade), D: f(dark) };
 }
-const OUTLINE_C = hexc(OUTLINE);
-const SHOE = ramp('#2E2E36', 1.6, 0.8);
-const GLASSES = [30, 30, 42, 255];           // dark frames: they must read as glasses on every skin tone
-const EYE_WHITE = hexc('#F2F2F2');
+export const OUTLINE_C = hexc(OUTLINE);
+export const SHOE = ramp('#2E2E36', 1.6, 0.8);
+export const GLASSES = [30, 30, 42, 255];    // dark frames: they must read as glasses on every skin tone
+export const EYE_WHITE = hexc('#F2F2F2');
 
-class Grid {
+export class Grid {
   constructor() {
     this.part = Array.from({ length: HERO_H }, () => new Array(HERO_W).fill(null));
     this.col = Array.from({ length: HERO_H }, () => new Array(HERO_W).fill(null));
@@ -79,12 +81,12 @@ class Grid {
   }
 }
 
-function rect(x0, y0, x1, y1) {
+export function rect(x0, y0, x1, y1) {
   const out = [];
   for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) out.push([x, y]);
   return out;
 }
-function ellipse(cx, cy, rx, ry) {
+export function ellipse(cx, cy, rx, ry) {
   const out = [];
   for (let y = Math.trunc(cy - ry); y <= Math.trunc(cy + ry); y++)
     for (let x = Math.trunc(cx - rx); x <= Math.trunc(cx + rx); x++)
