@@ -167,3 +167,7 @@ the claim form (scene sprites load with their scene; if that fails the scene sho
 
 See `ASSET_PROMPTS.md` for image provenance. Scenario 4's portrait is Jess's pick (variant 2); her blink/talk
 frames are pending. The claim form is a placeholder until the HubSpot form exists.
+
+## Who does what
+
+Work moves through GitHub pull requests: see `briefs/PROTOCOL.md` (everyone), `briefs/warp/PROTOCOL.md` (code), `briefs/art/PROTOCOL.md` (art drops).
