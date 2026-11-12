@@ -107,3 +107,10 @@ block on. Test the restyle under `.hs-form` on a real phone.
 - Strings with no script slot (mine, in `UI` in `js/screens/chapter.js` and `MENU_UI` in `js/screens/menu.js`): Look / Use / Help, `[Close the terminal]`, Copy results / Copied, the claim placeholder line, "coming soon", the summary's labels. Give them slots when the script settles.
 - Stale script slots: `status.score` and `complete.score` say "of 300" (the game shows `of 500`, per the spec); `complete.again.note` says "Three new stories".
 - Not yet: the hand-pulse on entering a room, unvisited-hotspot glints, footsteps and window sounds, the product-screen kit beyond the two pictures, Charity's final, claim/complete (the summary's Claim button and the menu's Claim button show a placeholder line).
+
+## Scenario 1 on its real room (Warp brief 03, 2026-11-12)
+- Shipped: `R1_exec_floor` with three hotspots (PC, monitor, CTO); Otto's vitals (`js/engine/vitals.js`) live in the room and close up; the PC close-up's menu opens both tools and gates Leave computer on a tool try; the CTO's decision (`js/engine/scenario.js`): Sign the contract (jab, 50, greyed) or Get Honeycomb (win, or "show me"). The eight placeholder-room slots are gone from the script.
+- Scripted timings at 200 wpm: shortest 1:41, everything 4:10 — the full poke-around is over the 3-minute target; the PC adds an extra 8 s and the entry line two pages on the shortest path.
+- Positions nudged from the art hand-back by a pixel or two (lights onto their chips, traces inside their frames): see the comment on `MONITOR` in `js/chapters/ch1.js`.
+- Strings with no slot (mine): `[Close Cave Logs]`, `[Close Honeycomb]`, `Back` (monitor close-up), plus brief 02's list.
+- Not yet: sound for the monitor (a heartbeat blip, an alarm) and for the CTO's call; the tool screens still take over the whole scene rather than appearing on the PC's CRT.

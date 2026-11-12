@@ -30,16 +30,20 @@ export const MONITOR = {
   okPool: Array.from({ length: 5 }, (_, i) => `ch1.vitals.ok.${i + 1}`),
   output: 'ch1.vitals.output',
   outputOk: 'ch1.vitals.output.ok',
+  // Nudged from the art hand-back (Warp brief 03): the traces sit inside their panel's frame rather than on
+  // it (room lane 118–180 × 30–50 → 120–178 × 32–48; close-up 27–224 × 26–91 → 29–222 × 29–88), and the
+  // lights cover the art's chips exactly: room (120,54) (142,54) (164,54) → (119,54) (141,54) (163,54); close-up
+  // (31,104) (100,104) (169,104) → one row lower, (31,105) (100,105) (169,105), 10×5 inside each chip's rim.
   room: {
-    lane: { x0: 118, x1: 180, y0: 30, y1: 50 },
-    lights: [[120, 54], [142, 54], [164, 54]], lightSize: [4, 2],
+    lane: { x0: 120, x1: 178, y0: 32, y1: 48 },
+    lights: [[119, 54], [141, 54], [163, 54]], lightSize: [4, 2],
     output: { x0: 183, x1: 203, y0: 30, y1: 72 },
   },
   close: {
-    lane: { x0: 27, x1: 224, y0: 26, y1: 91 },
+    lane: { x0: 29, x1: 222, y0: 29, y1: 88 },
     boxes: [{ x0: 27, x1: 87, y0: 116, y1: 164 }, { x0: 95, x1: 156, y0: 116, y1: 164 }, { x0: 164, x1: 224, y0: 116, y1: 164 }],
     boxHits: [{ x0: 27, x1: 87, y0: 100, y1: 164 }, { x0: 95, x1: 156, y0: 100, y1: 164 }, { x0: 164, x1: 224, y0: 100, y1: 164 }],
-    lights: [[31, 104], [100, 104], [169, 104]], lightSize: [10, 5],
+    lights: [[31, 105], [100, 105], [169, 105]], lightSize: [10, 5],
     output: { x0: 232, x1: 293, y0: 26, y1: 164 },
     screen: { x0: 18, x1: 301, y0: 16, y1: 174 },     // a tap outside the glass goes back to the room
   },

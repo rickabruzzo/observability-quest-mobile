@@ -71,8 +71,10 @@ export function createChapterScreen(game) {
     });
   }
   function drawLights(g, where, f, size) {
-    g.fillStyle = f.tone === 'green' ? '#3CE070' : '#FF3030';
-    where.forEach(([lx, ly], i) => { if (f.lights[i]) g.fillRect(lx, ly, size[0], size[1]); });
+    where.forEach(([lx, ly], i) => {                         // an unlit light is dark, not the art's idle chip
+      g.fillStyle = f.lights[i] ? (f.tone === 'green' ? '#3CE070' : '#FF3030') : '#2A0C0C';
+      g.fillRect(lx, ly, size[0], size[1]);
+    });
   }
   const traceColour = (f) => (f.tone === 'green' ? '#3CE070' : '#FF5A3C');
 
@@ -84,11 +86,10 @@ export function createChapterScreen(game) {
     const patch = art?.manifest.patches?.[room.image];
     if (frameNo && patch && img(room.talk[frameNo - 1])) g.drawImage(img(room.talk[frameNo - 1]), patch.x, patch.y);
     // Otto's vitals, motion only: the trace, the lights, a cursor typing in the output panel
-    g.fillStyle = '#05081A'; g.fillRect(m.lane.x0, m.lane.y0, m.lane.x1 - m.lane.x0 + 1, m.lane.y1 - m.lane.y0 + 1);
     drawLane(g, m.lane, beatSamples(vitalsT, vitalsMode, m.lane.x1 - m.lane.x0 + 1, ctx.reducedMotion), traceColour(f), 1);
     drawLights(g, m.lights, f, ch.monitor.room.lightSize);
-    const o = m.output, per = Math.floor((o.x1 - o.x0 - 1) / 3), shown = f.output.glitch ? 0 : f.output.shown;
-    g.fillStyle = '#05081A'; g.fillRect(o.x0, o.y0, o.x1 - o.x0 + 1, o.y1 - o.y0 + 1);
+    const o = m.output, per = Math.floor((o.x1 - o.x0 - 1) / 3), rows = Math.floor((o.y1 - o.y0 - 4) / 5);
+    const shown = Math.min(per * rows - 1, f.output.glitch ? 0 : f.output.shown);   // a long answer fills the panel, never spills
     g.fillStyle = f.tone === 'green' ? '#2A9A50' : '#6A7090';
     for (let i = 0; i < shown; i++) g.fillRect(o.x0 + 2 + (i % per) * 3, o.y0 + 3 + Math.floor(i / per) * 5, 2, 2);
     if (f.output.cursor || f.output.glitch) {
