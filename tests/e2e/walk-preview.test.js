@@ -85,3 +85,45 @@ test('Sheet button returns to the creator with the same hero', async () => {
   assert.equal((await page.evaluate(() => window.__oq.creator.hero)).body, 'masc');
   await ctx.close();
 });
+
+// ---- Sierra's cursor, for mouse and for thumbs ----
+const at = async (page, lx, ly) => { const b = await page.locator('#scene').boundingBox(); return { x: b.x + (lx + 0.5) * (b.width / 320), y: b.y + (ly + 0.5) * (b.height / 200) }; };
+
+test('with a mouse: a walking figure over the floor, a hand over something usable', async () => {
+  const { ctx, page } = await openPreview({ viewport: { width: 1280, height: 720 }, hasTouch: false, isMobile: false });
+  let p = await at(page, 80, 185); await page.mouse.move(p.x, p.y);
+  await page.waitForFunction(() => window.__oq.preview.cursor === 'walk');
+  const walkCss = await page.evaluate(() => document.getElementById('scene-box').style.cursor);
+  assert.match(walkCss, /^url\("data:image\/png/);
+  p = await at(page, 220, 100); await page.mouse.move(p.x, p.y);
+  await page.waitForFunction(() => window.__oq.preview.cursor === 'hand');
+  const handCss = await page.evaluate(() => document.getElementById('scene-box').style.cursor);
+  assert.match(handCss, /^url\("data:image\/png/); assert.notEqual(handCss, walkCss);
+  await ctx.close();
+});
+
+test('on a phone: no cursor, but a tap shows the walker where it lands and the hand on a usable thing', async () => {
+  const { ctx, page } = await openPreview();
+  assert.equal(await page.evaluate(() => document.getElementById('scene-box').style.cursor), '');
+  let p = await at(page, 60, 186); await page.mouse.click(p.x, p.y);
+  await page.waitForFunction(() => window.__oq.preview.marker?.icon === 'walk');
+  assert.ok(Math.abs((await pv(page)).marker.x - 60) <= 1);
+  await page.waitForFunction(() => window.__oq.preview.marker === null, null, { timeout: 2000 });      // it goes away
+  await page.waitForFunction(() => window.__oq.preview.walking === false, null, { timeout: 6000 });
+  p = await at(page, 220, 100); await page.mouse.click(p.x, p.y);
+  await page.waitForFunction(() => window.__oq.preview.marker?.icon === 'hand');
+  await page.waitForFunction(() => window.__oq.preview.walking === false, null, { timeout: 6000 });
+  await page.waitForFunction(() => /desk/i.test(document.querySelector('.room-ui')?.textContent || ''));  // it walks over, then looks
+  assert.ok(Math.abs((await pv(page)).x - 150) <= 2, 'did not walk to the desk');
+  await ctx.close();
+});
+
+test('leaving the room clears the cursor', async () => {
+  const { ctx, page } = await openPreview({ viewport: { width: 1280, height: 720 }, hasTouch: false, isMobile: false });
+  const p = await at(page, 80, 185); await page.mouse.move(p.x, p.y);
+  await page.waitForFunction(() => window.__oq.preview.cursor === 'walk');
+  await page.click('#btn-redo');
+  await page.waitForFunction(() => document.body.dataset.screen === 'CREATOR');
+  assert.equal(await page.evaluate(() => document.getElementById('scene-box').style.cursor), '');
+  await ctx.close();
+});

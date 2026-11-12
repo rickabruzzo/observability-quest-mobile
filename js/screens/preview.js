@@ -5,14 +5,19 @@
 import { drawHero, HERO_W, HERO_H } from '../engine/hero.js';
 import { planWalk, stepWalk } from '../engine/walk.js';
 import { colButton } from '../engine/ui.js';
+import { actionAt, applyCursor, drawIcon, MARKER_MS } from '../engine/cursor.js';
 
 export const FLOOR_Y = 180;          // the hero's feet sit on this logical row
 const START_X = 146;
 const MIN_X = 0, MAX_X = 320 - HERO_W;
+// things in the room you can use: where they are, where the hero stands to use them, what they say
+const HOTSPOTS = [{ id: 'desk', x: 166, y: 64, w: 110, h: 68, standX: 150, text: 'A desk. Nothing is on fire here. Yet.' }];
+const HINT = 'Tap the floor to walk';
 
 export function createPreviewScreen(game) {
   let hero, x = START_X, pose = 'idle', flip = false, plan = null, elapsed = 0;
-  let redo = null, onTap = null;
+  let redo = null, onTap = null, onMove = null, cursor = null, marker = null, pending = null;
+  const say = (ctx, text) => { const el = ctx.overlay.querySelector('.room-ui'); if (el) el.textContent = text; };
 
   function paintRoom(g) {
     g.fillStyle = '#4A5A78'; g.fillRect(0, 0, 320, 112);        // wall
@@ -30,6 +35,7 @@ export function createPreviewScreen(game) {
     const g = ctx.ctx2d;
     paintRoom(g);
     drawHero(g, hero, pose, x, FLOOR_Y - HERO_H, 1, { flip });
+    if (marker) drawIcon(g, marker.icon, marker.x, marker.y);        // where the tap landed, and what it will do
   }
 
   function walkTo(ctx, targetX) {
@@ -44,29 +50,45 @@ export function createPreviewScreen(game) {
     enter(ctx) {
       hero = ctx.hero;
       x = START_X; pose = 'idle'; flip = false; plan = null; elapsed = 0;
-      ctx.overlay.innerHTML = '<div class="room-ui">Tap the floor to walk</div>';
+      ctx.overlay.innerHTML = `<div class="room-ui">${HINT}</div>`;
+      marker = null; pending = null; cursor = null;
+      const box = ctx.canvas.parentElement;
+      const logical = (e) => { const r = ctx.canvas.getBoundingClientRect(); return [Math.floor((e.clientX - r.left) / (r.width / 320)), Math.floor((e.clientY - r.top) / (r.height / 200))]; };
       onTap = (e) => {
-        const r = ctx.canvas.getBoundingClientRect();
-        const tapX = Math.floor((e.clientX - r.left) / (r.width / 320));
-        walkTo(ctx, tapX - Math.floor(HERO_W / 2));
+        const [tx, ty] = logical(e), act = actionAt(tx, ty, HOTSPOTS);
+        marker = { icon: act.icon, x: tx, y: ty, left: MARKER_MS };
+        pending = act.spot; say(ctx, HINT);
+        walkTo(ctx, act.spot ? act.spot.standX : tx - Math.floor(HERO_W / 2));
+        if (!plan && pending) { say(ctx, pending.text); pending = null; }   // already there (or reduced motion): look at once
+        paint(ctx);
       };
+      onMove = (e) => {                                // a mouse shows what a click would do before it is made
+        const [mx, my] = logical(e), name = actionAt(mx, my, HOTSPOTS).icon;
+        if (name !== cursor) { cursor = name; applyCursor(box, name); }
+      };
+      box.addEventListener('pointermove', onMove);
       // listen on the scene box: the overlay sits over the canvas and would swallow the tap
       ctx.canvas.parentElement.addEventListener('pointerdown', onTap);
       redo = colButton({ id: 'btn-redo', long: 'Sheet', short: 'Edit', onClick: () => game.go('CREATOR') });
       ctx.colR.appendChild(redo);
       paint(ctx);
-      window.__oq && (window.__oq.preview = { get x() { return x; }, get pose() { return pose; }, get walking() { return plan !== null; }, get flip() { return flip; } });
+      window.__oq && (window.__oq.preview = { get x() { return x; }, get pose() { return pose; }, get walking() { return plan !== null; }, get flip() { return flip; }, get cursor() { return cursor; }, get marker() { return marker && { icon: marker.icon, x: marker.x, y: marker.y }; } });
     },
     tick(dt, ctx) {
-      if (!plan) return;
-      elapsed += dt;
-      const s = stepWalk(plan, elapsed);
-      x = s.x; pose = s.pose; flip = s.flip;
-      if (s.done) plan = null;
+      if (!plan && !marker) return;
+      if (marker && (marker.left -= dt) <= 0) marker = null;
+      if (plan) {
+        elapsed += dt;
+        const s = stepWalk(plan, elapsed);
+        x = s.x; pose = s.pose; flip = s.flip;
+        if (s.done) { plan = null; if (pending) { say(ctx, pending.text); pending = null; } }
+      }
       paint(ctx);
     },
     exit(ctx) {
       ctx.canvas.parentElement.removeEventListener('pointerdown', onTap); onTap = null;
+      ctx.canvas.parentElement.removeEventListener('pointermove', onMove); onMove = null;
+      applyCursor(ctx.canvas.parentElement, null); cursor = null; marker = null; pending = null;
       redo?.remove(); redo = null;
       ctx.overlay.innerHTML = '';
     },

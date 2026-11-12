@@ -270,6 +270,107 @@ def hero(body='masc', skin=0, hair='black', style='standard', beard='none',
     c.outline()
     return c.image()
 
+# ---- profile view (facing right; the game mirrors it for left) --------------------------------------
+# DRAFT for Rick's approval (2026-11-11): not ported to the game yet. Standing plus a four-frame walk:
+# stride, passing, stride with the other leg forward, passing.
+SIDE_POSES = ['stand', 'step1', 'step2', 'step3', 'step4']
+#            (front-leg swing, back-leg swing, bob, arm swing)   swing = px the foot leads (+) or trails (-) the hip
+SIDE_WALK = {'stand': (0, 0, 0, 0), 'step1': (5, -5, 0, -3), 'step2': (1, -1, -1, 0), 'step3': (-5, 5, 0, 3), 'step4': (-1, 1, -1, 0)}
+
+
+def _slant(x0, x1, y0, y1, lean):
+    """A limb: columns x0..x1 at the top row, leaning `lean` px by the bottom row."""
+    return [(x + round(lean * (y - y0) / max(1, y1 - y0)), y) for y in range(y0, y1 + 1) for x in range(x0, x1 + 1)]
+
+
+def hero_side(body='masc', skin=0, hair='black', style='standard', beard='none',
+              hoodie='ink', jeans='indigo', glasses='none', pose='stand', outfit='hoodie'):
+    c = Canvas()
+    skin_r = ramp(SKIN[skin], light=1.12, shade=0.8, dark=0.62)
+    hair_r = ramp(HAIR[hair], light=1.35, shade=0.7)
+    pj = outfit == 'pj'
+    hood_r = ramp(PJ['top'] if pj else HOODIE[hoodie]); jean_r = ramp(PJ['bottom'] if pj else JEANS[jeans], light=1.25, shade=0.72)
+    shoe_r = skin_r if pj else SHOE
+    front, back, bob, arm = SIDE_WALK[pose]
+    slim = body == 'fem'
+    t0, t1 = (10, 18) if slim else (9, 18)                              # torso, side on
+
+    # legs: the far one first (darker), then the near one; shoes point the way the hero faces
+    c.oy = 0
+    c.fill('legB', _slant(10, 14, 45, 66, back)); c.fill('shoeB', [(x + back, y) for (x, y) in rect(10, 67, 17, 71)])
+    c.fill('legF', _slant(11, 15, 45, 66, front)); c.fill('shoeF', [(x + front, y) for (x, y) in rect(11, 67, 18, 71)])
+    c.oy = bob
+    # back hair behind the body, hood behind the neck
+    if style == 'shoulder': c.fill('hair', rect(7, 8, 12, 21))
+    elif style == 'long': c.fill('hair', rect(6, 8, 12, 31))
+    if not pj: c.fill('hood', rect(7, 18, 12, 23))
+    c.fill('torso', rect(t0, 20, t1, 45) + rect(t0 + 1, 19, t1 - 1, 19))
+    c.fill('neck', rect(12, 17, 15, 20))
+    # head in profile: skull, face plane, nose, chin
+    c.fill('head', ellipse(13.5, 10.5, 5.6, 6.6) + rect(13, 13, 18, 17) + rect(14, 18, 17, 18))
+    c.fill('head', [(19, 11), (19, 12), (20, 12), (19, 13)])            # nose
+    c.fill('ear', rect(12, 10, 13, 12))
+    # hair
+    skull = ellipse(13.5, 9.0, 6.2, 6.0)
+    if style == 'mohawk':
+        hm = rect(9, 1, 17, 5)                                          # the ridge, seen along its length
+    elif style == 'fro':
+        hm = [p for p in ellipse(12.0, 8.0, 9.2, 8.4) if not (p[0] >= 15 and p[1] >= 8)]
+    else:
+        hm = [p for p in skull if p[1] <= 6 or p[0] <= 11]              # crown and the back of the head
+        hm = [p for p in hm if not (p[0] >= 13 and p[1] >= 7)]          # forehead and face stay clear
+        if style == 'standard': hm += rect(11, 7, 12, 9)                # sideburn in front of the ear
+        elif style == 'shoulder': hm += rect(7, 8, 11, 21) + rect(12, 7, 12, 9)
+        elif style == 'long': hm += rect(6, 8, 11, 31) + rect(12, 7, 12, 9)
+    c.fill('hair', hm)
+    # the near arm, over the torso; it swings against the legs
+    c.fill('arm', _slant(11, 15, 22, 43, arm)); c.fill('hand', [(x + arm, y) for (x, y) in rect(11, 44, 15, 47)])
+
+    c.shade('legB', {k: jean_r['S'] if k != 'D' else jean_r['D'] for k in 'LBSD'}, hl=0, sh=1, top_light=False)
+    c.shade('shoeB', {k: shoe_r['S'] for k in 'LBSD'}, hl=0, sh=0, top_light=False)
+    c.shade('legF', jean_r, hl=1, sh=1, top_light=False); c.shade('shoeF', shoe_r, hl=1, sh=1)
+    c.shade('hood', {'L': hood_r['S'], 'B': hood_r['D'], 'S': hood_r['D'], 'D': hood_r['D']}, hl=0, sh=0, top_light=False)
+    c.shade('torso', hood_r, hl=1, sh=2, top_light=False)
+    c.shade('arm', {'L': hood_r['S'], 'B': hood_r['B'], 'S': hood_r['S'], 'D': hood_r['D']}, hl=1, sh=1, top_light=False)
+    c.shade('hand', skin_r, hl=1, sh=1, top_light=False)
+    c.shade('neck', {'L': skin_r['S'], 'B': skin_r['S'], 'S': skin_r['D'], 'D': skin_r['D']}, hl=0, sh=1, top_light=False)
+    c.shade('head', skin_r, hl=1, sh=1); c.shade('ear', {k: skin_r['S'] for k in 'LBSD'}, hl=0, sh=0, top_light=False)
+    c.shade('hair', hair_r, hl=2, sh=2)
+    if pj:
+        stripe = hexc(PJ['stripe'])
+        for y in range(H):
+            if y % 3: continue
+            for x in range(W):
+                if c.part[y][x] in ('torso', 'arm', 'legF', 'legB'): c.col[y][x] = stripe
+    else:
+        for x in range(t0, t1 + 1): c.px(x, 45, hood_r['D'])            # hem
+        for (x, y, k) in HC_MARK_PIXELS: c.px(x + 5, y, hexc(HC_MARK[k]))   # the mark, on the chest's leading side
+    if style == 'mohawk':
+        buzz = tuple((a * 11 + h * 9) // 20 for a, h in zip(skin_r['B'], hair_r['B']))
+        for (x, y) in skull:
+            if (y <= 6 or x <= 11) and not (x >= 13 and y >= 7) and c.part[y + c.oy][x] == 'head': c.px(x, y, buzz)
+    # face, looking right
+    for x in (16, 17, 18): c.px(x, 9, hair_r['D'])
+    c.px(17, 10, EYE_WHITE); c.px(18, 10, OUTLINE)
+    c.px(17, 15, skin_r['D']); c.px(18, 15, skin_r['D'])
+    beard_r = ramp(HAIR[hair], light=1.3, shade=0.7)
+    if beard == 'short':
+        for (x, y) in rect(13, 14, 13, 16) + [(16, 14), (17, 14), (18, 14)] + rect(14, 16, 18, 17) + rect(14, 18, 17, 18):
+            if (x, y) not in ((17, 15), (18, 15)): c.px(x, y, beard_r['B'])
+    elif beard == 'long':
+        for (x, y) in rect(13, 13, 18, 23):
+            if (x, y) in ((17, 15), (18, 15)) or (y <= 13 and x >= 15): continue
+            if y >= 20 and x < 13 + (y - 20): continue
+            c.px(x, y, beard_r['S'] if x <= 13 else beard_r['B'])
+    if glasses == 'glasses':
+        for (x, y) in [(17, 8), (18, 8), (17, 11), (18, 11), (16, 9), (16, 10), (19, 9), (19, 10)] + [(x, 9) for x in range(12, 16)]:
+            c.px(x, y, GLASSES)
+        c.px(17, 9, skin_r['L']); c.px(18, 9, skin_r['L'])
+    c.oy = 0
+    c.outline()
+    return c.image()
+
+
 def write_fixtures(d):
     """<name>.json (config + pose), <name>.rgba (28*72*4 bytes row-major), <name>.png for every fixture."""
     os.makedirs(d, exist_ok=True)
