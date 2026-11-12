@@ -86,23 +86,10 @@ export function drawClothes(g, cfg, x, y) {
   for (const [mx, my, k] of HC_MARK_PIXELS) R(HC_MARK[k], 24 + (mx - mx0), -8 + (my - my0), 1, 1);   // the mark, face up
 }
 
-/** What the hero carries, alone: the pixels that differ between the hero with it and without. */
-function heldItem(cfg) {
-  const a = composeHero(cfg, 'idle'), b = composeHero({ ...cfg, hold: 'none' }, 'idle'), px = [];
-  for (let i = 0; i < HERO_W * HERO_H; i++) {
-    if (a[i * 4] !== b[i * 4] || a[i * 4 + 1] !== b[i * 4 + 1] || a[i * 4 + 2] !== b[i * 4 + 2] || a[i * 4 + 3] !== b[i * 4 + 3]) {
-      if (a[i * 4 + 3]) px.push([i % HERO_W, Math.floor(i / HERO_W), `rgb(${a[i * 4]},${a[i * 4 + 1]},${a[i * 4 + 2]})`]);
-    }
-  }
-  if (!px.length) return null;
-  const x0 = Math.min(...px.map((p) => p[0])), y1 = Math.max(...px.map((p) => p[1]));
-  return px.map(([x, y, c]) => [x - x0, y - y1, c]);                 // relative to its left edge and its bottom row
-}
-
 export function createIntroScreen(game) {
   let token = 0, assets = null, shot = 0, t = 0, out = false, done = false;
   let skip = null, onTap = null, sfx = null, titleEl = null;
-  let lastOn = false, clicked = false, heroState = null, item = null;
+  let lastOn = false, clicked = false, heroState = null;
   let fired = new Set(), sounds = [];
 
   function cut(i) { shot = i; t = 0; lastOn = false; clicked = false; heroState = null; fired = new Set(); }
@@ -175,18 +162,15 @@ export function createIntroScreen(game) {
     const h = heroAt(t);
     const e = h.walking ? exitAt(exitPlan({ standX, doorX: m.door.x, floorY: m.floorY, doorY: Number.isFinite(m.door.y) ? m.door.y : m.floorY }), t - WALK_AT) : null;
     const pile = h.outfit === 'pj' && !!m.clothes;         // on the floor until the change puts them on the hero
-    // The room is painted with a laptop on the dresser, and again without it. A hero who carries a laptop gets
-    // the painted one until they take it; any other item is drawn on the bare dresser top instead.
+    // The room is painted with a laptop on the dresser, and again without it: taking it is a cut between the two,
+    // Sierra inventory style. Whatever the hero chose to carry appears in their hand at the same moment.
     const bareRoom = assets.images.get('D_laptop_gone');
-    const painted = !!bareRoom && cfg.hold === 'laptop';
-    const onDresser = !h.holding && !painted && !!m.item && !!item;
     const bare = h.holding ? cfg : { ...cfg, hold: 'none' };
     let plate = 'D_bedroom_vga';
-    if (bareRoom && (h.holding || !painted)) { g.drawImage(bareRoom, 0, 0, 320, 200); plate = 'D_laptop_gone'; }
+    if (bareRoom && h.holding) { g.drawImage(bareRoom, 0, 0, 320, 200); plate = 'D_laptop_gone'; }
     if (e?.doorOpen) { openDoor(g, m); plate = assets.images.get('D_door_open') ? 'D_door_open' : plate; }
     showTitle(ctx, m, h.titled);
     if (pile) drawClothes(g, cfg, m.clothes.x, m.clothes.y);
-    if (onDresser) for (const [dx, dy, c] of item) { g.fillStyle = c; g.fillRect(m.item.x + dx, m.item.y + dy, 1, 1); }
     heroState = { pose: h.pose, outfit: h.outfit, x: standX, visible: h.visible, pile, holding: h.holding, doorOpen: !!e?.doorOpen, plate };
     sound('title', h.titled); sound('rustle', h.visible); sound('step', h.standing); sound('pickup', h.outfit === 'hoodie');
     sound('take', h.holding); sound('door', !!e?.doorOpen); sound('shut', !!e && !e.visible && !e.doorOpen);
@@ -227,7 +211,6 @@ export function createIntroScreen(game) {
     enter(ctx) {
       const mine = ++token;
       assets = null; out = false; done = false; cut(0);
-      item = heldItem(ctx.hero);
       sfx = createSfx(); sfx.unlock();                 // we are inside the Start tap: the one moment a phone lets sound begin
       sounds = [];
       skip = colButton({ id: 'btn-skip', long: 'Skip', short: 'Skip', onClick: finish });

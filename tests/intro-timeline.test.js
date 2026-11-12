@@ -3,10 +3,10 @@ import { SHOTS, frameAt, nextShot, TOTAL_MS, HERO_STEPS, heroAt, FLASH_MS } from
 
 test('shots are the storyboard, in order, with its timings', () => {
   assert.deepEqual(SHOTS.map((s) => s.id), ['dark', 'help', 'asleep', 'arm', 'lit', 'message', 'misery', 'lamp', 'bedroom']);
-  assert.deepEqual(SHOTS.map((s) => s.ms), [3000, 2500, 3000, 1500, 2000, 8000, 2000, 1500, 12000]);
-  assert.equal(TOTAL_MS, 35500);
+  assert.deepEqual(SHOTS.map((s) => s.ms), [3000, 2500, 3000, 1500, 2000, 8000, 2000, 1500, 15000]);
+  assert.equal(TOTAL_MS, 38500);
   assert.equal(SHOTS[1].text, 'Help!');
-  assert.equal(SHOTS[5].text, 'Backend is down. Website is down. Database is down. Get in here! -CTO');
+  assert.equal(SHOTS[5].text, 'Backend is down. Front end is down. Database is down. Get in here! -CTO');
 });
 test('dark room flashes to black', () => { assert.equal(frameAt(0, 0).black, false); assert.equal(frameAt(0, 300).black, true); assert.equal(frameAt(0, 0).image, 'A_room_dark'); });
 test('pager LCD flashes Help! then scrolls the message', () => {
@@ -55,9 +55,10 @@ test('sampled every ms, no shot changes picture more than 4 times a second', () 
 import { exitPlan, exitAt } from '../js/intro/timeline.js';
 test('the way out: across the floor, up to the threshold, door opens, hero gone, door shuts', () => {
   const p = exitPlan({ standX: 158, doorX: 261, floorY: 178, doorY: 153 });
-  assert.ok(p.total > 1500 && p.total < 3500, String(p.total));
+  assert.ok(p.total > 2500 && p.total < 5000, String(p.total));      // 103 px at a stroll, a few steps up, the door
   const a = exitAt(p, 0); assert.deepEqual([a.x, a.y, a.visible, a.doorOpen, a.done], [158, 178, true, false, false]);
   const mid = exitAt(p, p.across / 2); assert.ok(mid.x > 158 && mid.x < 261 && mid.y === 178 && /^walk/.test(mid.pose));
+  assert.ok(p.across >= 103 / 70 * 1000, 'the walk out is a stroll: no faster than 70 px/s');
   const up = exitAt(p, p.across + p.up / 2); assert.equal(up.x, 261); assert.ok(up.y < 178 && up.y > 153);
   const open = exitAt(p, p.across + p.up + 10); assert.deepEqual([open.x, open.y, open.pose, open.visible, open.doorOpen], [261, 153, 'idle', true, true]);
   const gone = exitAt(p, p.across + p.up + p.open + 10); assert.deepEqual([gone.visible, gone.doorOpen, gone.done], [false, true, false]);

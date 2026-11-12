@@ -84,3 +84,9 @@ block on. Test the restyle under `.hs-form` on a real phone.
 - Character sheet scales up on big windows now; the thumb-column buttons and the name sheet do not yet.
 - Title screen is still a text placeholder; use the wordmark (and title art) there in the title sub-project.
 - Furnished bedroom, `D_laptop_gone` and `D_door_open` landed 2026-11-11 and are placed from the hand-back's measurements; awaiting Rick's sign-off. `D_laptop_gone` keeps a faint mark on the wall above the dresser — redo that edit if it shows on a phone.
+
+## From Rick's play-through, 2026-11-11 (for the room-engine sub-project)
+- **Profile walk**: Rick likes Sierra's side-on walking figure. The hero walks facing the camera today (leg and arm offsets on the front view). Add a profile view to `tools/hero_gen.py` + the JS port (all hair styles, beard, glasses, held item, hoodie mark on the visible side), 4–6 walk frames, mirrored for left; front view stays for standing and the sheet. Show Rick a contact sheet before porting.
+- **Walk and hand cursors**: Sierra's cursor is a walking figure that becomes a hand over things you can use. Phones have no hover, so: on desktop (`@media (hover: hover)`) use those two cursors over floor and hotspots; on touch, show the hand as a brief badge on a hotspot when it is tapped (and optionally pulse hotspots on entering a room), and a small walking-figure marker where a floor tap lands.
+- Walk speed is now 110 px/s in rooms (a full room in ~3 s) and 60 px/s in the intro. The spec's "≤ 1.2 s per room" came from booth pacing; revisit if three seconds per crossing makes a three-chapter run too long.
+- Everyone takes the painted laptop from the dresser (inventory); the item chosen on the sheet appears in the hero's hand at that moment. `item` in the overrides is unused for now.

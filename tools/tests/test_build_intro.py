@@ -289,3 +289,18 @@ def test_laptop_gone_and_door_open_chain(tmp_path):
     os.remove(src / 'D_laptop_gone.png')                                # without it, the door edit is cut against the bedroom itself
     m = bi.build(str(src), out)
     assert 'D_laptop_gone' not in m['images'] and 'D_door_open' in m['images']
+
+
+def test_the_vga_bedroom_keeps_its_small_colours(tmp_path):
+    """A green plant and a yellow lampshade are a few dozen pixels in a brown room: 32 colours greys them out."""
+    src = _real_src(tmp_path); rng = np.random.default_rng(5)
+    a = np.zeros((400, 640, 3), np.uint8)
+    for i in range(40): a[i * 10:(i + 1) * 10] = (60 + i * 3, 36 + i * 2, 20 + i)              # many browns
+    a[:, 0:200] = rng.integers(20, 200, (400, 200, 3), dtype=np.uint8)                          # a busy area eating palette slots
+    a[300:308, 400:408] = (60, 150, 60); a[100:108, 300:308] = (230, 200, 120)                 # plant, lampshade: 16 px each at game size
+    Image.fromarray(a, 'RGB').save(src / 'D_bedroom_vga.png')
+    out = str(tmp_path / 'out'); m = bi.build(str(src), out)
+    px = _px(out, m, 'D_bedroom_vga').astype(int)
+    r, g, b = px[152, 202]; assert g > r + 50 and g > b + 50, ('plant', r, g, b)
+    r, g, b = px[52, 152]; assert r > 200 and g > 170 and b < 150, ('shade', r, g, b)
+    assert np.abs(px - np.asarray(bi.downsample(Image.open(src / 'D_bedroom_vga.png'))).astype(int)).max() <= 48      # no colour anywhere is far off

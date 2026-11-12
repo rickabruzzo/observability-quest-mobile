@@ -1,7 +1,7 @@
 import test from 'node:test'; import assert from 'node:assert/strict';
 import { GLYPHS, textWidth, drawText } from '../js/intro/font5x7.js';
 import { lcdScale, flashOn, marqueeX, drawLcd } from '../js/intro/pager.js';
-const MSG = 'Backend is down. Website is down. Database is down. Get in here! -CTO';
+const MSG = 'Backend is down. Front end is down. Database is down. Get in here! -CTO';
 test('every character of both LCD strings has a glyph', () => { for (const ch of 'Help!' + MSG) assert.ok(GLYPHS[ch], JSON.stringify(ch)); });
 test('all of printable ASCII has a glyph', () => { for (let c = 32; c < 127; c++) assert.ok(GLYPHS[String.fromCharCode(c)], String(c)); });
 test('glyphs are 7 rows of 5 bits', () => { for (const g of Object.values(GLYPHS)) { assert.equal(g.length, 7); assert.ok(g.every((r) => r >= 0 && r < 32)); } });
@@ -43,7 +43,7 @@ test('marquee text is small enough to show at least eight characters at once', (
 test('static paging: one sentence per page, word-wrapped, at the largest scale that fits', () => {
   const p = lcdPages(MSG, { x: 92, y: 62, w: 136, h: 36 });
   assert.equal(p.scale, 2);
-  assert.deepEqual(p.pages, [['Backend is', 'down.'], ['Website is', 'down.'], ['Database is', 'down.'], ['Get in', 'here! -CTO']]);
+  assert.deepEqual(p.pages, [['Backend is', 'down.'], ['Front end', 'is down.'], ['Database is', 'down.'], ['Get in', 'here! -CTO']]);
   assert.deepEqual(lcdPages('Help!', { x: 92, y: 62, w: 136, h: 36 }), { scale: 4, pages: [['Help!']] });
 });
 test('static paging on a tiny LCD still returns every word', () => {

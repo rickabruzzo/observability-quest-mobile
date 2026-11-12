@@ -20,7 +20,9 @@ SOURCES = PLATES + list(EDITS)
 OPTIONAL = {'D_laptop_gone': ['D_bedroom_vga'], 'D_door_open': ['D_laptop_gone', 'D_bedroom_vga']}
 DERIVED = ['C_awake_lit', 'B_lamp_lit']
 MAX_DRIFT = 0.5                     # an edit may remove an object and add a hand; past half the frame it is another picture
-COLOURS = 32
+COLOURS = 32                        # the EGA-style shots
+COLOURS_FOR = {'D_bedroom_vga': 192}   # the VGA bedroom keeps its full palette: at 32 a green plant or a yellow lampshade greys out
+CHANGE_COLOURS_FOR = {'D_bedroom_vga': 32}   # 192 + two chained edits of 32 still fit one 256-colour file
 DEFAULTS = {'wall': {'x': 24, 'y': 14, 'w': 232, 'h': 44}, 'bed': {'x': 60, 'y': 96}, 'stand': {'x': 90}, 'door': {'x': 286}, 'floorY': 176,
             'clothes': {'x': 126, 'y': 184}, 'item': {'x': 200, 'y': 150}, 'doorway': {'x': 272, 'y': 60, 'w': 56, 'h': 116}}
 LCD_MIN = (40, 10)                  # anything smaller is a stray green speck, not the pager's LCD
@@ -48,7 +50,24 @@ def downsample(img):
 
 
 def quantise(img, colours=COLOURS):
-    return img.convert('RGB').quantize(colours, method=Image.MEDIANCUT, dither=Image.NONE).convert('RGB')
+    """Median cut. Past 64 colours, in two passes: median cut spends its palette on the big areas and averages
+    the small bright things (a green plant, a yellow lampshade) into the browns around them, so a quarter of the
+    palette is held back and handed out, one colour at a time, to whichever pixel is still furthest off."""
+    img = img.convert('RGB')
+    if colours <= 64: return img.quantize(colours, method=Image.MEDIANCUT, dither=Image.NONE).convert('RGB')
+    spare = colours // 4
+    first = img.quantize(colours - spare, method=Image.MEDIANCUT, dither=Image.NONE)
+    a = np.asarray(img).astype(np.int32); flat = a.reshape(-1, 3)
+    pal = np.asarray(first.getpalette()[:(colours - spare) * 3], np.int32).reshape(-1, 3)
+    idx = np.concatenate([((flat[i:i + 8000, None, :] - pal[None]) ** 2).sum(axis=2).argmin(axis=1) for i in range(0, len(flat), 8000)])
+    dist = ((flat - pal[idx]) ** 2).sum(axis=1)
+    for _ in range(spare):                          # each spare colour goes to the pixel that is furthest from its nearest
+        worst = int(dist.argmax())
+        if dist[worst] <= 3 * 8 * 8: break
+        pal = np.vstack([pal, flat[worst]])
+        d = ((flat - flat[worst]) ** 2).sum(axis=1); closer = d < dist
+        idx[closer] = len(pal) - 1; dist[closer] = d[closer]
+    return Image.fromarray(pal[idx].reshape(a.shape).astype(np.uint8), 'RGB')
 
 
 MIN_CHANGE = 12                     # px: a changed patch smaller than this, away from any real change, is generator noise
@@ -281,9 +300,11 @@ def build(src, out, placeholders=False, logo_src=LOGO_SRC):
             fake.append(n)
     for n in PLATES:
         if n in fake: raw[n] = placeholder(n)
-        done[n] = quantise(raw[n])
+        done[n] = quantise(raw[n], COLOURS_FOR.get(n, COLOURS))
     refs = {n: raw[n] for n in PLATES}
+    root = {n: n for n in PLATES}                   # which plate each still descends from
     def make_edit(n, plate):
+        root[n] = root.get(plate, plate)
         # compare in the generator's own colours (refs[]), but take unchanged pixels from the finished plate
         refs[n] = snap_to_plate(raw[n], refs[plate])[0]
         img, frac = snap_to_plate(raw[n], refs[plate], base=done[plate])
@@ -294,7 +315,7 @@ def build(src, out, placeholders=False, logo_src=LOGO_SRC):
         if diff.any():                              # the change gets its own small palette, so a tiny edit keeps its colours
             ys, xs = np.nonzero(diff)
             strip = Image.fromarray(a[diff].reshape(1, -1, 3), 'RGB')
-            a[diff] = np.asarray(quantise(strip, CHANGE_COLOURS)).reshape(-1, 3)
+            a[diff] = np.asarray(quantise(strip, CHANGE_COLOURS_FOR.get(root[n], CHANGE_COLOURS))).reshape(-1, 3)
             print(f'  {n}: {frac:.1%} of the frame changed, x {xs.min()}-{xs.max()}, y {ys.min()}-{ys.max()}')
         done[n] = Image.fromarray(a, 'RGB')
 
@@ -318,7 +339,8 @@ def build(src, out, placeholders=False, logo_src=LOGO_SRC):
     images = {}
     for n, im in done.items():
         images[n] = f'{n}.png'
-        im.convert('P', palette=Image.ADAPTIVE, colors=256).save(os.path.join(out, images[n]), optimize=True)
+        exact = len(im.convert('RGB').getcolors(1 << 20) or []) <= 256     # a palette file only when it loses nothing:
+        (im.convert('P', palette=Image.ADAPTIVE, colors=256) if exact else im.convert('RGB')).save(os.path.join(out, images[n]), optimize=True)   # a requantised edit would stop matching its plate
 
     lcd = find_lcd(done['B_nightstand'])
     if not lcd:

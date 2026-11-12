@@ -11,7 +11,7 @@ cut to a close up of a 90s pager with green LCD background and black text sittin
 Cut to sleepy face, maybe a bit of drool. Blearly eye cracks open.
 Cut to arm reaching out to pager
 Cut back to face looking at pager, face is illuminated by flashing pager light. 
-Cut to close up of pager with scrolling text: 'Backend is down. Website is down. Database is down. Get in here! -CTO'
+Cut to close up of pager with scrolling text: 'Backend is down. Front end is down. Database is down. Get in here! -CTO'
 Cut back to face holding pager, face has changed to look of misery and hopelness ness
 Cut to hand turning on lamp
 Cut to original intro size crop, The graphic style has switched from those large dithered, minimal animation intro cut scenes to the gamplay VGA look: bed room is now illuniated with Observability Quest I: So you want to be on-call? on the bedroom wall behind the bed. Theme song plays

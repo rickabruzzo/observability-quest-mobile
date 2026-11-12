@@ -3,7 +3,7 @@
 import { flashOn } from './pager.js';
 
 export const FLASH_MS = 500;                          // one on/off cycle; 2Hz is the ceiling for anything that flashes
-const CTO = 'Backend is down. Website is down. Database is down. Get in here! -CTO';
+const CTO = 'Backend is down. Front end is down. Database is down. Get in here! -CTO';
 
 export const SHOTS = [
   { id: 'dark', ms: 3000, image: 'A_room_dark', flash: 'black', beepOnFlash: true },
@@ -14,7 +14,7 @@ export const SHOTS = [
   { id: 'message', ms: 8000, image: 'B_nightstand', lcd: 'marquee', text: CTO },
   { id: 'misery', ms: 2000, image: 'C_misery' },
   { id: 'lamp', ms: 1500, image: 'B_lamp', alt: 'B_lamp_lit', altAt: 700, clickAt: 700 },
-  { id: 'bedroom', ms: 12000, image: 'D_bedroom_vga', hero: true },
+  { id: 'bedroom', ms: 15000, image: 'D_bedroom_vga', hero: true },
 ];
 export const TOTAL_MS = SHOTS.reduce((n, s) => n + s.ms, 0);
 
@@ -59,7 +59,7 @@ export function heroAt(tMs) {
 
 // ---- the way out of the bedroom: across the floor to the door, up to its threshold, through it ----
 // Still limited animation: the door is two stills (shut, open), the hero is there and then is not.
-const AMBLE = 140, AMBLE_UP = 70;                     // px/s: a sleepy walk
+const AMBLE = 60, AMBLE_UP = 40;                      // px/s: a sleepy walk
 const DOOR_OPEN_MS = 350, DOOR_GONE_MS = 300, DOOR_SHUT_MS = 400;
 const STEP = ['walk1', 'walk2', 'walk3', 'walk4'];
 
@@ -71,7 +71,7 @@ export function exitPlan({ standX, doorX, floorY, doorY = floorY }) {
 
 /** Where the hero is tMs into the plan. x is the sprite's left edge, y the row the feet stand on. */
 export function exitAt(p, tMs) {
-  const t = Math.max(0, tMs), flip = p.doorX < p.standX, step = STEP[Math.floor(t / 100) % 4];
+  const t = Math.max(0, tMs), flip = p.doorX < p.standX, step = STEP[Math.floor(t / 170) % 4];
   const at = (x, y, pose, visible, doorOpen, done = false) => ({ x, y, pose, flip, visible, doorOpen, done });
   if (t < p.across) return at(Math.round(p.standX + (p.doorX - p.standX) * (t / p.across)), p.floorY, step, true, false);
   let u = t - p.across;
