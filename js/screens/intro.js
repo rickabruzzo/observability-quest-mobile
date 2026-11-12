@@ -6,6 +6,7 @@ import { SHOTS, HERO_STEPS, frameAt, heroAt, nextShot, exitPlan, exitAt } from '
 import { lcdScale, marqueeScale, marqueeX, drawLcd, lcdPages, drawLcdPage } from '../intro/pager.js';
 import { createSfx } from '../intro/sfx.js';
 import { composeHero, drawHero, HERO_W, HERO_H } from '../engine/hero.js';
+import { drawHeroSide } from '../engine/hero-side.js';
 import { HOODIE, JEANS, HC_MARK, HC_MARK_PIXELS, OUTLINE } from '../engine/hero-parts.js';
 import { colButton } from '../engine/ui.js';
 
@@ -157,7 +158,7 @@ export function createIntroScreen(game) {
       if (bareRoom) g.drawImage(bareRoom, 0, 0, 320, 200);
       showTitle(ctx, m, true);
       drawHero(g, cfg, 'idle', standX, standY, 1);
-      heroState = { pose: 'idle', outfit: 'hoodie', x: standX, visible: true, pile: false, holding: true, doorOpen: false };
+      heroState = { pose: 'idle', view: 'front', outfit: 'hoodie', x: standX, visible: true, pile: false, holding: true, doorOpen: false };
       if (t >= REDUCED_BEDROOM_MS) finish();
       return;
     }
@@ -172,12 +173,12 @@ export function createIntroScreen(game) {
     if (e?.doorOpen) { openDoor(g, m); plate = assets.images.get('D_door_open') ? 'D_door_open' : plate; }
     showTitle(ctx, m, h.titled);
     if (pile) drawClothes(g, cfg, m.clothes.x, m.clothes.y);
-    heroState = { pose: h.pose, outfit: h.outfit, x: standX, visible: h.visible, pile, holding: h.holding, doorOpen: !!e?.doorOpen, plate };
+    heroState = { pose: h.pose, view: 'front', outfit: h.outfit, x: standX, visible: h.visible, pile, holding: h.holding, doorOpen: !!e?.doorOpen, plate };
     sound('title', h.titled); sound('rustle', h.stirring); sound('step', h.standing); sound('pickup', h.outfit === 'hoodie');
     sound('take', h.holding); sound('door', !!e?.doorOpen); sound('shut', !!e && !e.visible && !e.doorOpen);
     if (e) {
-      if (e.visible) drawHero(g, cfg, e.pose, e.x, e.y - HERO_H, 1, { flip: e.flip });
-      Object.assign(heroState, { pose: e.pose, outfit: 'hoodie', x: e.x, visible: e.visible });
+      if (e.visible) drawHeroSide(g, cfg, e.pose, e.x, e.y - HERO_H, 1, { flip: e.flip });   // the way out is side on throughout
+      Object.assign(heroState, { pose: e.pose, view: e.view, outfit: 'hoodie', x: e.x, visible: e.visible });
       if (e.done) finish();
       return;
     }

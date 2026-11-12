@@ -31,11 +31,29 @@ test('tap right: hero walks right over time, lands at the tap, ends idle', async
   await page.mouse.click(sc.x + sc.width * 0.85, sc.y + sc.height * 0.9);
   await page.waitForTimeout(90);
   const mid = await pv(page);
-  assert.ok(mid.walking && mid.x > x0 && /^walk[1-4]$/.test(mid.pose), JSON.stringify(mid));
+  assert.ok(mid.walking && mid.x > x0 && /^w[1-8]$/.test(mid.pose), JSON.stringify(mid));
   await page.waitForFunction(() => window.__oq.preview.walking === false, null, { timeout: 6000 });
   const end = await pv(page);
   assert.equal(end.pose, 'idle');
   assert.ok(Math.abs(end.x - (Math.floor(0.85 * 320) - 14)) <= 1, `x=${end.x}`);
+  await ctx.close();
+});
+
+test('the room reports the side view while walking and the front view at rest', async () => {
+  const { ctx, page } = await openPreview();
+  const sc = await page.locator('#scene').boundingBox();
+  assert.equal((await pv(page)).view, 'front', 'standing still, facing the player');
+  await page.mouse.click(sc.x + sc.width * 0.85, sc.y + sc.height * 0.9);
+  await page.waitForFunction(() => window.__oq.preview.view === 'side', null, { timeout: 2000 });
+  const mid = await pv(page);
+  assert.ok(/^w[1-8]$/.test(mid.pose), `side view but pose ${mid.pose}`);
+  // walking left is the same side view, mirrored
+  await page.waitForFunction(() => window.__oq.preview.walking === false, null, { timeout: 6000 });
+  assert.deepEqual([(await pv(page)).view, (await pv(page)).pose], ['front', 'idle']);
+  await page.mouse.click(sc.x + sc.width * 0.05, sc.y + sc.height * 0.9);
+  await page.waitForFunction(() => window.__oq.preview.view === 'side' && window.__oq.preview.flip === true, null, { timeout: 2000 });
+  await page.waitForFunction(() => window.__oq.preview.walking === false, null, { timeout: 6000 });
+  assert.equal((await pv(page)).view, 'front');
   await ctx.close();
 });
 
@@ -54,7 +72,7 @@ test('reduced motion teleports', async () => {
   await page.mouse.click(sc.x + sc.width * 0.85, sc.y + sc.height * 0.9);
   await page.waitForTimeout(50);
   const p = await pv(page);
-  assert.equal(p.walking, false); assert.equal(p.pose, 'idle'); assert.ok(p.x > 200, `x=${p.x}`);
+  assert.equal(p.walking, false); assert.equal(p.pose, 'idle'); assert.equal(p.view, 'front'); assert.ok(p.x > 200, `x=${p.x}`);
   await ctx.close();
 });
 

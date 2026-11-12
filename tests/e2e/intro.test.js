@@ -138,6 +138,9 @@ test('the bedroom shot shows the title and walks the hero out', async () => {
   assert.notEqual(await grab(pileBox), withPile, 'the clothes are still on the floor');
   // the laptop is taken once they are dressed, Sierra inventory style (the plate cut is checked in its own test)
   await page.waitForFunction(() => window.__oq.intro.hero?.holding === true, null, { timeout: 4000 });
+  // the way out is the profile view: side on across the floor and up to the threshold, no back view
+  await page.waitForFunction(() => window.__oq.intro.hero?.view === 'side', null, { timeout: 6000 });
+  assert.match((await intro(page)).hero.pose, /^(w[1-8]|stand)$/);
   // out through the door: it opens, the hero is gone, then the next screen
   await page.waitForFunction(() => window.__oq.intro.hero?.doorOpen === true, null, { timeout: 6000 });
   await page.waitForFunction(() => window.__oq.intro.hero?.doorOpen === true && window.__oq.intro.hero.visible === false, null, { timeout: 3000 });
@@ -235,6 +238,7 @@ test('the hero stands where the manifest says', async () => {
   await running(page);
   for (let i = 0; i < 8; i++) { await page.waitForTimeout(300); await tapScene(page); }
   await page.waitForFunction(() => window.__oq.intro.hero?.pose === 'idle', null, { timeout: 5000 });
+  assert.equal((await intro(page)).hero.view, 'front', 'standing in the bedroom, facing the player');
   assert.equal((await intro(page)).hero.x, 150);
   await ctx.close();
 });

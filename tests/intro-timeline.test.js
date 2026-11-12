@@ -58,17 +58,36 @@ test('sampled every ms, no shot changes picture more than 4 times a second', () 
 });
 
 import { exitPlan, exitAt } from '../js/intro/timeline.js';
+import { SIDE_POSES } from '../js/engine/hero-side.js';
+import { STRIDE_PX } from '../js/engine/walk.js';
 test('the way out: across the floor, up to the threshold, door opens, hero gone, door shuts', () => {
   const p = exitPlan({ standX: 158, doorX: 261, floorY: 178, doorY: 153 });
   assert.ok(p.total > 2500 && p.total < 5000, String(p.total));      // 103 px at a stroll, a few steps up, the door
   const a = exitAt(p, 0); assert.deepEqual([a.x, a.y, a.visible, a.doorOpen, a.done], [158, 178, true, false, false]);
-  const mid = exitAt(p, p.across / 2); assert.ok(mid.x > 158 && mid.x < 261 && mid.y === 178 && /^walk/.test(mid.pose));
+  const mid = exitAt(p, p.across / 2); assert.ok(mid.x > 158 && mid.x < 261 && mid.y === 178 && /^w[1-8]$/.test(mid.pose));
   assert.ok(p.across >= 103 / 70 * 1000, 'the walk out is a stroll: no faster than 70 px/s');
   const up = exitAt(p, p.across + p.up / 2); assert.equal(up.x, 261); assert.ok(up.y < 178 && up.y > 153);
-  const open = exitAt(p, p.across + p.up + 10); assert.deepEqual([open.x, open.y, open.pose, open.visible, open.doorOpen], [261, 153, 'idle', true, true]);
+  assert.ok(/^w[1-8]$/.test(up.pose), 'the few steps up to the door still walk — there is no back view');
+  const open = exitAt(p, p.across + p.up + 10); assert.deepEqual([open.x, open.y, open.pose, open.visible, open.doorOpen], [261, 153, 'stand', true, true]);
   const gone = exitAt(p, p.across + p.up + p.open + 10); assert.deepEqual([gone.visible, gone.doorOpen, gone.done], [false, true, false]);
   const shut = exitAt(p, p.across + p.up + p.open + p.gone + 10); assert.deepEqual([shut.visible, shut.doorOpen, shut.done], [false, false, false]);
   assert.equal(exitAt(p, p.total).done, true);
+});
+test('the whole way out is the profile view: there is no back view to turn into', () => {
+  const p = exitPlan({ standX: 158, doorX: 261, floorY: 178, doorY: 153 });
+  for (let t = 0; t <= p.total; t += 25) {
+    const e = exitAt(p, t);
+    assert.equal(e.view, 'side', `t=${t}`);
+    assert.ok(SIDE_POSES.includes(e.pose), `t=${t}: ${e.pose}`);
+  }
+});
+test('the exit frame comes from distance travelled, so the feet do not slide', () => {
+  const p = exitPlan({ standX: 0, doorX: 190, floorY: 180, doorY: 180 });
+  assert.equal(exitAt(p, 0).pose, 'w1');
+  const atPx = (px) => exitAt(p, (px / 190) * p.across).pose;          // the walk across is linear in t
+  assert.equal(atPx(STRIDE_PX), 'w1', 'one full cycle per stride');
+  assert.equal(atPx(STRIDE_PX * 2), 'w1');
+  assert.deepEqual([...new Set(Array.from({ length: STRIDE_PX }, (_, d) => atPx(d)))], SIDE_POSES.slice(1));
 });
 test('the way out with the door on the hero\'s own row skips the walk up; leftward doors flip', () => {
   const p = exitPlan({ standX: 200, doorX: 40, floorY: 176, doorY: 176 });
