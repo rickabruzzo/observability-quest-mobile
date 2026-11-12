@@ -181,20 +181,21 @@ def hero(body='masc', skin=0, hair='black', style='standard', beard='none',
     # fall in front of the shoulders (the mass behind the head was filled before the body). mohawk: a flat-topped
     # ridge on a buzzed scalp — the head stays round. fro: one big round mass.
     hm = []
+    c.fill('head', ellipse(cx, 7.0, b['head_rx'] + 0.8, 3.8) + rect(8, 6, 19, 8))       # a full round skull under any hair
     if style == 'mohawk':
-        c.fill('head', ellipse(cx, 7.0, b['head_rx'] + 0.8, 3.8) + rect(8, 6, 19, 8))   # a full round skull under the buzz
-        hm += rect(12, 2, 15, 7)
+        hm += rect(12, 1, 15, 5)                                     # the ridge stops above the forehead
     elif style == 'fro':
         hm = [p for p in ellipse(cx, 8.0, b['head_rx'] + 4.2, 8.2) if not (p[1] >= 8 and 9 <= p[0] <= 18)]
     else:
-        hm += ellipse(cx, 7.0, b['head_rx'] + 0.8, 3.8)             # crown
-        hm += rect(8, 6, 19, 8)                                      # fringe over the forehead
+        hm += ellipse(cx, 6.2, b['head_rx'] + 0.9, 4.2)             # crown, with some height to it
+        hm += rect(8, 6, 19, 8)                                      # down to the temples
         if style == 'standard':
             hm += rect(8, 9, 8, 11) + rect(19, 9, 19, 11)            # sideburns, inside the head's outline
         elif style == 'shoulder':
             hm += rect(6, 6, 8, 21) + rect(19, 6, 21, 21)            # locks to the shoulders, three wide
         elif style == 'long':
             hm += rect(5, 7, 8, 31) + rect(19, 7, 22, 31) + rect(6, 32, 8, 33) + rect(19, 32, 21, 33)   # down over the chest
+        hm = [p for p in hm if not (p[1] >= 7 and 9 <= p[0] <= 18)]  # hairline: two rows of forehead above the brows
     c.fill('hair', hm)
     # ---- shading ----
     c.shade('legL', jean_r); c.shade('legR', jean_r)
@@ -239,7 +240,7 @@ def hero(body='masc', skin=0, hair='black', style='standard', beard='none',
         buzz = tuple((a * 11 + h * 9) // 20 for a, h in zip(skin_r['B'], hair_r['B']))      # stubble: skin showing through
         for y in range(4, 9):
             for x in range(7, 21):
-                if c.part[y + c.oy][x] == 'head' and not (y == 8 and 10 <= x <= 17): c.px(x, y, buzz)
+                if c.part[y + c.oy][x] == 'head' and not (y >= 7 and 9 <= x <= 18): c.px(x, y, buzz)
     if style == 'fro':
         for (x, y) in [(9, 3), (16, 2), (6, 7), (21, 6), (12, 5), (18, 5), (5, 12), (22, 11), (8, 14), (19, 14)]:
             if c.part[y + c.oy][x] == 'hair': c.px(x, y, hair_r['D'])        # a few darker curls

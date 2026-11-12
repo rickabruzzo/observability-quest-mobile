@@ -147,3 +147,11 @@ def test_longer_hair_fills_in_behind_the_neck():
         for y in range(9, 19):
             row = [im.getpixel((x, y)) for x in range(6, 22)]
             assert all(p[3] == 255 for p in row), (style, y)                  # one solid mass, no gaps between hair and face
+
+
+def test_every_style_shows_a_forehead():
+    skin = [hero_gen.ramp(hero_gen.SKIN[1], light=1.12, shade=0.8, dark=0.62)[k][:3] for k in 'LBSD']
+    for style in hero_gen.OPTIONS['style']:
+        im = _head(style=style)
+        rows = [y for y in (6, 7, 8) if all(im.getpixel((x, y))[:3] in skin for x in range(11, 17))]
+        assert len(rows) >= (1 if style == 'fro' else 2), (style, rows)      # clear skin between hair and brows (the fro, approved as is, sits lower)

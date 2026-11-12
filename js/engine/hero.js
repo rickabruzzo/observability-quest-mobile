@@ -145,17 +145,18 @@ export function composeHero(cfg, pose = 'idle', outfit = 'hoodie') {
   // fall in front of the shoulders (the mass behind the head was filled before the body). mohawk: a flat-topped
   // ridge on a buzzed scalp — the head stays round. fro: one big round mass.
   let hm = [];
+  c.fill('head', ellipse(cx, 7.0, b.headRx + 0.8, 3.8).concat(rect(8, 6, 19, 8)));     // a full round skull under any hair
   if (style === 'mohawk') {
-    c.fill('head', ellipse(cx, 7.0, b.headRx + 0.8, 3.8).concat(rect(8, 6, 19, 8)));   // a full round skull under the buzz
-    hm = rect(12, 2, 15, 7);
+    hm = rect(12, 1, 15, 5);                                           // the ridge stops above the forehead
   } else if (style === 'fro') {
     hm = ellipse(cx, 8.0, b.headRx + 4.2, 8.2).filter(([x, y]) => !(y >= 8 && x >= 9 && x <= 18));
   } else {
-    hm = ellipse(cx, 7.0, b.headRx + 0.8, 3.8);                       // crown
-    hm = hm.concat(rect(8, 6, 19, 8));                                 // fringe over the forehead
+    hm = ellipse(cx, 6.2, b.headRx + 0.9, 4.2);                       // crown, with some height to it
+    hm = hm.concat(rect(8, 6, 19, 8));                                 // down to the temples
     if (style === 'standard') hm = hm.concat(rect(8, 9, 8, 11), rect(19, 9, 19, 11));            // sideburns, inside the head's outline
     else if (style === 'shoulder') hm = hm.concat(rect(6, 6, 8, 21), rect(19, 6, 21, 21));       // locks to the shoulders, three wide
     else if (style === 'long') hm = hm.concat(rect(5, 7, 8, 31), rect(19, 7, 22, 31), rect(6, 32, 8, 33), rect(19, 32, 21, 33));   // down over the chest
+    hm = hm.filter(([x, y]) => !(y >= 7 && x >= 9 && x <= 18));        // hairline: two rows of forehead above the brows
   }
   c.fill('hair', hm);
 
@@ -200,7 +201,7 @@ export function composeHero(cfg, pose = 'idle', outfit = 'hoodie') {
   // hair texture: buzzed temples for the mohawk, dark curls dotted through the fro
   if (style === 'mohawk') {
     const buzz = skinR.B.map((a, i) => Math.floor((a * 11 + hairR.B[i] * 9) / 20));      // stubble: skin showing through
-    for (let y = 4; y <= 8; y++) for (let x = 7; x <= 20; x++) if (c.part[y + c.oy]?.[x] === 'head' && !(y === 8 && x >= 10 && x <= 17)) c.px(x, y, buzz);
+    for (let y = 4; y <= 8; y++) for (let x = 7; x <= 20; x++) if (c.part[y + c.oy]?.[x] === 'head' && !(y >= 7 && x >= 9 && x <= 18)) c.px(x, y, buzz);
   }
   if (style === 'fro') for (const [x, y] of [[9, 3], [16, 2], [6, 7], [21, 6], [12, 5], [18, 5], [5, 12], [22, 11], [8, 14], [19, 14]]) if (c.part[y + c.oy]?.[x] === 'hair') c.px(x, y, hairR.D);   // a few darker curls
   // beard (takes the hair colour): short = stubble over the jaw with a solid chin; long = full, down the chest
