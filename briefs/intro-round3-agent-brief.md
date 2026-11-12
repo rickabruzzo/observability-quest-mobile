@@ -18,6 +18,10 @@ only works if it is the *same* room. Make it as an **edit of the approved `raw/D
 > the pillow. Someone is asleep in the bed under the blanket, head on the pillow, facing away — a dim shape, no
 > detail. The laptop is still on the dresser. Door closed. No text.
 
+The game letters its title on the wall itself, in both pictures: barely visible in the dark one, then fully lit
+when the light comes on. So **the wall above the bed and dresser must stay plain in the dark picture too** — no
+writing, no new pictures, no light patches there.
+
 Accept when: every piece of furniture, the door, the shelf and the rug are **exactly where they are in
 `D_bedroom_vga`** (flip between the two); the room is dark enough that the lit version will feel like a reveal;
 the pager glow is on the nightstand; the sleeper is a vague shape (the game draws the real hero once the light
@@ -52,5 +56,9 @@ Run `crop.py`, then `python3 tools/build_intro.py`. Expect `real art`, **no `FAL
 found), and `B_arm: …% of the frame changed` with a box on the left half only.
 
 ## 4. Report to Rick
+
+If the new dark room is accepted, add `"darkTitle": true` to `scratch/intro_gen/intro.overrides.json` and rebuild:
+that tells the game the dark shot is the same room, so it shows the title on the unlit wall.
+
 
 Files, tool/model/date, tries, flaws kept, the build output — and the new LCD rectangle the build printed.

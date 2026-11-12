@@ -70,6 +70,9 @@ The title on the bedroom wall is the app's own **Observability Quest wordmark**,
 `assets/title_screen.png` (letters only — no starscape, glow, rule or blue panel; the build adds the **I** after QUEST from the wordmark's own letter I), sized to the `wall` rectangle, with
 the subtitle lettered under it. Replace that picture and rebuild to change the logo.
 
+Set `"darkTitle": true` in the overrides once `A_room_dark` is the bedroom with the light off: the title then sits on
+the unlit wall, dimmed, and the lights reveal it.
+
 Two optional stills extend the bedroom: `D_laptop_gone.png` (the bedroom without the laptop on the dresser) and
 `D_door_open.png` (the door open, cut against `D_laptop_gone` when that exists). A hero who carries a laptop sees the
 painted one until they take it; any other item is drawn on the bare dresser top at `item`. Without `D_door_open` the

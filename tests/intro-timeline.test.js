@@ -33,12 +33,12 @@ test('reduced motion: nothing flashes', () => {
 test('nextShot runs off the end', () => { assert.equal(nextShot(0), 1); assert.equal(nextShot(8), null); });
 test('out-of-range shot index is clamped, not thrown', () => { assert.equal(frameAt(99, 0).image, 'D_bedroom_vga'); assert.equal(frameAt(-1, 0).image, 'A_room_dark'); });
 test('hero script: the room holds on the title, then up, dressed, a beat, the item, the door', () => {
-  const at = Object.fromEntries(HERO_STEPS.map((s) => [s.do || (s.walkTo ? 'walk' : s.take ? 'take' : s.flash ? 'flash' : `${s.pose}-${s.outfit}`), s.at]));
-  // the light comes on with the hero already sitting up in bed — never an empty bed
-  let h = heroAt(0); assert.deepEqual([h.visible, h.pose, h.outfit, h.titled], [true, 'situp', 'pj', false]);
-  assert.equal(heroAt(at.title + 50).titled, true);
-  assert.ok(at['idle-pj'] - at.title >= 2500, 'the title gets at least 2.5 s before the hero gets up');
-  assert.ok(at.rustle > at.title && at.rustle < at['idle-pj'], 'the covers go back just before the feet hit the floor');
+  const at = Object.fromEntries(HERO_STEPS.map((s) => [s.walkTo ? 'walk' : s.take ? 'take' : s.flash ? 'flash' : s.pose ? `${s.pose}-${s.outfit}` : s.do, s.at]));
+  // the light comes on with the title already on the wall and the hero already sitting up in bed — never an empty bed
+  let h = heroAt(0); assert.deepEqual([h.visible, h.pose, h.outfit, h.titled], [true, 'situp', 'pj', true]);
+  assert.equal(at['situp-pj'], 0);
+  assert.ok(at['idle-pj'] >= 3000, 'the title gets at least 3 s before the hero gets up');
+  assert.ok(at.rustle > 2000 && at.rustle < at['idle-pj'], 'the covers go back just before the feet hit the floor');
   assert.equal(heroAt(at.rustle - 1).stirring, false); assert.equal(heroAt(at.rustle + 1).stirring, true);
   h = heroAt(at['idle-pj'] + 100); assert.deepEqual([h.pose, h.outfit, h.flash], ['idle', 'pj', false]);
   assert.equal(heroAt(at.flash + 50).flash, true);
@@ -78,3 +78,5 @@ test('the hero script fits inside the bedroom shot with the exit', () => {
   const p = exitPlan({ standX: 0, doorX: 292, floorY: 190, doorY: 150 });      // the longest walk a 320px room allows
   assert.ok(HERO_STEPS.at(-1).at + p.total <= SHOTS.at(-1).ms, `${HERO_STEPS.at(-1).at + p.total}`);
 });
+
+test('the wide dark shot can carry the title, dimmed, for the lights to reveal', () => { assert.equal(SHOTS[7].title, 'dim'); });

@@ -324,3 +324,9 @@ def test_numeral_stands_on_quests_baseline_and_the_lines_are_apart():
     def head(r): return int(np.nonzero(bottom[:, r[0]:r[1] + 1].any(axis=1))[0].min())
     assert abs(foot(i_run) - foot((t_run[1] - 30, t_run[1]))) <= 2, (foot(i_run), foot(t_run))     # not below the T's foot
     assert abs(head(i_run) - head((t_run[1] - 30, t_run[1]))) <= 2
+
+
+def test_dark_title_is_off_unless_the_overrides_turn_it_on(tmp_path):
+    assert bi.build(str(tmp_path / 'nosrc'), str(tmp_path / 'out'), placeholders=True)['darkTitle'] is False
+    src = tmp_path / 'src'; os.makedirs(src); json.dump({'darkTitle': True}, open(src / 'intro.overrides.json', 'w'))
+    assert bi.build(str(src), str(tmp_path / 'out'), placeholders=True)['darkTitle'] is True

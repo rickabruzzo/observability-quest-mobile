@@ -113,6 +113,7 @@ test('the bedroom shot shows the title and walks the hero out', async () => {
   const first = await intro(page);                                        // the hero is in bed the moment the light comes on
   assert.ok(first.t < 600, `checked late (${first.t})`);
   assert.deepEqual([first.hero?.visible, first.hero?.pose, first.hero?.outfit], [true, 'situp', 'pj']);
+  assert.equal(await page.locator('.intro-title').count(), 1, 'the title is on the wall the moment the light comes on');
   await page.waitForFunction(() => window.__oq.intro.t > 900);
   // the title is the app's own wordmark, drawn on the wall, with the subtitle lettered under it
   assert.equal(await page.locator('.intro-title').getAttribute('aria-label'), 'Observability Quest I: So you want to be on-call?');
@@ -257,4 +258,21 @@ test('the laptop is on the dresser until it is taken into inventory; the hero ca
   await page.waitForFunction(() => window.__oq.intro.hero?.doorOpen === true, null, { timeout: 8000 });
   assert.equal((await intro(page)).hero.plate, 'D_door_open');
   await ctx.close();
+});
+
+test('when the dark shot is the same room, the title is already on its wall, dimmed', async () => {
+  for (const [dark, want] of [[true, 1], [false, 0]]) {
+    const { ctx, page } = await openIntro({}, (page) => page.route('**/assets/intro/intro.json', async (r) => {
+      const res = await r.fetch(); const m = await res.json(); m.darkTitle = dark;
+      await r.fulfill({ response: res, json: m });
+    }));
+    await running(page);
+    for (let i = 0; i < 7; i++) { await page.waitForTimeout(300); await tapScene(page); }
+    await page.waitForFunction(() => window.__oq.intro.id === 'wide');
+    await page.waitForTimeout(150);
+    assert.equal(await page.locator('.intro-title.dim').count(), want, `darkTitle ${dark}`);
+    await page.waitForFunction(() => window.__oq.intro.id === 'bedroom' && window.__oq.intro.hero, null, { timeout: 4000 });
+    assert.equal(await page.locator('.intro-title').count(), 1); assert.equal(await page.locator('.intro-title.dim').count(), 0);
+    await ctx.close();
+  }
 });

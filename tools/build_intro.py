@@ -356,12 +356,13 @@ def build(src, out, placeholders=False, logo_src=LOGO_SRC):
         lcd, found = LCD_FALLBACK, False
     else: found = True
     m = {'size': [W, H], 'images': images, 'lcd': dict(zip('xywh', lcd)), **json.loads(json.dumps(DEFAULTS)),
-         'lcdFound': found, 'placeholder': bool(fake)}
+         'lcdFound': found, 'darkTitle': False, 'placeholder': bool(fake)}
     ov = os.path.join(src, OVERRIDES)
     if os.path.exists(ov):
         for k, v in json.load(open(ov)).items():
             if k in ('lcd', 'wall', 'bed', 'stand', 'door', 'clothes', 'item', 'doorway') and isinstance(v, dict): m[k] = {**m[k], **v}
             elif k == 'floorY' and isinstance(v, (int, float)): m[k] = v
+            elif k == 'darkTitle' and isinstance(v, bool): m[k] = v      # the dark wide shot is the bedroom unlit: show the title on its wall, dimmed
             else: warn(f'{OVERRIDES}: "{k}" ignored (expected lcd, wall, bed, stand, door, clothes, item, doorway as objects, or floorY as a number)')
     m['door'].setdefault('y', m['floorY'])           # the row the hero's feet reach at the door; the floor line unless set
     # the title: the wordmark at the top of the wall, a line of text under it (placed after overrides moved the wall)

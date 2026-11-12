@@ -101,3 +101,4 @@ body[data-cols="narrow"] .btn-sierra .long, body:not([data-cols="narrow"]) .btn-
 .intro-title { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-align: center; pointer-events: none; }
 .intro-title-h { font-family: var(--font-display); font-size: calc(var(--scene-h) * 0.085); line-height: 1; color: var(--honey); text-shadow: 1px 1px 0 #000; white-space: nowrap; }
 .intro-title-s { font-family: var(--font-text); font-size: calc(var(--scene-h) * 0.085); line-height: 1; color: #DCF0FF; text-shadow: 1px 1px 0 #000; white-space: nowrap; }
+.intro-title.dim { opacity: 0.16; }

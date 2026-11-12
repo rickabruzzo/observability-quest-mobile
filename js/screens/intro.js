@@ -11,6 +11,7 @@ import { colButton } from '../engine/ui.js';
 
 const BASE = 'assets/intro/';
 const LOAD_TIMEOUT_MS = 6000;
+const DIM = 0.16;                    // how much of the title shows on the unlit wall
 const TAP_GUARD_MS = 250;            // a tap this soon after a cut is the tail of the last tap
 const STAND_DX = 30;                 // standing spot when the manifest has none: just right of the bed's left edge
 const WALK_AT = HERO_STEPS.find((s) => s.walkTo).at;
@@ -112,12 +113,13 @@ export function createIntroScreen(game) {
 
   // The title on the wall: the app's wordmark (a picture, drawn on the canvas) with the subtitle under it as
   // page text. Without the wordmark picture, both lines are lettered as text.
-  function showTitle(ctx, m, on) {
-    const logo = assets?.images.get('wall_logo');
-    if (on && logo) ctx.ctx2d.drawImage(logo, m.logo.x, m.logo.y);
+  function showTitle(ctx, m, on, dim = false) {
+    const logo = assets?.images.get('wall_logo'), g = ctx.ctx2d;
+    if (on && logo) { g.globalAlpha = dim ? DIM : 1; g.drawImage(logo, m.logo.x, m.logo.y); g.globalAlpha = 1; }
+    if (titleEl && titleEl.classList.contains('dim') !== dim) { titleEl.remove(); titleEl = null; }
     if (on && !titleEl) {
       titleEl = document.createElement('div');
-      titleEl.className = 'intro-title';
+      titleEl.className = dim ? 'intro-title dim' : 'intro-title';
       titleEl.setAttribute('role', 'img'); titleEl.setAttribute('aria-label', TITLE_LABEL);
       const r = logo ? m.subtitle : m.wall;
       Object.assign(titleEl.style, { left: `${(r.x / 320) * 100}%`, top: `${(r.y / 200) * 100}%`, width: `${(r.w / 320) * 100}%`, height: `${(r.h / 200) * 100}%` });
@@ -196,14 +198,15 @@ export function createIntroScreen(game) {
     const s = SHOTS[shot], m = assets.manifest, f = frameAt(shot, t, { reduced: ctx.reducedMotion });
     if (f.black) { g.fillStyle = '#000'; g.fillRect(0, 0, 320, 200); } else g.drawImage(assets.images.get(f.image), 0, 0, 320, 200);
     if (!f.black) paintLcd(g, m, s, f.lcd);
-    if (s.hero) paintHero(ctx, m); else showTitle(ctx, m, false);
+    if (s.clickAt != null && !clicked && t >= s.clickAt) { clicked = true; sfx?.click(); sounds.push('click'); }   // the light switch comes first
+    // the dark wide shot is the same room once its art matches (manifest.darkTitle): the title is already on the wall, barely lit
+    if (s.hero) paintHero(ctx, m); else showTitle(ctx, m, s.title === 'dim' && m.darkTitle === true && !f.black, true);
     // sound follows the picture: a beep each time the flash comes on, a click when the lamp does
     if (s.beepOnFlash && !ctx.reducedMotion) {
       const on = s.flash === 'black' ? !f.black : !!f.lcd?.on;
       if (on && !lastOn) { sfx?.beep(); sounds.push('beep'); }
       lastOn = on;
     }
-    if (s.clickAt != null && !clicked && t >= s.clickAt) { clicked = true; sfx?.click(); sounds.push('click'); }
   }
 
   return {

@@ -13,7 +13,7 @@ export const SHOTS = [
   { id: 'lit', ms: 2000, image: 'C_awake', alt: 'C_awake_lit', flash: 'alt' },
   { id: 'message', ms: 8000, image: 'B_nightstand', lcd: 'marquee', text: CTO },
   { id: 'misery', ms: 2000, image: 'C_misery' },
-  { id: 'wide', ms: 1400, image: 'A_room_dark' },                       // back to the wide dark room, steady in the pager's glow…
+  { id: 'wide', ms: 1400, image: 'A_room_dark', title: 'dim' },                       // back to the wide dark room, steady in the pager's glow…
   { id: 'bedroom', ms: 15000, image: 'D_bedroom_vga', hero: true, clickAt: 0 },   // …click: the light is on, and this is the room
 ];
 export const TOTAL_MS = SHOTS.reduce((n, s) => n + s.ms, 0);
@@ -35,8 +35,7 @@ export function frameAt(shotIndex, tMs, { reduced = false } = {}) {
 // Shot 9: the hero is sitting up in bed as the light comes on; the title comes up on the wall; they get up,
 // flash into day clothes, take the laptop and walk out.
 export const HERO_STEPS = [
-  { at: 0, pose: 'situp', outfit: 'pj' },            // the light comes on with the hero already sitting up in bed
-  { at: 600, do: 'title' },                          // then the room holds, so the title can be read
+  { at: 0, pose: 'situp', outfit: 'pj', do: 'title' },   // the light comes on: the title is on the wall, the hero sitting up in bed
   { at: 3900, do: 'rustle' },                        // the covers go back
   { at: 4600, pose: 'idle', outfit: 'pj', stand: true },
   { at: 5400, flash: true },
