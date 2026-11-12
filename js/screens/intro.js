@@ -17,7 +17,7 @@ const TAP_GUARD_MS = 250;            // a tap this soon after a cut is the tail 
 const STAND_DX = 30;                 // standing spot when the manifest has none: just right of the bed's left edge
 const WALK_AT = HERO_STEPS.find((s) => s.walkTo).at;
 const REDUCED_BEDROOM_MS = 2500;
-const NEXT = 'PREVIEW';
+const NEXT = 'AFTER_INTRO';                // the game routes it: the scenario menu, or ?ch=N / ?preview=1
 const TITLE = ['OBSERVABILITY QUEST I', 'So you want to be on-call?'];     // lettered whole when the wordmark picture is missing
 const SUBTITLE = 'So you want to be on-call?';                             // under the wordmark, which carries the I
 const TITLE_LABEL = 'Observability Quest I: So you want to be on-call?';

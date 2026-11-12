@@ -5,7 +5,10 @@ import { createTitleScreen } from './screens/title.js';
 import { createCreatorScreen } from './screens/creator.js';
 import { createPreviewScreen } from './screens/preview.js';
 import { createIntroScreen } from './screens/intro.js';
+import { createMenuScreen } from './screens/menu.js';
+import { createChapterScreen } from './screens/chapter.js';
 import { sanitizeHero } from './creator-state.js';
+import { parseDone, afterIntro, DONE_KEY, MAX_SCORE } from './menu.js';
 
 export const ADVANCE_GUARD_MS = 350;
 const HERO_KEY = 'oq.hero';
@@ -22,7 +25,13 @@ const ctx = {
   hero: null,
   reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
   fit: null,
-  setScore(n) { document.getElementById('sb-score').textContent = `Score: ${n} of 300`; },
+  chapterId: 1,          // the scenario the CHAPTER screen plays; the menu sets it
+  claimed: false,        // the prize: nothing claims it yet (the claim flow is a later brief)
+  runlog: null,          // the current scenario's stopwatch (js/engine/runlog.js)
+  holds: { rotate: false, hidden: false },   // why the clock is stopped, if it is
+  setScore(n) { document.getElementById('sb-score').textContent = `Score: ${n} of ${MAX_SCORE}`; },
+  loadDone() { let raw = null; try { raw = sessionStorage.getItem(DONE_KEY); } catch { raw = null; } return parseDone(raw); },
+  saveDone(done) { try { sessionStorage.setItem(DONE_KEY, JSON.stringify(done)); } catch { /* storage unavailable: keep going */ } },
   saveHero(hero) { try { sessionStorage.setItem(HERO_KEY, JSON.stringify(hero)); } catch { /* storage unavailable: keep going */ } },
   loadHero() { let raw = null; try { raw = sessionStorage.getItem(HERO_KEY); } catch { raw = null; } return sanitizeHero(raw); },
 };
@@ -32,12 +41,19 @@ game.screens.TITLE = createTitleScreen(game);
 game.screens.CREATOR = createCreatorScreen(game);
 game.screens.INTRO = createIntroScreen(game);
 game.screens.PREVIEW = createPreviewScreen(game);
+game.screens.MENU = createMenuScreen(game);
+game.screens.CHAPTER = createChapterScreen(game);
 
 let current = null, currentName = 'LOADING', lastGo = -Infinity, transitions = 0;
 let paused = false, lastT = 0;
 
 function go(name) {
   const now = performance.now();
+  if (name === 'AFTER_INTRO') {           // the intro's way out: ?ch=N straight into a scenario, ?preview=1 the test room, else the menu
+    const route = afterIntro(location.search);
+    if (route.ch) ctx.chapterId = route.ch;
+    name = route.screen;
+  }
   if (name === currentName) return false;
   if (now - lastGo < ADVANCE_GUARD_MS && currentName !== 'LOADING') return false;
   const next = game.screens[name];
@@ -57,6 +73,13 @@ function resize() {
   applyStage(document.documentElement, ctx.fit);
   document.body.dataset.cols = ctx.fit.colW < 96 ? 'narrow' : 'wide';
   paused = isPortrait(vw, vh) && vw <= 700;
+  hold('rotate', paused);
+}
+
+/** Stops (or restarts) the scenario clock for one reason; the rotate gate and a hidden tab are the reasons. */
+function hold(reason, on) {
+  ctx.holds[reason] = on;
+  ctx.runlog?.hold(reason, on);
 }
 
 function frame(t) {
@@ -68,6 +91,7 @@ function frame(t) {
 
 window.addEventListener('resize', resize);
 window.addEventListener('orientationchange', resize);
+document.addEventListener('visibilitychange', () => hold('hidden', document.visibilityState === 'hidden'));
 resize();
 ctx.hero = ctx.loadHero();
 go('TITLE');
@@ -80,6 +104,7 @@ window.__oq = {
   get fit() { return ctx.fit; },
   get paused() { return paused; },
   get transitions() { return transitions; },
+  get run() { return ctx.runlog?.snapshot() ?? null; },
   go,
   ctx,
   game,

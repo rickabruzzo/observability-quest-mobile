@@ -89,8 +89,8 @@ function paintHc(g, stage, p = 1) {
   const bx = PIC.x + 10, by = PIC.y + 18, bw = PIC.w - 20;
   if (stage === 0) {
     g.fillStyle = '#2A3346'; for (let i = 0; i < 5; i++) g.fillRect(bx, by + i * 28, bw, 1);
-    g.fillStyle = '#F96E10';                                         // the budget burning down, faster at the end
-    for (let x = 0; x < bw; x++) { const y = Math.round(118 * Math.pow(x / bw, 2.2)); g.fillRect(bx + x, by + 10 + y, 2, 2); }
+    g.fillStyle = "#F96E10";                                         // the burn rate climbing, faster at the end
+    for (let x = 0; x < bw; x++) { const y = Math.round(118 * Math.pow(x / bw, 2.2)); g.fillRect(bx + x, by + 128 - y, 2, 2); }
     g.fillStyle = '#E04040'; g.fillRect(bx, by + 2, 40, 4);
     return;
   }

@@ -8,12 +8,12 @@ let server, browser;
 before(async () => { server = await startServer(); browser = await chromium.launch(); });
 after(async () => { await browser?.close(); await server?.close(); });
 
-async function openIntro(opts = {}, prep) {
+async function openIntro(opts = {}, prep, query = '') {
   const ctx = await browser.newContext({ viewport: { width: 844, height: 390 }, deviceScaleFactor: 1, hasTouch: true, isMobile: true, ...opts });
   const page = await ctx.newPage();
   const errors = []; page.on('pageerror', (e) => errors.push(e));
   if (prep) await prep(page);
-  await page.goto(server.baseURL, { waitUntil: 'load' });
+  await page.goto(server.baseURL + query, { waitUntil: 'load' });
   await page.waitForFunction(() => window.__oq?.ready === true);
   await page.click('#btn-start');
   await page.waitForFunction(() => document.body.dataset.screen === 'CREATOR');
@@ -83,25 +83,25 @@ test('a tap in the first 250 ms of a shot is ignored', async () => {
   await ctx.close();
 });
 
-test('Skip goes to the preview once, however fast it is pressed', async () => {
+test('Skip goes to the scenario menu once, however fast it is pressed', async () => {
   const { ctx, page, errors } = await openIntro();
   await page.waitForFunction(() => document.body.dataset.screen === 'INTRO');
   const before = await page.evaluate(() => window.__oq.transitions);
   await page.locator('#btn-skip').dblclick();
-  await page.waitForFunction(() => document.body.dataset.screen === 'PREVIEW', null, { timeout: 3000 });
+  await page.waitForFunction(() => document.body.dataset.screen === 'MENU', null, { timeout: 3000 });
   await page.waitForTimeout(500);
   assert.equal(await page.evaluate(() => window.__oq.transitions), before + 1);
-  assert.equal(await page.evaluate(() => document.body.dataset.screen), 'PREVIEW');
+  assert.equal(await page.evaluate(() => document.body.dataset.screen), 'MENU');
   assert.equal(await page.locator('#btn-skip').count(), 0);
   assert.deepEqual(errors, []);
   await ctx.close();
 });
 
-test('tapping through every shot ends in the preview', async () => {
+test('tapping through every shot ends in the scenario menu', async () => {
   const { ctx, page } = await openIntro();
   await running(page);
   for (let i = 0; i < 9; i++) { await page.waitForTimeout(300); await tapScene(page); }
-  await page.waitForFunction(() => document.body.dataset.screen === 'PREVIEW', null, { timeout: 3000 });
+  await page.waitForFunction(() => document.body.dataset.screen === 'MENU', null, { timeout: 3000 });
   await ctx.close();
 });
 
@@ -148,7 +148,7 @@ test('the bedroom shot shows the title and walks the hero out', async () => {
   await page.waitForFunction(() => window.__oq.intro.sounds.includes('shut') || document.body.dataset.screen !== 'INTRO', null, { timeout: 9000 }).catch(() => {});
   const heard = await page.evaluate(() => window.__oq.intro.sounds.slice());
   assert.deepEqual(heard.filter((n) => n !== 'beep'), ['click', 'title', 'rustle', 'step', 'pickup', 'take', 'door', 'shut']);   // the light, then each action
-  await page.waitForFunction(() => document.body.dataset.screen === 'PREVIEW', null, { timeout: 9000 });
+  await page.waitForFunction(() => document.body.dataset.screen === 'MENU', null, { timeout: 9000 });
   await ctx.close();
 });
 
@@ -169,15 +169,15 @@ test('rotating to portrait freezes the intro; rotating back resumes the same sho
   await ctx.close();
 });
 
-test('if the pictures cannot load the game carries on to the preview', async () => {
+test('if the pictures cannot load the game carries on to the scenario menu', async () => {
   const { ctx, page } = await openIntro({}, (page) => page.route('**/assets/intro/*.png', (r) => r.abort()));
-  await page.waitForFunction(() => document.body.dataset.screen === 'PREVIEW', null, { timeout: 8000 });
+  await page.waitForFunction(() => document.body.dataset.screen === 'MENU', null, { timeout: 8000 });
   await ctx.close();
 });
 
-test('if the manifest is broken the game carries on to the preview', async () => {
+test('if the manifest is broken the game carries on to the scenario menu', async () => {
   const { ctx, page } = await openIntro({}, (page) => page.route('**/assets/intro/intro.json', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '{"images":' })));
-  await page.waitForFunction(() => document.body.dataset.screen === 'PREVIEW', null, { timeout: 8000 });
+  await page.waitForFunction(() => document.body.dataset.screen === 'MENU', null, { timeout: 8000 });
   await ctx.close();
 });
 
@@ -191,7 +191,7 @@ test('reduced motion: no black frames, no flashing, ends without input', async (
     await page.waitForTimeout(100);
   }
   for (let i = 0; i < 9; i++) { if (await page.evaluate(() => document.body.dataset.screen) !== 'INTRO') break; await page.waitForTimeout(300); await tapScene(page).catch(() => {}); if ((await intro(page)).id === 'bedroom') break; }
-  await page.waitForFunction(() => document.body.dataset.screen === 'PREVIEW', null, { timeout: 5000 });
+  await page.waitForFunction(() => document.body.dataset.screen === 'MENU', null, { timeout: 5000 });
   await ctx.close();
 });
 
@@ -204,14 +204,14 @@ test('Skip is a full-size target on a small phone', async () => {
   await ctx.close();
 });
 
-test('if a picture never arrives the game still reaches the preview', async () => {
+test('if a picture never arrives the game still reaches the scenario menu', async () => {
   const { ctx, page } = await openIntro({}, (page) => page.route('**/assets/intro/C_misery.png', () => { /* never answered */ }));
-  await page.waitForFunction(() => document.body.dataset.screen === 'PREVIEW', null, { timeout: 9000 });
+  await page.waitForFunction(() => document.body.dataset.screen === 'MENU', null, { timeout: 9000 });
   await ctx.close();
 });
 
 test('back to the sheet and Start again: one Skip, one title, taps still advance one shot', async () => {
-  const { ctx, page } = await openIntro();
+  const { ctx, page } = await openIntro({}, undefined, '?preview=1');       // the preview room has the way back to the sheet
   for (let round = 0; round < 2; round++) {
     await running(page);
     await page.click('#btn-skip');
