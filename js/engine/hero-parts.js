@@ -48,3 +48,16 @@ export const BODIES = {
 export const HC_MARK = { blue: '#0298EC', green: '#64BA00', orange: '#F96E10', honey: '#FFB000' };
 export const HC_MARK_PIXELS = [[11, 23, 'blue'], [12, 23, 'blue'], [10, 24, 'green'], [11, 24, 'blue'], [12, 24, 'blue'],
   [9, 25, 'orange'], [10, 25, 'green'], [10, 26, 'honey']];   // high on the chest, wearer's right of the drawstrings
+
+// ---- profile view (facing right; the game mirrors it for left) ----
+// Copied verbatim from tools/hero_gen.py; tests/hero-side.test.js proves js/engine/hero-side.js
+// against the Python fixtures in tests/fixtures/hero-side.
+export const SIDE_POSES = ['stand', 'w1', 'w2', 'w3', 'w4', 'w5', 'w6', 'w7', 'w8'];
+// The walk, as joint angles in degrees from straight down (+ = forward). One leg's eight frames; the other leg
+// and the arms use the same table half a cycle away. The front leg reaches out nearly straight and lands on the
+// heel, the back leg trails with the knee bent and the heel lifting, the swinging leg folds at the knee as it
+// passes, and each arm swings against its own leg with the elbow a little bent. The body dips on the two wide
+// frames.                        thigh, shin
+export const SIDE_LEG = [[26, 12], [16, 2], [2, -4], [-12, -22], [-22, -46], [-8, -62], [12, -48], [26, -10]];
+export const SIDE_BOB = [1, 0, 0, 0, 1, 0, 0, 0];
+export const THIGH = 11, SHIN = 11, UPPER = 10, FORE = 9;
