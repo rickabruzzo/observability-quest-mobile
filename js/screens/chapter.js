@@ -1,7 +1,8 @@
-// A scenario, start to finish: class card → room (tap to walk, tap to act, Look / Use / Help) → tool screens
-// (the old tool, the Honeycomb screen) → win → verdict → the timing summary. The chapter's words, places
-// and pictures are data (js/chapters/ch1.js); the rules are the pure engine modules; this module is the DOM,
-// the canvas and the clock.
+// A scenario, start to finish: class card → room (tap to walk, tap to act, Look / Use / Help) → close-ups
+// (the PC with its menu, Otto's vitals monitor) → tool screens (the old tool, the Honeycomb screen) → the
+// CTO's decision → win → verdict → the timing summary. The chapter's words, places and pictures are data
+// (js/chapters/ch1.js); the rules are the pure engine modules (scenario, vitals, prompts, room); this module
+// is the DOM, the canvas and the clock.
 
 import { SCRIPT } from '../script.js';
 import { CH1 } from '../chapters/ch1.js';
@@ -12,16 +13,20 @@ import { colButton } from '../engine/ui.js';
 import { drawIcon, applyCursor, MARKER_MS } from '../engine/cursor.js';
 import { hotspotAt, walkTarget } from '../engine/room.js';
 import { createWindows } from '../engine/window.js';
-import { createTool, choose, promptsOf, toolScore } from '../engine/prompts.js';
+import { createTool, choose, promptsOf } from '../engine/prompts.js';
 import { createRunlog, summaryLines, formatMs, PHASES, PHASE_LABELS, COUNT_LABELS } from '../engine/runlog.js';
+import { createScenario, notePrompt, noteHcDone, canLeave, vitalsLine, ctoUse, decide, scenarioScore } from '../engine/scenario.js';
+import { vitalsFrame, beatSamples, talkFrame, stepAt } from '../engine/vitals.js';
+import { loadManifest } from '../engine/images.js';
 import { recordDone, totalScore } from '../menu.js';
 
 export const CHAPTERS = { 1: CH1 };
 export const REVEAL_MS = 1600;               // a right answer's result is drawn in over this long
+const LOAD_WAIT_MS = 6000;                   // the card waits this long for the room's pictures, then plays without
 // Strings the script has no slot for (listed in the hand-back for Rick).
 export const UI = {
-  look: 'Look', use: 'Use', help: 'Help',
-  exitOld: '[Close the terminal]',
+  look: 'Look', use: 'Use', help: 'Help', back: 'Back',
+  exitOld: '[Close Cave Logs]', exitHc: '[Close Honeycomb]',
   copy: 'Copy results', copied: 'Copied',
   claimSoon: 'The prize desk opens in a later build. For now, back to the menu.',
   summaryTitle: (n, t) => `Scenario ${n} · ${t}`,
@@ -29,25 +34,83 @@ export const UI = {
 
 const say = (key) => SCRIPT[key] ?? key;
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+/** CSS placement of a scene area ({x0,x1,y0,y1}, inclusive, on the 320x200 scene) as percentages of the scene box. */
+const place = (a) => `left:${(a.x0 / 320) * 100}%;top:${(a.y0 / 200) * 100}%;width:${((a.x1 - a.x0 + 1) / 320) * 100}%;height:${((a.y1 - a.y0 + 1) / 200) * 100}%`;
+const inArea = (a, x, y) => x >= a.x0 && x <= a.x1 && y >= a.y0 && y <= a.y1;
+const GLITCH = '#@%&*?!/<>';
 
 export function createChapterScreen(game) {
-  let ch, room, hero, run, wins, token = null;
+  let ch, room, hero, run, wins, token = null, scen, art = null, loading = null;
   let state = 'card', mode = 'use', busy = false;
   let x = 0, pose = 'idle', view = 'front', flip = false, plan = null, elapsed = 0, walkMs = 0, pending = null, marker = null, cursor = null;
-  let toolName = null, toolState = null, toolEl = null, reveal = null, portrait = null;
-  let icons = [], onDown = null, onMove = null, onTapCount = null;
+  let tools = {}, introShown = new Set(), toolName = null, toolFrom = null, toolEl = null, reveal = null, portrait = null;
+  let vitalsMode = 'critical', vitalsT = 0, nudges = [], talkT = 0, ctoQuiet = false, lastDraw = '';
+  let sceneEl = null, pcView = 'menu', monFrame = null;
+  let icons = [], back = null, onDown = null, onMove = null, onTapCount = null;
+
+  // ---- the monitor's state, shared by the room and the close-up ----
+  const vitals = (ctx) => vitalsFrame(vitalsT, {
+    state: vitalsMode, reduced: ctx.reducedMotion, nudges,
+    pool: ch.monitor.pool.map(say), okPool: ch.monitor.okPool.map(say), output: say(ch.monitor.output), outputOk: say(ch.monitor.outputOk),
+  });
 
   // ---- drawing ----
+  const img = (name) => art?.images.get(name);
+  function backdrop(g, name) {
+    const im = img(name);
+    if (im) g.drawImage(im, 0, 0); else { g.fillStyle = '#1B2333'; g.fillRect(0, 0, 320, 200); }   // the pictures failed: keep playing
+  }
+  function drawLane(g, lane, samples, colour, thick) {
+    const h = lane.y1 - lane.y0, step = (lane.x1 - lane.x0 + 1) / samples.length;
+    g.fillStyle = colour;
+    samples.forEach((v, i) => {
+      const y = Math.round(lane.y0 + v * h);
+      const prev = i ? Math.round(lane.y0 + samples[i - 1] * h) : y;
+      const top = Math.min(y, prev), bot = Math.max(y, prev);               // join the samples so spikes read as lines
+      g.fillRect(Math.round(lane.x0 + i * step), top, Math.max(1, Math.round(step)), Math.max(thick, bot - top + 1));
+    });
+  }
+  function drawLights(g, where, f, size) {
+    where.forEach(([lx, ly], i) => {                         // an unlit light is dark, not the art's idle chip
+      g.fillStyle = f.lights[i] ? (f.tone === 'green' ? '#3CE070' : '#FF3030') : '#2A0C0C';
+      g.fillRect(lx, ly, size[0], size[1]);
+    });
+  }
+  const traceColour = (f) => (f.tone === 'green' ? '#3CE070' : '#FF5A3C');
+
   function paintRoom(ctx) {
-    const g = ctx.ctx2d;
-    room.paint(g);
+    const g = ctx.ctx2d, m = ch.monitor.room, f = vitals(ctx);
+    backdrop(g, room.image);
+    // the CTO talks on the phone unless she is talking to you (or it is over)
+    const frameNo = ctoQuiet || state === 'decide' || state === 'ending' ? 0 : talkFrame(talkT, ctx.reducedMotion);
+    const patch = art?.manifest.patches?.[room.image];
+    if (frameNo && patch && img(room.talk[frameNo - 1])) g.drawImage(img(room.talk[frameNo - 1]), patch.x, patch.y);
+    // Otto's vitals, motion only: the trace, the lights, a cursor typing in the output panel
+    drawLane(g, m.lane, beatSamples(vitalsT, vitalsMode, m.lane.x1 - m.lane.x0 + 1, ctx.reducedMotion), traceColour(f), 1);
+    drawLights(g, m.lights, f, ch.monitor.room.lightSize);
+    const o = m.output, per = Math.floor((o.x1 - o.x0 - 1) / 3), rows = Math.floor((o.y1 - o.y0 - 4) / 5);
+    const shown = Math.min(per * rows - 1, f.output.glitch ? 0 : f.output.shown);   // a long answer fills the panel, never spills
+    g.fillStyle = f.tone === 'green' ? '#2A9A50' : '#6A7090';
+    for (let i = 0; i < shown; i++) g.fillRect(o.x0 + 2 + (i % per) * 3, o.y0 + 3 + Math.floor(i / per) * 5, 2, 2);
+    if (f.output.cursor || f.output.glitch) {
+      g.fillStyle = f.output.glitch ? '#FF3030' : '#E8ECF4';
+      g.fillRect(o.x0 + 2 + (shown % per) * 3, o.y0 + 2 + Math.floor(shown / per) * 5, 2, 4);
+    }
     if (view === 'side') drawHeroSide(g, hero, pose, x, room.floorY - HERO_H + SIDE_FOOT_DY, 1, { flip });
     else drawHero(g, hero, pose, x, room.floorY - HERO_H, 1, { flip });
     if (marker) drawIcon(g, marker.icon, marker.x, marker.y);
   }
+  function paintMonitor(ctx) {
+    const g = ctx.ctx2d, m = ch.monitor.close, f = vitals(ctx);
+    backdrop(g, ch.monitor.image);
+    const n = Math.floor((m.lane.x1 - m.lane.x0 + 1) / 2);
+    drawLane(g, m.lane, beatSamples(vitalsT, vitalsMode, n, ctx.reducedMotion), traceColour(f), 2);
+    drawLights(g, m.lights, f, m.lightSize);
+    renderMonitorText(f);
+  }
   function paintTool(ctx, p = 1) {
     const def = ch.tools[toolName];
-    if (def.kind === 'hc') def.paint(ctx.ctx2d, toolState.step, p); else def.paint(ctx.ctx2d);
+    if (def.kind === 'hc') def.paint(ctx.ctx2d, tools.hc.step, p); else def.paint(ctx.ctx2d);
   }
   function paintPortrait(ctx) {
     const g = ctx.ctx2d;
@@ -58,7 +121,9 @@ export function createChapterScreen(game) {
   function paint(ctx) {
     if (state === 'tool') paintTool(ctx, reveal ? Math.min(1, reveal.t / REVEAL_MS) : 1);
     else if (state === 'verdict') paintPortrait(ctx);
-    else if (state === 'room' || state === 'ending') paintRoom(ctx);
+    else if (state === 'monitor') paintMonitor(ctx);
+    else if (state === 'pc') backdrop(ctx.ctx2d, ch.pc.image);
+    else if (state === 'room' || state === 'decide' || state === 'ending') paintRoom(ctx);
   }
 
   // ---- sequencing ----
@@ -68,6 +133,17 @@ export function createChapterScreen(game) {
     const t = live();
     await wins.say(say(key), opts);
     return t === live();
+  }
+  /** A line about the CTO: she stops talking on the phone while it is open. */
+  async function ctoLine(key) {
+    ctoQuiet = true;
+    const ok = await line(key);
+    ctoQuiet = false;
+    return ok;
+  }
+  function clearScene(ctx) {
+    sceneEl?.remove(); sceneEl = null; toolEl?.remove(); toolEl = null; monFrame = null;
+    back?.remove(); back = null;
   }
 
   // ---- the class card ----
@@ -82,6 +158,16 @@ export function createChapterScreen(game) {
         <p>${esc(say(ch.card.line))}</p>
       </div>`;
     run.count('windows');
+  }
+  /** The card is dismissed: into the room once its pictures are in (they started loading when the card opened). */
+  async function leaveCard(ctx) {
+    if (state !== 'card' || busy) return;
+    busy = true;
+    const t = live();
+    try { art = await loading; } catch { art = null; }
+    if (t !== live()) return;
+    busy = false;
+    enterRoom(ctx, { first: true });
   }
 
   // ---- the room ----
@@ -98,16 +184,18 @@ export function createChapterScreen(game) {
     for (const b of icons) if (b.id !== 'btn-help') b.setAttribute('aria-pressed', String(b.id === `btn-${mode}`));
   }
 
-  async function enterRoom(ctx, { first }) {
-    state = 'room'; run.phase('room');
+  async function enterRoom(ctx, { first = false, at = null } = {}) {
+    state = 'room'; run.phase('room'); busy = false;
+    clearScene(ctx);
     ctx.overlay.innerHTML = '';
-    wins.setLayer(null);
+    if (at !== null) { x = at; pose = 'idle'; view = 'front'; plan = null; }
     mode = 'use'; setIcons(ctx, true);
     paint(ctx);
     if (first) await line(ch.enter);
   }
 
   function finishWalk() { if (walkMs || plan) run.walk(walkMs); walkMs = 0; }
+  function stopWalk() { if (plan) { finishWalk(); plan = null; pose = 'idle'; view = 'front'; } pending = null; }
 
   function walkTo(ctx, tx) {
     if (plan) finishWalk();
@@ -119,58 +207,150 @@ export function createChapterScreen(game) {
 
   function act(ctx, spot) {
     run.visit(spot.id);
-    if (typeof spot.use === 'string') line(spot.use);
-    else if (spot.use?.tool) openTool(ctx, spot.use.tool);
+    const use = spot.use;
+    if (typeof use === 'string') line(use);
+    else if (use?.scene === 'pc') enterPc(ctx);
+    else if (use?.scene === 'monitor') enterMonitor(ctx);
+    else if (use?.action === 'cto') useCto(ctx);
+    else if (use?.tool) openTool(ctx, use.tool, 'room');
     else line(spot.look);                                     // nothing to do with it: say what it is
   }
 
-  function roomTap(ctx, e) {
+  function logical(ctx, e) {
     const r = ctx.canvas.getBoundingClientRect();
-    const tx = Math.floor((e.clientX - r.left) / (r.width / 320)), ty = Math.floor((e.clientY - r.top) / (r.height / 200));
+    return [Math.floor((e.clientX - r.left) / (r.width / 320)), Math.floor((e.clientY - r.top) / (r.height / 200))];
+  }
+
+  function roomTap(ctx, e) {
+    const [tx, ty] = logical(ctx, e);
     const spot = hotspotAt(room, tx, ty);
     marker = { icon: spot ? 'hand' : 'walk', x: tx, y: ty, left: MARKER_MS };
     if (mode === 'look') {
       mode = 'use'; markMode();
-      if (spot) { run.count('looks'); run.visit(spot.id); line(spot.look); paint(ctx); return; }   // Look reads from where you stand
+      if (spot) {                                             // Look reads from where you stand
+        run.count('looks'); run.visit(spot.id);
+        if (spot.id === 'cto') ctoLine(spot.look); else line(spot.look);
+        paint(ctx); return;
+      }
     }
+    if (spot && spot.walk === false) { stopWalk(); paint(ctx); act(ctx, spot); return; }
     pending = spot;
     walkTo(ctx, spot ? spot.standX : walkTarget(room, tx));
     if (!plan && pending) { const s = pending; pending = null; act(ctx, s); }
     paint(ctx);
   }
 
+  // ---- the monitor close-up ----
+  async function enterMonitor(ctx) {
+    state = 'monitor'; run.phase('monitor'); run.count('monitor');
+    setIcons(ctx, false); clearScene(ctx);
+    const m = ch.monitor.close;
+    sceneEl = document.createElement('div');
+    sceneEl.className = 'scene-ui monitor-ui'; sceneEl.id = 'monitor';
+    sceneEl.innerHTML = m.boxes.map((a, i) => `<div class="mon-box" data-box="${i}" style="${place(a)}"><span class="fit"></span><span class="fit"></span></div>`).join('')
+      + `<div class="mon-out" style="${place(m.output)}"></div>`;
+    ctx.overlay.appendChild(sceneEl);
+    back = colButton({ id: 'btn-back', long: UI.back, onClick: () => { if (state === 'monitor' && !wins.open) enterRoom(ctx); } });
+    ctx.colR.appendChild(back);
+    lastDraw = ''; paint(ctx);
+    await line(ch.monitor.chart);
+  }
+  function renderMonitorText(f) {
+    if (!sceneEl || state !== 'monitor') return;
+    const key = JSON.stringify([f.boxes, f.tone, f.output]);
+    if (key === monFrame) return;
+    monFrame = key;
+    sceneEl.classList.toggle('ok', f.tone === 'green');
+    sceneEl.querySelectorAll('.mon-box').forEach((el, i) => {
+      const b = f.boxes[i], spans = el.querySelectorAll('.fit');
+      el.classList.toggle('garble', b.garble);
+      b.lines.forEach((l, j) => { if (spans[j].textContent !== l) { spans[j].textContent = l; fit(spans[j]); } });
+    });
+    const o = f.output, out = sceneEl.querySelector('.mon-out');
+    const text = o.glitch ? [...o.text].map((c, i) => (c === ' ' ? ' ' : GLITCH[(i * 7 + f.step) % GLITCH.length])).join('') : o.text.slice(0, o.shown);
+    out.innerHTML = `${esc(text)}<span class="mon-cursor${o.cursor ? '' : ' off'}"></span>`;
+  }
+  /** A line wider than its box is condensed sideways to fit, never cut and never smaller than the box's font. */
+  function fit(span) {
+    span.style.transform = '';
+    const w = span.parentElement.clientWidth, need = span.scrollWidth;
+    if (need > w && w > 0) span.style.transform = `scaleX(${(w / need).toFixed(3)})`;
+  }
+  function monitorTap(ctx, e) {
+    const [tx, ty] = logical(ctx, e), m = ch.monitor.close;
+    const box = m.boxHits.findIndex((a) => inArea(a, tx, ty));
+    if (box >= 0) { nudges.push({ step: ctx.reducedMotion ? nudges.length + 1 : stepAt(vitalsT), box }); monFrame = null; paint(ctx); return; }
+    if (!inArea(m.screen, tx, ty)) enterRoom(ctx);               // off the glass: back to the room
+  }
+
+  // ---- the PC ----
+  function enterPc(ctx, { view: v = 'menu' } = {}) {
+    state = 'pc'; run.phase('pc');
+    setIcons(ctx, false); clearScene(ctx);
+    sceneEl = document.createElement('div');
+    sceneEl.className = 'scene-ui pc-ui'; sceneEl.id = 'pc';
+    sceneEl.innerHTML = `<div class="pc-screen" style="${place(ch.pc.screen)}"><div class="pc-title">${esc(say(ch.pc.title))}</div><div class="pc-grid"></div></div>`;
+    ctx.overlay.appendChild(sceneEl);
+    paint(ctx);
+    showPc(ctx, v);
+  }
+  function showPc(ctx, v) {
+    pcView = v;
+    const grid = sceneEl.querySelector('.pc-grid');
+    grid.className = `pc-grid view-${v}`;
+    const items = v === 'email'
+      ? ch.pc.emails.map((key, i) => ({ id: `email-${i + 1}`, key }))
+      : ch.pc.menu;
+    grid.innerHTML = items.map((it) => `<button type="button" class="pc-item" data-id="${it.id}">${esc(say(it.key))}</button>`).join('');
+    grid.querySelectorAll('.pc-item').forEach((b) => b.addEventListener('click', () => pcPick(ctx, b.dataset.id)));
+  }
+  async function pcPick(ctx, id) {
+    if (state !== 'pc' || wins.open || busy) return;
+    const p = ch.pc;
+    if (id.startsWith('email-')) { run.count('emails'); if (await line(p.reply)) showPc(ctx, 'menu'); return; }
+    if (id === 'email') { showPc(ctx, 'email'); return; }
+    if (id === 'vitals') { run.count('vitals'); line(p.vitals[vitalsLine(scen)]); return; }
+    if (id === 'old' || id === 'hc') { openTool(ctx, id, 'pc'); return; }
+    if (id === 'leave') {
+      if (!canLeave(scen)) { line(p.locked); return; }            // never greyed: the line is the joke
+      if (await line(p.leave)) enterRoom(ctx, { at: room.hotspots.find((h) => h.id === 'pc').standX });
+    }
+  }
+
   // ---- tool screens ----
-  function openTool(ctx, name) {
-    state = 'tool'; toolName = name; busy = false;
+  async function openTool(ctx, name, from) {
+    state = 'tool'; toolName = name; toolFrom = from; busy = false;
     const def = ch.tools[name];
-    toolState = createTool(def);
+    tools[name] ||= createTool(def);                         // progress is kept between visits
     run.phase(def.kind === 'hc' ? 'hc' : 'old');
     if (def.kind === 'hc' && !portrait) { portrait = new Image(); portrait.src = ch.verdict.portrait; }
-    setIcons(ctx, false);
+    setIcons(ctx, false); clearScene(ctx);
     ctx.overlay.innerHTML = '';
     toolEl = document.createElement('div');
     toolEl.className = `tool ${def.kind}`; toolEl.id = `tool-${name}`;
     toolEl.innerHTML = `<div class="tool-title">${esc(say(def.title))}</div><div class="tool-prompts" hidden></div>`;
     ctx.overlay.appendChild(toolEl);
     paint(ctx);
-    line(def.intro).then((ok) => { if (ok) showPrompts(ctx); });
+    if (!introShown.has(name) && !tools[name].done) {
+      introShown.add(name);
+      if (!(await line(def.intro))) return;
+    }
+    showPrompts(ctx);
   }
 
   function showPrompts(ctx) {
-    const def = ch.tools[toolName], box = toolEl.querySelector('.tool-prompts');
+    const def = ch.tools[toolName], t = tools[toolName], box = toolEl.querySelector('.tool-prompts');
     box.innerHTML = '';
-    for (const p of promptsOf(toolState)) {
+    if (!t.done) for (const p of promptsOf(t)) {
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'prompt'; b.textContent = say(p.key); b.disabled = p.disabled; b.dataset.index = p.index;
       b.addEventListener('click', () => pick(ctx, p.index));
       box.appendChild(b);
     }
-    if (def.kind === 'old') {
-      const b = document.createElement('button');
-      b.type = 'button'; b.className = 'prompt exit'; b.id = 'tool-exit'; b.textContent = UI.exitOld;
-      b.addEventListener('click', () => leaveOld(ctx));
-      box.appendChild(b);
-    }
+    const exit = document.createElement('button');
+    exit.type = 'button'; exit.className = 'prompt exit'; exit.id = 'tool-exit'; exit.textContent = def.kind === 'old' ? UI.exitOld : UI.exitHc;
+    exit.addEventListener('click', () => leaveTool(ctx));
+    box.appendChild(exit);
     box.hidden = false;
   }
   const hidePrompts = () => { const box = toolEl?.querySelector('.tool-prompts'); if (box) box.hidden = true; };
@@ -178,7 +358,8 @@ export function createChapterScreen(game) {
   async function pick(ctx, index) {
     if (state !== 'tool' || busy || wins.open) return;
     const def = ch.tools[toolName], t = live();
-    const r = choose(toolState, index);
+    const r = choose(tools[toolName], index);
+    if (r.outcome === 'wrong' || r.outcome === 'right') notePrompt(scen, def.kind);
     if (r.outcome === 'wrong') {
       run.count(def.kind === 'hc' ? 'wrong' : 'oldPrompts');
       hidePrompts();
@@ -190,23 +371,68 @@ export function createChapterScreen(game) {
     await new Promise((done) => { reveal = { t: ctx.reducedMotion ? REVEAL_MS : 0, done }; if (ctx.reducedMotion) { reveal = null; done(); } });
     if (t !== live()) return;
     reveal = null; busy = false; paint(ctx);
+    if (r.finished) { noteHcDone(scen); vitalsMode = 'ok'; vitalsT = 0; nudges = []; }   // Otto recovers
     if (!(await line(r.result))) return;
-    if (r.finished) finish(ctx); else showPrompts(ctx);
+    if (!r.finished) { showPrompts(ctx); return; }
+    if (toolFrom === 'cto') win(ctx);                            // "show me", and it did: straight to the win
+    else enterPc(ctx);
   }
 
-  async function leaveOld(ctx) {
+  async function leaveTool(ctx) {
     if (state !== 'tool' || busy || wins.open) return;
-    toolEl?.remove(); toolEl = null;
-    await enterRoom(ctx, { first: false });
-    line(ch.tools.old.exit);
+    const def = ch.tools[toolName];
+    if (toolFrom === 'pc') {
+      enterPc(ctx);
+      if (def.kind === 'old') line(def.exit);
+    } else enterRoom(ctx);                                       // backed out of "show me": back to the room
+  }
+
+  // ---- the CTO ----
+  async function useCto(ctx) {
+    run.phase('cto');
+    const u = ctoUse(scen);
+    if (u.kind === 'call') {
+      if (await ctoLine(ch.cto.calls[u.n - 1])) run.phase('room');
+      return;
+    }
+    ctoQuiet = true;
+    if (!(await line(ch.cto.ask))) return;
+    showDecision(ctx);
+  }
+  function showDecision(ctx) {
+    state = 'decide'; ctoQuiet = true; setIcons(ctx, false); clearScene(ctx);
+    sceneEl = document.createElement('div');
+    sceneEl.className = 'scene-ui decide'; sceneEl.id = 'decide';
+    sceneEl.innerHTML = `<div class="decide-prompts">
+      <button type="button" class="prompt" id="decide-sign"${scen.signed ? ' disabled' : ''}>${esc(say(ch.cto.sign))}</button>
+      <button type="button" class="prompt" id="decide-hc">${esc(say(ch.cto.hc))}</button></div>`;
+    ctx.overlay.appendChild(sceneEl);
+    sceneEl.querySelector('#decide-sign').addEventListener('click', () => advise(ctx, 'sign'));
+    sceneEl.querySelector('#decide-hc').addEventListener('click', () => advise(ctx, 'hc'));
+    paint(ctx);
+  }
+  async function advise(ctx, choice) {
+    if (state !== 'decide' || wins.open) return;
+    const r = decide(scen, choice);
+    if (r.outcome === 'tried') return;
+    clearScene(ctx);
+    if (r.outcome === 'jab') {
+      run.count('signed');
+      if (await line(ch.cto.jab)) showDecision(ctx);             // the choice comes back
+      return;
+    }
+    if (r.outcome === 'win') { win(ctx); return; }
+    if (!(await line(ch.cto.show))) return;
+    ctoQuiet = false;
+    openTool(ctx, 'hc', 'cto');
   }
 
   // ---- the win, the verdict, the summary ----
-  async function finish(ctx) {
-    const score = toolScore(toolState);
-    toolEl?.remove(); toolEl = null;
-    state = 'ending'; run.phase('win');
+  async function win(ctx) {
+    const score = scenarioScore(scen, tools.hc);
+    clearScene(ctx);
     ctx.overlay.innerHTML = '';
+    state = 'ending'; run.phase('win'); setIcons(ctx, false);
     paint(ctx);
     const done = recordDone(ctx.loadDone(), ch.id, score);         // the score ticks up as the win is declared
     ctx.saveDone(done); ctx.setScore(totalScore(done));
@@ -214,7 +440,7 @@ export function createChapterScreen(game) {
     state = 'verdict'; paint(ctx);
     if (!(await line(ch.verdict.key, { where: 'bottom', className: 'verdict' }))) return;
     run.end(score);
-    showSummary(ctx);
+    showSummary(ctx, score);
   }
 
   function showSummary(ctx) {
@@ -224,10 +450,11 @@ export function createChapterScreen(game) {
     const rows = (pairs) => pairs.map(([k, v]) => `<div class="sum-row"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('');
     const phases = PHASES.map((p) => [PHASE_LABELS[p], formatMs(s.phases[p])]);
     const counts = COUNT_LABELS.map(([k, label]) => [label, k === 'walkMs' ? formatMs(s.counts[k]) : String(s.counts[k])]);
+    const half = Math.ceil(counts.length / 2);
     ctx.overlay.innerHTML = `
       <div class="summary" id="summary" role="dialog">
         <h2>${esc(UI.summaryTitle(ch.id, formatMs(s.total)))}</h2>
-        <div class="sum-grid"><div class="sum-col">${rows(phases)}${rows([['Score', `${s.score} of 100`]])}</div><div class="sum-col">${rows(counts)}</div></div>
+        <div class="sum-grid"><div class="sum-col">${rows(phases)}${rows([['Score', `${s.score} of 100`]])}</div><div class="sum-col">${rows(counts.slice(0, half))}</div><div class="sum-col">${rows(counts.slice(half))}</div></div>
         <p class="sum-prompt">${esc(say('after.prompt'))}</p>
         <div class="sum-btns">
           <button type="button" class="prompt" id="btn-claim">${esc(say('after.claim'))}</button>
@@ -265,7 +492,11 @@ export function createChapterScreen(game) {
       room = ch.room; hero = ctx.hero;
       token = {};
       x = room.start; pose = 'idle'; view = 'front'; flip = false; plan = null; elapsed = 0; walkMs = 0; pending = null; marker = null; cursor = null;
-      mode = 'use'; busy = false; toolName = null; toolState = null; toolEl = null; reveal = null;
+      mode = 'use'; busy = false; tools = {}; introShown = new Set(); toolName = null; toolFrom = null; toolEl = null; reveal = null;
+      scen = createScenario(); vitalsMode = 'critical'; vitalsT = 0; nudges = []; talkT = 0; ctoQuiet = false; lastDraw = ''; sceneEl = null; monFrame = null;
+      art = null;
+      loading = loadManifest(ch.manifest, { timeout: LOAD_WAIT_MS });     // the room's pictures load while the card is read
+      loading.then((a) => { art = a; }, () => {});
       run = createRunlog({ chapter: ch.id });
       for (const [reason, on] of Object.entries(ctx.holds || {})) if (on) run.hold(reason, true);
       ctx.runlog = run;
@@ -277,13 +508,14 @@ export function createChapterScreen(game) {
       onDown = (e) => {
         if (e.target.closest?.('button')) return;               // buttons answer their own clicks
         if (wins.open) { wins.tap(); return; }
-        if (state === 'card') { enterRoom(ctx, { first: true }); return; }
+        if (state === 'card') { leaveCard(ctx); return; }
         if (state === 'room' && !busy) roomTap(ctx, e);
+        else if (state === 'monitor') monitorTap(ctx, e);
       };
       onMove = (e) => {
         if (state !== 'room' || wins.open) { if (cursor) { cursor = null; applyCursor(box, null); } return; }
-        const r = ctx.canvas.getBoundingClientRect();
-        const name = hotspotAt(room, Math.floor((e.clientX - r.left) / (r.width / 320)), Math.floor((e.clientY - r.top) / (r.height / 200))) ? 'hand' : 'walk';
+        const [mx, my] = logical(ctx, e);
+        const name = hotspotAt(room, mx, my) ? 'hand' : 'walk';
         if (name !== cursor) { cursor = name; applyCursor(box, name); }
       };
       box.addEventListener('pointerdown', onDown);
@@ -291,15 +523,20 @@ export function createChapterScreen(game) {
       showCard(ctx);
       window.__oq && (window.__oq.chapter = {
         get state() { return state; }, get mode() { return mode; }, get x() { return x; }, get walking() { return plan !== null; },
-        get view() { return view; }, get busy() { return busy; },
-        get window() { return wins.open ? { text: wins.element.dataset.text, pages: wins.pages, page: wins.page } : null; },
-        get tool() { return toolState ? { name: toolName, step: toolState.step, done: toolState.done, wrong: toolState.wrong, prompts: promptsOf(toolState) } : null; },
-        get score() { return toolState ? toolScore(toolState) : 0; },
+        get view() { return view; }, get busy() { return busy; }, get pcView() { return pcView; },
+        get loaded() { return art !== null; },
+        get window() { return wins.open ? { id: wins.serial, text: wins.element.dataset.text, pages: wins.pages, page: wins.page } : null; },
+        get tool() { const t = tools[toolName]; return t && state === 'tool' ? { name: toolName, from: toolFrom, step: t.step, done: t.done, wrong: t.wrong, prompts: promptsOf(t) } : null; },
+        get scenario() { return { ...scen }; },
+        get vitals() { return vitals(ctx); },
+        get ctoFrame() { return ctoQuiet || state === 'decide' || state === 'ending' ? 0 : talkFrame(talkT, ctx.reducedMotion); },
+        get score() { return tools.hc ? scenarioScore(scen, tools.hc) : 0; },
         hotspot(id) { return room.hotspots.find((h) => h.id === id); },
       });
     },
     tick(dt, ctx) {
       wins.tick(dt);
+      vitalsT += dt; talkT += dt;
       let dirty = false;
       if (marker && (marker.left -= dt) <= 0) { marker = null; dirty = true; }
       if (plan) {
@@ -309,6 +546,11 @@ export function createChapterScreen(game) {
         if (s.done) { plan = null; finishWalk(); if (pending) { const p = pending; pending = null; act(ctx, p); } }
       } else if (marker) dirty = true;
       if (reveal) { reveal.t += dt; dirty = true; if (reveal.t >= REVEAL_MS) { const d = reveal.done; reveal.t = REVEAL_MS; d(); } }
+      // the monitor and the CTO move on their own: redraw when either has a new frame
+      if (['room', 'decide', 'ending', 'monitor'].includes(state)) {
+        const key = `${stepAt(vitalsT)}:${talkFrame(talkT, ctx.reducedMotion)}:${ctoQuiet}:${nudges.length}`;
+        if (key !== lastDraw) { lastDraw = key; dirty = true; }
+      }
       if (dirty) paint(ctx);
     },
     exit(ctx) {
@@ -317,7 +559,7 @@ export function createChapterScreen(game) {
       box.removeEventListener('pointerdown', onDown); box.removeEventListener('pointermove', onMove);
       document.removeEventListener('pointerdown', onTapCount, true);
       applyCursor(box, null);
-      wins.reset(); setIcons(ctx, false);
+      wins.reset(); setIcons(ctx, false); clearScene(ctx);
       ctx.overlay.innerHTML = '';
       toolEl = null; reveal = null; plan = null;
     },
