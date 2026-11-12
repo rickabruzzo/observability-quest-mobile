@@ -4,7 +4,8 @@ Read `briefs/warp/PROTOCOL.md` first. Branch: **`warp/ch1-room`**, cut from `sci
 
 ```
 cd ~/Documents/"Observability Quest Mobile"
-git worktree add ../oqm-warp-ch1-room -b warp/ch1-room sci-adventure
+git fetch origin
+git worktree add ../oqm-warp-ch1-room -b warp/ch1-room origin/sci-adventure
 cd ../oqm-warp-ch1-room
 git config user.name Claude && git config user.email noreply@anthropic.com    # this worktree only
 ```
@@ -171,5 +172,6 @@ apart from the eight deletions above.
 
 ## Hand back
 
-`scratch/warp-ch1-room-handback.md` in the main folder, then tell Rick: "ready — push `warp/ch1-room`". Include
-the two scripted timings, every call you made, any position you nudged, and any string that needs a script slot.
+Per `briefs/warp/PROTOCOL.md`: commit `handbacks/2026-11-12-warp-ch1-room.md`, push `warp/ch1-room`, open the
+pull request into `sci-adventure`. Include the two scripted timings, every call you made, any position you
+nudged, and any string that needs a script slot.
