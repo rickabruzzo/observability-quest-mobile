@@ -149,9 +149,32 @@ body[data-cols="narrow"] .btn-sierra .long, body:not([data-cols="narrow"]) .btn-
 /* ---- timing summary ---- */
 .summary { position: absolute; left: 8px; right: 8px; top: 6px; bottom: 6px; display: flex; flex-direction: column; background: var(--sheet-white); color: #111; border-top: 6px solid #000; border-bottom: 6px solid #000; padding: 4px 12px 8px; font-size: 18px; line-height: 1.05; }
 .summary h2 { margin: 0 0 4px; font-family: var(--font-text); font-size: 24px; font-weight: normal; color: var(--sheet-blue); text-align: center; }
-.sum-grid { display: grid; grid-template-columns: 1fr 1.25fr; gap: 0 16px; }
+.sum-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0 12px; }
 .sum-row { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px dotted #bbb; }
 .sum-row b { font-weight: normal; color: var(--sheet-red); white-space: nowrap; }
 .sum-prompt { margin: auto 0 6px; text-align: center; font-size: 20px; }
 .sum-btns { display: flex; gap: 8px; justify-content: center; }
 .sum-btns .prompt { flex: 1; text-align: center; padding: 0 4px; }
+
+/* ---- close-ups (js/screens/chapter.js): text placed from the scene's own rectangles ---- */
+.scene-ui { position: absolute; inset: 0; pointer-events: none; }
+.scene-ui button { pointer-events: auto; }
+/* Otto's vitals, close up: two lines a box, condensed sideways (never shrunk) when a line is wider than its box */
+.mon-box, .mon-out { position: absolute; overflow: hidden; font-family: var(--font-text); font-size: calc(18px * var(--ui-scale, 1)); line-height: 1.1; color: #FF8A5C; }
+.mon-box { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+.mon-box .fit { display: block; max-width: none; white-space: nowrap; transform-origin: 50% 50%; }
+.mon-box.garble { color: #FF3030; }
+.mon-out { padding: 2px 3px; color: #C8D0E8; overflow-wrap: anywhere; }
+.mon-cursor { display: inline-block; width: 0.5em; height: 0.9em; margin-left: 1px; vertical-align: -0.1em; background: currentColor; }
+.mon-cursor.off { visibility: hidden; }
+.monitor-ui.ok .mon-box { color: #3CE070; }
+.monitor-ui.ok .mon-out { color: #3CE070; }
+/* the PC: green on dark, everything inside the CRT's screen */
+.pc-screen { position: absolute; display: flex; flex-direction: column; gap: 4px; padding: 4px 6px; overflow: hidden; font-family: var(--font-text); color: #3CE070; }
+.pc-title { font-size: calc(20px * var(--ui-scale, 1)); line-height: 1.1; color: #FFB000; text-align: center; white-space: nowrap; }
+.pc-grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; align-content: center; gap: 4px; min-height: 0; }
+.pc-item { min-height: 44px; padding: 1px 6px; background: rgba(60, 224, 112, 0.08); color: #3CE070; border: 1px solid #2A9A50; font-family: var(--font-text); font-size: calc(20px * var(--ui-scale, 1)); line-height: 1.05; text-align: left; cursor: pointer; }
+.pc-grid.view-email .pc-item { font-size: calc(18px * var(--ui-scale, 1)); }
+.pc-item:active { background: #3CE070; color: #05140A; }
+/* the CTO's question: two prompts low over the cube, clear of the hero and the CTO */
+.decide-prompts { position: absolute; left: 3%; bottom: 10px; display: flex; flex-direction: column; gap: 8px; width: 44%; pointer-events: auto; }   /* over the cube: the hero and the CTO stay in view */

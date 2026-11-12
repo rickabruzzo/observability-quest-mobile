@@ -18,7 +18,7 @@ function measureFn() {
  * @param {{ onShow?: (text: string) => void }} hooks onShow is called once per window (the stopwatch counts them)
  */
 export function createWindows(ctx, { onShow } = {}) {
-  let el = null, msg = null, resolve = null, layer = null;
+  let el = null, msg = null, resolve = null, layer = null, serial = 0;
 
   function close() {
     el?.remove(); el = null; msg = null;
@@ -42,9 +42,12 @@ export function createWindows(ctx, { onShow } = {}) {
     get pages() { return msg ? msg.pages.length : 0; },
     get page() { return msg ? msg.page : -1; },
     get element() { return el; },
+    /** Counts windows opened: tells two windows with the same words apart. */
+    get serial() { return serial; },
     /** Opens a window (closing any open one) and resolves when the player dismisses it. */
     say(text, { where = 'center', className = '' } = {}) {
       if (el) close();
+      serial++;
       onShow?.(text);
       el = document.createElement('div');
       el.className = `msg ${where} ${className}`.trim();

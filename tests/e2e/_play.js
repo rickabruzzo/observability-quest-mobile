@@ -30,13 +30,13 @@ export const ch = (page) => page.evaluate(() => { const c = window.__oq.chapter;
 export const run = (page) => page.evaluate(() => window.__oq.run);
 export const winOpen = (page) => page.waitForFunction(() => !!window.__oq.chapter.window, null, { timeout: 9000 });
 
-/** Taps the open window until it closes (one tap completes the typing, the next turns or closes). */
+/** Taps the open window until it closes (one tap completes the typing, the next turns or closes). Returns its text. */
 export async function dismiss(page) {
   await winOpen(page);
-  const first = (await ch(page)).window.text;
+  const first = (await ch(page)).window;
   for (let i = 0; i < 40; i++) {
     const w = (await ch(page)).window;
-    if (!w || w.text !== first) return first;
+    if (!w || w.id !== first.id) return first.text;
     await page.click('.msg');
   }
   throw new Error('window would not close');
@@ -46,22 +46,38 @@ export async function tapSpot(page, id) {
   const r = await page.evaluate((i) => window.__oq.chapter.hotspot(i).rect, id);
   await page.mouse.click(sc.x + ((r.x + r.w / 2) * sc.width) / 320, sc.y + ((r.y + r.h / 2) * sc.height) / 200);
 }
+export const inState = (page, s, timeout = 9000) => page.waitForFunction((v) => window.__oq.chapter.state === v && !window.__oq.chapter.busy, s, { timeout });
 export const toolOpen = (page, name) => page.waitForFunction((n) => window.__oq.chapter.tool?.name === n && window.__oq.chapter.state === 'tool', name, { timeout: 9000 });
 export const promptsShown = (page) => page.waitForFunction(() => { const b = document.querySelector('.tool-prompts'); return b && !b.hidden && !window.__oq.chapter.window; }, null, { timeout: 9000 });
 export async function prompt(page, i) { await promptsShown(page); await page.click(`.tool-prompts .prompt[data-index="${i}"]`); }
-
-/** From the class card to the summary by the Honeycomb path; `wrongFirst` tries prompt 2 of step 1 first. */
-export async function playShortest(page, { wrongFirst = false } = {}) {
-  await page.click('#class-card');
-  assert.equal(await dismiss(page), SCRIPT['ch1.room.enter']);
-  await tapSpot(page, 'workstation');
+/** A PC menu item (or an email: 'email-3'), once no window is in the way. */
+export async function pcPick(page, id) {
+  await page.waitForFunction((i) => window.__oq.chapter.state === 'pc' && !window.__oq.chapter.window && document.querySelector(`.pc-item[data-id="${i}"]`), id, { timeout: 9000 });
+  await page.click(`.pc-item[data-id="${id}"]`);
+}
+export async function toPc(page) { await tapSpot(page, 'pc'); await inState(page, 'pc'); }
+/** Honeycomb, opened from wherever it is open: intro (first time), two right answers, the two results. */
+export async function solveHc(page, { wrongFirst = false, intro = true } = {}) {
   await toolOpen(page, 'hc');
-  assert.equal(await dismiss(page), SCRIPT['ch1.hc.intro']);
+  if (intro) assert.equal(await dismiss(page), SCRIPT['ch1.hc.intro']);
   if (wrongFirst) { await prompt(page, 1); assert.equal(await dismiss(page), SCRIPT['ch1.hc.step1.jab.2']); }
   await prompt(page, 0);
   assert.equal(await dismiss(page), SCRIPT['ch1.hc.step1.result']);
   await prompt(page, 0);
   assert.equal(await dismiss(page), SCRIPT['ch1.hc.step2.result']);
+}
+export async function leavePc(page) {
+  await pcPick(page, 'leave');
+  assert.equal(await dismiss(page), SCRIPT['ch1.pc.leave']);
+  await inState(page, 'room');
+}
+/** Walk to the CTO and hear her question; the two prompts are up. */
+export async function askCto(page) {
+  await tapSpot(page, 'cto');
+  assert.equal(await dismiss(page), SCRIPT['ch1.cto.ask']);
+  await inState(page, 'decide');
+}
+export async function winLines(page) {
   assert.equal(await dismiss(page), SCRIPT['ch1.win']);
   assert.equal(await dismiss(page), SCRIPT['ch1.hero.line']);
   assert.equal((await ch(page)).state, 'verdict');
@@ -69,3 +85,16 @@ export async function playShortest(page, { wrongFirst = false } = {}) {
   await page.waitForSelector('#summary');
 }
 
+/** The shortest path: card → PC → Honeycomb (clean, or one wrong first) → leave → CTO → [Get Honeycomb] → summary. */
+export async function playShortest(page, { wrongFirst = false } = {}) {
+  await page.click('#class-card');
+  assert.equal(await dismiss(page), SCRIPT['ch1.room.enter']);
+  await toPc(page);
+  await pcPick(page, 'hc');
+  await solveHc(page, { wrongFirst });
+  await inState(page, 'pc');
+  await leavePc(page);
+  await askCto(page);
+  await page.click('#decide-hc');
+  await winLines(page);
+}
