@@ -62,7 +62,7 @@ export const SCRIPT = {
   "ch1.look.pc": "Your cube, and a beige computer older than most of the company. It runs everything you need and nothing you want.",
   "ch1.look.cto": "Your CTO, on the phone with a customer who has been waiting on Otto. The Cave Logs renewal is on her desk — three years, with a comma in a place you didn't expect — and her pen is closer to it than you'd like.",
   "ch1.cto.call.1": "CTO: No — no, he IS helping you. He's been \"happy to\" for eleven minutes.",
-  "ch1.cto.call.2": "CTO: I understand. Yes. I'm looking at the man who is going to fix it right now.",
+  "ch1.cto.call.2": "CTO: I understand. Yes. I'm looking at the person who is going to fix it right now.",
   "ch1.cto.call.3": "CTO: (to you, hand over the phone) Tell me what to buy. Go look, then tell me.",
   "ch1.pc.title": "CONVERSO · WORKSTATION 7",
   "ch1.pc.menu.email": "[Read email]",

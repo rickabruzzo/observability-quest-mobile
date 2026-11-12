@@ -227,7 +227,7 @@ Your CTO, on the phone with a customer who has been waiting on Otto. The Cave Lo
 CTO: No — no, he IS helping you. He's been "happy to" for eleven minutes.
 
 ### ch1.cto.call.2
-CTO: I understand. Yes. I'm looking at the man who is going to fix it right now.
+CTO: I understand. Yes. I'm looking at the person who is going to fix it right now.
 
 ### ch1.cto.call.3
 CTO: (to you, hand over the phone) Tell me what to buy. Go look, then tell me.
