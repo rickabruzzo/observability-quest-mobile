@@ -3,10 +3,13 @@ import assert from 'node:assert/strict';
 import { planWalk, stepWalk, STRIDE_PX, WALK_SPEED } from '../js/engine/walk.js';
 import { SIDE_POSES } from '../js/engine/hero-side.js';
 
-test('a Sierra stroll, not a sprint: a full room takes about three seconds (Rick, 2026-11-11: "walking is way too fast")', () => {
+test('a Sierra stroll: about three steps a second, so a full room takes about five seconds', () => {
+  // The stride is fixed by the drawn leg angles (STRIDE_PX per two steps); the speed is what sets the cadence.
+  // At 110 px/s the profile walk took nearly six steps a second — a scurry (Warp hand-back 01, 2026-11-11).
+  const steps = (WALK_SPEED / STRIDE_PX) * 2;
+  assert.ok(steps >= 2.5 && steps <= 3.6, `${steps.toFixed(2)} steps a second`);
   const d = planWalk(0, 292).duration;
-  assert.ok(d >= 2300 && d <= 3500, `${d} ms`);
-  assert.ok(WALK_SPEED >= 85 && WALK_SPEED <= 125);
+  assert.ok(d >= 4000 && d <= 5800, `${d} ms`);
 });
 
 test('duration from distance and speed', () => {

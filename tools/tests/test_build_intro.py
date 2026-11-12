@@ -145,10 +145,10 @@ def test_wrong_aspect_source_is_refused_by_name(tmp_path):
 
 
 def test_unrecognised_files_are_called_out(tmp_path, capsys):
-    src = _real_src(tmp_path); os.rename(src / 'B_arm.png', src / 'B_arm.jpg'); open(src / 'b_arm.PNG', 'wb').close()
+    src = _real_src(tmp_path); os.rename(src / 'B_arm.png', src / 'B_arm.jpg'); open(src / 'arm_take2.PNG', 'wb').close()   # (a name that differs only by case would be the same file on a Mac)
     bi.build(str(src), str(tmp_path / 'out'))
     err = capsys.readouterr().err
-    assert 'B_arm.jpg' in err and 'b_arm.PNG' in err
+    assert 'B_arm.jpg' in err and 'arm_take2.PNG' in err
 
 
 def test_manifest_has_a_stand_spot_and_overrides_move_it(tmp_path):
