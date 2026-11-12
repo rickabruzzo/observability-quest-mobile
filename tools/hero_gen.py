@@ -282,7 +282,7 @@ SIDE_POSES = ['stand'] + [f'w{i}' for i in range(1, 9)]
 # with the elbow a little bent. The body dips on the two wide frames.
 #          thigh, shin
 SIDE_LEG = [(26, 12), (16, 2), (2, -4), (-12, -22), (-22, -46), (-8, -62), (12, -48), (26, -10)]
-SIDE_BOB = [1, 0, 0, 0, 1, 0, 0, 0]
+SIDE_BOB = [1, 0, 0, 1, 1, 0, 0, 1]   # exactly what keeps the planted shoe on one floor row (a test holds it there)
 THIGH, SHIN, UPPER, FORE = 11, 11, 10, 9
 
 # Golden fixtures for js/engine/hero-side.js (tests/fixtures/hero-side, tests/hero-side.test.js).
@@ -350,16 +350,18 @@ def hero_side(body='masc', skin=0, hair='black', style='standard', beard='none',
     shoe_r = skin_r if pj else SHOE
     if pose == 'stand':
         near, far, bob, swing = (0, 0), (0, 0), 0, 4
+        far_swing = -20                                                 # standing: the far arm hangs a little behind, so it shows
     else:
         i = SIDE_POSES.index(pose) - 1
         near, far, bob = SIDE_LEG[i], SIDE_LEG[(i + 4) % 8], SIDE_BOB[i]
         swing = -near[0] * 0.9                                           # each arm swings against its own leg
+        far_swing = -swing
     slim = body == 'fem'
     t0, t1 = (10, 18) if slim else (9, 18)                              # torso, side on
 
     # far arm and far leg first (darker), then the near leg; shoes point the way the hero faces
     c.oy = bob
-    if pose != 'stand': _arm(c, 'B', 14, 23, -swing)
+    _arm(c, 'B', 14, 23, far_swing)
     _leg(c, 'B', 13, 45, *far)
     _leg(c, 'F', 14, 45, *near)
     # back hair behind the body, hood behind the neck

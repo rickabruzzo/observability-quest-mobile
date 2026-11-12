@@ -59,5 +59,5 @@ export const SIDE_POSES = ['stand', 'w1', 'w2', 'w3', 'w4', 'w5', 'w6', 'w7', 'w
 // passes, and each arm swings against its own leg with the elbow a little bent. The body dips on the two wide
 // frames.                        thigh, shin
 export const SIDE_LEG = [[26, 12], [16, 2], [2, -4], [-12, -22], [-22, -46], [-8, -62], [12, -48], [26, -10]];
-export const SIDE_BOB = [1, 0, 0, 0, 1, 0, 0, 0];
+export const SIDE_BOB = [1, 0, 0, 1, 1, 0, 0, 1];   // exactly what keeps the planted shoe on one floor row
 export const THIGH = 11, SHIN = 11, UPPER = 10, FORE = 9;

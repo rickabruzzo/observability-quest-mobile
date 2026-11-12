@@ -71,12 +71,13 @@ export function composeHeroSide(cfg, pose = 'stand', outfit = 'hoodie') {
   const far = standing ? [0, 0] : SIDE_LEG[(i + 4) % 8];
   const bob = standing ? 0 : SIDE_BOB[i];
   const swing = standing ? 4 : -near[0] * 0.9;                      // each arm swings against its own leg
+  const farSwing = standing ? -20 : -swing;                         // standing: the far arm hangs a little behind, so it shows
   const slim = body === 'fem';
   const t0 = slim ? 10 : 9, t1 = 18;                                // torso, side on
 
   // far arm and far leg first (darker), then the near leg; shoes point the way the hero faces
   c.oy = bob;
-  if (!standing) arm(c, 'B', 14, 23, -swing);
+  arm(c, 'B', 14, 23, farSwing);
   leg(c, 'B', 13, 45, far[0], far[1]);
   leg(c, 'F', 14, 45, near[0], near[1]);
   // back hair behind the body, hood behind the neck

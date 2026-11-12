@@ -214,3 +214,21 @@ def test_side_faces_right_and_the_near_shoe_leads():
     im = hero_gen.hero_side(**hero_gen.PRESETS['masc'])
     xs = [x for x in range(28) if im.getpixel((x, 12))[3]]
     assert xs[-1] >= 20                                      # the nose reaches past the skull
+
+
+def test_side_feet_stay_on_one_floor_line():
+    """The planted shoe is on the same row in every frame, so the body rides the legs evenly and nothing hops."""
+    for name, cfg in hero_gen.PRESETS.items():
+        for pose in hero_gen.SIDE_POSES:
+            im = hero_gen.hero_side(**cfg, pose=pose)
+            low = max(y for y in range(72) for x in range(28) if im.getpixel((x, y))[3])
+            assert low == 70, (name, pose, low)
+
+
+def test_standing_profile_shows_the_far_arm_behind_the_body():
+    for name, cfg in hero_gen.PRESETS.items():
+        im = hero_gen.hero_side(**cfg, pose='stand')
+        behind = [(x, y) for y in range(34, 48) for x in range(4, 9) if im.getpixel((x, y))[3]]
+        assert len(behind) >= 6, (name, behind)                      # a sliver of sleeve and hand at the back
+        skin = [hero_gen.ramp(hero_gen.SKIN[cfg['skin']], light=1.12, shade=0.8, dark=0.62)[k][:3] for k in 'LBSD']
+        assert any(im.getpixel(p)[:3] in skin for p in behind), name   # including the hand

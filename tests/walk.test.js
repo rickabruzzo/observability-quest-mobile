@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { planWalk, stepWalk, STRIDE_PX, WALK_SPEED } from '../js/engine/walk.js';
+import { planWalk, stepWalk, STRIDE_PX, WALK_SPEED, SETTLE_MS } from '../js/engine/walk.js';
 import { SIDE_POSES } from '../js/engine/hero-side.js';
 
 test('a Sierra stroll: about three steps a second, so a full room takes about five seconds', () => {
@@ -28,7 +28,7 @@ test('walking is the side view; standing still is the front view', () => {
   const p = planWalk(0, 300, { speed: 300 });
   assert.equal(stepWalk(p, 100).view, 'side');
   assert.ok(SIDE_POSES.includes(stepWalk(p, 100).pose));
-  const end = stepWalk(p, 1000);
+  const end = stepWalk(p, 1000 + SETTLE_MS);
   assert.equal(end.view, 'front'); assert.equal(end.pose, 'idle');
 });
 
@@ -67,7 +67,7 @@ test('x interpolates', () => {
 });
 
 test('done at the end, front-facing idle, exact target', () => {
-  const s = stepWalk(planWalk(0, 300, { speed: 300 }), 1000);
+  const s = stepWalk(planWalk(0, 300, { speed: 300 }), 1000 + SETTLE_MS);
   assert.equal(s.done, true); assert.equal(s.pose, 'idle'); assert.equal(s.view, 'front'); assert.equal(s.x, 300);
   assert.equal(stepWalk(planWalk(0, 300, { speed: 300 }), 5000).x, 300);
   const nowhere = stepWalk(planWalk(50, 50), 0);
@@ -78,4 +78,15 @@ test('a negative or zero elapsed time is the first frame, not a crash', () => {
   const p = planWalk(0, 300, { speed: 300 });
   assert.equal(stepWalk(p, -50).pose, 'w1');
   assert.equal(stepWalk(p, -50).x, 0);
+});
+
+test('on arrival the hero holds the side-on stance for a beat, then turns to face the player', () => {
+  assert.ok(SETTLE_MS >= 150 && SETTLE_MS <= 400);
+  const right = planWalk(0, 300, { speed: 300 }), left = planWalk(300, 0, { speed: 300 });
+  for (const t of [1000, 1000 + SETTLE_MS - 1]) {
+    assert.deepEqual(stepWalk(right, t), { x: 300, pose: 'stand', view: 'side', done: false, flip: false });
+    assert.deepEqual(stepWalk(left, t), { x: 0, pose: 'stand', view: 'side', done: false, flip: true });   // still facing the way they walked
+  }
+  assert.deepEqual(stepWalk(right, 1000 + SETTLE_MS), { x: 300, pose: 'idle', view: 'front', done: true, flip: false });
+  assert.equal(stepWalk(planWalk(50, 50), 0).done, true);            // a walk to where they already are does not settle
 });

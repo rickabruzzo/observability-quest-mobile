@@ -8,6 +8,7 @@ import { SIDE_POSES } from './hero-side.js';
 
 export const WALK_SPEED = 60;  // logical px per second — about three steps a second with STRIDE_PX; a full 320 px room in about 5 s
 export const STRIDE_PX = 38;   // floor covered by one full cycle — two steps, the eight frames of SIDE_LEG
+export const SETTLE_MS = 220;  // on arrival, the side-on stance is held this long before the hero turns to face the player
 const FRAMES = SIDE_POSES.slice(1);                   // w1..w8; SIDE_POSES[0] is 'stand'
 const PER_FRAME_PX = STRIDE_PX / FRAMES.length;
 
@@ -23,9 +24,10 @@ export function planWalk(fromX, toX, { speed = WALK_SPEED } = {}) {
  */
 export function stepWalk(plan, elapsedMs) {
   const flip = plan.dir < 0;
-  if (plan.duration === 0 || elapsedMs >= plan.duration) {
+  if (plan.duration === 0 || elapsedMs >= plan.duration + SETTLE_MS) {
     return { x: plan.toX, pose: 'idle', view: 'front', done: true, flip };
   }
+  if (elapsedMs >= plan.duration) return { x: plan.toX, pose: 'stand', view: 'side', done: false, flip };   // arrived: a beat side on
   const t = Math.max(0, elapsedMs) / plan.duration;
   const x = Math.round(plan.fromX + (plan.toX - plan.fromX) * t);
   const pose = FRAMES[Math.floor(Math.abs(x - plan.fromX) / PER_FRAME_PX) % FRAMES.length];
