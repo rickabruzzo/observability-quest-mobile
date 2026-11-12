@@ -22,14 +22,14 @@ npm run serve          # http://localhost:8080  (any static server works)
 
 v2 is played **landscape**: on a desktop browser make the window wider than it is tall; on a phone on the
 same Wi-Fi open `http://<your-laptop-ip>:8080` and turn the phone sideways (portrait shows the rotate screen).
-Flow today: title → character sheet → intro cutscene (tap to advance, **Skip** to jump) → preview room (tap the floor to walk). `anim-preview.html` still shows
+Flow today: title → character sheet → intro cutscene (tap to advance, **Skip** to jump) → scenario menu → scenario 1 (class card, room, the old tool, the Honeycomb screen, verdict) → a timing summary with **Copy results**. Scenarios 2–5 show on the menu, disabled. `?ch=1` skips the menu; `?preview=1` sends the intro to the old preview room (tap the floor to walk). `anim-preview.html` still shows
 the v0.1 portrait animations.
 
 ## Test
 
 ```
 npm test               # unit tests: hero renderer vs Python fixtures, stage math, walk, creator state, fonts, shared v0.1 modules
-npm run e2e            # Playwright: landscape shell + rotate gate, character sheet, intro cutscene, preview walk, weight budgets
+npm run e2e            # Playwright: landscape shell + rotate gate, character sheet, intro cutscene, scenario menu, scenario 1 end to end, preview walk, weight budgets
 python3 -m pytest tools/tests -q   # asset tooling + the reference hero generator (regenerate fixtures: python3 tools/hero_gen.py --fixtures tests/fixtures/hero)
 ```
 
@@ -114,7 +114,16 @@ js/engine/walk.js         planWalk / stepWalk: position, pose and which view to 
 js/engine/stage.js        320×200 logical canvas, scaling and the landscape/rotate gate
 js/engine/ui.js           the control-bar buttons
 js/engine/cursor.js       Sierra's walk/hand cursors, and the tap marker phones get instead
-js/screens/               title, creator (the character sheet), intro, preview (the test room)
+js/screens/               title, creator (the character sheet), intro, menu (the scenario menu), chapter (plays a
+                          scenario: card, room, tool screens, verdict, summary), preview (the test room)
+js/chapters/ch1.js        scenario 1 as data: the room's hotspots and stand points, the two tool screens, the
+                          placeholder pictures (replace ROOM.paint when the real background lands)
+js/engine/room.js         hotspot lookup, walk targets, a room-data checker
+js/engine/message.js      word wrap, pagination, typewriter (pure); js/engine/window.js draws the SCI windows
+js/engine/prompts.js      bracketed prompts step by step, and the score (100 clean, 50 after a wrong one)
+js/engine/runlog.js       the stopwatch: phases, counts, time on hold (rotate gate, hidden tab) cut out
+js/menu.js                the menu's rules: rows, oq.done best scores, ?ch=N
+js/script.js              GENERATED from script/script.md by `python3 tools/build_script.py` — never edit
 js/intro/                 timeline.js (shots, the hero's script, the way out of the bedroom), pager, sfx, font5x7
 tools/hero_gen.py         the normative renderer: hero() is the front view, hero_side() the profile.
                           --fixtures / --side-fixtures write the goldens the JS ports are proved against

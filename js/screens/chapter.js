@@ -52,7 +52,8 @@ export function createChapterScreen(game) {
   function paintPortrait(ctx) {
     const g = ctx.ctx2d;
     g.fillStyle = '#000'; g.fillRect(0, 0, 320, 200);
-    if (portrait?.complete && portrait.naturalWidth) g.drawImage(portrait, 0, 14, 640, 400, 0, 0, 320, 200);  // 640x428 cropped to 16:10
+    // 640x428 cropped to 16:10 and fitted above the verdict window, which takes the bottom third
+    if (portrait?.complete && portrait.naturalWidth) g.drawImage(portrait, 0, 14, 640, 400, 54, 2, 211, 132);
   }
   function paint(ctx) {
     if (state === 'tool') paintTool(ctx, reveal ? Math.min(1, reveal.t / REVEAL_MS) : 1);

@@ -66,7 +66,7 @@ block on. Test the restyle under `.hs-form` on a real phone.
 - The wordmark's I after QUEST is the logo's own letter I enlarged by the build; a hand-finished I (or a redrawn wordmark with the numeral) would be cleaner.
 - The sitting hero is drawn over the bed, not tucked behind the blanket; a foreground mask for the blanket would fix it.
 - No mute control yet; `createSfx({ muted })` takes one when the audio sub-project adds it.
-- After the intro the game goes to the preview room; the chapter deal replaces that in the room-engine sub-project.
+- After the intro the game goes to the scenario menu (Warp brief 02); `?preview=1` still reaches the preview room.
 
 ## Deferred minors from the intro review (2026-11-11)
 - `build_intro.py` prints the total size but does not fail over 400 KB (the e2e weight test does); real dithered art may land near the limit.
@@ -100,3 +100,10 @@ block on. Test the restyle under `.hs-form` on a real phone.
 - Script work this creates for Rick: the `menu.*` and `after.*` slots are my drafts; Charity's six `final.*` tiers were written for a 300-point run and need a new shape (proposal in the spec's Scoring section); the `deal.window` slot is retired.
 - Score reads `N of 500`. Open: whether the claim form should carry which scenarios were finished (proposed in the spec).
 - Still worth trimming: scenarios 4 and 5 are the longest (about 390 and 420 words on the shortest path against 320 for scenario 1).
+
+## Scenario 1 playable, with a stopwatch (Warp brief 02, 2026-11-11)
+- Shipped: `tools/build_script.py` → `js/script.js` (a stale build fails pytest); room engine v1 (`js/engine/room.js`, `message.js`, `window.js`, `prompts.js`); `js/engine/runlog.js` and the timing summary with Copy results; the scenario menu (`js/menu.js`, `js/screens/menu.js`, `oq.done`); scenario 1 (`js/chapters/ch1.js`, `js/screens/chapter.js`) on code-drawn placeholder art.
+- Real room art: replace `ROOM.paint` in `js/chapters/ch1.js`, then re-measure the five rects and stand points in `PLACES`. Walking time on the shortest path is ~2.2 s of the total and depends on where the workstation ends up.
+- Strings with no script slot (mine, in `UI` in `js/screens/chapter.js` and `MENU_UI` in `js/screens/menu.js`): Look / Use / Help, `[Close the terminal]`, Copy results / Copied, the claim placeholder line, "coming soon", the summary's labels. Give them slots when the script settles.
+- Stale script slots: `status.score` and `complete.score` say "of 300" (the game shows `of 500`, per the spec); `complete.again.note` says "Three new stories".
+- Not yet: the hand-pulse on entering a room, unvisited-hotspot glints, footsteps and window sounds, the product-screen kit beyond the two pictures, Charity's final, claim/complete (the summary's Claim button and the menu's Claim button show a placeholder line).
