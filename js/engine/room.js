@@ -1,8 +1,9 @@
 // Rooms, the pure part. A room is data:
-//   { paint(g), floorY, walk: [minX, maxX], start, hotspots: [{ id, rect: {x,y,w,h}, standX, look, use }] }
+//   { paint(g), floorY, walk: [minX, maxX], start, hotspots: [{ id, rect: {x,y,w,h}, standX, walk, look, use }] }
 // x values for the hero are the sprite's left edge, as everywhere in the engine. `look` is a script key;
-// `use` is a script key, or { tool: name } to open a tool screen. The screen (js/screens/chapter.js) does
-// the drawing and the DOM.
+// `use` is a script key, { tool: name } to open a tool screen, { scene: name } to open a close-up, or
+// { action: name } for the chapter's own logic. `walk: false` acts at once from where the hero stands
+// (no stand point needed). The screen (js/screens/chapter.js) does the drawing and the DOM.
 
 import { HERO_W } from './hero.js';
 
@@ -41,7 +42,7 @@ export function checkRoom(room, script) {
     const r = h.rect;
     if (r.x < 0 || r.y < 0 || r.x + r.w > SCENE_W || r.y + r.h > SCENE_H) out.push(`${h.id}: rect outside the scene`);
     if (r.w < MIN_HIT || r.h < MIN_HIT) out.push(`${h.id}: rect too small (${r.w}x${r.h} < ${MIN_HIT})`);
-    if (!(room.walk[0] <= h.standX && h.standX <= room.walk[1])) out.push(`${h.id}: standX ${h.standX} outside the walk range`);
+    if (h.walk !== false && !(room.walk[0] <= h.standX && h.standX <= room.walk[1])) out.push(`${h.id}: standX ${h.standX} outside the walk range`);
     for (const k of [h.look, typeof h.use === 'string' ? h.use : null]) if (k && !script[k]) out.push(`${h.id}: no script slot ${k}`);
     if (!h.look) out.push(`${h.id}: no look line`);
   }
