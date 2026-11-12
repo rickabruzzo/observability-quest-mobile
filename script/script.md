@@ -33,8 +33,8 @@ Turn your phone sideways to play.
 ### help.window
 LOOK (the eye) tells you about a thing. USE (the hand) does the thing. Tap anywhere on the floor to walk there. Tap a window to continue. Nothing here can get you fired. Probably.
 
-### status.score
-Score: {score} of 300
+### status.done
+Solved: {n} of 5
 
 ---
 
@@ -867,28 +867,25 @@ MATT NELSON: You gave an agent one clear goal and it caught your Friday deploy b
 
 ## Final — Charity Majors
 
-Tiers by points. The verdict window is a full-portrait takeover with the text in a window below. Score shown as `{score} of 500`. **These six tiers were written for a three-scenario run and need rewriting** now that one scenario wins: see the spec's Scoring section for the proposed shape (clean / mixed / rough, plus a line for how many are done).
+**No score** (Rick, 2026-11-12). Charity speaks when the player chooses to finish, after at least one scenario is solved. She has two moods, by whether the player made wrong choices along the way (tried the old tool's prompts, gave the wrong advice first), and one closing line by how many scenarios are solved. Everyone who gets here chose correctly in the end, so even the grief ends warm. The verdict window is a full-portrait takeover with the text in a window below.
 
 ### final.header
 CHARITY MAJORS · CTO & CO-FOUNDER
 
-### final.300
-A perfect night. Three stories, three right calls, not one wrong tap. Either you work at Honeycomb or you're lying. Either way, welcome to the future.
+### final.clean
+No detours. You looked at the problem, asked the right question, and fixed it before your coffee got cold. Either you work at Honeycomb or you should. Welcome to the future.
 
-### final.250
-Nearly perfect. One wrong turn and you caught it fast. That's what observability is for — not never being wrong, just never being wrong for long.
+### final.grief
+You got there. You grepped some JSON first, and I watched you reach for that pen, and we are going to pretend I didn't. Observability isn't never being wrong. It's never being wrong for long.
 
-### final.200
-Solid. You got there. You took the scenic route once or twice, but you got there, and your customers never knew. That's the job.
+### final.count.one
+One incident, solved. There are four more nights like that one in there, if you can't sleep either.
 
-### final.150
-Half right. Not flying blind — just… partially blind. There's a better way, and it's at honeycomb.io.
+### final.count.some
+{n} incidents, solved. Your on-call rotation would like a word, and the word is "thanks".
 
-### final.100
-Rough night. Your on-call rotation hates you and they're right to. Dashboards are not observability. Grep is not a strategy.
-
-### final.50
-I don't know how you're still employed, but I respect the chaos. Call Honeycomb. Now. honeycomb.io
+### final.count.all
+All five. Every incident in the building. Go home. Honeycomb will page you if anything is actually wrong.
 
 ### coda.1
 Dawn. You walk out of the building. The street is the same street. You are not the same engineer.
@@ -927,9 +924,6 @@ SHOW THIS TO BOOTH STAFF
 ### complete.instr
 You finished Observability Quest. Hand your phone to someone in a Honeycomb shirt.
 
-### complete.score
-Final score: {score} of 300
-
 ### complete.redeem
 REDEEMED (staff)
 
@@ -940,7 +934,7 @@ REDEEMED
 Play again
 
 ### complete.again.note
-Three new stories, same hero. The prize is yours already.
+More incidents, same hero. The prize is yours already.
 
 ---
 
@@ -948,7 +942,7 @@ Three new stories, same hero. The prize is yours already.
 
 1. Company names: Converso, Kestrel Bank, Twang & Co. / Fretwork, Nullpoint Games / Starfall, Agentry / Pip — swap any you dislike; nothing else depends on them.
 2. Einar: keep the Icelandic gag? It's affectionate, but say so if it reads as a jab at a real person.
-3. Chapter 5's two winning prompts: *Check the evidence first* = 100, *Approve the suggested fix* = 50 (spec). The 50-point result text makes the half-score explicit — too preachy?
+3. Chapter 5's two winning prompts both win now that there is no score; the result text for *Approve the suggested fix* needs its half-score line removed when chapter 5 is rewritten.
 4. The intro slots are placeholders for your script; they show the beat and the length I'd aim for.
-5. Charity's `final.250` tier is new (v0.1 had five solves, not points) — happy to rewrite any of the six.
+5. Charity's final is two moods (`final.clean`, `final.grief`) plus a closing line by count: rewrite freely.
 6. Chapter 2's narrator: Emily is leaving. Her verdict, name and portrait stay as the placeholder; when the replacement is named, `ch2.verdict` gets rewritten in their voice and the portrait pipeline runs once more (same steps as Jessitron's).
