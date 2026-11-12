@@ -13,8 +13,8 @@ export const SHOTS = [
   { id: 'lit', ms: 2000, image: 'C_awake', alt: 'C_awake_lit', flash: 'alt' },
   { id: 'message', ms: 8000, image: 'B_nightstand', lcd: 'marquee', text: CTO },
   { id: 'misery', ms: 2000, image: 'C_misery' },
-  { id: 'lamp', ms: 1500, image: 'B_lamp', alt: 'B_lamp_lit', altAt: 700, clickAt: 700 },
-  { id: 'bedroom', ms: 15000, image: 'D_bedroom_vga', hero: true },
+  { id: 'wide', ms: 1400, image: 'A_room_dark' },                       // back to the wide dark room, steady in the pager's glow…
+  { id: 'bedroom', ms: 15000, image: 'D_bedroom_vga', hero: true, clickAt: 0 },   // …click: the light is on, and this is the room
 ];
 export const TOTAL_MS = SHOTS.reduce((n, s) => n + s.ms, 0);
 
@@ -32,22 +32,25 @@ export function frameAt(shotIndex, tMs, { reduced = false } = {}) {
   return { image, black, lcd };
 }
 
-// Shot 9: the title comes up on the wall, the hero sits up, stands, flashes into day clothes and walks out.
+// Shot 9: the hero is sitting up in bed as the light comes on; the title comes up on the wall; they get up,
+// flash into day clothes, take the laptop and walk out.
 export const HERO_STEPS = [
+  { at: 0, pose: 'situp', outfit: 'pj' },            // the light comes on with the hero already sitting up in bed
   { at: 600, do: 'title' },                          // then the room holds, so the title can be read
-  { at: 3400, pose: 'situp', outfit: 'pj' },
+  { at: 3900, do: 'rustle' },                        // the covers go back
   { at: 4600, pose: 'idle', outfit: 'pj', stand: true },
   { at: 5400, flash: true },
   { at: 5560, pose: 'idle', outfit: 'hoodie' },      // the clothes are off the floor and on the hero
-  { at: 6700, take: true },                          // a beat later the item on the dresser is in the hero's hand
+  { at: 6700, take: true },                          // a beat later the laptop on the dresser is the hero's
   { at: 7400, walkTo: 'door' },
 ];
 
 export function heroAt(tMs) {
-  const h = { visible: false, pose: 'situp', outfit: 'pj', flash: false, titled: false, walking: false, standing: false, holding: false };
+  const h = { visible: false, pose: 'situp', outfit: 'pj', flash: false, titled: false, walking: false, standing: false, holding: false, stirring: false };
   for (const s of HERO_STEPS) {
     if (tMs < s.at) break;
     if (s.do === 'title') h.titled = true;
+    if (s.do === 'rustle') h.stirring = true;
     if (s.pose) { h.visible = true; h.pose = s.pose; h.outfit = s.outfit; h.flash = false; }
     if (s.stand) h.standing = true;
     if (s.flash) h.flash = true;

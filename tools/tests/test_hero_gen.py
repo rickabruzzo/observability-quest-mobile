@@ -53,6 +53,7 @@ def test_simplified_option_lists():
     assert o['beard'] == ['none', 'short', 'long']
     assert o['glasses'] == ['none', 'glasses']
     assert 'length' not in o and 'beardCol' not in o
+    assert 'hold' not in o and all('hold' not in p for p in hero_gen.PRESETS.values())   # nothing carried (Rick, 2026-11-11)
 
 
 def test_beard_uses_hair_colour():
@@ -71,11 +72,10 @@ def test_styles_differ_from_each_other():
         seen.add(b)
 
 
-def test_pj_outfit_differs_and_drops_the_item():
+def test_pj_outfit_differs_and_goes_barefoot():
     base = hero_gen.hero(**hero_gen.PRESETS['masc'])
     pj = hero_gen.hero(**hero_gen.PRESETS['masc'], outfit='pj')
     assert pj.tobytes() != base.tobytes()
-    assert pj.getpixel((2, 37))[3] == 0            # where the laptop was
     assert pj.getpixel((9, 70))[:3] != base.getpixel((9, 70))[:3]   # bare feet, not shoes
 
 
@@ -104,9 +104,46 @@ def test_hoodie_carries_the_honeycomb_mark_and_pyjamas_do_not():
     assert walk.getpixel((11, 24 + 1))[:3] == hero_gen.hexc(hero_gen.HC_MARK['blue'])[:3]
 
 
-def test_empty_handed_hero_for_the_moment_before_the_item_is_picked_up(tmp_path):
-    full = hero_gen.hero(**hero_gen.PRESETS['masc'])
-    bare = hero_gen.hero(**{**hero_gen.PRESETS['masc'], 'hold': 'none'})
-    assert bare.getpixel((2, 37))[3] == 0 and full.getpixel((2, 37))[3] == 255
-    hero_gen.write_fixtures(str(tmp_path))
-    assert (tmp_path / 'masc-nohold-idle.rgba').exists()
+def _head(**kw):
+    return hero_gen.hero(**{**hero_gen.PRESETS['masc'], 'beard': 'none', 'hair': 'ginger', 'skin': 1, **kw})
+
+
+def test_nothing_is_drawn_left_of_the_arm():
+    im = hero_gen.hero(**hero_gen.PRESETS['masc'])
+    assert all(im.getpixel((x, y))[3] == 0 for x in range(0, 4) for y in range(30, 50))
+
+
+def test_glasses_are_a_frame_round_each_eye():
+    im = _head(glasses='glasses'); f = hero_gen.GLASSES[:3]
+    for x0 in (9, 15):
+        ring = [(x0 + 1, 8), (x0 + 2, 8), (x0 + 1, 11), (x0 + 2, 11), (x0, 9), (x0, 10), (x0 + 3, 9), (x0 + 3, 10)]
+        assert all(im.getpixel(p)[:3] == f for p in ring), x0
+        inside = [im.getpixel((x, y))[:3] for x in (x0 + 1, x0 + 2) for y in (9, 10)]
+        assert f not in inside and hero_gen.EYE_WHITE[:3] in inside           # the eye shows through
+    assert im.getpixel((13, 9))[:3] == f and im.getpixel((14, 9))[:3] == f    # bridge
+    assert sum(im.getpixel((x, y))[:3] == f for x in range(28) for y in range(20)) >= 18
+
+
+def test_mohawk_keeps_the_head_round():
+    mo, st = _head(style='mohawk'), _head(style='standard')
+    def width(im, y): xs = [x for x in range(28) if im.getpixel((x, y))[3]]; return xs[-1] - xs[0] + 1
+    for y in (6, 7, 8): assert width(mo, y) >= width(st, y) - 1, y            # as wide as any other head at the temples
+    ridge = [x for x in range(28) if mo.getpixel((x, 2))[3]]
+    assert ridge and ridge[-1] - ridge[0] + 1 >= 4                            # a flat-topped strip, not a point
+
+
+def test_standard_hair_stays_inside_the_head():
+    st, bald = _head(style='standard'), _head(style='mohawk')
+    for y in range(9, 19):
+        xs = [x for x in range(28) if st.getpixel((x, y))[3]]; xb = [x for x in range(28) if bald.getpixel((x, y))[3]]
+        assert xs[0] >= xb[0] and xs[-1] <= xb[-1], y                         # no strands hanging outside the face
+
+
+def test_longer_hair_fills_in_behind_the_neck():
+    ginger = [hero_gen.ramp(hero_gen.HAIR['ginger'], light=1.35, shade=0.7)[k][:3] for k in 'LBSD']
+    for style in ('shoulder', 'long'):
+        im = _head(style=style)
+        assert im.getpixel((10, 19))[:3] in ginger and im.getpixel((17, 19))[:3] in ginger, style   # beside the neck, not background
+        for y in range(9, 19):
+            row = [im.getpixel((x, y)) for x in range(6, 22)]
+            assert all(p[3] == 255 for p in row), (style, y)                  # one solid mass, no gaps between hair and face

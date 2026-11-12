@@ -24,7 +24,7 @@ test('pick coerces numeric options from DOM strings', () => {
 });
 
 test('the simplified option lists: no beard colour, no length', () => {
-  assert.deepEqual(Object.keys(OPTIONS).sort(), ['beard', 'body', 'glasses', 'hair', 'hoodie', 'hold', 'jeans', 'skin', 'style'].sort());
+  assert.deepEqual(Object.keys(OPTIONS).sort(), ['beard', 'body', 'glasses', 'hair', 'hoodie', 'jeans', 'skin', 'style'].sort());
   assert.deepEqual(OPTIONS.style, ['mohawk', 'standard', 'shoulder', 'long', 'fro']);
   assert.deepEqual(OPTIONS.beard, ['none', 'short', 'long']);
   assert.deepEqual(OPTIONS.glasses, ['none', 'glasses']);
@@ -58,3 +58,9 @@ test('displayName falls back', () => {
 });
 
 test('rows cover every option exactly once', () => assert.deepEqual([...FACE_ROWS, ...KIT_ROWS].sort(), Object.keys(OPTIONS).sort()));
+
+test('a hero saved before the held item was removed loads without it', async () => {
+  const { sanitizeHero } = await import('../js/creator-state.js');
+  const h = sanitizeHero({ body: 'fem', skin: 1, hair: 'brown', style: 'long', beard: 'none', hoodie: 'honey', jeans: 'black', glasses: 'glasses', hold: 'coffee', name: 'Ada' });
+  assert.equal('hold' in h, false); assert.equal(h.style, 'long'); assert.equal(h.name, 'Ada');
+});

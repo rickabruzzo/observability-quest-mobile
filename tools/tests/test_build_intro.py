@@ -2,7 +2,7 @@ import json, os
 from PIL import Image
 from tools import build_intro as bi
 
-ALL = ['A_room_dark', 'B_nightstand', 'B_arm', 'B_lamp', 'B_lamp_lit', 'C_face_asleep', 'C_eye_crack',
+ALL = ['A_room_dark', 'B_nightstand', 'B_arm', 'C_face_asleep', 'C_eye_crack',
        'C_awake', 'C_awake_lit', 'C_misery', 'D_bedroom_vga']
 
 
@@ -133,7 +133,7 @@ def test_a_speck_is_not_an_lcd():
 
 def test_no_lcd_is_reported_in_the_manifest(tmp_path, capsys):
     src = _real_src(tmp_path); Image.new('RGB', (640, 400), (40, 40, 40)).save(src / 'B_nightstand.png')
-    for n in ('B_arm', 'B_lamp'): os.remove(src / f'{n}.png')
+    os.remove(src / 'B_arm.png')
     m = bi.build(str(src), str(tmp_path / 'out'))
     assert m['lcdFound'] is False and 'lcd' in capsys.readouterr().err.lower()
 
@@ -145,11 +145,10 @@ def test_wrong_aspect_source_is_refused_by_name(tmp_path):
 
 
 def test_unrecognised_files_are_called_out(tmp_path, capsys):
-    src = _real_src(tmp_path); os.rename(src / 'B_arm.png', src / 'B_arm.jpg'); open(src / 'b_lamp.PNG', 'wb').close()
-    os.remove(src / 'B_lamp.png')
+    src = _real_src(tmp_path); os.rename(src / 'B_arm.png', src / 'B_arm.jpg'); open(src / 'b_arm.PNG', 'wb').close()
     bi.build(str(src), str(tmp_path / 'out'))
     err = capsys.readouterr().err
-    assert 'B_arm.jpg' in err and 'b_lamp.PNG' in err
+    assert 'B_arm.jpg' in err and 'b_arm.PNG' in err
 
 
 def test_manifest_has_a_stand_spot_and_overrides_move_it(tmp_path):
@@ -254,12 +253,12 @@ def test_wordmark_carries_the_numeral_after_quest():
     plain = np.asarray(bi.wall_logo(numeral=False)); num = np.asarray(bi.wall_logo(numeral=True))
     assert plain.shape == num.shape                                    # the I sits inside the wordmark's own width
     hh = plain.shape[0]
-    def right_edge(a): return int(np.nonzero((a[hh * 6 // 10:, :, 3] > 0).any(axis=0))[0].max())    # QUEST's row
+    def right_edge(a): return int(np.nonzero((a[hh * 6 // 10:hh * 85 // 100, :, 3] > 0).any(axis=0))[0].max())    # QUEST's row, above the Q's tail
     def top_rows(a): return a[:hh * 4 // 10]
     assert right_edge(num) >= right_edge(plain) + 8
     assert (top_rows(num)[..., 3] == top_rows(plain)[..., 3]).all()    # OBSERVABILITY untouched (colours may shift a shade in the shared palette)
     assert np.abs(top_rows(num).astype(int) - top_rows(plain).astype(int)).mean() < 8
-    extra = num[hh * 6 // 10:, right_edge(plain) + 2:, :]
+    extra = num[hh * 6 // 10:hh * 85 // 100, right_edge(plain) + 2:, :]
     op = extra[..., 3] > 0; r, g, b = extra[..., 0][op].astype(int), extra[..., 1][op].astype(int), extra[..., 2][op].astype(int)
     assert op.sum() > 40 and ((b >= r) & (b >= g - 12)).mean() > 0.99  # the same blue lettering, not a new font
 
@@ -304,3 +303,24 @@ def test_the_vga_bedroom_keeps_its_small_colours(tmp_path):
     r, g, b = px[152, 202]; assert g > r + 50 and g > b + 50, ('plant', r, g, b)
     r, g, b = px[52, 152]; assert r > 200 and g > 170 and b < 150, ('shade', r, g, b)
     assert np.abs(px - np.asarray(bi.downsample(Image.open(src / 'D_bedroom_vga.png'))).astype(int)).max() <= 48      # no colour anywhere is far off
+
+
+def test_the_lamp_close_up_is_no_longer_built(tmp_path):
+    m = bi.build(str(tmp_path / 'nosrc'), str(tmp_path / 'out'), placeholders=True)
+    assert not any('lamp' in n for n in m['images'])
+    assert 'B_lamp' not in bi.SOURCES
+
+
+def test_numeral_stands_on_quests_baseline_and_the_lines_are_apart():
+    a = np.asarray(bi.wall_logo(width=400)); op = a[..., 3] > 0; hh, ww = op.shape
+    rows = op.sum(axis=1)
+    mid = [y for y in range(hh * 3 // 10, hh * 7 // 10) if rows[y] == 0]
+    assert len(mid) >= 3, 'OBSERVABILITY and QUEST still touch'
+    bottom = op[max(mid):]                                               # QUEST I
+    cols = np.nonzero(bottom.any(axis=0))[0]
+    runs = bi._runs(bottom.any(axis=0))
+    i_run, t_run = runs[-1], runs[-2]                                    # the numeral, and the letter before it
+    def foot(r): return int(np.nonzero(bottom[:, r[0]:r[1] + 1].any(axis=1))[0].max())
+    def head(r): return int(np.nonzero(bottom[:, r[0]:r[1] + 1].any(axis=1))[0].min())
+    assert abs(foot(i_run) - foot((t_run[1] - 30, t_run[1]))) <= 2, (foot(i_run), foot(t_run))     # not below the T's foot
+    assert abs(head(i_run) - head((t_run[1] - 30, t_run[1]))) <= 2

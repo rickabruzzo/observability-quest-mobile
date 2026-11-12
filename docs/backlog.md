@@ -65,7 +65,6 @@ block on. Test the restyle under `.hs-form` on a real phone.
 - Real stills landed 2026-11-11 (Gemini, via the agent brief). Positions for the bedroom are in `scratch/intro_gen/intro.overrides.json` on Rick's machine and baked into `assets/intro/intro.json`.
 - The wordmark's I after QUEST is the logo's own letter I enlarged by the build; a hand-finished I (or a redrawn wordmark with the numeral) would be cleaner.
 - The sitting hero is drawn over the bed, not tucked behind the blanket; a foreground mask for the blanket would fix it.
-- `B_lamp_lit` lifts the black background to a warm brown along with the wood; limit the lift to non-black pixels if it looks muddy on a phone.
 - No mute control yet; `createSfx({ muted })` takes one when the audio sub-project adds it.
 - After the intro the game goes to the preview room; the chapter deal replaces that in the room-engine sub-project.
 
@@ -86,7 +85,9 @@ block on. Test the restyle under `.hs-form` on a real phone.
 - Furnished bedroom, `D_laptop_gone` and `D_door_open` landed 2026-11-11 and are placed from the hand-back's measurements; awaiting Rick's sign-off. `D_laptop_gone` keeps a faint mark on the wall above the dresser — redo that edit if it shows on a phone.
 
 ## From Rick's play-through, 2026-11-11 (for the room-engine sub-project)
-- **Profile walk**: Rick likes Sierra's side-on walking figure. The hero walks facing the camera today (leg and arm offsets on the front view). Add a profile view to `tools/hero_gen.py` + the JS port (all hair styles, beard, glasses, held item, hoodie mark on the visible side), 4–6 walk frames, mirrored for left; front view stays for standing and the sheet. Show Rick a contact sheet before porting.
+- **Profile walk**: Rick likes Sierra's side-on walking figure. The hero walks facing the camera today (leg and arm offsets on the front view). Add a profile view to `tools/hero_gen.py` + the JS port (all hair styles, beard, glasses, hoodie mark on the visible side), 4–6 walk frames, mirrored for left; front view stays for standing and the sheet. Show Rick a contact sheet before porting.
 - **Walk and hand cursors**: Sierra's cursor is a walking figure that becomes a hand over things you can use. Phones have no hover, so: on desktop (`@media (hover: hover)`) use those two cursors over floor and hotspots; on touch, show the hand as a brief badge on a hotspot when it is tapped (and optionally pulse hotspots on entering a room), and a small walking-figure marker where a floor tap lands.
 - Walk speed is now 110 px/s in rooms (a full room in ~3 s) and 60 px/s in the intro. The spec's "≤ 1.2 s per room" came from booth pacing; revisit if three seconds per crossing makes a three-chapter run too long.
-- Everyone takes the painted laptop from the dresser (inventory); the item chosen on the sheet appears in the hero's hand at that moment. `item` in the overrides is unused for now.
+- Everyone takes the painted laptop from the dresser (inventory). The held-item option is gone (Rick, 2026-11-11: "they all look bad"); nothing is drawn in the hero's hand. `item` in the overrides is unused.
+- Head redraw 2026-11-11 (awaiting Rick's eye): round glasses frames, mohawk as a flat ridge on a buzzed round skull, standard cut inside the head's outline, shoulder/long hair as a solid mass behind the head with locks in front of the shoulders, ears joined to the face.
+- Round 3 art (`briefs/intro-round3-agent-brief.md`): the dark wide shot should be the bedroom with the light off, so the reveal is the same room; pager hand from the left with believable sizes. A new pager plate means a new LCD rectangle — rebuild and check the text still fits.

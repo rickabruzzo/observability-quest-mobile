@@ -38,10 +38,11 @@ python3 -m pytest tools/tests -q   # asset tooling + the reference hero generato
 
 ## Intro art (when the generated images land)
 
-The intro cuts between nine stills. Until the real ones exist the game shows labelled placeholders.
+The intro cuts between a handful of stills. Until the real ones exist the game shows labelled placeholders.
 
 1. Generate the nine images from `briefs/intro-shots-brief.md` and export them at 640×400 into `scratch/intro_gen/`
-   (`A_room_dark`, `B_nightstand`, `B_arm`, `B_lamp`, `C_face_asleep`, `C_eye_crack`, `C_awake`, `C_misery`, `D_bedroom_vga`, all `.png`).
+   (`A_room_dark`, `B_nightstand`, `B_arm`, `C_face_asleep`, `C_eye_crack`, `C_awake`, `C_misery`, `D_bedroom_vga`, all `.png`;
+   the lamp close-up `B_lamp` was cut — the light now comes on as the cut from the dark wide shot to the bedroom).
 2. `python3 tools/build_intro.py` — writes `assets/intro/*.png` + `intro.json` and prints `real art` or `PLACEHOLDERS`.
    Any image that is missing stays a placeholder (the build lists them); an edit whose plate is missing is ignored.
    Sources must be 16:10 `.png` with exactly these names; anything else in the folder is called out and skipped.

@@ -109,7 +109,10 @@ test('the bedroom shot shows the title and walks the hero out', async () => {
   const { ctx, page } = await openIntro();
   await running(page);
   for (let i = 0; i < 8; i++) { await page.waitForTimeout(300); await tapScene(page); }
-  await page.waitForFunction(() => window.__oq.intro.id === 'bedroom');
+  await page.waitForFunction(() => window.__oq.intro.id === 'bedroom' && window.__oq.intro.hero);   // its first painted frame
+  const first = await intro(page);                                        // the hero is in bed the moment the light comes on
+  assert.ok(first.t < 600, `checked late (${first.t})`);
+  assert.deepEqual([first.hero?.visible, first.hero?.pose, first.hero?.outfit], [true, 'situp', 'pj']);
   await page.waitForFunction(() => window.__oq.intro.t > 900);
   // the title is the app's own wordmark, drawn on the wall, with the subtitle lettered under it
   assert.equal(await page.locator('.intro-title').getAttribute('aria-label'), 'Observability Quest I: So you want to be on-call?');
@@ -147,7 +150,7 @@ test('the bedroom shot shows the title and walks the hero out', async () => {
   // every action is heard, in order: title, sitting up, feet on the floor, clothes on, item taken, door, door
   await page.waitForFunction(() => window.__oq.intro.sounds.includes('shut') || document.body.dataset.screen !== 'INTRO', null, { timeout: 9000 }).catch(() => {});
   const heard = await page.evaluate(() => window.__oq.intro.sounds.slice());
-  assert.deepEqual(heard.filter((n) => n !== 'beep' && n !== 'click'), ['title', 'rustle', 'step', 'pickup', 'take', 'door', 'shut']);
+  assert.deepEqual(heard.filter((n) => n !== 'beep'), ['click', 'title', 'rustle', 'step', 'pickup', 'take', 'door', 'shut']);   // the light, then each action
   await page.waitForFunction(() => document.body.dataset.screen === 'PREVIEW', null, { timeout: 9000 });
   await ctx.close();
 });
@@ -242,23 +245,16 @@ test('the hero stands where the manifest says', async () => {
   await ctx.close();
 });
 
-test('whatever the hero carries, the laptop is on the dresser until it is taken into inventory', async () => {
-  for (const hold of ['laptop', 'coffee']) {
-    const ctx = await browser.newContext({ viewport: { width: 844, height: 390 }, deviceScaleFactor: 1, hasTouch: true, isMobile: true });
-    const page = await ctx.newPage();
-    await page.goto(server.baseURL, { waitUntil: 'load' });
-    await page.waitForFunction(() => window.__oq?.ready === true);
-    await page.click('#btn-start'); await page.waitForFunction(() => document.body.dataset.screen === 'CREATOR'); await page.waitForTimeout(400);
-    await page.click('.tab[data-page="kit"]'); await page.click(`.opt[data-key="hold"][data-value="${hold}"]`);
-    await page.click('#btn-start-game'); await running(page);
-    if (!(await page.evaluate(() => !!window.__oq.intro.manifest.images.D_laptop_gone))) { await ctx.close(); return; }   // placeholder art has no such still
-    for (let i = 0; i < 8; i++) { await page.waitForTimeout(300); await tapScene(page); }
-    await page.waitForFunction(() => window.__oq.intro.hero?.visible && window.__oq.intro.hero.pose === 'situp');
-    assert.equal((await intro(page)).hero.plate, 'D_bedroom_vga', hold);
-    await page.waitForFunction(() => window.__oq.intro.hero?.holding === true, null, { timeout: 6000 });
-    assert.equal((await intro(page)).hero.plate, 'D_laptop_gone', hold);
-    await page.waitForFunction(() => window.__oq.intro.hero?.doorOpen === true, null, { timeout: 8000 });
-    assert.equal((await intro(page)).hero.plate, 'D_door_open', hold);
-    await ctx.close();
-  }
+test('the laptop is on the dresser until it is taken into inventory; the hero carries nothing', async () => {
+  const { ctx, page } = await openIntro();
+  await running(page);
+  if (!(await page.evaluate(() => !!window.__oq.intro.manifest.images.D_laptop_gone))) { await ctx.close(); return; }   // placeholder art has no such still
+  for (let i = 0; i < 8; i++) { await page.waitForTimeout(300); await tapScene(page); }
+  await page.waitForFunction(() => window.__oq.intro.hero?.visible && window.__oq.intro.hero.pose === 'situp');
+  assert.equal((await intro(page)).hero.plate, 'D_bedroom_vga');
+  await page.waitForFunction(() => window.__oq.intro.hero?.holding === true, null, { timeout: 9000 });
+  assert.equal((await intro(page)).hero.plate, 'D_laptop_gone');
+  await page.waitForFunction(() => window.__oq.intro.hero?.doorOpen === true, null, { timeout: 8000 });
+  assert.equal((await intro(page)).hero.plate, 'D_door_open');
+  await ctx.close();
 });

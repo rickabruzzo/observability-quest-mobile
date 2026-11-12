@@ -156,7 +156,7 @@ Raw downloads (1264×848) and every rejected try are kept in `scratch/intro_gen/
 | `A_room_dark` | plate: dark bedroom, nightstand, lamp, sleeper | 2 → #1 | |
 | `B_nightstand` | plate: pager close-up, **blank** green LCD | 5 → #3 | Tries 3–5 added a framing sentence (straight-on, pager about half the frame wide, right third empty). LCD is 35% of the width, not 40%. Buttons differ from the prompt. |
 | `B_arm` | edit of B: arm reaching for the pager | 2 → #1 | #2 rejected: fingers covered the LCD |
-| `B_lamp` | edit of B: hand on the lamp chain, pager gone | 2 → #2 | #1 rejected: two hands |
+| `B_lamp` | edit of B: hand on the lamp chain, pager gone | 2 → #2 | **Cut 2026-11-11** — no longer built or shown. |
 | `C_face_asleep` | plate: sleeping face, drool | 2 → #2 | |
 | `C_eye_crack` | edit of C: one eye cracked open | 2 → #1 | |
 | `C_awake` | edit of C: eyes half open | 2 → #1 | |
@@ -182,3 +182,6 @@ plus Rick's direction in the session. Every frame is an edit of the one before i
 
 Not yet signed off by Rick. The clothes on the floor, the Honeycomb mark on the hoodie, and any carried item other than
 a laptop are drawn by the game.
+
+Round 3 (pending): `A_room_dark` remade as the bedroom with the light off (an edit of `D_bedroom_vga`), and a new
+`B_nightstand` / `B_arm` with a smaller pager and the hand coming in from the left — `briefs/intro-round3-agent-brief.md`.

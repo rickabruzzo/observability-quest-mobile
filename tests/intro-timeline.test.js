@@ -2,9 +2,9 @@ import test from 'node:test'; import assert from 'node:assert/strict';
 import { SHOTS, frameAt, nextShot, TOTAL_MS, HERO_STEPS, heroAt, FLASH_MS } from '../js/intro/timeline.js';
 
 test('shots are the storyboard, in order, with its timings', () => {
-  assert.deepEqual(SHOTS.map((s) => s.id), ['dark', 'help', 'asleep', 'arm', 'lit', 'message', 'misery', 'lamp', 'bedroom']);
-  assert.deepEqual(SHOTS.map((s) => s.ms), [3000, 2500, 3000, 1500, 2000, 8000, 2000, 1500, 15000]);
-  assert.equal(TOTAL_MS, 38500);
+  assert.deepEqual(SHOTS.map((s) => s.id), ['dark', 'help', 'asleep', 'arm', 'lit', 'message', 'misery', 'wide', 'bedroom']);
+  assert.deepEqual(SHOTS.map((s) => s.ms), [3000, 2500, 3000, 1500, 2000, 8000, 2000, 1400, 15000]);
+  assert.equal(TOTAL_MS, 38400);
   assert.equal(SHOTS[1].text, 'Help!');
   assert.equal(SHOTS[5].text, 'Backend is down. Front end is down. Database is down. Get in here! -CTO');
 });
@@ -16,7 +16,10 @@ test('pager LCD flashes Help! then scrolls the message', () => {
 });
 test('cuts to the alternate still at altAt', () => {
   assert.equal(frameAt(2, 1799).image, 'C_face_asleep'); assert.equal(frameAt(2, 1800).image, 'C_eye_crack');
-  assert.equal(frameAt(7, 699).image, 'B_lamp'); assert.equal(frameAt(7, 700).image, 'B_lamp_lit');
+  // back to the wide dark room, steady in the pager's glow; the light comes on as the cut to the bedroom
+  assert.equal(frameAt(7, 0).image, 'A_room_dark'); assert.equal(frameAt(7, 300).black, false); assert.equal(frameAt(7, 1399).image, 'A_room_dark');
+  assert.equal(SHOTS[8].clickAt, 0);
+  assert.ok(!SHOTS.some((s) => /lamp/i.test(`${s.image}${s.alt || ''}`)), 'the lamp close-up is gone');
 });
 test('green flash on the face alternates whole stills', () => { assert.equal(frameAt(4, 0).image, 'C_awake_lit'); assert.equal(frameAt(4, 300).image, 'C_awake'); });
 test('reduced motion: nothing flashes', () => {
@@ -24,17 +27,19 @@ test('reduced motion: nothing flashes', () => {
   assert.equal(frameAt(4, 0, { reduced: true }).image, 'C_awake');
   assert.deepEqual(frameAt(5, 0, { reduced: true }).lcd, { text: SHOTS[5].text, mode: 'static', on: true });
   assert.equal(frameAt(1, 300, { reduced: true }).lcd.on, true);
-  assert.equal(frameAt(7, 0, { reduced: true }).image, 'B_lamp_lit');
+  assert.equal(frameAt(7, 0, { reduced: true }).image, 'A_room_dark');
   assert.equal(frameAt(2, 0, { reduced: true }).image, 'C_face_asleep'); assert.equal(frameAt(2, 1800, { reduced: true }).image, 'C_eye_crack');
 });
 test('nextShot runs off the end', () => { assert.equal(nextShot(0), 1); assert.equal(nextShot(8), null); });
 test('out-of-range shot index is clamped, not thrown', () => { assert.equal(frameAt(99, 0).image, 'D_bedroom_vga'); assert.equal(frameAt(-1, 0).image, 'A_room_dark'); });
 test('hero script: the room holds on the title, then up, dressed, a beat, the item, the door', () => {
   const at = Object.fromEntries(HERO_STEPS.map((s) => [s.do || (s.walkTo ? 'walk' : s.take ? 'take' : s.flash ? 'flash' : `${s.pose}-${s.outfit}`), s.at]));
-  assert.equal(heroAt(0).visible, false); assert.equal(heroAt(0).titled, false); assert.equal(heroAt(at.title + 50).titled, true);
-  assert.ok(at['situp-pj'] - at.title >= 2500, 'the title gets at least 2.5 s alone on screen');
-  assert.equal(heroAt(at['situp-pj'] - 1).visible, false);
-  let h = heroAt(at['situp-pj'] + 100); assert.deepEqual([h.pose, h.outfit, h.visible], ['situp', 'pj', true]);
+  // the light comes on with the hero already sitting up in bed — never an empty bed
+  let h = heroAt(0); assert.deepEqual([h.visible, h.pose, h.outfit, h.titled], [true, 'situp', 'pj', false]);
+  assert.equal(heroAt(at.title + 50).titled, true);
+  assert.ok(at['idle-pj'] - at.title >= 2500, 'the title gets at least 2.5 s before the hero gets up');
+  assert.ok(at.rustle > at.title && at.rustle < at['idle-pj'], 'the covers go back just before the feet hit the floor');
+  assert.equal(heroAt(at.rustle - 1).stirring, false); assert.equal(heroAt(at.rustle + 1).stirring, true);
   h = heroAt(at['idle-pj'] + 100); assert.deepEqual([h.pose, h.outfit, h.flash], ['idle', 'pj', false]);
   assert.equal(heroAt(at.flash + 50).flash, true);
   h = heroAt(at['idle-hoodie'] + 40); assert.deepEqual([h.pose, h.outfit, h.flash, h.holding], ['idle', 'hoodie', false, false]);

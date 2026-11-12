@@ -28,7 +28,8 @@ test('sheet: 5 FACE rows, 5 KIT rows, every option 44px+, hero drawn', async () 
   assert.ok(boxes.every(([w, h]) => w >= 44 && h >= 44), JSON.stringify(boxes.filter(([w, h]) => w < 44 || h < 44)));
   assert.equal(boxes.length, 3 + 4 + 5 + 5 + 3); // body, skin, hair colour, hair, beard
   await page.click('.tab[data-page="kit"]');
-  assert.equal(await page.locator('.sheet-row').count(), 5); // name row + hoodie, jeans, glasses, holding
+  assert.equal(await page.locator('.sheet-row').count(), 4); // name row + hoodie, jeans, glasses (nothing is carried)
+  assert.equal(await page.locator('.opt[data-key="hold"]').count(), 0);
   const painted = await page.evaluate(() => {
     const c = document.querySelector('#hero-view'); const d = c.getContext('2d').getImageData(0, 0, 28, 72).data;
     let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i]) n++; return n;

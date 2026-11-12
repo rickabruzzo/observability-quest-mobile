@@ -7,7 +7,6 @@ import { BODIES, HAIR, HC_MARK, HC_MARK_PIXELS, HOODIE, JEANS, OUTLINE, PJ, SIT_
 export const HERO_W = 28;
 export const HERO_H = 72;
 export const HEAD_CROP = { x: 4, y: 0, w: 20, h: 21 };
-export const HAND_CROP = { x: 0, y: 30, w: 12, h: 20 };
 
 function hexc(s) {
   const h = s.replace('#', '');
@@ -20,7 +19,7 @@ function ramp(base, light = 1.22, shade = 0.74, dark = 0.5) {
 }
 const OUTLINE_C = hexc(OUTLINE);
 const SHOE = ramp('#2E2E36', 1.6, 0.8);
-const LAPTOP = ramp('#8A94A6', 1.25, 0.7);
+const GLASSES = [30, 30, 42, 255];           // dark frames: they must read as glasses on every skin tone
 const EYE_WHITE = hexc('#F2F2F2');
 
 class Grid {
@@ -96,7 +95,7 @@ function ellipse(cx, cy, rx, ry) {
 /** Composes the 28×72 RGBA sprite for a hero config and pose. */
 export function composeHero(cfg, pose = 'idle', outfit = 'hoodie') {
   const { body = 'masc', skin = 0, hair = 'black', style = 'standard', beard = 'none',
-    hoodie = 'ink', jeans = 'indigo', glasses = 'none', hold = 'laptop' } = cfg;
+    hoodie = 'ink', jeans = 'indigo', glasses = 'none' } = cfg;
   const b = BODIES[body]; const c = new Grid();
   const skinR = ramp(SKIN[skin], 1.12, 0.8, 0.62);
   const hairR = ramp(HAIR[hair], 1.35, 0.7);
@@ -107,7 +106,6 @@ export function composeHero(cfg, pose = 'idle', outfit = 'hoodie') {
   const shoeR = pj ? skinR : SHOE;                                  // pyjamas go barefoot
   const [legLdx, legRdx, shoeLdx, shoeRdx, bob0, armLdy, armRdy] = WALK[pose] || WALK.idle;
   const bob = sit ? SIT_DY : bob0;                                  // sitting up: the whole upper body sits lower
-  const held = pj || sit ? null : hold;                               // nothing in hand in bed or in pyjamas
 
   // ---- legs & shoes (back; never bob) ----
   const legTop = 45, legBot = 66;
@@ -123,6 +121,9 @@ export function composeHero(cfg, pose = 'idle', outfit = 'hoodie') {
   // ---- everything above the legs bobs with the walk ----
   c.oy = bob;
   if (!pj) c.fill('hood', rect(9, 18, 18, 22));                    // pyjamas have no hood
+  // back hair: the mass behind the head and neck (the body is drawn over it)
+  if (style === 'shoulder') c.fill('hair', ellipse(cx, 10.0, b.headRx + 2.6, 8.0).concat(rect(6, 10, 21, 21)));
+  else if (style === 'long') c.fill('hair', ellipse(cx, 10.0, b.headRx + 2.9, 8.2).concat(rect(5, 10, 22, 23)));
   for (let y = 20; y <= 45; y++) {
     let span;
     if (y <= 21) span = [b.shoulder[0] + (21 - y), b.shoulder[1] - (21 - y)];
@@ -136,22 +137,25 @@ export function composeHero(cfg, pose = 'idle', outfit = 'hoodie') {
   c.fill('neck', rect(b.neck[0], 17, b.neck[1], 20));
   c.fill('head', ellipse(cx, 11.5, b.headRx, 6.8));
   c.fill('head', rect(8, 15, 19, 16)); c.fill('head', rect(9, 17, 18, 17)); c.fill('head', rect(11, 18, 16, 18));
+  c.fill('head', rect(8, 9, 19, 14));                              // cheeks out to the ears: no gap between ear and face
   c.fill('earL', rect(7, 10, 7, 12)); c.fill('earR', rect(20, 10, 20, 12));
 
-  // ---- hair (one picker: mohawk, buzz, standard, shoulder, long, fro) ----
+  // ---- hair in front of the head ----
+  // standard: a cap with short sideburns, all inside the head's outline. shoulder/long: the cap, plus locks that
+  // fall in front of the shoulders (the mass behind the head was filled before the body). mohawk: a flat-topped
+  // ridge on a buzzed scalp — the head stays round. fro: one big round mass.
   let hm = [];
   if (style === 'mohawk') {
-    hm = rect(12, 3, 15, 8).concat([[13, 2], [14, 2]]);                 // a narrow, short, pronounced strip
+    c.fill('head', ellipse(cx, 7.0, b.headRx + 0.8, 3.8).concat(rect(8, 6, 19, 8)));   // a full round skull under the buzz
+    hm = rect(12, 2, 15, 7);
+  } else if (style === 'fro') {
+    hm = ellipse(cx, 8.0, b.headRx + 4.2, 8.2).filter(([x, y]) => !(y >= 8 && x >= 9 && x <= 18));
   } else {
     hm = ellipse(cx, 7.0, b.headRx + 0.8, 3.8);                       // crown
-    hm = hm.concat(rect(8, 6, 19, 8));                                 // band over the forehead
-    if (style === 'standard') hm = hm.concat(rect(6, 7, 7, 11), rect(20, 7, 21, 11));
-    else if (style === 'shoulder') hm = hm.concat(rect(6, 7, 7, 20), rect(20, 7, 21, 20), rect(5, 14, 5, 20), rect(22, 14, 22, 20));
-    else if (style === 'long') hm = hm.concat(rect(6, 7, 7, 30), rect(20, 7, 21, 30), rect(5, 12, 5, 30), rect(22, 12, 22, 30), rect(4, 18, 4, 30), rect(23, 18, 23, 30));
-    else if (style === 'fro') {
-      // one big smooth round mass behind and around the face, down past the ears; the face stays clear below the brow line
-      hm = ellipse(cx, 8.0, b.headRx + 4.2, 8.2).filter(([x, y]) => !(y >= 8 && x >= 9 && x <= 18));
-    }
+    hm = hm.concat(rect(8, 6, 19, 8));                                 // fringe over the forehead
+    if (style === 'standard') hm = hm.concat(rect(8, 9, 8, 11), rect(19, 9, 19, 11));            // sideburns, inside the head's outline
+    else if (style === 'shoulder') hm = hm.concat(rect(6, 6, 8, 21), rect(19, 6, 21, 21));       // locks to the shoulders, three wide
+    else if (style === 'long') hm = hm.concat(rect(5, 7, 8, 31), rect(19, 7, 22, 31), rect(6, 32, 8, 33), rect(19, 32, 21, 33));   // down over the chest
   }
   c.fill('hair', hm);
 
@@ -188,13 +192,16 @@ export function composeHero(cfg, pose = 'idle', outfit = 'hoodie') {
   }
   // face
   const brow = hairR.D;
-  for (const x of [10, 11, 12]) c.px(x, 9, brow);
-  for (const x of [15, 16, 17]) c.px(x, 9, brow);
-  c.px(10, 10, EYE_WHITE); c.px(11, 10, OUTLINE_C); c.px(16, 10, EYE_WHITE); c.px(15, 10, OUTLINE_C);
+  for (const x of [9, 10, 11]) c.px(x, 9, brow);
+  for (const x of [16, 17, 18]) c.px(x, 9, brow);
+  c.px(10, 10, EYE_WHITE); c.px(11, 10, OUTLINE_C); c.px(17, 10, EYE_WHITE); c.px(16, 10, OUTLINE_C);
   c.px(14, 12, skinR.S); c.px(14, 13, skinR.S); c.px(13, 13, skinR.S);
   for (const x of [12, 13, 14, 15]) c.px(x, 15, skinR.D);
   // hair texture: buzzed temples for the mohawk, dark curls dotted through the fro
-  if (style === 'mohawk') for (const [x, y] of [[8, 7], [9, 8], [8, 9], [19, 7], [18, 8], [19, 9]]) c.px(x, y, hairR.S);
+  if (style === 'mohawk') {
+    const buzz = skinR.B.map((a, i) => Math.floor((a * 11 + hairR.B[i] * 9) / 20));      // stubble: skin showing through
+    for (let y = 4; y <= 8; y++) for (let x = 7; x <= 20; x++) if (c.part[y + c.oy]?.[x] === 'head' && !(y === 8 && x >= 10 && x <= 17)) c.px(x, y, buzz);
+  }
   if (style === 'fro') for (const [x, y] of [[9, 3], [16, 2], [6, 7], [21, 6], [12, 5], [18, 5], [5, 12], [22, 11], [8, 14], [19, 14]]) if (c.part[y + c.oy]?.[x] === 'hair') c.px(x, y, hairR.D);   // a few darker curls
   // beard (takes the hair colour): short = stubble over the jaw with a solid chin; long = full, down the chest
   if (beard === 'short') {
@@ -212,32 +219,15 @@ export function composeHero(cfg, pose = 'idle', outfit = 'hoodie') {
     }
     for (let y = 13; y <= 16; y++) c.px(9, y, beardR.L);
   }
-  // glasses: on or off, silver square frames
+  // glasses: a dark round frame about each eye (the eye and a row of skin show inside), a bridge, arms to the ears
   if (glasses === 'glasses') {
-    const g = hexc('#C9D2E0');
-    for (const [x, y] of [[9, 10], [12, 10], [14, 10], [17, 10], [13, 10], [9, 11], [12, 11], [14, 11], [17, 11]]) c.px(x, y, g);
-  }
-  // held item rides with the left arm; the pager sits on the belt
-  c.oy = bob + (held === 'pager' ? 0 : armLdy);
-  if (held === 'laptop') {
-    for (const [x, y] of rect(0, 33, 6, 42)) c.px(x, y, LAPTOP.B);
-    for (let x = 0; x <= 6; x++) { c.px(x, 33, LAPTOP.L); c.px(x, 42, LAPTOP.S); }
-    for (let y = 33; y <= 42; y++) c.px(6, y, LAPTOP.S);
-    for (const [x, y] of [[2, 37], [3, 37], [2, 38], [3, 38]]) c.px(x, y, hexc('#FFB000'));
-    for (const [x, y] of rect(0, 33, 6, 42)) if (x === 0 || y === 33 || y === 42) c.px(x, y, OUTLINE_C);
-  } else if (held === 'coffee') {
-    for (const [x, y] of rect(3, 42, 6, 47)) c.px(x, y, hexc('#F4F4F4'));
-    for (let x = 3; x <= 6; x++) c.px(x, 42, hexc('#5C3A1E'));
-    c.px(2, 44, hexc('#F4F4F4')); c.px(2, 45, hexc('#F4F4F4'));
-  } else if (held === 'phone') {
-    for (const [x, y] of rect(3, 41, 6, 48)) c.px(x, y, OUTLINE_C);
-    for (const [x, y] of rect(4, 42, 5, 47)) c.px(x, y, hexc('#64BA00'));
-  } else if (held === 'duck') {
-    for (const [x, y] of rect(2, 42, 6, 46)) c.px(x, y, hexc('#F7D21B'));
-    c.px(1, 44, hexc('#F96E10')); c.px(0, 44, hexc('#F96E10')); c.px(4, 43, OUTLINE_C);
-  } else if (held === 'pager') {
-    for (const [x, y] of rect(7, 44, 11, 47)) c.px(x, y, OUTLINE_C);
-    for (const [x, y] of rect(8, 45, 10, 46)) c.px(x, y, hexc('#64BA00'));
+    const frame = [];
+    for (const x0 of [9, 15]) {                                                           // lenses over the eyes at 10-11 and 16-17
+      frame.push([x0 + 1, 8], [x0 + 2, 8], [x0 + 1, 11], [x0 + 2, 11], [x0, 9], [x0, 10], [x0 + 3, 9], [x0 + 3, 10]);
+      for (const x of [x0 + 1, x0 + 2]) c.px(x, 9, skinR.L);                              // the brow sits behind the lens
+    }
+    frame.push([13, 9], [14, 9], [8, 9], [19, 9]);                                        // bridge, arms
+    for (const [x, y] of frame) c.px(x, y, GLASSES);
   }
   c.oy = 0;
   c.outline();

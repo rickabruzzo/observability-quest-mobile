@@ -162,17 +162,16 @@ export function createIntroScreen(game) {
     const h = heroAt(t);
     const e = h.walking ? exitAt(exitPlan({ standX, doorX: m.door.x, floorY: m.floorY, doorY: Number.isFinite(m.door.y) ? m.door.y : m.floorY }), t - WALK_AT) : null;
     const pile = h.outfit === 'pj' && !!m.clothes;         // on the floor until the change puts them on the hero
-    // The room is painted with a laptop on the dresser, and again without it: taking it is a cut between the two,
-    // Sierra inventory style. Whatever the hero chose to carry appears in their hand at the same moment.
+    // The room is painted with a laptop on the dresser, and again without it: taking it is a cut between the two.
+    // Sierra inventory style — it is simply the hero's now; nothing is drawn in their hand.
     const bareRoom = assets.images.get('D_laptop_gone');
-    const bare = h.holding ? cfg : { ...cfg, hold: 'none' };
     let plate = 'D_bedroom_vga';
     if (bareRoom && h.holding) { g.drawImage(bareRoom, 0, 0, 320, 200); plate = 'D_laptop_gone'; }
     if (e?.doorOpen) { openDoor(g, m); plate = assets.images.get('D_door_open') ? 'D_door_open' : plate; }
     showTitle(ctx, m, h.titled);
     if (pile) drawClothes(g, cfg, m.clothes.x, m.clothes.y);
     heroState = { pose: h.pose, outfit: h.outfit, x: standX, visible: h.visible, pile, holding: h.holding, doorOpen: !!e?.doorOpen, plate };
-    sound('title', h.titled); sound('rustle', h.visible); sound('step', h.standing); sound('pickup', h.outfit === 'hoodie');
+    sound('title', h.titled); sound('rustle', h.stirring); sound('step', h.standing); sound('pickup', h.outfit === 'hoodie');
     sound('take', h.holding); sound('door', !!e?.doorOpen); sound('shut', !!e && !e.visible && !e.doorOpen);
     if (e) {
       if (e.visible) drawHero(g, cfg, e.pose, e.x, e.y - HERO_H, 1, { flip: e.flip });
@@ -188,7 +187,7 @@ export function createIntroScreen(game) {
       return;
     }
     if (h.flash) drawSilhouette(g, composeHero(cfg, 'idle', h.outfit), standX, standY, '#FFFFFF');
-    else drawHero(g, bare, 'idle', standX, standY, 1, { outfit: h.outfit });
+    else drawHero(g, cfg, 'idle', standX, standY, 1, { outfit: h.outfit });
   }
 
   function paint(ctx, dt = 0) {

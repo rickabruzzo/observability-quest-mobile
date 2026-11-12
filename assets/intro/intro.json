@@ -9,14 +9,12 @@
   "C_face_asleep": "C_face_asleep.png",
   "D_bedroom_vga": "D_bedroom_vga.png",
   "B_arm": "B_arm.png",
-  "B_lamp": "B_lamp.png",
   "C_eye_crack": "C_eye_crack.png",
   "C_awake": "C_awake.png",
   "C_misery": "C_misery.png",
   "D_laptop_gone": "D_laptop_gone.png",
   "D_door_open": "D_door_open.png",
   "C_awake_lit": "C_awake_lit.png",
-  "B_lamp_lit": "B_lamp_lit.png",
   "wall_logo": "wall_logo.png"
  },
  "lcd": {
@@ -63,11 +61,11 @@
   "x": 56,
   "y": 6,
   "w": 178,
-  "h": 49
+  "h": 52
  },
  "subtitle": {
   "x": 51,
-  "y": 57,
+  "y": 60,
   "w": 188,
   "h": 16
  }

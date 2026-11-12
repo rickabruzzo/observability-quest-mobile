@@ -12,13 +12,13 @@ from PIL import Image, ImageDraw
 
 W, H = 320, 200
 PLATES = ['A_room_dark', 'B_nightstand', 'C_face_asleep', 'D_bedroom_vga']
-EDITS = {'B_arm': 'B_nightstand', 'B_lamp': 'B_nightstand', 'C_eye_crack': 'C_face_asleep',
+EDITS = {'B_arm': 'B_nightstand', 'C_eye_crack': 'C_face_asleep',
          'C_awake': 'C_face_asleep', 'C_misery': 'C_awake'}                 # edit -> the still it is cut against
 SOURCES = PLATES + list(EDITS)
 # extra edits, in build order: built when delivered, never a placeholder. Each is cut against the first of its
 # candidate plates that exists (the door opens on the laptop-less room when there is one).
 OPTIONAL = {'D_laptop_gone': ['D_bedroom_vga'], 'D_door_open': ['D_laptop_gone', 'D_bedroom_vga']}
-DERIVED = ['C_awake_lit', 'B_lamp_lit']
+DERIVED = ['C_awake_lit']
 MAX_DRIFT = 0.5                     # an edit may remove an object and add a hand; past half the frame it is another picture
 COLOURS = 32                        # the EGA-style shots
 COLOURS_FOR = {'D_bedroom_vga': 192}   # the VGA bedroom keeps its full palette: at 32 a green plant or a yellow lampshade greys out
@@ -33,11 +33,12 @@ LOGO_SRC = 'assets/title_screen.png'   # the app's Observability Quest wordmark 
 LOGO_BOX = (60, 172, 590, 318)         # the wordmark on that 640x428 picture, clear of the gold rule below it
 LOGO_MAX_W = 190
 LOGO_OUTLINE = (8, 14, 40, 255)
+LOGO_LINE_GAP = 10                     # px of air added between OBSERVABILITY and QUEST, at the title screen's scale
 
 _PH_BG = {'A': (14, 14, 26), 'B': (30, 30, 36), 'C': (52, 40, 44), 'D': (40, 44, 70)}
-_PH_CHANGE = {'B_arm': (176, 60, 304, 150), 'B_lamp': (24, 20, 80, 110), 'C_eye_crack': (110, 80, 210, 96),
+_PH_CHANGE = {'B_arm': (176, 60, 304, 150), 'C_eye_crack': (110, 80, 210, 96),
               'C_awake': (110, 70, 210, 104), 'C_misery': (120, 124, 200, 150)}
-_PH_TINT = {'B_arm': (200, 150, 120), 'B_lamp': (150, 140, 90), 'C_eye_crack': (20, 20, 24),
+_PH_TINT = {'B_arm': (200, 150, 120), 'C_eye_crack': (20, 20, 24),
             'C_awake': (230, 230, 230), 'C_misery': (120, 60, 60)}
 
 
@@ -201,13 +202,18 @@ def _runs(flags):
     return out
 
 
-def _append_numeral(art, letters):
-    """OBSERVABILITY QUEST -> OBSERVABILITY QUEST I: the wordmark's own letter I (from OBSERVABILITY), enlarged
-    to QUEST's height and set a word-space after the T. Returns (art, letters) unchanged if it cannot be found."""
+def _split_row(letters):
+    """The thinnest row between the wordmark's two lines."""
     rows = letters.sum(axis=1); ys = np.nonzero(rows)[0]
     y0, y1 = int(ys.min()), int(ys.max())
     lo, hi = y0 + (y1 - y0) * 3 // 10, y0 + (y1 - y0) * 7 // 10
-    split = lo + int(np.argmin(rows[lo:hi + 1]))                       # the thinnest row between the two lines
+    return lo + int(np.argmin(rows[lo:hi + 1]))
+
+
+def _append_numeral(art, letters):
+    """OBSERVABILITY QUEST -> OBSERVABILITY QUEST I: the wordmark's own letter I (from OBSERVABILITY), enlarged
+    to QUEST's height and set a word-space after the T. Returns (art, letters) unchanged if it cannot be found."""
+    split = _split_row(letters)
     top = np.nonzero(letters[:split].any(axis=1))[0]; bot = np.nonzero(letters[split:].any(axis=1))[0] + split
     if not len(top) or not len(bot): return art, letters
     t0, t1, b0, b1 = int(top.min()), int(top.max()), int(bot.min()), int(bot.max())
@@ -217,11 +223,13 @@ def _append_numeral(art, letters):
     eyes = [(a, b) for a, b in _runs(face.any(axis=0)) if 10 <= b - a + 1 <= 30]
     if not eyes: return art, letters
     a, b = eyes[-1]; a, b = max(0, a - 1), min(letters.shape[1] - 1, b + 1)     # with its outline
+    qx1 = int(np.nonzero(letters[b0:b1 + 1].any(axis=0))[0].max())
+    cap = np.nonzero(letters[b0:b1 + 1, max(0, qx1 - 50):qx1 + 1].any(axis=1))[0] + b0      # the T: QUEST's cap height, without the Q's tail
+    b0, b1 = int(cap.min()), int(cap.max())
     scale = (b1 - b0 + 1) / (t1 - t0 + 1)
     gw, gh = max(1, round((b - a + 1) * scale)), b1 - b0 + 1
     glyph = Image.fromarray(art[t0:t1 + 1, a:b + 1], 'RGB').resize((gw, gh), Image.LANCZOS)
     gmask = Image.fromarray((band[:, a:b + 1] * 255).astype(np.uint8), 'L').resize((gw, gh), Image.NEAREST)
-    qx1 = int(np.nonzero(letters[b0:b1 + 1].any(axis=0))[0].max())
     x = qx1 + 1 + round((b - a + 1) * 0.7)                              # a word space
     if x + gw > letters.shape[1]: return art, letters
     art = art.copy(); letters = letters.copy(); m = np.asarray(gmask) > 127
@@ -244,6 +252,10 @@ def wall_logo(src=LOGO_SRC, width=LOGO_MAX_W, height=None, numeral=True):
     if not len(ys): return None
     art = np.asarray(c).copy()
     if numeral: art, letters = _append_numeral(art, letters)
+    split = _split_row(letters)                                         # air between the two lines
+    pad = np.zeros((LOGO_LINE_GAP,) + art.shape[1:], art.dtype)
+    art = np.concatenate([art[:split], pad, art[split:]]); letters = np.concatenate([letters[:split], pad[..., 0].astype(bool), letters[split:]])
+    ys, xs = np.nonzero(letters)
     box = (int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1)
     rgba = Image.fromarray(np.dstack([art, (letters * 255).astype(np.uint8)]), 'RGBA').crop(box)
     w = max(8, min(width, rgba.width))
@@ -261,12 +273,6 @@ def wall_logo(src=LOGO_SRC, width=LOGO_MAX_W, height=None, numeral=True):
 def lit_green(img):
     a = np.asarray(img.convert('RGB')).astype(np.float32)
     a[..., 0] *= 0.9; a[..., 1] *= 1.35; a[..., 2] *= 0.9
-    return quantise(Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), 'RGB'))
-
-
-def lit_warm(img):
-    a = np.asarray(img.convert('RGB')).astype(np.float32)
-    a[..., 0] = a[..., 0] * 1.5 + 40; a[..., 1] = a[..., 1] * 1.35 + 30; a[..., 2] = a[..., 2] + 5
     return quantise(Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), 'RGB'))
 
 
@@ -334,7 +340,6 @@ def build(src, out, placeholders=False, logo_src=LOGO_SRC):
         raw[n] = downsample(im); make_edit(n, plate)
     if fake and not placeholders: warn('placeholders used for: ' + ', '.join(fake))
     done['C_awake_lit'] = lit_green(done['C_awake'])
-    done['B_lamp_lit'] = lit_warm(done['B_lamp'])
 
     images = {}
     for n, im in done.items():
@@ -342,6 +347,8 @@ def build(src, out, placeholders=False, logo_src=LOGO_SRC):
         exact = len(im.convert('RGB').getcolors(1 << 20) or []) <= 256     # a palette file only when it loses nothing:
         (im.convert('P', palette=Image.ADAPTIVE, colors=256) if exact else im.convert('RGB')).save(os.path.join(out, images[n]), optimize=True)   # a requantised edit would stop matching its plate
 
+    for f in os.listdir(out):                       # stills no longer in the cut (the lamp close-up) do not linger
+        if f.endswith('.png') and f not in set(images.values()) | {'wall_logo.png'}: os.remove(os.path.join(out, f))
     lcd = find_lcd(done['B_nightstand'])
     if not lcd:
         print('build_intro: no green LCD found in B_nightstand; using the default box '

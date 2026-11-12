@@ -5,10 +5,10 @@ import { OPTIONS, PRESETS } from './engine/hero-parts.js';
 export const NAME_MAX = 16;
 export const DEFAULT_NAME = 'the Engineer';
 export const FACE_ROWS = ['body', 'skin', 'hair', 'style', 'beard'];
-export const KIT_ROWS = ['hoodie', 'jeans', 'glasses', 'hold'];
+export const KIT_ROWS = ['hoodie', 'jeans', 'glasses'];
 export const LABELS = {
   body: 'Body', skin: 'Skin', hair: 'Hair col.', style: 'Hair', beard: 'Beard',
-  hoodie: 'Hoodie', jeans: 'Jeans', glasses: 'Glasses', hold: 'Holding',
+  hoodie: 'Hoodie', jeans: 'Jeans', glasses: 'Glasses',
 };
 export const BODY_LABELS = { masc: 'Masc', fem: 'Fem', nb: 'Enby' };
 

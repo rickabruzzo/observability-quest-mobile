@@ -10,7 +10,6 @@ export const OPTIONS = {
   hoodie: ['honey', 'ink', 'teal', 'indigo', 'lime'],
   jeans: ['indigo', 'black', 'light', 'grey', 'khaki'],
   glasses: ['none', 'glasses'],
-  hold: ['laptop', 'coffee', 'phone', 'duck', 'pager'],
 };
 export const CONFIG_KEYS = Object.keys(OPTIONS);
 export const POSES = ['idle', 'walk1', 'walk2', 'walk3', 'walk4', 'situp'];   // situp: upright in bed, legs under the blanket
@@ -26,9 +25,9 @@ export const WALK = {
   walk4: [0, 0, 0, 0, 1, 0, 0],
 };
 export const PRESETS = {
-  masc: { body: 'masc', skin: 0, hair: 'black', style: 'standard', beard: 'short', hoodie: 'ink', jeans: 'indigo', glasses: 'none', hold: 'laptop' },
-  fem: { body: 'fem', skin: 1, hair: 'brown', style: 'long', beard: 'none', hoodie: 'honey', jeans: 'black', glasses: 'glasses', hold: 'coffee' },
-  nb: { body: 'nb', skin: 0, hair: 'violet', style: 'mohawk', beard: 'none', hoodie: 'teal', jeans: 'grey', glasses: 'glasses', hold: 'phone' },
+  masc: { body: 'masc', skin: 0, hair: 'black', style: 'standard', beard: 'short', hoodie: 'ink', jeans: 'indigo', glasses: 'none' },
+  fem: { body: 'fem', skin: 1, hair: 'brown', style: 'long', beard: 'none', hoodie: 'honey', jeans: 'black', glasses: 'glasses' },
+  nb: { body: 'nb', skin: 0, hair: 'violet', style: 'mohawk', beard: 'none', hoodie: 'teal', jeans: 'grey', glasses: 'glasses' },
 };
 
 export const OUTLINE = '#1a1424';

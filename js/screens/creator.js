@@ -1,13 +1,13 @@
 // Character creation — a Quest-for-Glory-style sheet (spec: Character creation › Sheet language).
 
-import { drawHero, drawHeroCrop, HEAD_CROP, HAND_CROP } from '../engine/hero.js';
+import { drawHero, drawHeroCrop, HEAD_CROP } from '../engine/hero.js';
 import { OPTIONS, SKIN, HAIR, HOODIE, JEANS } from '../engine/hero-parts.js';
 import { FACE_ROWS, KIT_ROWS, LABELS, BODY_LABELS, pick, randomHero, cleanName, displayName, sanitizeHero } from '../creator-state.js';
 import { colButton } from '../engine/ui.js';
 import { preloadIntro } from './intro.js';
 
 const SWATCH = { skin: (v) => SKIN[v], hair: (v) => HAIR[v], hoodie: (v) => HOODIE[v], jeans: (v) => JEANS[v] };
-const THUMB = { style: HEAD_CROP, beard: HEAD_CROP, glasses: HEAD_CROP, hold: HAND_CROP };
+const THUMB = { style: HEAD_CROP, beard: HEAD_CROP, glasses: HEAD_CROP };
 
 export function createCreatorScreen(game) {
   let hero, page = 'face', els = {}, heroCtx = null, nameSheet = null;
