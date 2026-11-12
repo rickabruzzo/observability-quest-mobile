@@ -123,7 +123,9 @@ the hero will play, the problem in a few words, and — once played — a tick a
 
 ## The gamified Honeycomb
 
-A **product screen** is a full-canvas VGA rendering: Honeycomb's dark UI reduced to flat VGA fills, a title bar naming the feature, a chunky chart or list, and the bracketed prompts. Each chapter has one, built from a small shared kit: heatmap, line chart, bar list ("BubbleUp"), trace waterfall, service map, agent timeline, a Canvas notebook, a Team Agent finding card. The right prompt plays a 2–3 second animation (bars sort and the outlier glows; the waterfall reveals the slow span; the service map lights one path; the finding card stamps VERIFIED) and the win line appears.
+A **product screen** is a full-canvas rendering of the real Honeycomb page for the chapter's feature, reduced to flat VGA fills: **Honeycomb's light UI** (white cards on pale grey, blue for passing, yellow-orange for failing), the page's real headings as labels, a chunky chart, and the bracketed prompts. It must be recognisable to someone who has seen the product and legible to someone who has not: **the feature's name is spelled out on first use** ("Service Level Objective", then SLO). Each chapter has one, built from a small shared kit: budget burndown, heatmap pair, BubbleUp dimension cards, trace waterfall, service map, agent timeline, a Canvas notebook, a Team Agent finding card. The direct prompt plays a 2–3 second animation and the result line appears.
+
+**Honeycomb is the solution, so nothing inside it is a joke** (Rick, 2026-11-12). Each step offers the direct route and two other *sensible Honeycomb moves*; those get a short nudge toward the direct route, grey out, and cost nothing. The last result says plainly what Honeycomb did: "Using Honeycomb <feature>, you found <cause> without switching tools." Then the player **applies the fix** (a prompt outside the product screen), and the room visibly recovers. The jokes live in the old tool, the room and the people.
 
 The **old tool** hotspot is the same mechanic with only wrong prompts, so it's a joke the player can enjoy and leave.
 
@@ -138,7 +140,7 @@ Personas and stats are shown as a Sierra character sheet at the start of each ch
 - *Cast (2026-11-12 redesign)*: the hero is the TDM, who advises. The **CTO** is a non-player character, the Buyer, who signs. **The patient is Otto**, the AI support assistant: he stalls mid-answer because one of twelve model calls is starved by a nightly cron job, and his SLO burns.
 - *Room*: a glass-walled exec floor at night, three thumb-sized hotspots: the hero's cube with an 80s desktop **PC**; a wall **monitor** showing Otto's vitals like a sci-fi sickbay readout (a heartbeat lane, three readout boxes cycling jokey stats, and his frozen output "I'd be happy to"); the **CTO** at her desk on the phone, the Cave Logs renewal in front of her. Art: `assets/rooms/` (`tools/build_rooms.py`, manifest `ch1.json`).
 - *Flow*: look at the monitor (a close-up; the vitals read like a doctor's chart) → sit at the PC (a close-up; menu: Read email · Check Otto's vitals · Open Cave Logs · Open Honeycomb · Leave computer) → **Leave computer** unlocks once either tool has been tried → walk to the CTO and advise: **[Sign the contract]** or **[Get Honeycomb]**.
-- *Decision*: **[Get Honeycomb]** wins. If the Honeycomb investigation is not finished yet, the CTO says "show me" and it opens on the spot; finishing it wins. **[Sign the contract]** gets a jab and costs points like any wrong prompt, and the choice comes back: a wrong choice never blocks. After the investigation the monitor recovers (steady heartbeat, green lights, Otto finishes his sentence).
+- *Decision*: **[Get Honeycomb]** wins. If the fix is not deployed yet, the CTO says "show me" and the Honeycomb screen opens on the spot (or, if the cause is already found, just the deploy prompt); deploying wins. **[Sign the contract]** gets a jab and costs points like any wrong prompt, and the choice comes back: a wrong choice never blocks. The investigation finds the cause; **[Apply the fix and deploy]** then appears on the PC menu, and deploying is what recovers the monitor (steady heartbeat, green lights, Otto finishes his sentence, with a joke). The win needs the fix deployed.
 - *Old tool*: **Cave Logs Inc.** — `[grep 40,000 lines of JSON]` `[Add another dashboard]` `[Renew for 3 years]`.
 - *Hero feature*: **SLOs + tracing every LLM call**. Screen: an SLO burn chart with `[Open the burning SLO]` → trace waterfall of 12 model calls → `[Find what's starving the threads]` → one nightly cron job glows. Win: SLO recovered; the CTO leaves the Cave Logs renewal unsigned.
 
@@ -181,9 +183,9 @@ Six verdict tiers, one per reachable score (see *Scoring*), rewritten for the SC
 
 Sierra-style: `Score: N of 500`, 100 per scenario; the total is what all five would give, so playing more is visibly worth more. The rules (my call):
 
-- **100** — the Honeycomb path solved with no wrong prompt *inside the Honeycomb screen*.
-- **50** — a wrong prompt was tried inside the Honeycomb screen first (at any step of a two-step screen).
-- **Visiting the old tool is free.** It is the joke, and the game is sized for a player who tries it once per chapter; a player who tries everything and then does the right thing still gets 100.
+- **100** — the scenario solved and the right advice given first time.
+- **50** — the wrong decision was tried first at the end (scenario 1: `[Sign the contract]`). The choice comes back; it never blocks.
+- **Nothing inside Honeycomb costs points**, and **visiting the old tool is free**: it is the joke, and a player who tries everything and then does the right thing still gets 100.
 - Chapter 5's two winning prompts: `[Check the evidence first]` = 100, `[Approve the suggested fix]` = 50.
 - **Look** lines give no points; they are their own reward. The score never goes down.
 

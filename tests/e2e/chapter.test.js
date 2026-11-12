@@ -264,7 +264,7 @@ test('667x375: the entry line pages; the PC menu, the emails and the monitor tex
   await page.click('#class-card');
   await winOpen(page);
   assert.ok((await ch(page)).window.pages >= 2);
-  assert.ok(await page.locator('.msg .msg-line').count() <= 3);
+  assert.ok(await page.locator('.msg .msg-line').count() <= 5);           // a narrow window may be five lines tall on this phone
   assert.deepEqual(await inside('.msg'), []);
   await dismiss(page);
   assert.deepEqual(await small('#btn-look, #btn-use, #btn-help'), []);

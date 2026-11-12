@@ -5,8 +5,9 @@ the text under a heading (up to the next heading) is the slot's copy. `tools/bui
 sub-project) turns this file into `js/script.js`, so edit the words here, not in code.
 
 Conventions: the narrator speaks with no prefix. The hero speaks as the chapter's class (`SRE:`). Other
-characters are prefixed by name. `[Bracketed]` lines are the tappable prompts — one right, one plausible,
-one silly — in the order shown. `{name}` is the hero's name or "the Engineer". Slots marked **RICK** are
+characters are prefixed by name. `[Bracketed]` lines are the tappable prompts, in the order shown. In an old tool they are
+one plausible and two silly, and all wrong. **In Honeycomb none is silly** (Rick, 2026-11-12): one is the
+direct route and the others are sensible Honeycomb moves that get a nudge (`jab` slots) and cost nothing. `{name}` is the hero's name or "the Engineer". Slots marked **RICK** are
 yours to write; the placeholder shows the beat and the length.
 
 Voice: the badge game's — second person, dry, a Sierra narrator who has seen you die before and is rooting
@@ -275,7 +276,7 @@ OTTO: CRITICAL. Stalled mid-sentence. Fourth outage this week. Twelve models ans
 OTTO: STILL CRITICAL. You now have 40,000 lines of JSON about it. Cause: somewhere in the JSON, presumably.
 
 ### ch1.pc.vitals.hc
-OTTO: STABLE. A nightly export cron was starving one model's threads at 3 AM. Cause: found.
+OTTO: STABLE. The export job has its own thread pool now. Cause: found. Fix: deployed.
 
 ### ch1.pc.leave.locked
 You stand up. You have looked at nothing and learned nothing, and the CTO can tell from across the room. Try a tool first.
@@ -326,49 +327,61 @@ You have solved nothing, but you have solved it for three years.
 You close Cave Logs. Cave Logs does not close you. Small victories.
 
 ### ch1.hc.title
-HONEYCOMB · SLOs
+HONEYCOMB · SERVICE LEVEL OBJECTIVES
 
 ### ch1.hc.intro
-The Otto SLO. The burn chart is doing the thing burn charts do right before someone's weekend disappears.
+Honeycomb opens on Otto's Service Level Objective — SLO for short: the promise that Otto answers 99% of customers in under five seconds. Tonight the promise is broken. The error budget is below zero and still falling.
 
 ### ch1.hc.step1.prompt.1
 [Open the burning SLO]
 
 ### ch1.hc.step1.prompt.2
-[Refresh and hope]
+[Check Historical Compliance]
 
 ### ch1.hc.step1.prompt.3
-[Rename the SLO to something calmer]
+[Start a new query from scratch]
 
 ### ch1.hc.step1.jab.2
-It refreshes. It is still burning. Hope is not a query.
+Compliance has been sliding under the target all week. That tells you how long Otto has been failing, not why. The burning SLO has the why.
 
 ### ch1.hc.step1.jab.3
-"Otto Latency (Fine)". The chart did not get the memo.
+You could. But the SLO already knows exactly which requests failed. Start there and skip the guessing.
 
 ### ch1.hc.step1.result
-Every Otto conversation is a trace. Twelve model calls fan out under each one, and the slow ones aren't spread across all twelve — they pile up at the same minute every night.
+The Budget Burndown isn't a slope, it's a staircase: the budget drops at the same hour every night. Right below it, on the same page, BubbleUp is ready to compare the requests that failed the SLO with the ones that passed.
 
 ### ch1.hc.step2.prompt.1
-[Find what's starving the threads]
+[BubbleUp: what's different about the failures?]
 
 ### ch1.hc.step2.prompt.2
-[Blame the biggest model]
+[Group the failures by model]
 
 ### ch1.hc.step2.prompt.3
-[Ask Otto what's wrong]
+[Open a trace of one slow answer]
 
 ### ch1.hc.step2.jab.2
-The biggest model is slow because everything is slow. You have discovered the symptom. The symptom was not hiding.
+All twelve models are slow at 3 AM, so it isn't one bad model. Good to know. BubbleUp will show what the failures do have in common.
 
 ### ch1.hc.step2.jab.3
-Otto: "I'd be happy to". Otto has been happy to for fourteen minutes now.
+One trace, twelve model calls, all waiting in the same queue. A strong hint. BubbleUp across every failure will confirm it.
 
 ### ch1.hc.step2.result
-BubbleUp compares the slow traces against the rest and one attribute lights up: a nightly export cron, running on the same pool, quietly eating every thread at 3 AM. Fixed before customers noticed. SLO: recovering.
+Using Honeycomb SLOs, you found what was stalling Otto without switching tools. BubbleUp lights up one difference: every failed request was waiting on a thread pool that a nightly export cron job eats at 3 AM.
+
+### ch1.pc.menu.deploy
+[Apply the fix and deploy]
+
+### ch1.pc.deploy
+You give the export job its own thread pool and deploy. On the wall, Otto's line steadies. The error budget stops falling.
+
+### ch1.otto.recovered
+OTTO: I'd be happy to help! I feel much better now. I really do. And for the record, I would open the pod bay doors. Nobody has given me any.
+
+### ch1.pc.vitals.found
+OTTO: STILL CRITICAL, but you know why. A nightly export cron job is starving his threads at 3 AM. Cause: found. Fix: not deployed.
 
 ### ch1.win
-You traced every LLM call and found a cron job. The CTO slides the Cave Logs renewal into a drawer, unsigned, and tells the customer Otto is back. The pen stays down.
+Service Level Objectives told you Otto was failing. BubbleUp told you why. You never left Honeycomb to find out. The CTO slides the Cave Logs renewal into a drawer, unsigned. The pen stays down.
 
 ### ch1.hero.line
 TDM: Three years of grep, or one query. I'll take the query.
