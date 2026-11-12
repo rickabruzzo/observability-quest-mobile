@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
-import { composeHeroSide, drawHeroSide, SIDE_POSES } from '../js/engine/hero-side.js';
-import { HERO_W, HERO_H } from '../js/engine/hero.js';
+import { composeHeroSide, drawHeroSide, SIDE_FOOT_DY, SIDE_POSES } from '../js/engine/hero-side.js';
+import { composeHero, HERO_W, HERO_H } from '../js/engine/hero.js';
 import { OPTIONS, PRESETS } from '../js/engine/hero-parts.js';
 
 const DIR = 'tests/fixtures/hero-side/';
@@ -65,4 +65,23 @@ test('an unknown pose falls back to standing rather than throwing', () => {
     Buffer.from(composeHeroSide(PRESETS.masc, 'walk1').buffer),
     Buffer.from(composeHeroSide(PRESETS.masc, 'stand').buffer),
   );
+});
+
+test('the profile stands on the same floor line as the front view, once SIDE_FOOT_DY is applied', () => {
+  // Both sprites are 28x72 but the profile's shoes end a row higher, so a hero drawn at the same
+  // y would hop a pixel every time it stopped walking. SIDE_FOOT_DY is that difference; the screens
+  // add it when they draw the side view against the floor.
+  const lowest = (px) => { let b = -1; for (let y = 0; y < HERO_H; y++) for (let x = 0; x < HERO_W; x++) if (px[(y * HERO_W + x) * 4 + 3]) b = y; return b; };
+  for (const name of ['masc', 'fem', 'nb']) {
+    const front = lowest(composeHero(PRESETS[name], 'idle'));
+    const side = lowest(composeHeroSide(PRESETS[name], 'stand'));
+    assert.equal(side + SIDE_FOOT_DY, front, `${name}: side ${side} + ${SIDE_FOOT_DY} != front ${front}`);
+  }
+  assert.equal(lowest(composeHeroSide(PRESETS.masc, 'stand', 'pj')) + SIDE_FOOT_DY, lowest(composeHero(PRESETS.masc, 'idle', 'pj')));
+});
+
+test('no walk frame drops below the standing floor line', () => {
+  const lowest = (px) => { let b = -1; for (let y = 0; y < HERO_H; y++) for (let x = 0; x < HERO_W; x++) if (px[(y * HERO_W + x) * 4 + 3]) b = y; return b; };
+  const floor = lowest(composeHeroSide(PRESETS.nb, 'stand'));
+  for (const p of SIDE_POSES) assert.ok(lowest(composeHeroSide(PRESETS.nb, p)) <= floor, `${p} sinks through the floor`);
 });

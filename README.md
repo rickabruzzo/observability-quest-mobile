@@ -98,6 +98,34 @@ assets/anim/          sprite patches + "blank" patches that clear moving parts o
 tools/                build_anim.py (frames → patches), optimize_png.py, render-loop.mjs, stamp.mjs
 ```
 
+v2 (`sci-adventure`) adds the point-and-click engine on top:
+
+```
+js/engine/hero-parts.js   sprite data copied verbatim from tools/hero_gen.py (options, colours, bodies,
+                          the front view's WALK offsets, the profile's SIDE_LEG / SIDE_BOB angles)
+js/engine/hero.js         the front view: composeHero / drawHero, 28×72 RGBA. Also exports the canvas
+                          (Grid), the colour ramps and the mask helpers that the profile view reuses
+js/engine/hero-side.js    the profile view: composeHeroSide / drawHeroSide, facing right, mirrored by
+                          flip to walk left. SIDE_POSES = stand + w1..w8; SIDE_FOOT_DY is the one row
+                          its feet sit higher than the front view's
+js/engine/walk.js         planWalk / stepWalk: position, pose and which view to draw. Walking is the
+                          profile (frame from distance travelled, one cycle per STRIDE_PX), standing
+                          still is the front view
+js/engine/stage.js        320×200 logical canvas, scaling and the landscape/rotate gate
+js/engine/ui.js           the control-bar buttons
+js/engine/cursor.js       Sierra's walk/hand cursors, and the tap marker phones get instead
+js/screens/               title, creator (the character sheet), intro, preview (the test room)
+js/intro/                 timeline.js (shots, the hero's script, the way out of the bedroom), pager, sfx, font5x7
+tools/hero_gen.py         the normative renderer: hero() is the front view, hero_side() the profile.
+                          --fixtures / --side-fixtures write the goldens the JS ports are proved against
+```
+
+Both ports are pixel-exact against Python: `tests/hero.test.js` and `tests/hero-side.test.js` compare
+every fixture byte for byte. Regenerate with `python3 tools/hero_gen.py --fixtures tests/fixtures/hero`
+and `--side-fixtures tests/fixtures/hero-side`. Every joint in the profile rounds half up
+(`floor(v + 0.5)`, `hero_gen._r` / `_r`), because Python's `round()` is banker's and JavaScript's
+`Math.round` is not — the two would otherwise put a limb on different pixels.
+
 ## Common edits
 
 - **Change a title or swap a narrator:** `js/scenarios.js` → `narrator: { name, title, portrait }`.

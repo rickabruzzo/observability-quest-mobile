@@ -3,7 +3,7 @@
 // cycle, flipping, reduced motion and the pause under the rotate gate.
 
 import { drawHero, HERO_W, HERO_H } from '../engine/hero.js';
-import { drawHeroSide } from '../engine/hero-side.js';
+import { drawHeroSide, SIDE_FOOT_DY } from '../engine/hero-side.js';
 import { planWalk, stepWalk } from '../engine/walk.js';
 import { colButton } from '../engine/ui.js';
 import { actionAt, applyCursor, drawIcon, MARKER_MS } from '../engine/cursor.js';
@@ -36,7 +36,7 @@ export function createPreviewScreen(game) {
     const g = ctx.ctx2d;
     paintRoom(g);
     // side on while walking (mirrored when heading left), facing the player when stopped
-    if (view === 'side') drawHeroSide(g, hero, pose, x, FLOOR_Y - HERO_H, 1, { flip });
+    if (view === 'side') drawHeroSide(g, hero, pose, x, FLOOR_Y - HERO_H + SIDE_FOOT_DY, 1, { flip });
     else drawHero(g, hero, pose, x, FLOOR_Y - HERO_H, 1, { flip });
     if (marker) drawIcon(g, marker.icon, marker.x, marker.y);        // where the tap landed, and what it will do
   }

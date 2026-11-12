@@ -11,6 +11,11 @@ import { FORE, HAIR, HC_MARK, HC_MARK_PIXELS, HOODIE, JEANS, PJ, SHIN, SIDE_BOB,
 
 export { SIDE_POSES, HERO_W, HERO_H };                  // the profile shares the front view's 28×72 canvas
 
+// The profile's shoes end one row higher than the front view's, so a hero drawn at the same y would
+// hop a pixel each time it stopped walking. Screens add this when they draw the side view against the
+// floor; tests/hero-side.test.js keeps the two baselines in step.
+export const SIDE_FOOT_DY = 1;
+
 /** Round half up — the one rule the whole profile view uses, in both languages (hero_gen._r). */
 const _r = (v) => Math.floor(v + 0.5);
 const rad = (deg) => (deg * Math.PI) / 180;

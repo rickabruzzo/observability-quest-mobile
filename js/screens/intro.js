@@ -6,7 +6,7 @@ import { SHOTS, HERO_STEPS, frameAt, heroAt, nextShot, exitPlan, exitAt } from '
 import { lcdScale, marqueeScale, marqueeX, drawLcd, lcdPages, drawLcdPage } from '../intro/pager.js';
 import { createSfx } from '../intro/sfx.js';
 import { composeHero, drawHero, HERO_W, HERO_H } from '../engine/hero.js';
-import { drawHeroSide } from '../engine/hero-side.js';
+import { drawHeroSide, SIDE_FOOT_DY } from '../engine/hero-side.js';
 import { HOODIE, JEANS, HC_MARK, HC_MARK_PIXELS, OUTLINE } from '../engine/hero-parts.js';
 import { colButton } from '../engine/ui.js';
 
@@ -177,7 +177,7 @@ export function createIntroScreen(game) {
     sound('title', h.titled); sound('rustle', h.stirring); sound('step', h.standing); sound('pickup', h.outfit === 'hoodie');
     sound('take', h.holding); sound('door', !!e?.doorOpen); sound('shut', !!e && !e.visible && !e.doorOpen);
     if (e) {
-      if (e.visible) drawHeroSide(g, cfg, e.pose, e.x, e.y - HERO_H, 1, { flip: e.flip });   // the way out is side on throughout
+      if (e.visible) drawHeroSide(g, cfg, e.pose, e.x, e.y - HERO_H + SIDE_FOOT_DY, 1, { flip: e.flip });   // the way out is side on throughout
       Object.assign(heroState, { pose: e.pose, view: e.view, outfit: 'hoodie', x: e.x, visible: e.visible });
       if (e.done) finish();
       return;
