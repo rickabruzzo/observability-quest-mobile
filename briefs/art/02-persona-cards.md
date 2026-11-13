@@ -13,7 +13,7 @@ picture that goes in the card's window**, one per persona:
 | File | Persona | Class |
 |---|---|---|
 | `P1_card` | the CTO (scenario 1) | Archmage of the Budget |
-| `P2_card` | the Platform Engineer (scenario 2) | Slayer of the Monolith |
+| `P2_card` | the Cloud Engineer (scenario 2) | Druid of the Monolith (**redo**, see below) |
 | `P3_card` | the Frontend Developer (scenario 3) | Bard of the Browser |
 | `P4_card` | the SRE on call (scenario 4) | Knight of the Pager |
 | `P5_card` | the Release Engineer (scenario 5) | Rogue of the Friday Deploy |
@@ -65,11 +65,25 @@ At most 5 tries a card.
 > around her, caught in the spell. Sparks of gold light. Behind her, a night city skyline through tall glass,
 > in dark blues.
 
-### `P2_card` — the Platform Engineer, Slayer of the Monolith
-> [the person from the room 2 plate], in plate armour pieced together from grey server parts and coiled cable.
-> Mid-swing with a war hammer whose head is a giant wrench, one boot planted on a huge cracked grey stone
-> monolith that has two small blinking lights. A thick power cable is wound round the other arm like a lasso.
-> Behind, a dark cavern lit by rows of tiny green lights.
+### `P2_card` — the Cloud Engineer, Druid of the Monolith (redo, Rick 2026-11-13)
+
+**This replaces the armoured "Slayer of the Monolith" picture** in `art-drops/2026-11-12-room-ch2/`. Rick: a druid
+at a Stonehenge-like monolith, in a nature setting, not a paladin. Attach `R2_war_room` (from that drop) as the
+character reference: the same man in his fifties, greying hair, glasses pushed up on his head.
+
+> [the person from the room 2 plate], as a druid: a hooded moss-green robe worn over his jacket, a crown of
+> leaves, and a gnarled wooden staff with a length of grey cable wound round it and one small green light near
+> the top. He stands inside a circle of tall weathered standing stones with stone lintels across their tops,
+> on grass, at dusk. Mid-incantation: staff raised high in one hand, the other hand thrown out toward the
+> tallest stone in the middle of the circle, a single huge grey monolith with two small blinking lights, moss
+> on its base and ivy climbing it. His robe and the grass are caught in a rising wind, and a swirl of low
+> cloud gathers above the stones. Behind, rolling green hills and a darkening sky.
+
+It is a stone circle of the game's own, not a copy of any particular monument: do not reproduce a real site's
+exact arrangement. No runes, carvings or writing on the stones.
+
+Deliver it on its own: branch `art/card-ch2`, drop `art-drops/<date>-card-ch2/P2_card.png` with a short
+`HANDBACK.md`. Leave the old picture where it is.
 
 ### `P3_card` — the Frontend Developer, Bard of the Browser
 > [the person from the room 3 plate], with her glasses, in a bard's feathered cap, a short cape and a tunic

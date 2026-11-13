@@ -470,13 +470,13 @@ Tonight's page: the Cloud Engineer at Kestrel Bank, who has moved 350 services t
 THE CLOUD ENGINEER
 
 ### ch2.persona.class
-Slayer of the Monolith
+Druid of the Monolith
 
 ### ch2.persona.stats
 YAML Tolerance 18 · Kubernetes 16 · Sleep 4 · "It's DNS" 20
 
 ### ch2.persona.flavor
-Has slain the monolith 350 times. It keeps getting back up.
+Moved 350 stones to the cloud. One still answers when called.
 
 ### ch2.room.enter
 The migration war room at Kestrel Bank, 3 AM. One wall is a whiteboard: two years of boxes and arrows, every service the bank runs. The Cloud Engineer who drew it is staring at it like it owes him money.
