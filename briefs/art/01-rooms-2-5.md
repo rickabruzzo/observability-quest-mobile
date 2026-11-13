@@ -80,6 +80,12 @@ context only; nothing is written in the picture.
 
 ### Room 2 — `R2_war_room` (Kestrel Bank: the migration war room)
 
+> **Superseded 2026-11-12.** Rick redirected this room: the persona is the **Cloud Engineer** standing at a
+> **whiteboard** (a hand-drawn service map), which is the room's wall display; the monolith is a codebase, so
+> there is **no server cabinet and no plug**; the hero's computer is a cubicle desk on the left. The delivered
+> art and its measurements are in `art-drops/2026-11-12-room-ch2/HANDBACK.md`. The description below is the
+> original brief, kept for the record.
+
 *Story:* a bank that hosts online banking for three hundred credit unions has "finished" a two-year move off
 its old monolith. Members of two credit unions cannot move money, but two in three hundred is one percent, so
 every dashboard is green. (What Honeycomb finds: for those two, one node still calls the old monolith.) The
