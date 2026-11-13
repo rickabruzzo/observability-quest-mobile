@@ -13,8 +13,11 @@ in Rick's terminal. You take a brief from `briefs/warp/`, build it on your own b
    git fetch origin
    git worktree add ../oqm-warp-<topic> -b warp/<topic> origin/sci-adventure
    cd ../oqm-warp-<topic>
-   git config user.name Claude && git config user.email noreply@anthropic.com    # this worktree only
    ```
+   Commit as Claude by naming the identity on each commit:
+   `git -c user.name=Claude -c user.email=noreply@anthropic.com commit -m "..."`. Do not run
+   `git config user.name` or `git config user.email`: a worktree shares its config file with the main folder, so
+   that would stamp Rick's own merges as Claude.
 2. **Push only `warp/<topic>`.** Never push, merge into or rebase `sci-adventure` or `main`; never force-push
    after the pull request is open (add commits instead).
 3. **Stay inside the brief's file list.** Each brief says which files are yours and which are off limits. If the
