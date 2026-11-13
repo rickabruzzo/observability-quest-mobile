@@ -238,3 +238,11 @@ instead. No customer is named in the game; the video is not in the repo.
 `assets/screens/ch5_hc_0..2.png` (Team Agents' goals; one Finding; the agent's work on a Canvas with its suggested fix) are
 modelled on Honeycomb's "Team Agents demo" (Jessitron and Martin Thwaites, Innovation Week 2026), which Rick supplied. The
 layouts follow the demo; the sign-up bug is the game's own; connector names are generic. Not screenshots; no logo.
+
+### Scenario 2's Honeycomb screens (2026-11-12): also drawn in code
+
+`assets/screens/ch2_hc_0..2.png` (the Service Map unfiltered; BubbleUp on the failed transfers; the Service Map filtered to
+two institutions) follow two customer stories Rick supplied: the Jack Henry case study (BubbleUp and Service Map) and the
+FireHydrant Kubernetes-migration story, whose video is a short text animation with no product footage. The layouts follow
+Honeycomb's Service Map and BubbleUp; the bank, the node and the service names are the game's own. No customer is named in
+the game.

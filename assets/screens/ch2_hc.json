@@ -1,0 +1,52 @@
+{
+ "pic": {
+  "x": 4,
+  "y": 20,
+  "w": 188,
+  "h": 176
+ },
+ "stages": [
+  {
+   "image": "ch2_hc_0.png",
+   "what": "Service Map: every service and every call, unfiltered",
+   "highlights": [
+    {
+     "x": 12,
+     "y": 14,
+     "w": 174,
+     "h": 13
+    }
+   ]
+  },
+  {
+   "image": "ch2_hc_1.png",
+   "what": "BubbleUp on the failed transfers: two institutions, one node",
+   "highlights": [
+    {
+     "x": 12,
+     "y": 38,
+     "w": 110,
+     "h": 76
+    },
+    {
+     "x": 125,
+     "y": 38,
+     "w": 61,
+     "h": 76
+    }
+   ]
+  },
+  {
+   "image": "ch2_hc_2.png",
+   "what": "Service Map filtered to those two: where their transfers go",
+   "highlights": [
+    {
+     "x": 60,
+     "y": 58,
+     "w": 82,
+     "h": 78
+    }
+   ]
+  }
+ ]
+}
