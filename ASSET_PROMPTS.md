@@ -209,3 +209,11 @@ Gemini API `gemini-3.1-flash-image`, 3:2, 1K, on Rick's personal account, follow
 | `R1_cto_talk_1`, `R1_cto_talk_2` | the composite plate | 2 each → t1 | Only the CTO's figure differs; the game swaps one 63×40 patch. The CTO is a fictional person. |
 | `R1_pc_closeup` | — (plate as style reference) | 2 → t1 | Blank screen; the game draws on it. |
 | `R1_monitor_closeup` | — (plate as style reference) | 3 → t3 | All panels blank; the game draws the vitals. |
+
+## Scenario 1's Honeycomb screens (2026-11-12): drawn in code, no model
+
+`assets/screens/ch1_hc_0.png` (Canvas: the automatic investigation), `ch1_hc_1.png` (Agent Timeline) and `ch1_hc_2.png`
+(one LLM call opened) are pixel art drawn by `tools/build_hc_screens.py` with the game's own 5x7 font. They are modelled on
+Honeycomb's own demo video, "Debugging agentic workflows" (Ken Rimple, Innovation Week 2026), which Rick supplied: the
+layouts, the lane structure and the demo's numbers (11.2 minutes, 19 LLM calls, 97 tool calls, 411,448 tokens, 57,293 input
+tokens, 97 orders, 145 KB). They are not screenshots, the video is not in the repo, and no Honeycomb logo is drawn.

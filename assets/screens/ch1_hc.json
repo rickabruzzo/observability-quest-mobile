@@ -1,0 +1,52 @@
+{
+ "pic": {
+  "x": 4,
+  "y": 20,
+  "w": 188,
+  "h": 176
+ },
+ "stages": [
+  {
+   "image": "ch1_hc_0.png",
+   "what": "Canvas: the automatic investigation",
+   "highlights": [
+    {
+     "x": 75,
+     "y": 88,
+     "w": 107,
+     "h": 68
+    }
+   ]
+  },
+  {
+   "image": "ch1_hc_1.png",
+   "what": "Agent Timeline: one conversation",
+   "highlights": [
+    {
+     "x": 104,
+     "y": 125,
+     "w": 79,
+     "h": 32
+    }
+   ]
+  },
+  {
+   "image": "ch1_hc_2.png",
+   "what": "One LLM call: what the model was sent",
+   "highlights": [
+    {
+     "x": 102,
+     "y": 51,
+     "w": 80,
+     "h": 21
+    },
+    {
+     "x": 101,
+     "y": 130,
+     "w": 83,
+     "h": 42
+    }
+   ]
+  }
+ ]
+}
