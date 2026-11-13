@@ -147,6 +147,18 @@ One story down. The prize is yours — or the night is young.
 
 ---
 
+## The persona card
+
+The first time the player talks to a scenario's persona, their card pops up: a trading card with the persona in a silly fantasy outfit for their class, their stats and a line of flavor (two short lines at most, about 66 characters). Closing it starts the conversation. Every conversation with the persona ends in a short list of options, and one of them shows the card again. The scenario's title card no longer carries the stats (`chN.card.stats` goes when the card is built).
+
+### persona.show
+[Show me your card again]
+
+### persona.leave
+[I'll go and take a look]
+
+---
+
 ## Chapter 1 — Agent Observability · Enterprise · CTO
 
 Inspired by a customer-service platform whose support bot is a team of AI agents. The solve follows Honeycomb's own agent-observability demo (2026): an alert starts an automatic investigation in Canvas, Agent Timeline shows the whole conversation, and one LLM call shows what the model was fed. Company: **Converso**, assistant: **Otto** (the patient). The persona is the **CTO**, the buyer, who signs; the Honeycomb Hero advises her. Room: your cube and its 80s PC, Otto's vitals monitor on the wall, the CTO at her desk. Vitals stats are two short lines split at ` / ` (15 characters a line at most). Narrator portrait at the verdict: Christine Yen.
@@ -159,6 +171,18 @@ Budget 3 · Vendor Skepticism 17 · Meetings Survived 19 · Grep 2
 
 ### ch1.card.line
 You are the Honeycomb Hero, and this is who paged you: the CTO of Converso. Her AI support agent is failing customers, and she is one signature away from three more years of logs.
+
+### ch1.persona.name
+THE CTO
+
+### ch1.persona.class
+Archmage of the Budget
+
+### ch1.persona.stats
+Budget 3 · Vendor Skepticism 17 · Meetings Survived 19 · Grep 2
+
+### ch1.persona.flavor
+Summons purchase orders at will. Has never once banished a renewal.
 
 ### ch1.room.enter
 The exec floor at Converso, 3:14 AM. Glass walls, one lamp, and the CTO who paged you, on the phone, not enjoying it. On the wall, a screen the size of a door shows the vitals of Otto — the AI support assistant — who is frozen halfway through the sentence "I'd be happy to". He has been happy to for eleven minutes.
@@ -406,6 +430,18 @@ YAML Tolerance 18 · Kubernetes 16 · Sleep 4 · "It's DNS" 20
 ### ch2.card.line
 Tonight's page: the Platform Engineer at Kestrel Bank, who has moved 350 services off the monolith. The monolith has not been informed.
 
+### ch2.persona.name
+THE PLATFORM ENGINEER
+
+### ch2.persona.class
+Slayer of the Monolith
+
+### ch2.persona.stats
+YAML Tolerance 18 · Kubernetes 16 · Sleep 4 · "It's DNS" 20
+
+### ch2.persona.flavor
+Has slain the monolith 350 times. It keeps getting back up.
+
 ### ch2.room.enter
 The migration war room at Kestrel Bank. A whiteboard covered in arrows. Three hundred and fifty green tiles on the wall. In the corner, a beige server with a hand-written sign: DO NOT UNPLUG.
 
@@ -525,6 +561,18 @@ Caffeine 17 · "Works on my machine" 20 · CSS 11 · Patience with RUM tools 1
 
 ### ch3.card.line
 Tonight's page: the Frontend Developer at Twang & Co. She sells guitars online and teaches people to play them. Checkout is slow for someone. She does not know who.
+
+### ch3.persona.name
+THE FRONTEND DEVELOPER
+
+### ch3.persona.class
+Bard of the Browser
+
+### ch3.persona.stats
+Caffeine 17 · "Works on my machine" 20 · CSS 11 · Patience with RUM tools 1
+
+### ch3.persona.flavor
+Her songs load instantly. On her machine.
 
 ### ch3.room.enter
 The dev bullpen at Twang & Co. Monitors everywhere, one of them showing somebody's checkout stuck at 13%: "Placing your order…" A left-handed guitar leans against a desk, unplugged, like it knows.
@@ -648,6 +696,18 @@ Pager Endurance 19 · Postmortem Writing 14 · Blameless 18 · Sleep 2
 
 ### ch4.card.line
 Tonight's page: the Site Reliability Engineer on call at Nullpoint Games. Eight thousand players are in one star system, and the one engineer who understands the fleet code is asleep in another time zone.
+
+### ch4.persona.name
+THE SRE ON CALL
+
+### ch4.persona.class
+Knight of the Pager
+
+### ch4.persona.stats
+Pager Endurance 19 · Postmortem Writing 14 · Blameless 18 · Sleep 2
+
+### ch4.persona.flavor
+Sworn to answer the call. Any call. At any hour.
 
 ### ch4.room.enter
 The ops room at Nullpoint Games, lit by a wall of space. Eight thousand pilots in one system. Chat scrolls with the word "lag" in nine languages. On a desk in the corner, a dusty monitor with a label: THE FLEET CODE — ASK EINAR.
@@ -774,6 +834,18 @@ Deploy Frequency 20 · Rollback Reflex 15 · Friday Deploys 1 · Sleep 3
 
 ### ch5.card.line
 Tonight's page: the Build & Release Engineer at Agentry. There are three of them. He shipped on a Friday. He knows what he did.
+
+### ch5.persona.name
+THE RELEASE ENGINEER
+
+### ch5.persona.class
+Rogue of the Friday Deploy
+
+### ch5.persona.stats
+Deploy Frequency 20 · Rollback Reflex 15 · Friday Deploys 1 · Sleep 3
+
+### ch5.persona.flavor
+Strikes at 5:52 PM. Vanishes for the weekend.
 
 ### ch5.room.enter
 A startup loft at 3 AM. Three desks, two empty. A pager face-down on the floor where someone threw it. On the couch, the engineer who shipped Friday's release, one finger over the rollback key.

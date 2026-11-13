@@ -62,7 +62,7 @@ This is **a game, not a toolkit**: we replicate the experience of an SCI-era gam
 2. **Character creation** — a Sierra character sheet, landscape: the hero large on the left, pickers on the right, RANDOM and DONE always visible. **Appearance only** — the class is not chosen here (Rick's call); each chapter hands the hero its persona. Details in *Character creation* below.
 3. **Intro** — Rick's storyboard (`docs/intro-storyboard.md`): a dithered EGA cold open in the dark — the pager, the face, the arm — cutting to the VGA bedroom with the title on the wall, where *the hero the player just made* gets out of bed, changes into the hoodie and walks out. Skippable. Details in *Intro and coda*. (Order per Rick 2026-11-11: sheet first, to be judged in team play-tests.)
 4. **Scenario menu**, then **one scenario** of the player's choosing (*The scenario menu*, below). A scenario is:
-   - **Class card**: the chapter's persona and their silly stats (below). The persona is **the person who paged the hero**, not the hero (Rick, 2026-11-12) — "Tonight's page: the SRE on call." Tap to continue.
+   - **Title card**: who paged the hero tonight, in one line — "Tonight's page: the SRE on call." No stats (Rick, 2026-11-12: they moved to the persona card). Tap to continue.
    - **Room**: a 320×200 scene with the hero, 3–5 hotspots, narrator line on entry.
    - **Hotspots**: tapping one walks the hero there (or teleports under reduced motion) and triggers it.
    - **Solve**: the Honeycomb hotspot opens the gamified product screen; the right prompt animates the result; narrator declares the win; the status bar's solved count ticks up.
@@ -133,7 +133,15 @@ The **old tool** hotspot is the same mechanic with only wrong prompts, so it's a
 
 **The player is always the Honeycomb Hero** (Rick, 2026-11-12): the character they built, in the Honeycomb hoodie, paged in the intro. Each chapter's **persona is the other person in the room**: one of Honeycomb's ICP personas, with a pain point, about to make the wrong call. It is their problem the hero solves, their stats on the class card, and their last word at the win. The hero works at whatever desk they are lent. **Titles** (use case · industry · persona) follow the problem and the approach in the Honeycomb video or customer story each solve is grounded in, so they may differ from the original five use-case names.
 
-Personas and stats are shown as a Sierra character sheet at the start of each chapter. Company names and all copy are placeholders until the script lands; the *shape* below is what the design commits to.
+### The persona card (Rick, 2026-11-12)
+
+The first time the player talks to the persona (Use on them), **their card pops up**: a fantasy trading card. On it, the persona in a **silly fantasy outfit for their class, in an action pose** (CTO: Archmage of the Budget; Platform Engineer: Slayer of the Monolith; Frontend Developer: Bard of the Browser; SRE on call: Knight of the Pager; Release Engineer: Rogue of the Friday Deploy), their name, their class, their four silly stats and a line of flavor. Closing the card starts their dialogue. The card opens by itself **only the first time**; after that, every conversation with the persona ends in a short option list that includes **[Show me your card again]**.
+
+- The frame is the game's own, drawn in CSS: it is *a* trading card, not a copy of any real card game's frame, symbols or wording.
+- The picture is generated art in the house VGA style, 16:10 (128×80 game px, delivered 640×400), of the same fictional person as in the room (art brief 02). Until a card's art exists, the card shows a crop of the persona from the room plate.
+- Portrait card, 5:7, 94% of the scene's height, centred over the dimmed room; all text is real text in VT323 and stays inside the card on a 667×375 phone.
+
+Company names and all copy are placeholders until the script lands; the *shape* below is what the design commits to.
 
 ### 1 · Agent Observability · Enterprise · **CTO** (was LLM Observability · Technical Decision Maker)
 - *Inspired by* Intercom / Fin AI. Company: a fictional enterprise customer-service platform.
