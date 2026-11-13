@@ -8,6 +8,7 @@ From `briefs/art/01-rooms-2-5.md` (room 3) and `briefs/art/02-persona-cards.md` 
 |---|---|
 | `R3_bullpen.png` | Room plate |
 | `R3_npc_talk_1.png`, `R3_npc_talk_2.png` | The persona in two other moments; differ from the plate only in the region below |
+| `R3_npc_win.png` | **New 2026-11-13.** Win frame: she hangs up the phone, relieved, with a small fist pump (`ch3.recovered`, `ch3.win`) |
 | `R3_wall_closeup.png` | The wall display straight on, all panels blank |
 | `R3_pc_closeup.png` | The hero's computer screen straight on, blank |
 | `P3_card.png` | `P3_card`: Bard of the Browser. Feathered cap, cape, tunic over the cardigan, striking a chord on a lute-shaped guitar with one boot on an amp, sparks off the strings. Reads at 128×80. |
@@ -50,11 +51,23 @@ From `briefs/art/01-rooms-2-5.md` (room 3) and `briefs/art/02-persona-cards.md` 
 
 The loop plate → talk_1 → plate → talk_2 swaps cleanly. Changed region: talk_1: x 27–117, y 20–135. talk_2: x 27–112, y 20–135. (the region includes a few stray pixels round the figure that match the plate to within a shade).
 
+
+## Updates for the revised script (2026-11-13)
+
+Cloud Claude rewrote chapter 3 around this drop. These changes fit the art to it:
+- **A laptop on her standing desk.** `ch3.look.npc` says "On her screen is a pull request: a nicer spinner", but her desk had no screen. A small laptop now sits there, lid toward the viewer (about x 40–70, y 100–118). It's in the plate, both talk frames and the win frame.
+- **The sticker in the middle of the spare laptop's lid** looked like a well-known fruit logo. It's now a plain orange sticker.
+- **New `R3_npc_win`** differs from the plate only inside **x 10–113, y 14–138**. With the talk frames, the frame-swap area for this room is **x 10, y 14, w 108, h 125**.
+- **The guitar is right-handed,** which the script now uses ("Right-handed, like nine in ten of them").
+- **Script loose end:** `ch3.look.workstation` describes a separate workstation with a sticky note. The room has only the spare desk.
+
 ## Flaws kept
 
 See "Changes from the brief". Nothing else known.
 
 ## Provenance
+
+- **2026-11-13 updates:** one edit of the plate for the laptop and the sticker (2 tries, t1 kept; only those two areas composited back, then pasted into the talk frames). Win frame: an edit of the plate, 2 tries, t1 kept; only her figure composited. Script: `scratch/room_gen/gen_set.py` (`R3_fix`, `R3_npc_win`). The earlier versions are in `scratch/room_gen/raw/tries/R3_before_update/`.
 
 - **Tool:** Gemini API `gemini-3.1-flash-image`, 3:2, 1K, 2026-11-12, on Rick's personal account.
 - **Plate:** the brief's room prompt with its opening and closing lines, `scratch/room_gen/raw/R1_exec_floor.png` attached as the style reference (`scratch/room_gen/gen_rooms.py`).
