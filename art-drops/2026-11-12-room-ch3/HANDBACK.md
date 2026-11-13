@@ -64,12 +64,15 @@ Cloud Claude rewrote chapter 3 around this drop. These changes fit the art to it
 
 ## Round 2 (Rick, 2026-11-13)
 
-- **The wall display now clearly reads as a TV monitor,** not a whiteboard. It has a thick black bezel, a power light, and a blue glow on the bricks. The page has a **browser title bar** (three dots and an empty address bar). The same change is in `R3_wall_closeup`.
+- **The wall display now clearly reads as a TV monitor,** not a whiteboard. It has a thick black bezel and a power light. (A painted glow on the bricks was tried and removed: Rick said it read as errant paint. See "Screen glow" below.) The page has a **browser title bar** (three dots and an empty address bar). The same change is in `R3_wall_closeup`.
   - **Wide shot:** the browser bar replaced the old top progress bar. In the room view, draw the progress in the address bar (**x 120–209, y 36–40**) or skip it, since text is too small at that size anyway. The other panels are unchanged: large x 111–171, y 46–80; small x 176–208 at y 46–55, 58–67, 71–80; lane x 111–208, y 84–90; whole screen x 102–217, y 34–94.
   - **Close-up:** title bar y 22–32 with the address bar x 97–223, y 24–30; **top bar (progress) x 54–265, y 39–51**; large x 54–183, y 60–137; small x 192–265 at y 60–80, 88–109, 117–137; lane x 54–265, y 147–160. The page is pale, so draw in dark ink.
 - **The two old CRT monitors and their cabinet in the back right corner are gone.** Rick: they looked like 80s portable TVs. Only brick wall is behind the chair now.
 - **New sign: a handwritten "No Stairway" sheet** taped on the right wall at **x 263–294, y 48–72**. It's the only writing in the room, at Rick's request, so the guitar can get the prompt "No Stairway to Heaven". It could be its own small hotspot.
 - **`R3_npc_talk_2` and `R3_npc_win` were remade** on the new plate. Her figure now changes inside **x 7–120, y 7–161** across all three frames. **The frame-swap area for this room is x 7, y 7, w 114, h 155.**
+
+- **Screen glow is the code's job (Rick, 2026-11-13).** The art has no glow. Draw a soft halo around the monitor's bezel (**x 96–224, y 25–102**), fading out over about 6–10 px, dithered to fit the palette rather than a smooth gradient, with no hard edge. Animate its intensity, flickering irregularly between pure white and a slightly darker bluish white, the way a TV lights a dark room. Tint the screen's pale page with the same flicker. Reduced motion: hold it steady at a low level, or leave it off.
+- Also cleaned in this pass: a duplicate set of tiny browser dots above the title bar, and a stray white motion-arrow by her wrist in `R3_npc_win`.
 
 ## Flaws kept
 
