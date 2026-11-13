@@ -85,3 +85,10 @@ test('without the pictures it still draws the frame, never throws', () => {
   assert.ok(g.calls.some((c) => c[1] === '#2A3346'));
   paintHc(fakeG(), 0, 1, null);
 });
+
+test('the loader lists a screen manifest\'s pictures by name, and a room manifest\'s as before', async () => {
+  const { manifestImages } = await import('../js/engine/images.js');
+  assert.deepEqual(manifestImages(manifest), [['ch1_hc_0', 'ch1_hc_0.png'], ['ch1_hc_1', 'ch1_hc_1.png'], ['ch1_hc_2', 'ch1_hc_2.png']]);
+  const room = JSON.parse(readFileSync('assets/rooms/ch1.json', 'utf8'));
+  assert.equal(manifestImages(room).length, Object.keys(room.images).length);
+});

@@ -126,7 +126,7 @@ body[data-cols="narrow"] .btn-sierra .long, body:not([data-cols="narrow"]) .btn-
 .tool { position: absolute; inset: 0; }
 .tool-title { position: absolute; left: 0; right: 0; top: 0; height: 9%; min-height: 24px; display: flex; align-items: center; justify-content: center; background: var(--bar); color: #000; font-size: 22px; line-height: 1; letter-spacing: 1px; }
 .tool.old .tool-title { background: #0A120A; color: #3CC83C; border-bottom: 2px solid #3CC83C; }
-.tool-prompts { position: absolute; left: 50%; right: 8px; top: 11%; bottom: 8px; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+.tool-prompts { position: absolute; left: 61.5%; right: 8px; top: 11%; bottom: 8px; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
 .tool-prompts[hidden] { display: none; }
 .prompt { min-height: 44px; padding: 2px 10px; background: var(--sheet-white); color: #111; border: 2px solid #111; box-shadow: 3px 3px 0 #555; font-family: var(--font-text); font-size: 20px; line-height: 1.1; text-align: left; cursor: pointer; }
 .prompt:active:not([disabled]) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #555; }
@@ -178,3 +178,11 @@ body[data-cols="narrow"] .btn-sierra .long, body:not([data-cols="narrow"]) .btn-
 .pc-item:active { background: #3CE070; color: #05140A; }
 /* the CTO's question: two prompts low over the cube, clear of the hero and the CTO */
 .decide-prompts { position: absolute; left: 3%; bottom: 10px; display: flex; flex-direction: column; gap: 8px; width: 44%; pointer-events: auto; }   /* over the cube: the hero and the CTO stay in view */
+
+/* ---- scenario menu: a solved scenario's tick (drawn, so no glyph is needed) ---- */
+.mr-tick { display: inline-block; width: 0.35em; height: 0.7em; margin-right: 0.35em; border: solid currentColor; border-width: 0 3px 3px 0; transform: rotate(45deg) translateY(-0.12em); vertical-align: middle; }
+
+/* ---- Charity's verdict on Claim: her portrait takes over the scene (above any menu or summary) ---- */
+.charity { position: absolute; inset: 0; z-index: 3; background: #000; }
+.charity-portrait { position: absolute; left: 16.875%; top: 1%; width: 65.9375%; height: 66%; object-fit: cover; image-rendering: pixelated; image-rendering: crisp-edges; }
+.charity-head { position: absolute; left: 0; right: 0; top: 0; padding: 2px 8px; background: rgba(0, 0, 0, 0.7); color: var(--honey); font-family: var(--font-text); font-size: 22px; line-height: 1.1; text-align: center; letter-spacing: 1px; }

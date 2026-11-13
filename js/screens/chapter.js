@@ -15,13 +15,16 @@ import { hotspotAt, walkTarget } from '../engine/room.js';
 import { createWindows } from '../engine/window.js';
 import { createTool, choose, promptsOf } from '../engine/prompts.js';
 import { createRunlog, summaryLines, formatMs, PHASES, PHASE_LABELS, COUNT_LABELS } from '../engine/runlog.js';
-import { createScenario, notePrompt, noteHcDone, canLeave, vitalsLine, ctoUse, decide, scenarioScore } from '../engine/scenario.js';
+import { createScenario, notePrompt, noteFound, noteDeployed, ottoState, canLeave, canDeploy, vitalsLine, ctoUse, decide, missteps } from '../engine/scenario.js';
+import { paintHc } from '../engine/screens.js';
+import { playCharity } from './charity.js';
 import { vitalsFrame, beatSamples, talkFrame, stepAt } from '../engine/vitals.js';
 import { loadManifest } from '../engine/images.js';
-import { recordDone, totalScore } from '../menu.js';
+import { recordDone, solvedCount } from '../menu.js';
 
 export const CHAPTERS = { 1: CH1 };
-export const REVEAL_MS = 1600;               // a right answer's result is drawn in over this long
+export const REVEAL_MS = 2000;               // a direct prompt's next picture wipes in, then its highlights pulse
+const RECOVER_HOLD_MS = 900;                 // after Otto finishes his sentence, a beat before he speaks
 const LOAD_WAIT_MS = 6000;                   // the card waits this long for the room's pictures, then plays without
 // Strings the script has no slot for (listed in the hand-back for Rick).
 export const UI = {
@@ -40,7 +43,7 @@ const inArea = (a, x, y) => x >= a.x0 && x <= a.x1 && y >= a.y0 && y <= a.y1;
 const GLITCH = '#@%&*?!/<>';
 
 export function createChapterScreen(game) {
-  let ch, room, hero, run, wins, token = null, scen, art = null, loading = null;
+  let ch, room, hero, run, wins, token = null, scen, art = null, hcArt = null, loading = null, recovering = null;
   let state = 'card', mode = 'use', busy = false;
   let x = 0, pose = 'idle', view = 'front', flip = false, plan = null, elapsed = 0, walkMs = 0, pending = null, marker = null, cursor = null;
   let tools = {}, introShown = new Set(), toolName = null, toolFrom = null, toolEl = null, reveal = null, portrait = null;
@@ -110,7 +113,7 @@ export function createChapterScreen(game) {
   }
   function paintTool(ctx, p = 1) {
     const def = ch.tools[toolName];
-    if (def.kind === 'hc') def.paint(ctx.ctx2d, tools.hc.step, p); else def.paint(ctx.ctx2d);
+    if (def.kind === 'hc') paintHc(ctx.ctx2d, tools.hc.step, p, hcArt, ctx.reducedMotion); else def.paint(ctx.ctx2d);
   }
   function paintPortrait(ctx) {
     const g = ctx.ctx2d;
@@ -121,7 +124,7 @@ export function createChapterScreen(game) {
   function paint(ctx) {
     if (state === 'tool') paintTool(ctx, reveal ? Math.min(1, reveal.t / REVEAL_MS) : 1);
     else if (state === 'verdict') paintPortrait(ctx);
-    else if (state === 'monitor') paintMonitor(ctx);
+    else if (state === 'monitor' || state === 'recover') paintMonitor(ctx);
     else if (state === 'pc') backdrop(ctx.ctx2d, ch.pc.image);
     else if (state === 'room' || state === 'decide' || state === 'ending') paintRoom(ctx);
   }
@@ -164,7 +167,7 @@ export function createChapterScreen(game) {
     if (state !== 'card' || busy) return;
     busy = true;
     const t = live();
-    try { art = await loading; } catch { art = null; }
+    await loading;
     if (t !== live()) return;
     busy = false;
     enterRoom(ctx, { first: true });
@@ -241,22 +244,26 @@ export function createChapterScreen(game) {
   }
 
   // ---- the monitor close-up ----
-  async function enterMonitor(ctx) {
-    state = 'monitor'; run.phase('monitor'); run.count('monitor');
+  function monitorUi(ctx) {
     setIcons(ctx, false); clearScene(ctx);
+    ctx.overlay.innerHTML = '';
     const m = ch.monitor.close;
     sceneEl = document.createElement('div');
     sceneEl.className = 'scene-ui monitor-ui'; sceneEl.id = 'monitor';
     sceneEl.innerHTML = m.boxes.map((a, i) => `<div class="mon-box" data-box="${i}" style="${place(a)}"><span class="fit"></span><span class="fit"></span></div>`).join('')
       + `<div class="mon-out" style="${place(m.output)}"></div>`;
     ctx.overlay.appendChild(sceneEl);
+  }
+  async function enterMonitor(ctx) {
+    state = 'monitor'; run.phase('monitor'); run.count('monitor');
+    monitorUi(ctx);
     back = colButton({ id: 'btn-back', long: UI.back, onClick: () => { if (state === 'monitor' && !wins.open) enterRoom(ctx); } });
     ctx.colR.appendChild(back);
     lastDraw = ''; paint(ctx);
     await line(ch.monitor.chart);
   }
   function renderMonitorText(f) {
-    if (!sceneEl || state !== 'monitor') return;
+    if (!sceneEl || (state !== 'monitor' && state !== 'recover')) return;
     const key = JSON.stringify([f.boxes, f.tone, f.output]);
     if (key === monFrame) return;
     monFrame = key;
@@ -298,9 +305,11 @@ export function createChapterScreen(game) {
     pcView = v;
     const grid = sceneEl.querySelector('.pc-grid');
     grid.className = `pc-grid view-${v}`;
-    const items = v === 'email'
-      ? ch.pc.emails.map((key, i) => ({ id: `email-${i + 1}`, key }))
-      : ch.pc.menu;
+    const deploy = { id: 'deploy', key: ch.pc.deploy.item };
+    let items = ch.pc.menu;
+    if (v === 'email') items = ch.pc.emails.map((key, i) => ({ id: `email-${i + 1}`, key }));
+    else if (v === 'deploy') items = [deploy];                     // "show me": the one prompt, on the spot
+    else if (canDeploy(scen)) items = [...items.slice(0, -1), deploy, items[items.length - 1]];   // before Leave
     grid.innerHTML = items.map((it) => `<button type="button" class="pc-item" data-id="${it.id}">${esc(say(it.key))}</button>`).join('');
     grid.querySelectorAll('.pc-item').forEach((b) => b.addEventListener('click', () => pcPick(ctx, b.dataset.id)));
   }
@@ -311,6 +320,7 @@ export function createChapterScreen(game) {
     if (id === 'email') { showPc(ctx, 'email'); return; }
     if (id === 'vitals') { run.count('vitals'); line(p.vitals[vitalsLine(scen)]); return; }
     if (id === 'old' || id === 'hc') { openTool(ctx, id, 'pc'); return; }
+    if (id === 'deploy' && canDeploy(scen)) { deployFix(ctx, pcView === 'deploy' ? 'win' : 'pc'); return; }
     if (id === 'leave') {
       if (!canLeave(scen)) { line(p.locked); return; }            // never greyed: the line is the joke
       if (await line(p.leave)) enterRoom(ctx, { at: room.hotspots.find((h) => h.id === 'pc').standX });
@@ -361,7 +371,7 @@ export function createChapterScreen(game) {
     const r = choose(tools[toolName], index);
     if (r.outcome === 'wrong' || r.outcome === 'right') notePrompt(scen, def.kind);
     if (r.outcome === 'wrong') {
-      run.count(def.kind === 'hc' ? 'wrong' : 'oldPrompts');
+      run.count(def.kind === 'hc' ? 'nudges' : 'oldPrompts');
       hidePrompts();
       if (await line(r.jab)) showPrompts(ctx);
       return;
@@ -371,10 +381,10 @@ export function createChapterScreen(game) {
     await new Promise((done) => { reveal = { t: ctx.reducedMotion ? REVEAL_MS : 0, done }; if (ctx.reducedMotion) { reveal = null; done(); } });
     if (t !== live()) return;
     reveal = null; busy = false; paint(ctx);
-    if (r.finished) { noteHcDone(scen); vitalsMode = 'ok'; vitalsT = 0; nudges = []; }   // Otto recovers
+    if (r.finished) noteFound(scen);                             // the cause is found; Otto is still critical
     if (!(await line(r.result))) return;
     if (!r.finished) { showPrompts(ctx); return; }
-    if (toolFrom === 'cto') win(ctx);                            // "show me", and it did: straight to the win
+    if (toolFrom === 'cto') enterPc(ctx, { view: 'deploy' });    // "show me", and it did: now deploy it, then the win
     else enterPc(ctx);
   }
 
@@ -424,23 +434,39 @@ export function createChapterScreen(game) {
     if (r.outcome === 'win') { win(ctx); return; }
     if (!(await line(ch.cto.show))) return;
     ctoQuiet = false;
-    openTool(ctx, 'hc', 'cto');
+    if (r.outcome === 'deploy') enterPc(ctx, { view: 'deploy' });   // found already: just deploy it
+    else openTool(ctx, 'hc', 'cto');
+  }
+
+  // ---- deploying the fix: the line, then the monitor recovering, then Otto ----
+  async function deployFix(ctx, after) {
+    run.phase('deploy');
+    if (!(await line(ch.pc.deploy.line))) return;
+    noteDeployed(scen);
+    vitalsMode = 'ok'; vitalsT = 0; nudges = [];                  // Otto recovers now, and the close-up shows it
+    state = 'recover'; monitorUi(ctx); lastDraw = ''; monFrame = null; paint(ctx);
+    const t = live();
+    if (!ctx.reducedMotion) await new Promise((done) => { recovering = { done, hold: 0 }; });
+    recovering = null;
+    if (t !== live()) return;
+    if (!(await line(ch.pc.deploy.recovered))) return;
+    if (after === 'win') win(ctx); else enterPc(ctx);
   }
 
   // ---- the win, the verdict, the summary ----
   async function win(ctx) {
-    const score = scenarioScore(scen, tools.hc);
+    const steps = missteps(scen);
     clearScene(ctx);
     ctx.overlay.innerHTML = '';
     state = 'ending'; run.phase('win'); setIcons(ctx, false);
     paint(ctx);
-    const done = recordDone(ctx.loadDone(), ch.id, score);         // the score ticks up as the win is declared
-    ctx.saveDone(done); ctx.setScore(totalScore(done));
+    const done = recordDone(ctx.loadDone(), ch.id, steps);         // solved: the status bar ticks up as the win is declared
+    ctx.saveDone(done); ctx.setSolved(solvedCount(done));
     for (const k of ch.win) if (!(await line(k))) return;
     state = 'verdict'; paint(ctx);
     if (!(await line(ch.verdict.key, { where: 'bottom', className: 'verdict' }))) return;
-    run.end(score);
-    showSummary(ctx, score);
+    run.end(steps);
+    showSummary(ctx);
   }
 
   function showSummary(ctx) {
@@ -454,7 +480,7 @@ export function createChapterScreen(game) {
     ctx.overlay.innerHTML = `
       <div class="summary" id="summary" role="dialog">
         <h2>${esc(UI.summaryTitle(ch.id, formatMs(s.total)))}</h2>
-        <div class="sum-grid"><div class="sum-col">${rows(phases)}${rows([['Score', `${s.score} of 100`]])}</div><div class="sum-col">${rows(counts.slice(0, half))}</div><div class="sum-col">${rows(counts.slice(half))}</div></div>
+        <div class="sum-grid"><div class="sum-col">${rows(phases)}${rows([['Missteps', String(s.missteps)]])}</div><div class="sum-col">${rows(counts.slice(0, half))}</div><div class="sum-col">${rows(counts.slice(half))}</div></div>
         <p class="sum-prompt">${esc(say('after.prompt'))}</p>
         <div class="sum-btns">
           <button type="button" class="prompt" id="btn-claim">${esc(say('after.claim'))}</button>
@@ -466,8 +492,8 @@ export function createChapterScreen(game) {
     ctx.overlay.querySelector('#btn-more').addEventListener('click', () => game.go('MENU'));
     ctx.overlay.querySelector('#btn-claim').addEventListener('click', async () => {
       if (wins.open) return;
-      await wins.say(UI.claimSoon);
-      if (t === live()) game.go('MENU');
+      if (ctx.overlay.querySelector('#charity')) return;
+      if (await playCharity(ctx, wins, UI.claimSoon, () => t === live())) game.go('MENU');
     });
     ctx.overlay.querySelector('#btn-copy').addEventListener('click', (e) => copyResults(e.currentTarget));
   }
@@ -494,14 +520,15 @@ export function createChapterScreen(game) {
       x = room.start; pose = 'idle'; view = 'front'; flip = false; plan = null; elapsed = 0; walkMs = 0; pending = null; marker = null; cursor = null;
       mode = 'use'; busy = false; tools = {}; introShown = new Set(); toolName = null; toolFrom = null; toolEl = null; reveal = null;
       scen = createScenario(); vitalsMode = 'critical'; vitalsT = 0; nudges = []; talkT = 0; ctoQuiet = false; lastDraw = ''; sceneEl = null; monFrame = null;
-      art = null;
-      loading = loadManifest(ch.manifest, { timeout: LOAD_WAIT_MS });     // the room's pictures load while the card is read
-      loading.then((a) => { art = a; }, () => {});
+      art = null; hcArt = null; recovering = null;
+      // the room's and the Honeycomb screen's pictures load while the card is read; either may fail and play on
+      const want = (url, set) => loadManifest(url, { timeout: LOAD_WAIT_MS }).then(set, () => {});
+      loading = Promise.all([want(ch.manifest, (a) => { art = a; }), want(ch.tools.hc.screens, (a) => { hcArt = a; })]);
       run = createRunlog({ chapter: ch.id });
       for (const [reason, on] of Object.entries(ctx.holds || {})) if (on) run.hold(reason, true);
       ctx.runlog = run;
       wins = createWindows(ctx, { onShow: () => run.count('windows') });
-      ctx.setScore(totalScore(ctx.loadDone()));
+      ctx.showSolved();
       const box = ctx.canvas.parentElement;
       onTapCount = () => run.count('taps');
       document.addEventListener('pointerdown', onTapCount, true);
@@ -511,6 +538,7 @@ export function createChapterScreen(game) {
         if (state === 'card') { leaveCard(ctx); return; }
         if (state === 'room' && !busy) roomTap(ctx, e);
         else if (state === 'monitor') monitorTap(ctx, e);
+        else if (state === 'recover' && recovering) recovering.done();     // a tap skips to Otto's line
       };
       onMove = (e) => {
         if (state !== 'room' || wins.open) { if (cursor) { cursor = null; applyCursor(box, null); } return; }
@@ -524,13 +552,13 @@ export function createChapterScreen(game) {
       window.__oq && (window.__oq.chapter = {
         get state() { return state; }, get mode() { return mode; }, get x() { return x; }, get walking() { return plan !== null; },
         get view() { return view; }, get busy() { return busy; }, get pcView() { return pcView; },
-        get loaded() { return art !== null; },
+        get loaded() { return art !== null; }, get screensLoaded() { return hcArt !== null; },
         get window() { return wins.open ? { id: wins.serial, text: wins.element.dataset.text, pages: wins.pages, page: wins.page } : null; },
         get tool() { const t = tools[toolName]; return t && state === 'tool' ? { name: toolName, from: toolFrom, step: t.step, done: t.done, wrong: t.wrong, prompts: promptsOf(t) } : null; },
         get scenario() { return { ...scen }; },
         get vitals() { return vitals(ctx); },
         get ctoFrame() { return ctoQuiet || state === 'decide' || state === 'ending' ? 0 : talkFrame(talkT, ctx.reducedMotion); },
-        get score() { return tools.hc ? scenarioScore(scen, tools.hc) : 0; },
+        get otto() { return ottoState(scen); },
         hotspot(id) { return room.hotspots.find((h) => h.id === id); },
       });
     },
@@ -546,8 +574,12 @@ export function createChapterScreen(game) {
         if (s.done) { plan = null; finishWalk(); if (pending) { const p = pending; pending = null; act(ctx, p); } }
       } else if (marker) dirty = true;
       if (reveal) { reveal.t += dt; dirty = true; if (reveal.t >= REVEAL_MS) { const d = reveal.done; reveal.t = REVEAL_MS; d(); } }
+      if (recovering) {
+        const o = vitals(ctx).output;
+        if (o.shown >= o.text.length && (recovering.hold += dt) >= RECOVER_HOLD_MS) recovering.done();
+      }
       // the monitor and the CTO move on their own: redraw when either has a new frame
-      if (['room', 'decide', 'ending', 'monitor'].includes(state)) {
+      if (['room', 'decide', 'ending', 'monitor', 'recover'].includes(state)) {
         const key = `${stepAt(vitalsT)}:${talkFrame(talkT, ctx.reducedMotion)}:${ctoQuiet}:${nudges.length}`;
         if (key !== lastDraw) { lastDraw = key; dirty = true; }
       }

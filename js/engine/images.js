@@ -1,6 +1,15 @@
-// Loads a room manifest (assets/rooms/*.json, built by tools/build_rooms.py) and every image it lists, once.
+// Loads a manifest and every image it lists, once: a room (assets/rooms/*.json, `images: { name: file }`) or a
+// product screen (assets/screens/*.json, `stages: [{ image: file }]`, named by the file without .png).
 // Resolves { manifest, images: Map<name, HTMLImageElement> }; rejects (and forgets, so a later call retries)
 // on any failure or after the timeout.
+
+/** [name, file] for every image a manifest lists, in either shape. */
+export function manifestImages(manifest) {
+  const out = [];
+  if (manifest.images && typeof manifest.images === 'object') out.push(...Object.entries(manifest.images));
+  if (Array.isArray(manifest.stages)) for (const s of manifest.stages) if (s?.image) out.push([String(s.image).replace(/\.png$/i, ''), s.image]);
+  return out;
+}
 
 const loading = new Map();
 
@@ -11,9 +20,10 @@ export function loadManifest(url, { timeout = 6000 } = {}) {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`${url} ${res.status}`);
     const manifest = await res.json();
-    if (!manifest.images || typeof manifest.images !== 'object') throw new Error(`${url}: no images`);
+    const list = manifestImages(manifest);
+    if (!list.length) throw new Error(`${url}: no images`);
     const images = new Map();
-    await Promise.all(Object.entries(manifest.images).map(([name, file]) => new Promise((ok, fail) => {
+    await Promise.all(list.map(([name, file]) => new Promise((ok, fail) => {
       const img = new Image();
       img.onload = () => { images.set(name, img); ok(); };
       img.onerror = () => fail(new Error(`${file} failed`));

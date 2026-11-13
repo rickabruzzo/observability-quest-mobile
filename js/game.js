@@ -8,7 +8,8 @@ import { createIntroScreen } from './screens/intro.js';
 import { createMenuScreen } from './screens/menu.js';
 import { createChapterScreen } from './screens/chapter.js';
 import { sanitizeHero } from './creator-state.js';
-import { parseDone, afterIntro, DONE_KEY, MAX_SCORE } from './menu.js';
+import { parseDone, serializeDone, afterIntro, solvedCount, DONE_KEY } from './menu.js';
+import { SCRIPT } from './script.js';
 
 export const ADVANCE_GUARD_MS = 350;
 const HERO_KEY = 'oq.hero';
@@ -29,9 +30,11 @@ const ctx = {
   claimed: false,        // the prize: nothing claims it yet (the claim flow is a later brief)
   runlog: null,          // the current scenario's stopwatch (js/engine/runlog.js)
   holds: { rotate: false, hidden: false },   // why the clock is stopped, if it is
-  setScore(n) { document.getElementById('sb-score').textContent = `Score: ${n} of ${MAX_SCORE}`; },
+  /** The status bar's right side: how many scenarios are solved (no score: spec, No score). */
+  setSolved(n) { document.getElementById('sb-done').textContent = SCRIPT['status.done'].replace('{n}', String(n)); },
+  showSolved() { ctx.setSolved(solvedCount(ctx.loadDone())); },
   loadDone() { let raw = null; try { raw = sessionStorage.getItem(DONE_KEY); } catch { raw = null; } return parseDone(raw); },
-  saveDone(done) { try { sessionStorage.setItem(DONE_KEY, JSON.stringify(done)); } catch { /* storage unavailable: keep going */ } },
+  saveDone(done) { try { sessionStorage.setItem(DONE_KEY, serializeDone(done)); } catch { /* storage unavailable: keep going */ } },
   saveHero(hero) { try { sessionStorage.setItem(HERO_KEY, JSON.stringify(hero)); } catch { /* storage unavailable: keep going */ } },
   loadHero() { let raw = null; try { raw = sessionStorage.getItem(HERO_KEY); } catch { raw = null; } return sanitizeHero(raw); },
 };

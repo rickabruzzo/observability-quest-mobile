@@ -41,6 +41,25 @@ export async function dismiss(page) {
   }
   throw new Error('window would not close');
 }
+/** Like dismiss, for any screen (the menu has no __oq.chapter): taps the open .msg until it closes or changes. */
+export async function dismissMsg(page) {
+  await page.waitForSelector('.msg', { timeout: 9000 });
+  const first = await page.locator('.msg').getAttribute('data-text');
+  for (let i = 0; i < 40; i++) {
+    const now = await page.evaluate(() => document.querySelector('.msg')?.dataset.text ?? null);
+    if (now !== first) return first;
+    await page.click('.msg').catch(() => {});
+  }
+  throw new Error('window would not close');
+}
+/** Charity's verdict after a Claim: her header and the three lines, in order; returns the lines' texts. */
+export async function charitySays(page) {
+  await page.waitForSelector('#charity', { timeout: 9000 });
+  const head = await page.locator('.charity-head').innerText();
+  const lines = [await dismissMsg(page), await dismissMsg(page), await dismissMsg(page)];
+  await page.waitForFunction(() => !document.querySelector('#charity'));
+  return { head, lines };
+}
 export async function tapSpot(page, id) {
   const sc = await page.locator('#scene').boundingBox();
   const r = await page.evaluate((i) => window.__oq.chapter.hotspot(i).rect, id);
@@ -66,6 +85,13 @@ export async function solveHc(page, { wrongFirst = false, intro = true } = {}) {
   await prompt(page, 0);
   assert.equal(await dismiss(page), SCRIPT['ch1.hc.step2.result']);
 }
+/** [Apply the fix and deploy], then watch Otto recover on the monitor until he speaks; back on the PC (or at the win). */
+export async function deployAndRecover(page) {
+  await pcPick(page, 'deploy');
+  assert.equal(await dismiss(page), SCRIPT['ch1.pc.deploy']);
+  await page.waitForFunction(() => window.__oq.chapter.state === 'recover', null, { timeout: 9000 });
+  assert.equal(await dismiss(page), SCRIPT['ch1.otto.recovered']);
+}
 export async function leavePc(page) {
   await pcPick(page, 'leave');
   assert.equal(await dismiss(page), SCRIPT['ch1.pc.leave']);
@@ -85,13 +111,21 @@ export async function winLines(page) {
   await page.waitForSelector('#summary');
 }
 
-/** The shortest path: card → PC → Honeycomb (clean, or one wrong first) → leave → CTO → [Get Honeycomb] → summary. */
-export async function playShortest(page, { wrongFirst = false } = {}) {
+/** The shortest path: card → PC → Honeycomb (direct, or one nudge first) → deploy → recovery → leave → CTO → [Get Honeycomb] → summary. */
+export async function playShortest(page, { wrongFirst = false, cave = false } = {}) {
   await page.click('#class-card');
   assert.equal(await dismiss(page), SCRIPT['ch1.room.enter']);
   await toPc(page);
+  if (cave) {                                                          // one Cave Logs prompt first: a misstep
+    await pcPick(page, 'old'); await toolOpen(page, 'old'); await dismiss(page);
+    await prompt(page, 0); await dismiss(page);
+    await promptsShown(page); await page.click('#tool-exit');
+    assert.equal(await dismiss(page), SCRIPT['ch1.old.exit']);
+  }
   await pcPick(page, 'hc');
   await solveHc(page, { wrongFirst });
+  await inState(page, 'pc');
+  await deployAndRecover(page);
   await inState(page, 'pc');
   await leavePc(page);
   await askCto(page);
