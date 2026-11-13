@@ -74,11 +74,20 @@ Cloud Claude rewrote chapter 3 around this drop. These changes fit the art to it
 - **Screen glow is the code's job (Rick, 2026-11-13).** The art has no glow. Draw a soft halo around the monitor's bezel (**x 97–223, y 26–100**), fading out over about 6–10 px, dithered to fit the palette rather than a smooth gradient, with no hard edge. Animate its intensity, flickering irregularly between pure white and a slightly darker bluish white, the way a TV lights a dark room. Tint the screen's pale page with the same flicker. Reduced motion: hold it steady at a low level, or leave it off.
 - Also cleaned in this pass: a duplicate set of tiny browser dots above the title bar, and a stray white motion-arrow by her wrist in `R3_npc_win`.
 
+## Round 3: close-ups (Rick, 2026-11-13)
+
+- **`R3_wall_closeup`:** the page is now the same pale blue-white as in the room (it was cream), and the diagonal glare is gone, so the surface is flat for the code to draw on. The panel positions are unchanged (see round 2).
+- **`R3_pc_closeup` is new.** It's the silver laptop from the room on its aluminium stand, seen from the chair, with plain coloured sticker shapes on the palm rest and brick and string lights behind. No monitors are in the background any more. **Screen: x 31–204, y 44–154**, about 54% of the frame each way (the brief asks for 60%; this is the largest that keeps the guitar in view).
+- **The guitar is on the right of the laptop in the close-up.** From the chair, facing the screen, the guitar that leans on the desk's left in the wide shot is on your right.
+- **Guitar headstocks:** the room guitar now has tuning pegs on both sides (a 3+3 shape) instead of six in a row, so it no longer reads as a Fender. The close-up's headstock is also two-sided (it drew four a side). This was patched into the plate and all three of her frames, at about x 187–228, y 84–155.
+
 ## Flaws kept
 
 See "Changes from the brief". Nothing else known.
 
 ## Provenance
+
+- **Round 3 (2026-11-13):** wall close-up: an edit, 2 tries, t1 kept. Laptop close-up: a new plate (2 tries; t1 showed the laptop from behind) and then an edit of t2 for a closer view and the headstock (2 tries, t2 kept), cropped tighter at full resolution (x 285–1235, y 28–622 of 1264×848) before the nearest-neighbour resize to 640×400. Room guitar: an edit, 2 tries, t1 kept, only the guitar composited. Script: `gen_set.py` (`R3_wall3`, `R3_pc2`, `R3_pc3`, `R3_guitar`).
 
 - **Round 2 (2026-11-13):** one edit of the plate for the monitor, the corner and the sign (2 tries, t2 kept; only those three areas composited back). Close-up: an edit, 2 tries, t2 kept. Talk 2 and the win frame: new edits of the new plate, 2 tries each, t1 kept, with only her figure composited. Script: `scratch/room_gen/gen_set.py` (`R3_fix2`, `R3_wall2`, `R3_npc_talk_2b`, `R3_npc_win_b`). Earlier versions are in `raw/tries/R3_before_fix2/`.
 
