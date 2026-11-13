@@ -80,9 +80,11 @@ context only; nothing is written in the picture.
 
 ### Room 2 — `R2_war_room` (Kestrel Bank: the migration war room)
 
-*Story:* a bank's two-year move off its old monolith is "done", but customer transfers take a mysterious path
-and nobody can see which of 350 services is at fault, because every dashboard is green. The persona is the
-**Platform Engineer** who ran the migration, ready to pull the old monolith's plug to prove it is finished.
+*Story:* a bank that hosts online banking for three hundred credit unions has "finished" a two-year move off
+its old monolith. Members of two credit unions cannot move money, but two in three hundred is one percent, so
+every dashboard is green. (What Honeycomb finds: for those two, one node still calls the old monolith.) The
+persona is the **Platform Engineer** who ran the migration, ready to pull the old monolith's plug to prove it
+is finished.
 
 > A bank's migration war room. Left: a long project table with a modern flat-panel monitor on an arm, a
 > keyboard, energy drink cans and takeaway boxes, and one empty office chair pulled out. In the middle of the
@@ -95,8 +97,8 @@ and nobody can see which of 350 services is at fault, because every dashboard is
 > shirtsleeves with a lanyard, one hand gripping the cable's plug at the socket, the other raised as he argues
 > his case, impatient.
 
-Display panels the game draws into: the tile grid (350 green tiles), the long lane (a ticket counter), the tall
-panel (one stuck transfer). Talk edits: (1) mouth open wide, free hand pointing at the status wall; (2) mouth
+Display panels the game draws into: the tile grid (350 green tiles, all of them green), the long lane (a
+support-ticket counter, climbing), the tall panel (one stuck transfer). Talk edits: (1) mouth open wide, free hand pointing at the status wall; (2) mouth
 half open, free hand palm-up, shrugging. The hand on the plug does not move.
 
 `R2_wall_closeup`: the status wall straight on: the empty tile grid, the lane under it, the tall panel.
