@@ -9,21 +9,35 @@ def test_font_reads_the_games_5x7_glyphs():
     assert hs.text_width('Share') == 29 and hs.text_width('57,293', 2) == 70
 
 
-def test_three_stages_at_the_picture_size_with_highlights_inside(tmp_path):
-    m = hs.build(str(tmp_path))
+import pytest
+
+
+@pytest.mark.parametrize('ch', ['ch1', 'ch3', 'ch4', 'ch5'])
+def test_three_stages_at_the_picture_size_with_highlights_inside(tmp_path, ch):
+    m = hs.build(str(tmp_path), ch)
     assert m['pic'] == {'x': 4, 'y': 20, 'w': 188, 'h': 176}
-    assert [s['image'] for s in m['stages']] == ['ch1_hc_0.png', 'ch1_hc_1.png', 'ch1_hc_2.png']
+    assert [s['image'] for s in m['stages']] == [f'{ch}_hc_{i}.png' for i in range(3)]
     for s in m['stages']:
         im = Image.open(tmp_path / s['image'])
         assert im.size == (188, 176)
         assert len(im.convert('RGB').getcolors(1 << 16)) <= 64          # flat VGA fills, no gradients
-        assert s['highlights'], s['image']
+        assert s['what'] and s['highlights'], s['image']
         for h in s['highlights']:
             assert 0 <= h['x'] and h['x'] + h['w'] <= 188 and 0 <= h['y'] and h['y'] + h['h'] <= 176
-    assert json.load(open(tmp_path / 'ch1_hc.json')) == m
+    assert json.load(open(tmp_path / f'{ch}_hc.json')) == m
 
 
-def test_build_is_deterministic(tmp_path):
-    hs.build(str(tmp_path / 'a')); hs.build(str(tmp_path / 'b'))
-    for n in ('ch1_hc_0.png', 'ch1_hc_1.png', 'ch1_hc_2.png'):
+@pytest.mark.parametrize('ch', ['ch1', 'ch3', 'ch4', 'ch5'])
+def test_build_is_deterministic(tmp_path, ch):
+    hs.build(str(tmp_path / 'a'), ch); hs.build(str(tmp_path / 'b'), ch)
+    for i in range(3):
+        n = f'{ch}_hc_{i}.png'
         assert open(tmp_path / 'a' / n, 'rb').read() == open(tmp_path / 'b' / n, 'rb').read()
+
+
+def test_the_committed_screens_are_what_the_tool_builds(tmp_path):
+    import os
+    for ch in hs.CHAPTERS:
+        m = hs.build(str(tmp_path), ch)
+        for s in m['stages']:
+            assert open(tmp_path / s['image'], 'rb').read() == open(os.path.join(hs.OUT, s['image']), 'rb').read(), s['image']

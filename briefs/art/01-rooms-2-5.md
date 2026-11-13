@@ -10,10 +10,11 @@ Four rooms, each built like scenario 1's exec floor (`assets/rooms/R1_*.png`, ra
 
 1. **The patient's display**: a big screen on the back wall showing whatever is failing, with **blank panels the
    game draws into**. Tapping it opens a close-up.
-2. **The hero's computer**: where the player sits to try the old tool and Honeycomb. Tapping it opens a close-up
+2. **The hero's computer**: a desk the hero has been lent, where the player sits to try the old tool and Honeycomb. Tapping it opens a close-up
    of its screen.
-3. **A person to advise**: one fictional colleague, mid-conversation, about to make the wrong call. The scenario
-   ends when the hero walks over and tells them what to do.
+3. **The persona**: one fictional person, mid-conversation, about to make the wrong call. This is whose problem
+   the scenario is about; the player's hero is always the outsider who was paged to help, and the scenario ends
+   when the hero walks over and tells them what to do.
 
 So each room is **five files**:
 
@@ -80,8 +81,8 @@ context only; nothing is written in the picture.
 ### Room 2 — `R2_war_room` (Kestrel Bank: the migration war room)
 
 *Story:* a bank's two-year move off its old monolith is "done", but customer transfers take a mysterious path
-and nobody can see which of 350 services is at fault, because every dashboard is green. The hero is the
-Platform Engineer. The person is the **Engineering Director**, who is ready to pull the old monolith's plug.
+and nobody can see which of 350 services is at fault, because every dashboard is green. The persona is the
+**Platform Engineer** who ran the migration, ready to pull the old monolith's plug to prove it is finished.
 
 > A bank's migration war room. Left: a long project table with a modern flat-panel monitor on an arm, a
 > keyboard, energy drink cans and takeaway boxes, and one empty office chair pulled out. In the middle of the
@@ -104,22 +105,25 @@ notes along its bottom edge, the war room dark and out of focus behind.
 
 ### Room 3 — `R3_bullpen` (Twang & Co.: the dev bullpen)
 
-*Story:* an online guitar store is slow for some shoppers and sales are sliding, but the monitoring tool's
-average says everything is fine. The hero is the Developer. The person is the **Product Manager**, who wants to
+*Story:* an online guitar store's checkout takes fourteen seconds for about one shopper in twelve, and sales are
+sliding, but the monitoring tool's average says everything is fine. (What Honeycomb finds: every slow order has a
+left-handed guitar in the cart.) The persona is the **Frontend Developer**, who is about to
 ship a loading spinner and blame the CDN.
 
 > A software team's bullpen in a converted warehouse. Right: a developer's desk with a laptop on a stand, its
 > lid covered in blank stickers, a second small monitor, headphones, a coffee mug, and one empty chair; a
 > generic solid-body electric guitar leans against the desk. In the middle of the back wall, a large wall
-> monitor showing an unfinished web page as empty outlines: across the top, one long thin empty bar; below it
+> monitor showing a web store's checkout page as empty outlines: across the top, one long thin empty bar; below it
 > on the left, one large empty rectangle; to its right, three smaller empty rectangles in a column; along the
 > bottom, one long thin empty lane. Brick wall, exposed pipes, a string of warm bulbs. Left: a standing desk
 > with a small lamp; behind it, facing right, a woman in her thirties with dark curly hair, glasses and a
 > cardigan, holding a phone in one hand and gesturing at the wall monitor with the other, anxious, mid-sentence.
 
-The guitar must be a generic shape, **not a recognisable real model**: no brand headstock, no logo. Display
-panels: the top bar (the page's loading bar, stuck at 13%), the large rectangle (the product picture that
-never loads), the three small rectangles (shopper readouts), the bottom lane (a conversions line sliding down).
+The guitar must be a generic shape, **not a recognisable real model**: no brand headstock, no logo. The story
+calls it left-handed; ask for that if the generator will do it, but do not spend tries on it. Display panels:
+the top bar (the checkout's "placing your order" progress bar, stuck at 13%), the large rectangle (the item in
+the cart: the game draws a guitar there), the three small rectangles (shopper readouts), the bottom lane (a
+conversions line sliding down).
 Talk edits: (1) mouth open, pointing hand jabbing at the monitor; (2) mouth half open, looking down at the
 phone held up in front of her. Note this room is mirrored: the hero's computer is on the **right**.
 
@@ -129,9 +133,11 @@ bezel, blank screen, a mug and the guitar's neck out of focus at the side.
 
 ### Room 4 — `R4_ops_room` (Nullpoint Games: the ops room)
 
-*Story:* the biggest space battle in an online game's history is live, with 8,000 players in one place, and the
-servers are lagging. Only one engineer understands the 23-year-old fleet code, and he is asleep in another time
-zone. The hero is the DevOps/SRE. The person is the **Incident Commander**, about to phone him.
+*Story:* the biggest space battle in an online game's history is live, with 8,000 players in one place. Pilots
+say they cannot get in and call it lag; every dashboard says the servers are healthy. (What Honeycomb finds:
+seven fleet joins in a hundred fail, and always have.) Only one engineer understands the 23-year-old fleet code,
+and he is asleep in another time zone. The persona is the **Site Reliability Engineer on call**, tonight's incident
+commander, about to phone him.
 
 > A game studio's operations room, dark, lit mostly by its screens. Left: a low curved console desk with an
 > ultrawide monitor, a mechanical keyboard with a soft glow, a headset, and one empty gaming chair. The back
@@ -143,20 +149,21 @@ zone. The hero is the DevOps/SRE. The person is the **Incident Commander**, abou
 > headset around her neck, holding a phone up in one hand with her thumb hovering over it, the other hand
 > pressed to her forehead, torn.
 
-Display panels: the star map (the fleet as moving dots, freezing), the lane under it (a latency line climbing),
-the chat column (lag reports scrolling). A few dim stars in the map panel are fine; anything that looks like a
+Display panels: the star map (the fleet as moving dots, with some stuck outside), the lane under it (a health
+line that stays flat and green while the pilots complain), the chat column (lag reports scrolling). A few dim stars in the map panel are fine; anything that looks like a
 ship, a planet with a name, or a known game's interface is a redo. Talk edits: (1) mouth open, phone lowered,
 free hand flung toward the wall; (2) phone raised to her ear, eyes shut, wincing.
 
 `R4_wall_closeup`: the wall display straight on: the star-map panel with its grid, the lane, the chat column.
 `R4_pc_closeup`: an ultrawide monitor straight on, thin bezel, blank screen, the glow of the keyboard along the
-bottom edge, the wall of space out of focus behind.
+bottom edge, the wall of space out of focus behind. (The game shows the team's coding agent on it.)
 
 ### Room 5 — `R5_loft` (a three-person AI startup: the loft)
 
-*Story:* Friday's release changed the support agent's prompt and model. Tonight the agent, Pip, answers every
-customer by apologising forty times in a row, and the token bill has tripled. The hero is the Build & Release
-Engineer. The person is the **Founder**, who wants to roll back everything.
+*Story:* Friday's release tightened sign-up validation. Since then eleven people have told support they cannot
+create an account, but the error rate is normal and nothing alerted. (What Honeycomb's Team Agent found on
+Friday evening: names with an apostrophe are rejected.) The persona is the **Build & Release Engineer** who
+shipped it, about to roll back everything.
 
 > A tiny startup's loft office. Left: a desk made from an old door on trestles, with a laptop on a stack of
 > books, an external keyboard, a desk plant and a takeaway cup, and one empty stool. Two more small desks
@@ -168,8 +175,8 @@ Engineer. The person is the **Founder**, who wants to roll back everything.
 > edge, facing left, a man in his late twenties with a beard, a beanie and a hoodie, a laptop open on his
 > knees, one finger raised over its keyboard about to press a key, the other hand gripping his hair, panicked.
 
-Display panels: the chart (token spend going vertical), the three boxes (cost readouts), the chat panel (Pip
-apologising). It must look different from Otto's monitor in R1: a projector screen on a stand, chart on the
+Display panels: the chart (sign-ups: a calm, healthy line), the three boxes (release readouts), the chat panel
+(the support inbox: eleven messages). It must look different from Otto's monitor in R1: a projector screen on a stand, chart on the
 left. Talk edits: (1) mouth open wide, both hands thrown up, the laptop balanced on his knees; (2) mouth half
 open, pointing at the projector screen. The pager stays where it is in every frame.
 

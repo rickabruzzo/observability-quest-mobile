@@ -1,0 +1,58 @@
+{
+ "pic": {
+  "x": 4,
+  "y": 20,
+  "w": 188,
+  "h": 176
+ },
+ "stages": [
+  {
+   "image": "ch3_hc_0.png",
+   "what": "Web Launchpad: the vitals are green, one request is not",
+   "highlights": [
+    {
+     "x": 13,
+     "y": 95,
+     "w": 172,
+     "h": 13
+    },
+    {
+     "x": 92,
+     "y": 110,
+     "w": 80,
+     "h": 13
+    }
+   ]
+  },
+  {
+   "image": "ch3_hc_1.png",
+   "what": "Trace: from the click in the browser to the backend",
+   "highlights": [
+    {
+     "x": 13,
+     "y": 72,
+     "w": 172,
+     "h": 11
+    }
+   ]
+  },
+  {
+   "image": "ch3_hc_2.png",
+   "what": "Heatmap and BubbleUp: what the slow checkouts share",
+   "highlights": [
+    {
+     "x": 12,
+     "y": 103,
+     "w": 78,
+     "h": 71
+    },
+    {
+     "x": 36,
+     "y": 30,
+     "w": 146,
+     "h": 22
+    }
+   ]
+  }
+ ]
+}
