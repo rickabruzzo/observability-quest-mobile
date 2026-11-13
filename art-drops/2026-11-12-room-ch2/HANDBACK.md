@@ -49,11 +49,12 @@ Every NPC frame differs from the plate only inside **x 240–309, y 48–173** (
 
 ## Flaws kept
 
-- **The cans on the cubicle desk read as a well-known energy drink** (blue, silver and red) when you look closely at full size. At 320×200 there's no legible logo. The close-ups use a plain silver can instead. Worth a Photoshop repaint of the colours if it bothers anyone.
 - **The PC close-up's screen is about 50% of the frame's width and 53% of its height**, below the brief's 60%.
 - **The whiteboard close-up** has a few boxes with ruled lines inside (like little documents). None are letters.
 
 ## Provenance
+
+- **Desk cans recoloured 2026-11-13:** the cans looked like a known energy drink up close. A Gemini edit of the plate made them plain green and orange with no labels; only the desk area (full res x 40–300, y 380–615; about x 10–76, y 89–148 at 320×200) was pasted back into the plate and all five NPC frames, so the frames still differ from the plate only in his figure.
 
 - **Tool:** Gemini API `gemini-3.1-flash-image`, 3:2, 1K, 2026-11-12, on Rick's personal account.
 - **Plate:** `R2c`: an edit of try 3 of the redesigned room (`R2b`) with try 1 as a second reference, turning the right window into wall (`scratch/room_gen/edit_r2.py`). Try 2 of that edit kept. Rick picked the desk, board, figure and wall in rounds.
