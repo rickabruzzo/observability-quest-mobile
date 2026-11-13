@@ -113,7 +113,7 @@ The AI support bot keeps freezing. The logs renewal is due Friday.
 THE PLATFORM ENGINEER
 
 ### menu.ch2.hook
-A bank, mid-migration. Something in the old monolith is still answering.
+A bank, mid-migration. Two credit unions can't move money. Every dashboard is green.
 
 ### menu.ch3.name
 THE FRONTEND DEVELOPER
@@ -419,7 +419,7 @@ CHRISTINE YEN: A chatbot is a conversation between agents now. When it goes wron
 
 ## Chapter 2 — Migrations · Fintech · Platform Engineer
 
-Inspired by a digital bank two years into a monolith-to-microservices migration. Company: **Kestrel Bank**. Narrator: Emily Nakashima — **placeholder: Emily is leaving Honeycomb; keep her lines and portrait until a replacement narrator is named** (2026-11-10).
+Inspired by a digital bank two years into a monolith-to-microservices migration. Company: **Kestrel Bank**, which hosts online banking for three hundred credit unions. The persona is the Platform Engineer who ran the migration. The solve follows two customer stories: a banking-technology company that, part-way through a move to Kubernetes with hundreds of services, used BubbleUp to find two credit unions failing on one node (about one percent of traffic, so invisible at the top level) and the Service Map, filtered to those institutions, to see where their requests went and who owned the failing service; and an incident-management company that says it would not have moved to Kubernetes without Honeycomb. In Honeycomb nothing is a joke: the `jab` slots are nudges. The room slots below still describe the placeholder five-hotspot room and are rewritten when the room art lands. Narrator: Emily Nakashima — **placeholder: Emily is leaving Honeycomb; keep her lines and portrait until a replacement narrator is named** (2026-11-10).
 
 ### ch2.card.title
 THE PLATFORM ENGINEER
@@ -428,7 +428,7 @@ THE PLATFORM ENGINEER
 YAML Tolerance 18 · Kubernetes 16 · Sleep 4 · "It's DNS" 20
 
 ### ch2.card.line
-Tonight's page: the Platform Engineer at Kestrel Bank, who has moved 350 services off the monolith. The monolith has not been informed.
+Tonight's page: the Platform Engineer at Kestrel Bank, who has moved 350 services to Kubernetes for three hundred credit unions. The monolith has not been informed.
 
 ### ch2.persona.name
 THE PLATFORM ENGINEER
@@ -449,7 +449,7 @@ The migration war room at Kestrel Bank. A whiteboard covered in arrows. Three hu
 The laptop they've handed you. A ticket queue climbing like a stock you didn't buy.
 
 ### ch2.use.laptop
-The migration is "done". Customer transfers are taking a mysterious path through the new architecture — some of them arrive, slowly; some of them don't. Support tickets are climbing. Nobody can say which of 350 services is the problem, because every one of them is green.
+The migration is "done". Kestrel hosts online banking for three hundred credit unions, and members of two of them can't move money. Tickets are climbing. Two out of three hundred is one percent, so every dashboard is green.
 
 ### ch2.look.whiteboard
 Two years of arrows. Somewhere in here is the truth. It is not labelled.
@@ -470,7 +470,7 @@ A terminal showing Old Artifact — 350 dashboards, 350 checkmarks.
 OLD ARTIFACT
 
 ### ch2.old.intro
-Three hundred and fifty tiles. Every one green. Transfers are failing between the tiles, where nobody put a dashboard.
+Three hundred and fifty tiles. Every one green. Two credit unions are failing between the tiles, where nobody put a dashboard.
 
 ### ch2.old.prompt.1
 [Refresh]
@@ -500,52 +500,58 @@ A workstation. Honeycomb. The intern set it up. The intern is asleep. The intern
 HONEYCOMB · SERVICE MAP
 
 ### ch2.hc.intro
-Every one of the 350 services, and every call between them, drawn from the traces themselves. One path is doing something the architecture diagram says is impossible.
+Honeycomb opens on the Service Map: all 350 services and every call between them, drawn from live traces. It looks like a plate of spaghetti, because it is one. Narrow it down.
 
 ### ch2.hc.step1.prompt.1
-[Trace one customer's transfer]
+[BubbleUp the failed transfers]
 
 ### ch2.hc.step1.prompt.2
-[Look at the average latency]
+[Read the whole Service Map]
 
 ### ch2.hc.step1.prompt.3
-[Unplug the monolith]
+[Check the overall error rate]
 
 ### ch2.hc.step1.jab.2
-The average is fine. The average is always fine. The average is how you got here.
+Three hundred and fifty services and every call between them. All true, and too much. Narrow it down first: ask what the failures share.
 
 ### ch2.hc.step1.jab.3
-The sign said DO NOT. You have confirmed the sign.
+0.9%. Under the alert line. Two credit unions out of three hundred are about one percent of traffic. The top-line number was never going to show them.
 
 ### ch2.hc.step1.result
-One transfer, start to finish: forty-one services — and then, for one hop, it leaves the cloud, bounces through the beige box in the corner, and comes back. The monolith is still in the path. The migration missed one route.
+BubbleUp compares the failed transfers with all the others and shows what they share: two credit unions, and one node in the new cluster. One percent of traffic. No dashboard was going to find that.
 
 ### ch2.hc.step2.prompt.1
-[BubbleUp: what's different about the slow ones?]
+[Filter the Service Map to those two]
 
 ### ch2.hc.step2.prompt.2
-[Restart the 41 services]
+[Open a trace from that node]
 
 ### ch2.hc.step2.prompt.3
-[Blame DNS]
+[See who owns the service]
 
 ### ch2.hc.step2.jab.2
-Forty-one restarts. The transfers now fail quickly instead of slowly. Progress, technically.
+One transfer: gateway, transfers, then nine seconds waiting on something called legacy-core. Interesting. The map will show whether that's one request or all of them.
 
 ### ch2.hc.step2.jab.3
-It is not DNS. It is never DNS. It is sometimes DNS. It is not DNS tonight.
+The span's tag says the payments platform team owns it. Good: you know who to call. Find out what to tell them first.
 
 ### ch2.hc.step2.result
-BubbleUp lights one attribute: `legacy_route=true`. Every slow transfer took the detour; no fast one did. One feature flag, one deploy, and the monolith finally gets to retire.
+Using Honeycomb's BubbleUp and Service Map, you found what the migration missed without switching tools: on node 17, transfers for those two credit unions still call the old monolith. The one you said was off.
+
+### ch2.pc.menu.deploy
+[Apply the fix and deploy]
+
+### ch2.pc.deploy
+You point node 17 at the new ledger, like the other 349 services, and deploy. Two credit unions' transfers go through. The monolith finally has nothing to do.
 
 ### ch2.win
-A good migration goes unnoticed by customers. Tonight, yours finally does. You peel the sign off the monolith.
+A good migration goes unnoticed by customers. Tonight, yours finally does. The Platform Engineer pulls the plug, and this time nothing else goes dark.
 
 ### ch2.hero.line
 PLATFORM ENGINEER: Three hundred and fifty services and the problem was the one we said we'd turned off.
 
 ### ch2.verdict
-EMILY NAKASHIMA: You followed one customer through 350 services in a single query. Root cause in minutes. That's the whole point of tracing — you don't guess the path, you see it.
+EMILY NAKASHIMA: Two credit unions out of three hundred is one percent, and one percent never shows on a dashboard. You asked what the failures shared, then watched where they went. You don't make a move like this one blind.
 
 ---
 

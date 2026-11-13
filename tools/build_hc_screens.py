@@ -9,6 +9,13 @@ using it looks like. Scenario 1 (agent observability demo, Innovation Week 2026)
   1  Agent Timeline: one conversation, every agent, LLM call and tool call in order
   2  one LLM call opened: how many tokens went in, and the tool result that put them there
 
+Scenario 2 (no product video: two customer stories, a banking-technology company's BubbleUp and Service Map
+during a move to Kubernetes, and an incident-management company's migration):
+
+  0  the Service Map, unfiltered: hundreds of services round a busy gateway
+  1  BubbleUp on the failed requests: two institutions and one node stand out
+  2  the Service Map filtered to those institutions: the path, the failing service, its owner
+
 Scenario 3 (frontend observability demo, "See everything"):
 
   0  the Web Launchpad: Core Web Vitals, and Slowest Requests by Endpoint
@@ -535,10 +542,102 @@ def agent_work():
     return p.im, [hl1, hl2]
 
 
+# ---- scenario 2: Service Map and BubbleUp in a migration (from two customer stories; no product video) ----
+
+def seg(p, x0, y0, x1, y1, colour):
+    """A 1-px line between two points."""
+    n = max(abs(x1 - x0), abs(y1 - y0), 1)
+    for i in range(n + 1): p.rect(round(x0 + (x1 - x0) * i / n), round(y0 + (y1 - y0) * i / n), 1, 1, colour)
+
+
+def disc(p, cx, cy, r, fill, line=None):
+    for y in range(-r, r + 1):
+        for x in range(-r, r + 1):
+            d = x * x + y * y
+            if d <= r * r: p.rect(cx + x, cy + y, 1, 1, line if line and d > (r - 1) * (r - 1) else fill)
+
+
+def hairball(p, node, edge, hub=None):
+    """Every service and every call: nodes scattered round a busy gateway. Deterministic, no random module."""
+    cx, cy = 99, 101; pts = []; v = 7
+    for i in range(64):
+        v = (v * 73 + 41) % 997; ang = v / 997 * 6.283; v = (v * 73 + 41) % 997; rad = 22 + v % 50
+        import math
+        x = round(cx + math.cos(ang) * rad * 1.45); y = round(cy + math.sin(ang) * rad)
+        if 18 <= x <= 180 and 34 <= y <= 168: pts.append((x, y))
+    for i, (x, y) in enumerate(pts):
+        if i % 3: seg(p, cx, cy, x, y, edge)
+        if i % 4 == 0: seg(p, x, y, *pts[(i * 7 + 3) % len(pts)], edge)
+    for x, y in pts: p.rect(x - 1, y - 1, 3, 3, CARD, node)
+    if hub: disc(p, cx, cy, 8, (214, 200, 244), hub)
+
+
+def service_map_all():
+    """Stage 0. The Service Map, unfiltered: 350 services and every call between them. True, and too much."""
+    p = Pic(); p.chrome('Service Map')
+    e = p.chip(14, 17, 'all services'); p.text(e + 4, 17, '350', MUTE); p.text(185 - text_width('0.9% errors'), 17, '0.9% errors', MUTE)
+    p.card(12, 28, 174, 146)
+    hairball(p, BLUE, LINE, PURPLE)
+    p.rect(110, 106, 45, 11, CARD, LINE); p.text(113, 108, 'gateway')
+    return p.im, [{'x': 12, 'y': 14, 'w': 174, 'h': 13}]
+
+
+def bubbleup_institutions():
+    """Stage 1. BubbleUp on the failed transfers: what they share is two institutions and one node."""
+    p = Pic(); p.chrome('BubbleUp')
+    e = p.chip(14, 17, 'COUNT'); p.text(e + 5, 17, 'status >= 500', MUTE)
+    p.rect(14, 29, 5, 5, YELLOW); e = p.text(21, 28, 'failed', MUTE); p.rect(e + 8, 29, 5, 5, BLUE); p.text(e + 15, 28, 'rest', MUTE)
+    p.card(12, 38, 110, 76); p.text(15, 41, 'institution'); base = 98; p.rect(15, base, 104, 1, LINE)
+    for i in range(16):
+        x = 17 + i * 6; hb = 6 + (i * 5) % 9; hot = i in (4, 11)
+        p.rect(x, base - hb, 2, hb, BLUE); p.rect(x + 3, base - (44 if hot else (i * 3) % 3), 2, 44 if hot else (i * 3) % 3, YELLOW)
+    p.text(27, base + 4, 'CU-041'); p.text(69, base + 4, 'CU-118')
+    p.card(125, 38, 61, 76); p.text(128, 41, 'k8s.node'); p.rect(128, base, 55, 1, LINE)
+    for i in range(5):
+        x = 131 + i * 10; hb = 10 + (i * 7) % 8; hot = i == 3
+        p.rect(x, base - hb, 3, hb, BLUE); p.rect(x + 4, base - (44 if hot else 1), 3, 44 if hot else 1, YELLOW)
+    p.text(160, base + 4, '17')
+    for i, name in enumerate(('region', 'version', 'plan')):
+        x = 12 + i * 59; p.card(x, 118, 56, 56); p.text(x + 3, 121, name, MUTE); p.rect(x + 3, 164, 50, 1, LINE)
+        for j in range(3):
+            gx = x + 7 + j * 16; hb = 14 + ((i + j) * 5) % 9
+            p.rect(gx, 164 - hb, 5, hb, BLUE); p.rect(gx + 6, 164 - hb + 2 - (j % 2) * 3, 5, hb - 2 + (j % 2) * 3, YELLOW)
+    return p.im, [{'x': 12, 'y': 38, 'w': 110, 'h': 76}, {'x': 125, 'y': 38, 'w': 61, 'h': 76}]
+
+
+def service_map_filtered():
+    """Stage 2. The Service Map filtered to those two institutions: where their transfers really go."""
+    p = Pic(); p.chrome('Service Map')
+    e = p.chip(14, 17, 'institution: 2', ORANGE, WARN); p.chip(e + 4, 17, '500s', RED, DEL)
+    p.card(12, 28, 174, 146)
+    hairball(p, FAINT, (240, 242, 246))
+
+    def node(x, y, label, fill, line, fg=INK):
+        w = text_width(label) + 8; p.rect(x, y, w, 13, fill, line); p.text(x + 4, y + 3, label, fg); return x + w
+    e1 = node(14, 44, 'gateway', (232, 224, 248), PURPLE)
+    e2 = node(70, 44, 'transfers', SKY, BLUE)
+    node(140, 44, 'ledger', (246, 247, 249), GREEK, MUTE)
+    seg(p, e1, 50, 69, 50, INK); p.rect(67, 49, 2, 3, INK)
+    for x in range(e2 + 1, 139, 3): p.rect(x, 50, 2, 1, GREEK)
+    p.text(182 - text_width('everyone else'), 33, 'everyone else', MUTE)
+    p.rect(99, 57, 2, 49, RED)
+    for i in range(4): p.rect(99 - i, 102 - i, 2 + 2 * i, 1, RED)
+    p.chip(50, 75, 'node-17'); p.text(106, 70, '2 credit', RED); p.text(106, 79, 'unions', RED)
+    node(64, 106, 'legacy-core', DEL, RED, RED)
+    e = p.chip(64, 125, '500s', RED, DEL); p.text(e + 5, 125, '9.2s', MUTE)
+    p.rect(13, 140, 172, 1, FAINT)
+    e = p.text(16, 148, 'owner', MUTE); p.chip(e + 5, 148, 'payments-platform')
+    p.greek(16, 162, [[30, 44, 22, 36]])
+    return p.im, [{'x': 60, 'y': 58, 'w': 82, 'h': 78}]
+
+
 CHAPTERS = {
     'ch1': ((canvas, 'Canvas: the automatic investigation'),
             (agent_timeline, 'Agent Timeline: one conversation'),
             (llm_call, 'One LLM call: what the model was sent')),
+    'ch2': ((service_map_all, 'Service Map: every service and every call, unfiltered'),
+            (bubbleup_institutions, 'BubbleUp on the failed transfers: two institutions, one node'),
+            (service_map_filtered, 'Service Map filtered to those two: where their transfers go')),
     'ch3': ((launchpad, 'Web Launchpad: the vitals are green, one request is not'),
             (trace, 'Trace: from the click in the browser to the backend'),
             (bubbleup, 'Heatmap and BubbleUp: what the slow checkouts share')),
