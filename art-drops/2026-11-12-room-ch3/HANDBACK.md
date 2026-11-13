@@ -71,7 +71,7 @@ Cloud Claude rewrote chapter 3 around this drop. These changes fit the art to it
 - **New sign: a handwritten "No Stairway" sheet** taped on the right wall at **x 263–294, y 48–72**. It's the only writing in the room, at Rick's request, so the guitar can get the prompt "No Stairway to Heaven". It could be its own small hotspot.
 - **`R3_npc_talk_2` and `R3_npc_win` were remade** on the new plate. Her figure now changes inside **x 7–120, y 7–161** across all three frames. **The frame-swap area for this room is x 7, y 7, w 114, h 155.**
 
-- **Screen glow is the code's job (Rick, 2026-11-13).** The art has no glow. Draw a soft halo around the monitor's bezel (**x 96–224, y 25–102**), fading out over about 6–10 px, dithered to fit the palette rather than a smooth gradient, with no hard edge. Animate its intensity, flickering irregularly between pure white and a slightly darker bluish white, the way a TV lights a dark room. Tint the screen's pale page with the same flicker. Reduced motion: hold it steady at a low level, or leave it off.
+- **Screen glow is the code's job (Rick, 2026-11-13).** The art has no glow. Draw a soft halo around the monitor's bezel (**x 97–223, y 26–100**), fading out over about 6–10 px, dithered to fit the palette rather than a smooth gradient, with no hard edge. Animate its intensity, flickering irregularly between pure white and a slightly darker bluish white, the way a TV lights a dark room. Tint the screen's pale page with the same flicker. Reduced motion: hold it steady at a low level, or leave it off.
 - Also cleaned in this pass: a duplicate set of tiny browser dots above the title bar, and a stray white motion-arrow by her wrist in `R3_npc_win`.
 
 ## Flaws kept
