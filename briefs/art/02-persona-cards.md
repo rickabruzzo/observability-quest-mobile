@@ -109,7 +109,7 @@ The instrument is a generic shape, not a recognisable real guitar model. Sparks,
 ## Accept when
 
 - one fictional person, recognisably the persona from the room plate;
-- the class reads at a glance at 128×80: wizard, armoured hammer-swinger, bard, knight, rogue;
+- the class reads at a glance at 128×80: wizard, druid, bard, knight, rogue;
 - an action pose, face visible;
 - no writing, no logo, no frame; nothing that matters in the outer 6%;
 - it sits with the rooms: the same VGA look, no smooth gradients, no photo-realism.
