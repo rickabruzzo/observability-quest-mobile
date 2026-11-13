@@ -1,52 +1,68 @@
-// Scenario 1 on its real room, played in a browser: the PC and its menu, Otto's vitals monitor, the CTO's
-// decision, both tools, the scores, paging and targets on a small phone, the rotate gate stopping the clock,
-// reduced motion, and the timing summary.
+// Scenario 1 on its real room, played in a browser: the PC and its menu, Otto's vitals monitor, the Honeycomb
+// screens from their pictures, cause found → fix deployed → Otto recovers, the CTO's decision, missteps and
+// Charity (no score), paging and targets on a small phone, the rotate gate, reduced motion, the summary.
 import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 import { startServer } from './_server.js';
 import { SCRIPT } from '../../js/script.js';
-import { openGame, pickScenario, ch, run, winOpen, dismiss, tapSpot, toolOpen, promptsShown, prompt, playShortest, inState, pcPick, toPc, solveHc, leavePc, askCto, winLines } from './_play.js';
+import { openGame, pickScenario, ch, run, winOpen, dismiss, tapSpot, toolOpen, promptsShown, prompt, playShortest, inState, pcPick, toPc, solveHc, leavePc, askCto, winLines, deployAndRecover, charitySays } from './_play.js';
 
 let server, browser;
 before(async () => { server = await startServer(); browser = await chromium.launch(); });
 after(async () => { await browser?.close(); await server?.close(); });
 
 const PHONES = [[844, 390], [667, 375]];
+const PIC = { x: 4, y: 20, w: 188, h: 176 };
 const into = async (page) => { await page.click('#class-card'); assert.equal(await dismiss(page), SCRIPT['ch1.room.enter']); };
 const scen = (page) => page.evaluate(() => window.__oq.chapter.scenario);
+const otto = (page) => page.evaluate(() => ({ state: window.__oq.chapter.otto, tone: window.__oq.chapter.vitals.tone }));
+/** Records every piece of text that ever appears on the page, so a test can say "never showed X". */
+const watchText = (page) => page.evaluate(() => {
+  window.__seen = new Set([document.body.innerText]);
+  new MutationObserver(() => window.__seen.add(document.body.innerText)).observe(document.body, { subtree: true, childList: true, characterData: true });
+});
+const seen = (page) => page.evaluate(() => [...window.__seen].join('\n'));
+/** Pixels of the scene canvas inside the picture rectangle, as a string (to compare two moments). */
+const picPixels = (page) => page.evaluate((P) => [...document.querySelector('#scene').getContext('2d').getImageData(P.x, P.y, P.w, P.h).data].join(','), PIC);
 
 for (const [w, h] of PHONES) {
-  test(`${w}x${h}: the shortest path (PC → Honeycomb clean → leave → CTO → Get Honeycomb) scores 100 and the phases add up`, async () => {
+  test(`${w}x${h}: the shortest path (PC → Honeycomb → deploy → recovery → leave → CTO → Get Honeycomb) wins, Solved ticks up, no score anywhere`, async () => {
     const { ctx, page } = await openGame(browser, server, { w, h });
+    await watchText(page);
+    assert.equal(await page.locator('#sb-done').innerText(), 'Solved: 0 of 5');
     await pickScenario(page);
     await playShortest(page);
+    assert.equal(await page.locator('#sb-done').innerText(), 'Solved: 1 of 5');
     const s = await run(page);
-    assert.equal(s.score, 100); assert.equal(s.done, true);
+    assert.equal(s.missteps, 0); assert.equal(s.done, true); assert.ok(!('score' in s));
     const sum = Object.values(s.phases).reduce((a, b) => a + b, 0);
     assert.ok(Math.abs(sum - s.total) <= 50, `phases ${sum} vs total ${s.total}`);
-    for (const p of ['card', 'room', 'pc', 'hc', 'cto', 'win']) assert.ok(s.phases[p] > 0, `${p}: ${JSON.stringify(s.phases)}`);
+    for (const p of ['card', 'room', 'pc', 'hc', 'deploy', 'cto', 'win']) assert.ok(s.phases[p] > 0, `${p}: ${JSON.stringify(s.phases)}`);
     assert.equal(s.phases.old, 0); assert.equal(s.phases.monitor, 0);
     assert.match(await page.locator('#summary h2').innerText(), /\d+:\d\d/);
-    assert.match(await page.locator('#sb-score').innerText(), /Score: 100 of 500/);
-    assert.equal(await page.locator('#btn-claim').innerText(), SCRIPT['after.claim']);
+    assert.match(await page.locator('#summary').innerText(), /Missteps\s+0/);
     const fits = await page.evaluate(() => { const r = document.querySelector('#summary').getBoundingClientRect(), b = document.querySelector('#scene-box').getBoundingClientRect(), e = document.querySelector('#summary'); return r.top >= b.top - 1 && r.bottom <= b.bottom + 1 && e.scrollHeight <= e.clientHeight + 1; });
     assert.ok(fits, 'summary fits the scene');
+    await page.click('#btn-claim');
+    await charitySays(page);
+    assert.doesNotMatch(await seen(page), /score|of 500|of 100\b/i, 'no score on any screen of scenario 1');
     assert.deepEqual(page.errors, []);
     await ctx.close();
   });
 }
 
-test('the room\'s pictures are loaded before the class card lets go, and the room is the real art', async () => {
+test('the room\'s and the Honeycomb screen\'s pictures are loaded before the class card lets go', async () => {
   const { ctx, page } = await openGame(browser, server, { query: '?ch=1' });
   await page.click('#class-card');
   await winOpen(page);
   assert.equal(await page.evaluate(() => window.__oq.chapter.loaded), true);
+  assert.equal(await page.evaluate(() => window.__oq.chapter.screensLoaded), true);
   assert.equal(await page.evaluate(() => window.__oq.chapter.state), 'room');
   await ctx.close();
 });
 
-test('Copy results prints one JSON line to the console', async () => {
+test('Copy results prints one JSON line to the console, with missteps and no score', async () => {
   const { ctx, page } = await openGame(browser, server, { query: '?ch=1' });
   const lines = []; page.on('console', (m) => lines.push(m.text()));
   await playShortest(page);
@@ -54,25 +70,60 @@ test('Copy results prints one JSON line to the console', async () => {
   await page.waitForFunction(() => document.querySelector('#btn-copy').textContent === 'Copied');
   const json = lines.map((l) => { try { return JSON.parse(l); } catch { return null; } }).find((v) => v?.oq === 'run');
   assert.ok(json, lines.join('\n'));
-  assert.equal(json.score, 100); assert.ok(json.phases.pc > 0 && 'signed' in json.counts);
+  assert.equal(json.missteps, 0); assert.ok(!('score' in json));
+  assert.ok(json.phases.deploy > 0 && 'nudges' in json.counts && 'signed' in json.counts);
   await ctx.close();
 });
 
-test('one wrong Honeycomb prompt first scores 50; the prompt greys out and cannot be chosen again', async () => {
+test('the Honeycomb screen: stage 0 drawn on opening, each direct prompt wipes in the next picture, the prompts clear of it', async () => {
+  for (const [w, h] of PHONES) {
+    const { ctx, page } = await openGame(browser, server, { w, h, query: '?ch=1' });
+    await into(page); await toPc(page); await pcPick(page, 'hc'); await toolOpen(page, 'hc');
+    const lit = await page.evaluate((P) => { const d = document.querySelector('#scene').getContext('2d').getImageData(P.x + 20, P.y + 20, 1, 1).data; return d[0] + d[1] + d[2]; }, PIC);
+    assert.ok(lit > 60, `stage 0 is drawn (pixel sum ${lit})`);
+    await dismiss(page); await promptsShown(page);
+    const layout = await page.evaluate((P) => {
+      const c = document.querySelector('#scene').getBoundingClientRect(), k = c.width / 320, b = document.querySelector('#scene-box').getBoundingClientRect();
+      const picRight = c.left + (P.x + P.w + 2) * k, titleBottom = document.querySelector('.tool-title').getBoundingClientRect().bottom;
+      return [...document.querySelectorAll('.tool-prompts .prompt')].map((e) => { const r = e.getBoundingClientRect(); return { text: e.textContent.slice(0, 20), ok: r.left >= picRight && r.right <= b.right + 0.5 && r.top >= titleBottom && r.bottom <= b.bottom + 0.5 && r.height >= 44 && r.width >= 44 }; });
+    }, PIC);
+    assert.equal(layout.length, 4, 'three prompts and the close button');
+    assert.deepEqual(layout.filter((l) => !l.ok), [], `${w}x${h}`);
+    let before = await picPixels(page);
+    for (const step of [1, 2]) {
+      await prompt(page, 0);
+      await winOpen(page);                                          // the result: the reveal is over
+      assert.equal((await ch(page)).tool.step, step);
+      const now = await picPixels(page);
+      assert.notEqual(now, before, `stage ${step} looks like stage ${step - 1}`);
+      before = now;
+      await dismiss(page);
+      if (step === 1) await promptsShown(page);
+    }
+    await ctx.close();
+  }
+});
+
+test('all four Honeycomb nudges, then the direct prompts: no misstep; the nudges are counted; Charity is clean', async () => {
   const { ctx, page } = await openGame(browser, server, { query: '?ch=1' });
   await into(page); await toPc(page); await pcPick(page, 'hc'); await toolOpen(page, 'hc'); await dismiss(page);
-  await prompt(page, 2);
-  assert.equal(await dismiss(page), SCRIPT['ch1.hc.step1.jab.3']);
+  for (const i of [1, 2]) { await prompt(page, i); assert.equal(await dismiss(page), SCRIPT[`ch1.hc.step1.jab.${i + 1}`]); }
   await promptsShown(page);
   assert.equal(await page.locator('.tool-prompts .prompt[data-index="2"]').isDisabled(), true);
   await page.locator('.tool-prompts .prompt[data-index="2"]').click({ force: true });
   await page.waitForTimeout(150);
   assert.equal((await ch(page)).window, null, 'a greyed prompt does nothing');
-  await solveHc(page, { intro: false });
+  await prompt(page, 0); await dismiss(page);
+  for (const i of [1, 2]) { await prompt(page, i); assert.equal(await dismiss(page), SCRIPT[`ch1.hc.step2.jab.${i + 1}`]); }
+  await prompt(page, 0); assert.equal(await dismiss(page), SCRIPT['ch1.hc.step2.result']);
   await inState(page, 'pc');
+  await deployAndRecover(page); await inState(page, 'pc');
   await leavePc(page); await askCto(page); await page.click('#decide-hc'); await winLines(page);
-  assert.equal((await run(page)).score, 50);
-  assert.equal((await run(page)).counts.wrong, 1);
+  const s = await run(page);
+  assert.equal(s.missteps, 0); assert.equal(s.counts.nudges, 4);
+  await page.click('#btn-claim');
+  const { lines } = await charitySays(page);
+  assert.deepEqual(lines.slice(0, 2), [SCRIPT['final.clean'], SCRIPT['final.count.one']]);
   await ctx.close();
 });
 
@@ -107,7 +158,59 @@ test('the CTO before a tool is tried: her three calls in order, the last one rep
   await ctx.close();
 });
 
-test('Cave Logs only, then the CTO: Get Honeycomb → "show me" → the investigation opens on the spot → the win', async () => {
+test('the cause found and the fix deployed: Otto stays critical until the deploy, the deploy item comes and goes, the vitals line follows', async () => {
+  const { ctx, page } = await openGame(browser, server, { query: '?ch=1' });
+  await into(page); await toPc(page);
+  await pcPick(page, 'vitals');
+  assert.equal(await dismiss(page), SCRIPT['ch1.pc.vitals.before']);
+  await pcPick(page, 'email');
+  assert.equal(await page.locator('.pc-item').count(), 5);
+  for (let i = 1; i <= 5; i++) assert.equal(await page.locator(`.pc-item[data-id="email-${i}"]`).innerText(), SCRIPT[`ch1.pc.email.${i}`]);
+  await pcPick(page, 'email-4');
+  assert.equal(await dismiss(page), SCRIPT['ch1.pc.email.reply']);
+  assert.equal(await page.locator('.pc-item[data-id="deploy"]').count(), 0, 'nothing to deploy yet');
+  await pcPick(page, 'hc'); await solveHc(page);
+  await inState(page, 'pc');
+  assert.deepEqual(await otto(page), { state: 'found', tone: 'red' }, 'found is not fixed');
+  assert.equal(await page.locator('.pc-item[data-id="deploy"]').innerText(), SCRIPT['ch1.pc.menu.deploy']);
+  await pcPick(page, 'vitals');
+  assert.equal(await dismiss(page), SCRIPT['ch1.pc.vitals.found']);
+  await pcPick(page, 'deploy');
+  assert.equal(await dismiss(page), SCRIPT['ch1.pc.deploy']);
+  await page.waitForFunction(() => window.__oq.chapter.state === 'recover');
+  assert.deepEqual(await otto(page), { state: 'deployed', tone: 'green' });
+  await winOpen(page);                                              // Otto speaks once he has finished his sentence
+  assert.equal(await page.locator('.mon-out').innerText().then((t) => t.trim()), SCRIPT['ch1.vitals.output.ok']);
+  assert.equal(await dismiss(page), SCRIPT['ch1.otto.recovered']);
+  await inState(page, 'pc');
+  assert.equal(await page.locator('.pc-item[data-id="deploy"]').count(), 0, 'used once, then gone');
+  await pcPick(page, 'vitals');
+  assert.equal(await dismiss(page), SCRIPT['ch1.pc.vitals.hc']);
+  await pcPick(page, 'hc'); await toolOpen(page, 'hc'); await promptsShown(page);
+  assert.equal(await page.locator('.tool-prompts .prompt[data-index]').count(), 0, 'a finished Honeycomb screen is only a Close');
+  await page.click('#tool-exit'); await inState(page, 'pc');
+  const s = await run(page);
+  assert.equal(s.counts.emails, 1); assert.ok(s.phases.deploy > 0);
+  await ctx.close();
+});
+
+test('found but not deployed at the CTO: Get Honeycomb → "show me" → the deploy prompt alone → recovery → the win', async () => {
+  const { ctx, page } = await openGame(browser, server, { query: '?ch=1' });
+  await into(page); await toPc(page); await pcPick(page, 'hc'); await solveHc(page); await inState(page, 'pc');
+  await leavePc(page);
+  assert.equal((await otto(page)).tone, 'red');
+  await askCto(page);
+  await page.click('#decide-hc');
+  assert.equal(await dismiss(page), SCRIPT['ch1.decide.hc.show']);
+  await inState(page, 'pc');
+  assert.deepEqual(await page.locator('.pc-item').evaluateAll((bs) => bs.map((b) => b.dataset.id)), ['deploy'], 'one prompt over the PC');
+  await deployAndRecover(page);
+  await winLines(page);
+  assert.equal((await run(page)).missteps, 0);
+  await ctx.close();
+});
+
+test('Cave Logs only, then the CTO: Get Honeycomb → "show me" → the investigation → deploy → the win; the Cave Logs picks are missteps', async () => {
   const { ctx, page } = await openGame(browser, server, { query: '?ch=1' });
   await into(page); await toPc(page);
   await pcPick(page, 'old'); await toolOpen(page, 'old');
@@ -126,20 +229,25 @@ test('Cave Logs only, then the CTO: Get Honeycomb → "show me" → the investig
   await page.click('#decide-hc');
   assert.equal(await dismiss(page), SCRIPT['ch1.decide.hc.show']);
   await solveHc(page);
+  await inState(page, 'pc');
+  await deployAndRecover(page);
   await winLines(page);
   const s = await run(page);
-  assert.equal(s.score, 100, 'the old tool is free');
+  assert.equal(s.missteps, 3);
   assert.ok(s.phases.old > 0);
   assert.equal(s.counts.oldPrompts, 3); assert.equal(s.counts.vitals, 1);
+  await page.click('#btn-claim');
+  const { lines } = await charitySays(page);
+  assert.equal(lines[0], SCRIPT['final.grief']);
   await ctx.close();
 });
 
-test('Sign first: the jab, 50 points, the prompt greys and the choice comes back; backing out of "show me" returns to the room', async () => {
+test('Sign first: the jab, a misstep, the prompt greys and the choice comes back; backing out of "show me" returns to the room', async () => {
   const { ctx, page } = await openGame(browser, server, { query: '?ch=1' });
   await into(page); await toPc(page);
-  await pcPick(page, 'old'); await toolOpen(page, 'old'); await dismiss(page);
-  await prompt(page, 0); await dismiss(page);
-  await page.click('#tool-exit'); await dismiss(page);
+  await pcPick(page, 'hc'); await toolOpen(page, 'hc'); await dismiss(page);
+  await prompt(page, 1); await dismiss(page);                       // a nudge: tried, but no misstep
+  await promptsShown(page); await page.click('#tool-exit'); await inState(page, 'pc');
   await leavePc(page); await askCto(page);
   await page.click('#decide-sign');
   assert.equal(await dismiss(page), SCRIPT['ch1.decide.sign.jab']);
@@ -148,8 +256,8 @@ test('Sign first: the jab, 50 points, the prompt greys and the choice comes back
   assert.equal((await scen(page)).signed, true);
   await page.click('#decide-hc');
   assert.equal(await dismiss(page), SCRIPT['ch1.decide.hc.show']);
-  await toolOpen(page, 'hc'); await dismiss(page);
-  await prompt(page, 0); await dismiss(page);                     // one step done, then back out
+  await toolOpen(page, 'hc');
+  await prompt(page, 0); await dismiss(page);                       // one step done, then back out
   await promptsShown(page);
   await page.click('#tool-exit');
   await inState(page, 'room');
@@ -160,34 +268,16 @@ test('Sign first: the jab, 50 points, the prompt greys and the choice comes back
   await toolOpen(page, 'hc');
   assert.equal((await ch(page)).tool.step, 1, 'progress kept');
   await prompt(page, 0); assert.equal(await dismiss(page), SCRIPT['ch1.hc.step2.result']);
+  await inState(page, 'pc');
+  await deployAndRecover(page);
   await winLines(page);
   const s = await run(page);
-  assert.equal(s.score, 50);
-  assert.equal(s.counts.signed, 1); assert.equal(s.counts.wrong, 0);
-  assert.match(await page.locator('#sb-score').innerText(), /Score: 50 of 500/);
-  await ctx.close();
-});
-
-test('the PC: emails answer and return to the menu; Check Otto\'s vitals follows the investigation; a finished Honeycomb screen is only a Close', async () => {
-  const { ctx, page } = await openGame(browser, server, { query: '?ch=1' });
-  await into(page); await toPc(page);
-  await pcPick(page, 'vitals');
-  assert.equal(await dismiss(page), SCRIPT['ch1.pc.vitals.before']);
-  await pcPick(page, 'email');
-  assert.equal(await page.locator('.pc-item').count(), 5);
-  for (let i = 1; i <= 5; i++) assert.equal(await page.locator(`.pc-item[data-id="email-${i}"]`).innerText(), SCRIPT[`ch1.pc.email.${i}`]);
-  await pcPick(page, 'email-4');
-  assert.equal(await dismiss(page), SCRIPT['ch1.pc.email.reply']);
-  await page.waitForSelector('.pc-item[data-id="leave"]');
-  await pcPick(page, 'hc'); await solveHc(page);
-  await inState(page, 'pc');
-  assert.equal((await page.evaluate(() => window.__oq.chapter.vitals)).tone, 'green', 'Otto recovers');
-  await pcPick(page, 'vitals');
-  assert.equal(await dismiss(page), SCRIPT['ch1.pc.vitals.hc']);
-  await pcPick(page, 'hc'); await toolOpen(page, 'hc'); await promptsShown(page);
-  assert.equal(await page.locator('.tool-prompts .prompt[data-index]').count(), 0);
-  await page.click('#tool-exit'); await inState(page, 'pc');
-  assert.equal((await run(page)).counts.emails, 1);
+  assert.equal(s.missteps, 1);
+  assert.equal(s.counts.signed, 1); assert.equal(s.counts.nudges, 1);
+  assert.equal(await page.locator('#sb-done').innerText(), 'Solved: 1 of 5');
+  await page.click('#btn-claim');
+  const { lines } = await charitySays(page);
+  assert.equal(lines[0], SCRIPT['final.grief']);
   await ctx.close();
 });
 
@@ -333,6 +423,7 @@ test('reduced motion: no walking, a still monitor and CTO, instant text, the sam
   await tapSpot(page, 'pc');
   await inState(page, 'pc');
   await pcPick(page, 'hc'); await solveHc(page); await inState(page, 'pc');
+  await deployAndRecover(page); await inState(page, 'pc');
   await leavePc(page);
   assert.notEqual(x0, 87); assert.equal((await ch(page)).x, 87);
   await askCto(page);
@@ -340,7 +431,7 @@ test('reduced motion: no walking, a still monitor and CTO, instant text, the sam
   await page.click('#decide-hc');
   await winLines(page);
   const s = await run(page);
-  assert.equal(s.score, 100); assert.equal(s.counts.walkMs, 0);
+  assert.equal(s.missteps, 0); assert.equal(s.counts.walkMs, 0);
   await ctx.close();
 });
 

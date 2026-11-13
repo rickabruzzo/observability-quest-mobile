@@ -3,10 +3,11 @@
 // button sits in the right thumb column. The rules are js/menu.js; this is the DOM.
 
 import { SCRIPT } from '../script.js';
-import { menuRows, totalScore, canClaim } from '../menu.js';
+import { menuRows, canClaim } from '../menu.js';
 import { colButton } from '../engine/ui.js';
 import { createWindows } from '../engine/window.js';
 import { UI as CHAPTER_UI } from './chapter.js';
+import { playCharity } from './charity.js';
 
 export const MENU_UI = { soon: 'coming soon' };   // a string the script has no slot for
 
@@ -17,7 +18,7 @@ export function createMenuScreen(game) {
   return {
     enter(ctx) {
       const done = ctx.loadDone();
-      ctx.setScore(totalScore(done));
+      ctx.showSolved();
       const g = ctx.ctx2d; g.fillStyle = '#000'; g.fillRect(0, 0, 320, 200);
       const rows = menuRows(SCRIPT, done);
       ctx.overlay.innerHTML = `
@@ -29,7 +30,7 @@ export function createMenuScreen(game) {
               <button type="button" class="menu-row${r.done ? ' done' : ''}" data-ch="${r.ch}" ${r.enabled ? '' : 'disabled aria-disabled="true"'}>
                 <span class="mr-name">${esc(r.name)}</span>
                 <span class="mr-hook">${esc(r.hook)}</span>
-                <span class="mr-mark">${r.done ? `${esc(SCRIPT['menu.done'])}<b>${r.score}</b>` : r.enabled ? '' : esc(MENU_UI.soon)}</span>
+                <span class="mr-mark">${r.done ? `<i class="mr-tick" aria-hidden="true"></i>${esc(SCRIPT['menu.done'])}` : r.enabled ? '' : esc(MENU_UI.soon)}</span>
               </button>`).join('')}
           </div>
         </div>`;
@@ -42,7 +43,7 @@ export function createMenuScreen(game) {
       onDown = (e) => { if (wins.open && !e.target.closest?.('button')) wins.tap(); };
       ctx.canvas.parentElement.addEventListener('pointerdown', onDown);
       if (canClaim(done, ctx.claimed)) {
-        claim = colButton({ id: 'btn-menu-claim', long: SCRIPT['claim.button'], className: 'go', onClick: () => { if (!wins.open) wins.say(CHAPTER_UI.claimSoon); } });
+        claim = colButton({ id: 'btn-menu-claim', long: SCRIPT['claim.button'], className: 'go', onClick: () => { if (!wins.open && !ctx.overlay.querySelector('#charity')) playCharity(ctx, wins, CHAPTER_UI.claimSoon); } });
         ctx.colR.appendChild(claim);
       }
     },
