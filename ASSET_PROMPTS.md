@@ -246,3 +246,20 @@ two institutions) follow two customer stories Rick supplied: the Jack Henry case
 FireHydrant Kubernetes-migration story, whose video is a short text animation with no product footage. The layouts follow
 Honeycomb's Service Map and BubbleUp; the bank, the node and the service names are the game's own. No customer is named in
 the game.
+
+## Rooms 2–5 and the five persona cards (2026-11-12, art drops)
+
+Made by Art Claude on Rick's personal account (Gemini API `gemini-3.1-flash-image`, 3:2, 1K), from `briefs/art/01-rooms-2-5.md`
+and `briefs/art/02-persona-cards.md`. Each drop carries its own provenance, tries, flaws kept and sign-off:
+
+| Drop | What | Notes |
+|---|---|---|
+| `art-drops/2026-11-12-card-ch1/` | `P1_card`: the CTO, Archmage of the Budget | try 1 of 3; Rick approved. A sparkle is drawn in code. |
+| `art-drops/2026-11-12-room-ch2/` | room 2, five figure frames, two close-ups, `P2_card` | **Rick redirected the room**: the display is the whiteboard, the persona a cloud engineer at the board; no cabinet, no plug. Idle frames (look, scratch, mark) as well as talk frames. The cans on the desk read as a known energy drink at full size; no logo is legible at 320×200. |
+| `art-drops/2026-11-12-room-ch3/` | room 3, two talk frames, two close-ups, `P3_card` | The wall monitor is pale; the three small boxes are short; the guitar is right-handed. |
+| `art-drops/2026-11-12-room-ch4/` | room 4, two talk frames, two close-ups, `P4_card` | The lane under the star map is thin. |
+| `art-drops/2026-11-12-room-ch5/` | room 5, two talk frames, two close-ups, `P5_card` | The projector has two extra boxes; the small boxes are small. |
+
+Rick approved the four room plates and the CTO's card. The talk frames, close-ups and cards 2–5 were picked by Art Claude
+against the briefs and are **not yet reviewed by Rick**. Built to game size by `tools/build_rooms.py` (rooms 320×200, figure
+frames as one shared patch per room; cards 128×80, 64 colours).

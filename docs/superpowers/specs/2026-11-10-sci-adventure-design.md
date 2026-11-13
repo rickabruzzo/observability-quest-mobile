@@ -143,6 +143,12 @@ The first time the player talks to the persona (Use on them), **their card pops 
 
 Company names and all copy are placeholders until the script lands; the *shape* below is what the design commits to.
 
+### The shape every scenario shares (from scenario 1, applied to 2–5 on 2026-11-13)
+
+Three hotspots: **the wall display** (Look, and a close-up the game draws into), **the lent computer** (a close-up with a menu: read email, check the status, open the old tool, open Honeycomb, apply the fix, leave) and **the persona** (their card the first time, then their lines). Leaving the computer and the persona's question unlock once a tool has been tried. The persona then asks what to do: one option is their own instinct, which gets a jab and comes back; the other is **[Get Honeycomb]**, which wins once the fix is deployed. The wrong instincts: sign the logs contract (1), draw a bigger diagram (2), ship the loading spinner (3), page Einar sooner (4), ban Friday deploys (5). After the fix, the wall display visibly recovers and a line says so.
+
+The persona rests between lines: their talk frames play only while their own words are on screen (Rick, 2026-11-12: a tight loop looked creepy). Scenario 2's Cloud Engineer mostly studies the board, and now and then scratches his head or makes a mark.
+
 ### 1 · Agent Observability · Enterprise · **CTO** (was LLM Observability · Technical Decision Maker)
 - *Inspired by* Intercom / Fin AI. Company: a fictional enterprise customer-service platform.
 - *Persona*: the **CTO**, the ICP's "Buyer": the person who signs. She paged the hero.
@@ -159,18 +165,18 @@ Company names and all copy are placeholders until the script lands; the *shape* 
   The other prompts are real moves that teach something and nudge back: token usage by agent (who), the Canvas agent (it already linked the conversation), the application trace (nothing downstream is slow), the evals (the answer was also bad). Then **[Apply the fix and deploy]**: the lookup returns the one order asked about. Win: Otto answers; the CTO leaves the Cave Logs renewal unsigned.
 - *Screens*: three pixel-art pictures, `assets/screens/ch1_hc_0..2.png`, drawn in code by `tools/build_hc_screens.py` from that demo (not screenshots; no logo), with the rectangles to pulse in `ch1_hc.json`.
 
-### 2 · Migrations · Fintech · **Platform Engineer**
+### 2 · Migrations · Fintech · **Cloud Engineer**
 - *Inspired by* Nubank for the setting: a fictional bank two years into moving 350 services off a monolith. *The solve is grounded (2026-11-12) in two customer stories*: **Jack Henry** (banking technology for small banks and credit unions; moving from Mesos to Kubernetes with about 250 services; one institution is about 1% of traffic, so failures never show at the top level; BubbleUp "immediately found" two credit unions failing on the same node; the Service Map, filtered to an institution and with erroring services highlighted, showed where to look; tags say which team owns a service) and **FireHydrant** (adopted Honeycomb at the start of its Kubernetes migration; found novel issues before they hurt; "I wouldn't make a transition like that without Honeycomb"). Neither is named in the game. The FireHydrant video is a one-minute text animation with no product footage.
-- *Persona*: the Platform Engineer who ran the migration, hand on the old monolith's plug, ready to prove it is finished.
+- *Persona*: the **Cloud Engineer** (Rick's name for him, 2026-11-12) who ran the migration and drew it on the whiteboard; he stands at the board trying to understand his own map. **The monolith is a codebase, not a box**: there is no server cabinet and no plug.
 - *Stats*: YAML Tolerance 18 · Kubernetes 16 · Sleep 4 · "It's DNS" 20.
-- *Room*: a migration war room; a whiteboard covered in arrows; a status wall of 350 green tiles; the monolith in the corner with a "DO NOT UNPLUG" sign.
+- *Room*: a migration war room; **the wall display is the whiteboard**, a hand-drawn service map of every service; the hero's lent desk is a cubicle on the left. The 350 green tiles live in the old tool.
 - *Situation*: the migration is "done". Kestrel hosts online banking for three hundred credit unions; members of two of them can't move money. Two in three hundred is one percent, so every dashboard is green.
 - *Old tool*: **Old Artifact** — 350 green tiles; `[Refresh]` `[Add a 351st dashboard]` `[Ask the monolith nicely]`.
 - *Hero feature*: **BubbleUp and the Service Map.**
   1. **Service Map, unfiltered.** All 350 services and every call between them: true, and too much. `[BubbleUp the failed transfers]`.
   2. **BubbleUp.** Failed transfers against all the others: two credit unions and one node in the new cluster stand out. `[Filter the Service Map to those two]`.
   3. **Service Map, filtered.** For those two, on node 17, `transfers` still calls `legacy-core`, the old monolith; everyone else goes to the new ledger. The owner tag says who to call.
-  The other prompts nudge back: reading the whole map (narrow it first), the overall error rate (0.9%: one percent never shows), one trace from that node (is it one request or all of them?), who owns the service (know what to tell them first). Then **[Apply the fix and deploy]**: point node 17 at the new ledger. Win: the Platform Engineer pulls the plug and nothing else goes dark. Pulling it earlier is the wrong call at the end: two credit unions go dark and the plug goes back in.
+  The other prompts nudge back: reading the whole map (narrow it first), the overall error rate (0.9%: one percent never shows), one trace from that node (is it one request or all of them?), who owns the service (know what to tell them first). Then **[Apply the fix and deploy]**: point node 17 at the new ledger. Win: for the first time in two years, the board is right. The wrong advice at the end is `[Draw a bigger diagram]`.
 - *Screens*: `assets/screens/ch2_hc_0..2.png` and `ch2_hc.json`, drawn in code by `tools/build_hc_screens.py`.
 
 ### 3 · Frontend Observability · E-commerce · **Frontend Developer**

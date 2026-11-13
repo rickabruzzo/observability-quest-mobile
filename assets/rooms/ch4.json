@@ -1,0 +1,21 @@
+{
+ "size": [
+  320,
+  200
+ ],
+ "images": {
+  "R4_ops_room": "R4_ops_room.png",
+  "R4_wall_closeup": "R4_wall_closeup.png",
+  "R4_pc_closeup": "R4_pc_closeup.png",
+  "R4_npc_talk_1": "R4_npc_talk_1.png",
+  "R4_npc_talk_2": "R4_npc_talk_2.png"
+ },
+ "patches": {
+  "R4_ops_room": {
+   "x": 243,
+   "y": 78,
+   "w": 62,
+   "h": 59
+  }
+ }
+}

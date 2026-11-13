@@ -1,0 +1,21 @@
+{
+ "size": [
+  320,
+  200
+ ],
+ "images": {
+  "R3_bullpen": "R3_bullpen.png",
+  "R3_wall_closeup": "R3_wall_closeup.png",
+  "R3_pc_closeup": "R3_pc_closeup.png",
+  "R3_npc_talk_1": "R3_npc_talk_1.png",
+  "R3_npc_talk_2": "R3_npc_talk_2.png"
+ },
+ "patches": {
+  "R3_bullpen": {
+   "x": 37,
+   "y": 48,
+   "w": 72,
+   "h": 61
+  }
+ }
+}

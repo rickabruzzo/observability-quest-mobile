@@ -32,3 +32,25 @@ def test_an_edit_that_is_another_picture_is_refused(tmp_path):
     try: br.build(str(src), str(tmp_path / 'out'), 'chX', plates=['P'], edits={'E1': 'P'})
     except ValueError as e: assert 'E1' in str(e)
     else: raise AssertionError('no error')
+
+
+def test_cards_come_out_at_the_card_window_size_in_few_colours(tmp_path):
+    src = tmp_path / 'c.png'
+    im = Image.new('RGB', (640, 400), (20, 30, 60)); im.paste((200, 60, 60), (100, 100, 300, 300)); im.save(src)
+    m = br.build_cards(str(tmp_path / 'out'), {'P9': str(src)})
+    assert m == {'size': [128, 80], 'cards': {'P9': 'P9_card.png'}}
+    out = Image.open(tmp_path / 'out' / 'P9_card.png')
+    assert out.size == (128, 80) and len(out.convert('RGB').getcolors(1 << 16)) <= 64
+    assert out.convert('RGB').getpixel((40, 40)) == (200, 60, 60)
+    assert json.load(open(tmp_path / 'out' / 'cards.json')) == m
+
+
+def test_every_room_and_card_in_the_drops_is_listed_with_its_source():
+    import os
+    for ch in ('ch2', 'ch3', 'ch4', 'ch5'):
+        r = br.ROOMS[ch]
+        for n in list(r['plates']) + list(r['edits']):
+            assert os.path.exists(os.path.join(br.ROOT, r['src'], n + '.png')), n
+        assert len(r['plates']) == 3 and set(r['edits'].values()) == {r['plates'][0]}
+    assert sorted(br.CARDS) == ['P1', 'P2', 'P3', 'P4', 'P5']
+    for f in br.CARDS.values(): assert os.path.exists(os.path.join(br.ROOT, f)), f
