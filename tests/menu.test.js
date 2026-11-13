@@ -1,45 +1,51 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseDone, recordDone, totalScore, menuRows, parseCh, afterIntro, canClaim, SCENARIOS, AVAILABLE, MAX_SCORE } from '../js/menu.js';
+import { parseDone, serializeDone, recordDone, solvedCount, menuRows, parseCh, afterIntro, canClaim, SCENARIOS, AVAILABLE } from '../js/menu.js';
+import * as menu from '../js/menu.js';
 import { SCRIPT } from '../js/script.js';
 
-test('five scenarios, in order; only the first is built; the score is out of 500', () => {
+test('five scenarios, in order; only the first is built', () => {
   assert.deepEqual(SCENARIOS, [1, 2, 3, 4, 5]);
   assert.deepEqual(AVAILABLE, [1]);
-  assert.equal(MAX_SCORE, 500);
 });
 
-test('stored completion is sanitised: junk, unknown scenarios and bad scores are dropped', () => {
+test('completion is scenario → missteps, stored with a version; junk and unknown scenarios are dropped', () => {
   assert.deepEqual(parseDone(null), {});
   assert.deepEqual(parseDone('not json'), {});
   assert.deepEqual(parseDone('[1,2]'), {});
-  assert.deepEqual(parseDone('{"1":100,"2":50,"9":100,"3":"x","4":250,"5":-1}'), { 1: 100, 2: 50 });
-  assert.deepEqual(parseDone('{"1":49.5}'), {});
+  const raw = serializeDone({ 1: 0, 3: 2 });
+  assert.deepEqual(JSON.parse(raw), { v: 2, done: { 1: 0, 3: 2 } });
+  assert.deepEqual(parseDone(raw), { 1: 0, 3: 2 });
+  assert.deepEqual(parseDone('{"v":2,"done":{"1":0,"9":0,"2":-1,"4":1.5,"5":"x"}}'), { 1: 0 });
 });
 
-test('a replay keeps the better score', () => {
-  let d = recordDone({}, 1, 50);
-  assert.deepEqual(d, { 1: 50 });
-  d = recordDone(d, 1, 100);
-  assert.deepEqual(d, { 1: 100 });
-  d = recordDone(d, 1, 50);
-  assert.deepEqual(d, { 1: 100 });
+test('an old-format oq.done (scenario → score) reads without crashing: 100 is no missteps, anything else is one', () => {
+  assert.deepEqual(parseDone('{"1":100}'), { 1: 0 });
+  assert.deepEqual(parseDone('{"1":50,"2":100,"9":100,"3":"x"}'), { 1: 1, 2: 0 });
 });
 
-test('the status-bar score is the sum of best scores', () => {
-  assert.equal(totalScore({}), 0);
-  assert.equal(totalScore({ 1: 100, 3: 50 }), 150);
+test('a replay keeps the fewer missteps', () => {
+  let d = recordDone({}, 1, 2);
+  assert.deepEqual(d, { 1: 2 });
+  d = recordDone(d, 1, 0);
+  assert.deepEqual(d, { 1: 0 });
+  d = recordDone(d, 1, 3);
+  assert.deepEqual(d, { 1: 0 });
 });
 
-test('menu rows: five, from the script, only scenario 1 enabled, done ones carry their score', () => {
-  const rows = menuRows(SCRIPT, { 1: 50 });
+test('the status bar counts solved scenarios', () => {
+  assert.equal(solvedCount({}), 0);
+  assert.equal(solvedCount({ 1: 0, 3: 4 }), 2);
+});
+
+test('menu rows: five, from the script, only scenario 1 enabled, solved ones ticked — and no number', () => {
+  const rows = menuRows(SCRIPT, { 1: 3 });
   assert.equal(rows.length, 5);
   assert.deepEqual(rows.map((r) => r.ch), [1, 2, 3, 4, 5]);
   assert.deepEqual(rows.map((r) => r.enabled), [true, false, false, false, false]);
   assert.equal(rows[0].name, SCRIPT['menu.ch1.name']);
-  assert.equal(rows[4].hook, SCRIPT['menu.ch5.hook']);
-  assert.deepEqual([rows[0].done, rows[0].score], [true, 50]);
-  assert.deepEqual([rows[1].done, rows[1].score], [false, null]);
+  assert.equal(rows[0].done, true); assert.equal(rows[1].done, false);
+  for (const r of rows) assert.deepEqual(Object.keys(r).sort(), ['ch', 'done', 'enabled', 'hook', 'name']);
 });
 
 test('?ch=N: a whole number 1..5, anything else is ignored', () => {
@@ -50,14 +56,17 @@ test('?ch=N: a whole number 1..5, anything else is ignored', () => {
 
 test('after the intro: a built ?ch goes straight in, ?preview=1 goes to the preview room, anything else the menu', () => {
   assert.deepEqual(afterIntro('?ch=1'), { screen: 'CHAPTER', ch: 1 });
-  assert.deepEqual(afterIntro('?ch=2'), { screen: 'MENU' });        // not built yet: the menu
-  assert.deepEqual(afterIntro('?ch=zz'), { screen: 'MENU' });
+  assert.deepEqual(afterIntro('?ch=2'), { screen: 'MENU' });
   assert.deepEqual(afterIntro(''), { screen: 'MENU' });
   assert.deepEqual(afterIntro('?preview=1'), { screen: 'PREVIEW' });
 });
 
-test('the claim button: once one scenario is done and the prize is unclaimed', () => {
+test('the claim button: once one scenario is solved and the prize is unclaimed', () => {
   assert.equal(canClaim({}, false), false);
-  assert.equal(canClaim({ 1: 50 }, false), true);
-  assert.equal(canClaim({ 1: 100 }, true), false);
+  assert.equal(canClaim({ 1: 2 }, false), true);
+  assert.equal(canClaim({ 1: 0 }, true), false);
+});
+
+test('nothing exported is named for a score', () => {
+  assert.deepEqual(Object.keys(menu).filter((k) => /score|^max_|per_scenario/i.test(k)), []);
 });

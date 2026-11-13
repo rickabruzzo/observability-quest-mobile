@@ -12,13 +12,29 @@ from PIL import Image
 if __package__ in (None, ''): sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from tools.build_intro import downsample, quantise, snap_to_plate
 
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC, OUT = 'scratch/room_gen', 'assets/rooms'
 COLOURS = 192
 MAX_DRIFT = 0.25                    # a talk frame changes one figure; past a quarter of the frame it is another picture
+# Each chapter: where its 640x400 files are, the plates (room first), and the edits of the room plate.
+# Chapter 1's sources predate the art drops and live in scratch/ on the machine that made them.
 ROOMS = {
-    'ch1': {'plates': ['R1_exec_floor', 'R1_monitor_closeup', 'R1_pc_closeup'],
+    'ch1': {'src': SRC, 'plates': ['R1_exec_floor', 'R1_monitor_closeup', 'R1_pc_closeup'],
             'edits': {'R1_cto_talk_1': 'R1_exec_floor', 'R1_cto_talk_2': 'R1_exec_floor'}},
+    'ch2': {'src': 'art-drops/2026-11-12-room-ch2', 'plates': ['R2_war_room', 'R2_wall_closeup', 'R2_pc_closeup'],
+            'edits': {n: 'R2_war_room' for n in ('R2_npc_talk_1', 'R2_npc_talk_2', 'R2_npc_look', 'R2_npc_scratch', 'R2_npc_mark')}},
+    'ch3': {'src': 'art-drops/2026-11-12-room-ch3', 'plates': ['R3_bullpen', 'R3_wall_closeup', 'R3_pc_closeup'],
+            'edits': {n: 'R3_bullpen' for n in ('R3_npc_talk_1', 'R3_npc_talk_2')}},
+    'ch4': {'src': 'art-drops/2026-11-12-room-ch4', 'plates': ['R4_ops_room', 'R4_wall_closeup', 'R4_pc_closeup'],
+            'edits': {n: 'R4_ops_room' for n in ('R4_npc_talk_1', 'R4_npc_talk_2')}},
+    'ch5': {'src': 'art-drops/2026-11-12-room-ch5', 'plates': ['R5_loft', 'R5_wall_closeup', 'R5_pc_closeup'],
+            'edits': {n: 'R5_loft' for n in ('R5_npc_talk_1', 'R5_npc_talk_2')}},
 }
+# The persona cards' pictures: 640x400 in the drops, 128x80 in the card's window.
+CARDS = {'P1': 'art-drops/2026-11-12-card-ch1/P1_card.png', 'P2': 'art-drops/2026-11-12-room-ch2/P2_card.png',
+         'P3': 'art-drops/2026-11-12-room-ch3/P3_card.png', 'P4': 'art-drops/2026-11-12-room-ch4/P4_card.png',
+         'P5': 'art-drops/2026-11-12-room-ch5/P5_card.png'}
+CARD_SIZE, CARD_COLOURS = (128, 80), 64
 
 
 def _save(img, path):
@@ -52,5 +68,21 @@ def build(src, out, name, plates, edits):
     return m
 
 
+def build_cards(out='assets/cards', cards=None):
+    """The persona cards' pictures at the card window's size. Averaged down (they are one figure seen small, and a
+    nearest-neighbour fifth loses the face), then cut to a VGA-sized palette."""
+    os.makedirs(out, exist_ok=True)
+    m = {'size': list(CARD_SIZE), 'cards': {}}
+    for name, path in (cards if cards is not None else {k: os.path.join(ROOT, v) for k, v in CARDS.items()}).items():
+        img = quantise(Image.open(path).convert('RGB').resize(CARD_SIZE, Image.BOX), CARD_COLOURS)
+        _save(img, os.path.join(out, name + '_card.png')); m['cards'][name] = name + '_card.png'
+    with open(os.path.join(out, 'cards.json'), 'w') as f: json.dump(m, f, indent=1); f.write('\n')
+    return m
+
+
 if __name__ == '__main__':
-    for name, r in ROOMS.items(): build(SRC, OUT, name, r['plates'], r['edits'])
+    for name, r in ROOMS.items():
+        src = os.path.join(ROOT, r['src'])
+        if not os.path.exists(os.path.join(src, r['plates'][0] + '.png')): print(f'{name}: sources not in this checkout ({r["src"]}); left as built'); continue
+        build(src, os.path.join(ROOT, OUT), name, r['plates'], r['edits'])
+    build_cards(os.path.join(ROOT, 'assets/cards'))

@@ -1,32 +1,45 @@
-// The scenario menu, the pure part (spec: The scenario menu): five rows in order, completion and best
-// scores in sessionStorage `oq.done`, the `?ch=N` shortcut, and when the claim button shows.
+// The scenario menu, the pure part (spec: The scenario menu, No score): five rows in order, which scenarios
+// are solved and with how many missteps (sessionStorage `oq.done`), the `?ch=N` shortcut, and when the claim
+// button shows. No points anywhere.
 
 export const SCENARIOS = [1, 2, 3, 4, 5];
 export const AVAILABLE = [1];               // built so far; the rest show, disabled
-export const PER_SCENARIO = 100;
-export const MAX_SCORE = SCENARIOS.length * PER_SCENARIO;
 export const DONE_KEY = 'oq.done';
+const VERSION = 2;                          // 1 (unversioned) stored scenario → score
 
-/** { scenario: best score } from storage; anything malformed is dropped. */
+/**
+ * { scenario: missteps } from storage; anything malformed is dropped. The old format, scenario → score with no
+ * version, is read too: a stored 100 was a clean run (0 missteps), anything else had at least one (1).
+ */
 export function parseDone(raw) {
   let v;
   try { v = JSON.parse(raw); } catch { return {}; }
   if (!v || typeof v !== 'object' || Array.isArray(v)) return {};
+  const old = v.v !== VERSION;
+  const src = old ? v : v.done;
+  if (!src || typeof src !== 'object' || Array.isArray(src)) return {};
   const out = {};
   for (const ch of SCENARIOS) {
-    const s = v[ch];
-    if (Number.isInteger(s) && s >= 0 && s <= PER_SCENARIO) out[ch] = s;
+    const m = src[ch];
+    if (!Number.isInteger(m) || m < 0) continue;
+    out[ch] = old ? (m === 100 ? 0 : 1) : m;
   }
   return out;
 }
 
-/** A new record with `score` for scenario `ch`, keeping the better of old and new. */
-export function recordDone(done, ch, score) {
-  return { ...done, [ch]: Math.max(score, done[ch] ?? -1) };
+/** What `oq.done` stores. */
+export function serializeDone(done) {
+  return JSON.stringify({ v: VERSION, done });
 }
 
-export function totalScore(done) {
-  return Object.values(done).reduce((a, b) => a + b, 0);
+/** A new record with `missteps` for scenario `ch`, keeping the fewer of old and new. */
+export function recordDone(done, ch, missteps) {
+  return { ...done, [ch]: Math.min(missteps, done[ch] ?? Infinity) };
+}
+
+/** How many scenarios are solved: the status bar's "Solved: N of 5". */
+export function solvedCount(done) {
+  return Object.keys(done).length;
 }
 
 export function menuRows(script, done, available = AVAILABLE) {
@@ -36,7 +49,6 @@ export function menuRows(script, done, available = AVAILABLE) {
     hook: script[`menu.ch${ch}.hook`],
     enabled: available.includes(ch),
     done: ch in done,
-    score: ch in done ? done[ch] : null,
   }));
 }
 

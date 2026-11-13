@@ -6,7 +6,7 @@ export function createTitleScreen(game) {
   let startBtn = null;
   return {
     enter(ctx) {
-      ctx.setScore(0);
+      ctx.showSolved();
       const g = ctx.ctx2d;
       g.fillStyle = '#000'; g.fillRect(0, 0, 320, 200);
       // a faint horizon line so the black isn't a dead canvas

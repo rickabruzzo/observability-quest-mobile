@@ -63,7 +63,9 @@ export const PC = {
   ],
   emails: [1, 2, 3, 4, 5].map((i) => `ch1.pc.email.${i}`),
   reply: 'ch1.pc.email.reply',
-  vitals: { before: 'ch1.pc.vitals.before', old: 'ch1.pc.vitals.old', hc: 'ch1.pc.vitals.hc' },
+  vitals: { before: 'ch1.pc.vitals.before', old: 'ch1.pc.vitals.old', found: 'ch1.pc.vitals.found', hc: 'ch1.pc.vitals.hc' },
+  // once the cause is found: deploy the fix, watch Otto recover on the monitor, hear from him
+  deploy: { item: 'ch1.pc.menu.deploy', line: 'ch1.pc.deploy', recovered: 'ch1.otto.recovered' },
   leave: 'ch1.pc.leave', locked: 'ch1.pc.leave.locked',
 };
 
@@ -75,46 +77,20 @@ export const CTO = {
   jab: 'ch1.decide.sign.jab', show: 'ch1.decide.hc.show',
 };
 
-// ---- product-screen pictures (left half of the scene; the prompts take the right) ----
+// ---- product-screen pictures ----
+// Both tools draw their picture in the same rectangle (the Honeycomb pictures' own size, from
+// assets/screens/ch1_hc.json); the prompts take the column from 61.5% of the scene (brief 06).
 
-const PIC = { x: 6, y: 20, w: 148, h: 172 };
-
-function frame(g, bg = '#141A26') {
-  g.fillStyle = '#000'; g.fillRect(0, 0, 320, 200);
-  g.fillStyle = '#2A3346'; g.fillRect(PIC.x - 2, PIC.y - 2, PIC.w + 4, PIC.h + 4);
-  g.fillStyle = bg; g.fillRect(PIC.x, PIC.y, PIC.w, PIC.h);
-}
+export const TOOL_PIC = { x: 4, y: 20, w: 188, h: 176 };
 
 /** Cave Logs: a black window of JSON, every line technically true. */
 function paintOld(g) {
-  frame(g, '#050805');
-  const widths = [90, 120, 60, 132, 100, 76, 128, 54, 110, 96, 136, 70, 118, 84, 102, 64, 126, 92, 58, 114];
-  widths.forEach((w, i) => { g.fillStyle = i % 5 === 2 ? '#2E7A2E' : '#3CC83C'; g.fillRect(PIC.x + 6, PIC.y + 6 + i * 8, w, 3); });
-}
-
-/**
- * Honeycomb · SLOs. `stage` is how many right answers so far; `p` (0..1) is the reveal of the latest one.
- * 0: the burn line climbing. 1: twelve model calls fan out under one trace. 2: one of them glows — the cron.
- */
-function paintHc(g, stage, p = 1) {
-  frame(g);
-  const bx = PIC.x + 10, by = PIC.y + 18, bw = PIC.w - 20;
-  if (stage === 0) {
-    g.fillStyle = '#2A3346'; for (let i = 0; i < 5; i++) g.fillRect(bx, by + i * 28, bw, 1);
-    g.fillStyle = '#F96E10';                                         // the burn rate climbing, faster at the end
-    for (let x = 0; x < bw; x++) { const y = Math.round(118 * Math.pow(x / bw, 2.2)); g.fillRect(bx + x, by + 128 - y, 2, 2); }
-    g.fillStyle = '#E04040'; g.fillRect(bx, by + 2, 40, 4);
-    return;
-  }
-  const n = 12, rowH = 11, shown = stage === 1 ? Math.ceil(n * p) : n;
-  const widths = [40, 52, 34, 60, 46, 38, 118, 44, 56, 36, 50, 42];  // one call is starved
-  for (let i = 0; i < shown; i++) {
-    const glow = stage === 2 && i === 6;
-    g.fillStyle = glow ? (p >= 1 || Math.floor(p * 8) % 2 ? '#FFB000' : '#F96E10') : '#0298EC';
-    g.fillRect(bx + (i % 3) * 4, by + i * rowH, widths[i], 7);
-    if (glow) { g.fillStyle = '#FFF3D0'; g.fillRect(bx + (i % 3) * 4, by + i * rowH, widths[i], 1); }
-  }
-  g.fillStyle = '#51368D'; g.fillRect(bx, by + n * rowH + 6, bw, 4);   // the parent trace
+  const P = TOOL_PIC;
+  g.fillStyle = '#000'; g.fillRect(0, 0, 320, 200);
+  g.fillStyle = '#2A3346'; g.fillRect(P.x - 2, P.y - 2, P.w + 4, P.h + 4);
+  g.fillStyle = '#050805'; g.fillRect(P.x, P.y, P.w, P.h);
+  const widths = [90, 160, 60, 172, 120, 76, 150, 54, 130, 96, 176, 70, 138, 84, 112, 64, 156, 92, 58, 134, 100];
+  widths.forEach((w, i) => { g.fillStyle = i % 5 === 2 ? '#2E7A2E' : '#3CC83C'; g.fillRect(P.x + 6, P.y + 6 + i * 8, Math.min(w, P.w - 12), 3); });
 }
 
 const step = (n) => ({
@@ -144,7 +120,7 @@ export const CH1 = {
     hc: {
       kind: 'hc', title: 'ch1.hc.title', intro: 'ch1.hc.intro',
       steps: [step(1), step(2)],
-      paint: paintHc,
+      screens: 'assets/screens/ch1_hc.json',     // one picture per stage, drawn by js/engine/screens.js
     },
   },
   win: ['ch1.win', 'ch1.hero.line'],

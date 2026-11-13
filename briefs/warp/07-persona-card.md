@@ -77,6 +77,12 @@ number right; the flavor line in italics under a rule.
 - `script/script.md` is off limits except: **delete the five `chN.card.stats` slots** once nothing reads them,
   and rebuild `js/script.js`. Change no words.
 
+### 5. The strings that were waiting for slots
+They have slots now: `ui.look`, `ui.use`, `ui.help`, `ui.back`, `ui.close.hc`, `ch1.old.close`, `ui.copy`,
+`ui.copied`, `menu.soon`, `claim.soon`. Read them from `SCRIPT` and delete those entries from the `UI` and
+`MENU_UI` tables. The stopwatch summary's own labels stay in code: the summary is Rick's tuning tool and comes
+out before the booth build.
+
 ## Tests (first)
 
 - Unit: the card opens on the first Use only; which options each state offers; `persona.show` returns to the

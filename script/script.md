@@ -110,7 +110,7 @@ THE CTO
 The AI support bot keeps freezing. The logs renewal is due Friday.
 
 ### menu.ch2.name
-THE PLATFORM ENGINEER
+THE CLOUD ENGINEER
 
 ### menu.ch2.hook
 A bank, mid-migration. Two credit unions can't move money. Every dashboard is green.
@@ -144,6 +144,39 @@ One story down. The prize is yours — or the night is young.
 
 ### after.more
 [Another scenario]
+
+---
+
+## Controls and small labels
+
+Words on buttons that are not part of any scene. `chN.old.close` is each old tool's own close button.
+
+### ui.look
+Look
+
+### ui.use
+Use
+
+### ui.help
+Help
+
+### ui.back
+Back
+
+### ui.close.hc
+[Close Honeycomb]
+
+### ui.copy
+Copy results
+
+### ui.copied
+Copied
+
+### menu.soon
+coming soon
+
+### claim.soon
+The prize desk opens in a later build. For now, back to the menu.
 
 ---
 
@@ -349,6 +382,9 @@ The new dashboard is beautiful. It is also green. Everything is green. Otto is f
 ### ch1.old.jab.3
 You have solved nothing, but you have solved it for three years.
 
+### ch1.old.close
+[Close Cave Logs]
+
 ### ch1.old.exit
 You close Cave Logs. Cave Logs does not close you. Small victories.
 
@@ -417,54 +453,147 @@ CHRISTINE YEN: A chatbot is a conversation between agents now. When it goes wron
 
 ---
 
-## Chapter 2 — Migrations · Fintech · Platform Engineer
+## Chapter 2 — Migrations · Fintech · Cloud Engineer
 
-Inspired by a digital bank two years into a monolith-to-microservices migration. Company: **Kestrel Bank**, which hosts online banking for three hundred credit unions. The persona is the Platform Engineer who ran the migration. The solve follows two customer stories: a banking-technology company that, part-way through a move to Kubernetes with hundreds of services, used BubbleUp to find two credit unions failing on one node (about one percent of traffic, so invisible at the top level) and the Service Map, filtered to those institutions, to see where their requests went and who owned the failing service; and an incident-management company that says it would not have moved to Kubernetes without Honeycomb. In Honeycomb nothing is a joke: the `jab` slots are nudges. The room slots below still describe the placeholder five-hotspot room and are rewritten when the room art lands. Narrator: Emily Nakashima — **placeholder: Emily is leaving Honeycomb; keep her lines and portrait until a replacement narrator is named** (2026-11-10).
+Inspired by a digital bank two years into a monolith-to-microservices migration. Company: **Kestrel Bank**, which hosts online banking for three hundred credit unions. The persona is the Cloud Engineer who ran the migration and drew it on the whiteboard (Rick, 2026-11-12: the monolith is a codebase, not a box; there is no plug). The solve follows two customer stories: a banking-technology company that, part-way through a move to Kubernetes with hundreds of services, used BubbleUp to find two credit unions failing on one node (about one percent of traffic, so invisible at the top level) and the Service Map, filtered to those institutions, to see where their requests went and who owned the failing service; and an incident-management company that says it would not have moved to Kubernetes without Honeycomb. In Honeycomb nothing is a joke: the `jab` slots are nudges. The room is written from the art drop of 2026-11-12: a wall display, a lent computer, and the persona. Narrator: Emily Nakashima — **placeholder: Emily is leaving Honeycomb; keep her lines and portrait until a replacement narrator is named** (2026-11-10).
 
 ### ch2.card.title
-THE PLATFORM ENGINEER
+THE CLOUD ENGINEER
 
 ### ch2.card.stats
 YAML Tolerance 18 · Kubernetes 16 · Sleep 4 · "It's DNS" 20
 
 ### ch2.card.line
-Tonight's page: the Platform Engineer at Kestrel Bank, who has moved 350 services to Kubernetes for three hundred credit unions. The monolith has not been informed.
+Tonight's page: the Cloud Engineer at Kestrel Bank, who has moved 350 services to Kubernetes for three hundred credit unions. The whiteboard says it's finished.
 
 ### ch2.persona.name
-THE PLATFORM ENGINEER
+THE CLOUD ENGINEER
 
 ### ch2.persona.class
-Slayer of the Monolith
+Druid of the Monolith
 
 ### ch2.persona.stats
 YAML Tolerance 18 · Kubernetes 16 · Sleep 4 · "It's DNS" 20
 
 ### ch2.persona.flavor
-Has slain the monolith 350 times. It keeps getting back up.
+Moved 350 stones to the cloud. One still answers when called.
 
 ### ch2.room.enter
-The migration war room at Kestrel Bank. A whiteboard covered in arrows. Three hundred and fifty green tiles on the wall. In the corner, a beige server with a hand-written sign: DO NOT UNPLUG.
+The migration war room at Kestrel Bank, 3 AM. One wall is a whiteboard: two years of boxes and arrows, every service the bank runs. The Cloud Engineer who drew it is staring at it like it owes him money.
 
-### ch2.look.laptop
-The laptop they've handed you. A ticket queue climbing like a stock you didn't buy.
+### ch2.look.wall
+The service map, by hand. Three hundred and fifty boxes and more arrows than anyone has counted. Somewhere in here is the truth. It is not labelled.
 
-### ch2.use.laptop
-The migration is "done". Kestrel hosts online banking for three hundred credit unions, and members of two of them can't move money. Tickets are climbing. Two out of three hundred is one percent, so every dashboard is green.
+### ch2.wall.chart
+Up close it is worse. Every arrow was true on the day it was drawn. None of them says which day.
 
-### ch2.look.whiteboard
-Two years of arrows. Somewhere in here is the truth. It is not labelled.
+### ch2.wall.stat.1
+THEORY 1 / IT'S DNS
 
-### ch2.use.whiteboard
-You add an arrow. It helps the way arrows help.
+### ch2.wall.stat.2
+THEORY 2 / IT'S THE CACHE
 
-### ch2.look.monolith
-The monolith. Beige, warm, humming. DO NOT UNPLUG. The sign is laminated, which tells you everything.
+### ch2.wall.stat.3
+THEORY 3 / COSMIC RAYS
 
-### ch2.use.monolith
-You touch the monolith. It is warm. Warmer than a retired machine should be.
+### ch2.wall.stat.4
+THEORY 4 / IT'S DNS AGAIN
 
-### ch2.look.terminal
-A terminal showing Old Artifact — 350 dashboards, 350 checkmarks.
+### ch2.wall.stat.5
+THEORY 5 / THE INTERN
+
+### ch2.wall.stat.6
+THEORY 6 / RETROGRADE
+
+### ch2.wall.ok.1
+THEORY 7 / NODE 17
+
+### ch2.wall.ok.2
+TRANSFERS / ARRIVING
+
+### ch2.wall.ok.3
+THE BOARD / RIGHT AT LAST
+
+### ch2.look.pc
+The desk they've lent you: a monitor on an arm, a row of energy drinks, and last night's takeaway. It runs everything you need and smells like a deadline.
+
+### ch2.look.npc
+The Cloud Engineer. Two years of his life are on that whiteboard, and tonight two credit unions fell through a gap in it. He keeps looking for the gap with a marker.
+
+### ch2.npc.call.1
+CLOUD ENGINEER: Every service on that board is green. I checked. Three hundred and fifty of them.
+
+### ch2.npc.call.2
+CLOUD ENGINEER: Two credit unions out of three hundred. Why those two? What do they even have in common?
+
+### ch2.npc.call.3
+CLOUD ENGINEER: Use that desk. Old Artifact is on it, and somebody installed Honeycomb. Go and look, then tell me.
+
+### ch2.pc.title
+KESTREL BANK · WAR ROOM 2
+
+### ch2.pc.menu.email
+[Read email]
+
+### ch2.pc.menu.status
+[Check the transfers]
+
+### ch2.pc.menu.old
+[Open Old Artifact]
+
+### ch2.pc.menu.hc
+[Open Honeycomb]
+
+### ch2.pc.menu.leave
+[Leave computer]
+
+### ch2.pc.email.1
+Migration complete!!! (party Friday)
+
+### ch2.pc.email.2
+RE: Migration complete??? (two credit unions disagree)
+
+### ch2.pc.email.3
+Whoever keeps erasing my arrows
+
+### ch2.pc.email.reply
+Two credit unions can't move money. The inbox can wait.
+
+### ch2.pc.status.before
+TRANSFERS: FAILING for two credit unions out of three hundred. Every service reports healthy. Cause: unknown.
+
+### ch2.pc.status.old
+TRANSFERS: STILL FAILING. You now have 350 green tiles about it. Cause: between the tiles, presumably.
+
+### ch2.pc.status.found
+TRANSFERS: STILL FAILING, but you know why. On node 17, those two credit unions still call the old monolith's code. Cause: found. Fix: not deployed.
+
+### ch2.pc.status.hc
+TRANSFERS: ARRIVING. Node 17 calls the new ledger like everything else. Cause: found. Fix: deployed.
+
+### ch2.pc.leave.locked
+You stand up. You have looked at nothing and learned nothing, and the man with the marker can tell. Try a tool first.
+
+### ch2.pc.leave
+You push back from the desk. Time to go and correct a whiteboard.
+
+### ch2.npc.ask
+CLOUD ENGINEER: Two years on this board and it was wrong the whole time. So what do I do about it?
+
+### ch2.decide.wrong
+[Draw a bigger diagram]
+
+### ch2.decide.hc
+[Get Honeycomb]
+
+### ch2.decide.wrong.jab
+He wheels in a second whiteboard. By morning it has arrows too. "Try again," he says, from somewhere between the boards.
+
+### ch2.decide.hc.show
+CLOUD ENGINEER: Honeycomb? Show me. If it can make sense of that board, I'll eat the marker.
+
+### ch2.recovered
+On the board, the path for those two credit unions finally runs where the arrows said it did. A transfer goes through: forty dollars, two days late.
 
 ### ch2.old.title
 OLD ARTIFACT
@@ -485,13 +614,16 @@ Still green. Greener, if anything. Dashboards are fine. Customers are not.
 The 351st dashboard is green. You have found the one thing in this building that scales.
 
 ### ch2.old.prompt.3
-[Ask the monolith nicely]
+[Ask the whiteboard]
 
 ### ch2.old.jab.3
-The monolith hums. It has heard "please" before.
+The whiteboard says what it has always said: everything. It is not narrowing things down.
+
+### ch2.old.close
+[Close Old Artifact]
 
 ### ch2.old.exit
-Three hundred and fifty green lies. You step away from the wall.
+Three hundred and fifty green lies. You close the tab.
 
 ### ch2.look.workstation
 A workstation. Honeycomb. The intern set it up. The intern is asleep. The intern is smarter than all of you.
@@ -542,13 +674,13 @@ Using Honeycomb's BubbleUp and Service Map, you found what the migration missed 
 [Apply the fix and deploy]
 
 ### ch2.pc.deploy
-You point node 17 at the new ledger, like the other 349 services, and deploy. Two credit unions' transfers go through. The monolith finally has nothing to do.
+You point node 17 at the new ledger, like the other 349 services, and deploy. Two credit unions' transfers go through. The old code finally has nothing to do.
 
 ### ch2.win
-A good migration goes unnoticed by customers. Tonight, yours finally does. The Platform Engineer pulls the plug, and this time nothing else goes dark.
+A good migration goes unnoticed by customers. Tonight, yours finally does. The Cloud Engineer caps his marker. For the first time in two years, the board is right.
 
 ### ch2.hero.line
-PLATFORM ENGINEER: Three hundred and fifty services and the problem was the one we said we'd turned off.
+CLOUD ENGINEER: Three hundred and fifty services, and the problem was the one we said we'd turned off.
 
 ### ch2.verdict
 EMILY NAKASHIMA: Two credit unions out of three hundred is one percent, and one percent never shows on a dashboard. You asked what the failures shared, then watched where they went. You don't make a move like this one blind.
@@ -557,7 +689,7 @@ EMILY NAKASHIMA: Two credit unions out of three hundred is one percent, and one 
 
 ## Chapter 3 — Frontend Observability · E-commerce · Frontend Developer
 
-Inspired by a guitar maker whose store and lessons app were slow for some users. Company: **Twang & Co.**, lessons app **Fretwork**. Narrator: Graham Siener. The solve follows Honeycomb's own frontend-observability demo ("See everything"): the Web Launchpad shows the vitals are fine and one request is not; View Trace follows that request from the browser into the backend; the heatmap of that span and BubbleUp show what the slow ones share. In Honeycomb nothing is a joke: the `jab` slots are nudges. The room slots below still describe the placeholder five-hotspot room and are rewritten when the room art lands.
+Inspired by a guitar maker whose store and lessons app were slow for some users. Company: **Twang & Co.**, lessons app **Fretwork**. Narrator: Graham Siener. The solve follows Honeycomb's own frontend-observability demo ("See everything"): the Web Launchpad shows the vitals are fine and one request is not; View Trace follows that request from the browser into the backend; the heatmap of that span and BubbleUp show what the slow ones share. In Honeycomb nothing is a joke: the `jab` slots are nudges. The room is written from the art drop of 2026-11-12: a wall display, a lent computer, and the persona.
 
 ### ch3.card.title
 THE FRONTEND DEVELOPER
@@ -581,25 +713,127 @@ Caffeine 17 · "Works on my machine" 20 · CSS 11 · Patience with RUM tools 1
 Her songs load instantly. On her machine.
 
 ### ch3.room.enter
-The dev bullpen at Twang & Co. Monitors everywhere, one of them showing somebody's checkout stuck at 13%: "Placing your order…" A left-handed guitar leans against a desk, unplugged, like it knows.
+The dev bullpen at Twang & Co., 3 AM. Brick, string lights, and a wall monitor showing somebody's checkout stuck at 13%. The Frontend Developer is on the phone with support. A guitar leans against the spare desk, like it knows.
 
-### ch3.look.laptop
-The laptop they've handed you. A conversion chart, sliding gently downhill since Tuesday.
+### ch3.look.wall
+A live checkout, mirrored on the wall. "Placing your order…" Thirteen percent. It has been thirteen percent since you walked in.
 
-### ch3.use.laptop
-Conversions are dropping. Some shoppers watch the checkout spinner for fourteen seconds. Most see nothing wrong. The RUM tool says average page load is 2.1 seconds and considers the matter closed.
+### ch3.wall.chart
+Somebody's cart, somebody's card, somebody's evening. The page loaded in under two seconds. The order has been placing for fourteen.
 
-### ch3.look.guitar
-A left-handed electric guitar. Somebody in this bullpen plays it. It has been leaning there, strung the other way round, trying to tell you something.
+### ch3.wall.progress
+Placing your order… 13%
 
-### ch3.use.guitar
-Three chords. Nobody looks up. This is a very tired bullpen.
+### ch3.wall.progress.ok
+Order placed. Thank you!
 
-### ch3.look.bigscreen
-A live checkout. "Placing your order…" Thirteen percent. It has been thirteen percent since you walked in.
+### ch3.wall.cart
+1 × Southpaw Special / left-handed
 
-### ch3.look.terminal
-A terminal showing Pretty Good Metrics. The average is very pretty.
+### ch3.wall.stat.1
+WAITING: 14 S
+
+### ch3.wall.stat.2
+AVERAGE: FINE
+
+### ch3.wall.stat.3
+CARTS: ABANDONED
+
+### ch3.wall.stat.4
+SPINNER: LOVELY
+
+### ch3.wall.stat.5
+SALES: SLIDING
+
+### ch3.wall.ok.1
+WAITING: 0.4 S
+
+### ch3.wall.ok.2
+CARTS: BOUGHT
+
+### ch3.wall.ok.3
+SALES: CLIMBING
+
+### ch3.look.pc
+The spare desk: a laptop under a crust of stickers, and a guitar leaning beside it. Right-handed, like nine in ten of them.
+
+### ch3.look.npc
+The Frontend Developer, on the phone with support, who are on the phone with a customer, who is looking at a spinner. On her screen is a pull request: a nicer spinner.
+
+### ch3.npc.call.1
+DEVELOPER: Yes, I know it's slow for them. It isn't slow for me. It isn't slow for anyone I can find.
+
+### ch3.npc.call.2
+DEVELOPER: Pretty Good Metrics says two seconds. Two! I have refreshed it a hundred times.
+
+### ch3.npc.call.3
+DEVELOPER: (hand over the phone) Take that desk. Find me one shopper it's slow for. Just one.
+
+### ch3.pc.title
+TWANG & CO. · SPARE LAPTOP
+
+### ch3.pc.menu.email
+[Read email]
+
+### ch3.pc.menu.status
+[Check the checkout]
+
+### ch3.pc.menu.old
+[Open Pretty Good Metrics]
+
+### ch3.pc.menu.hc
+[Open Honeycomb]
+
+### ch3.pc.menu.leave
+[Leave computer]
+
+### ch3.pc.email.1
+Checkout is slow (it isn't) (it is)
+
+### ch3.pc.email.2
+RE: have we tried a nicer spinner
+
+### ch3.pc.email.3
+Lost: one capo, sentimental value
+
+### ch3.pc.email.reply
+Somebody has been placing an order for fourteen seconds. The inbox can wait.
+
+### ch3.pc.status.before
+CHECKOUT: SLOW for about one shopper in twelve. Fine for everyone else, including you. Cause: unknown.
+
+### ch3.pc.status.old
+CHECKOUT: STILL SLOW. The average is 2.1 seconds and has never felt better. Cause: not the average's problem.
+
+### ch3.pc.status.found
+CHECKOUT: STILL SLOW, but you know why. Every slow order has a left-handed guitar in the cart, and that stock check crawls. Cause: found. Fix: not deployed.
+
+### ch3.pc.status.hc
+CHECKOUT: FAST. Left-handed stock is one query now, not one per warehouse. Cause: found. Fix: deployed.
+
+### ch3.pc.leave.locked
+You stand up. You have looked at nothing and learned nothing, and she can hear it in your footsteps. Try a tool first.
+
+### ch3.pc.leave
+You close the laptop. Time to go and talk someone out of a spinner.
+
+### ch3.npc.ask
+DEVELOPER: So it was never the frontend. What do I do now? Ship the spinner anyway, just in case?
+
+### ch3.decide.wrong
+[Ship the loading spinner]
+
+### ch3.decide.hc
+[Get Honeycomb]
+
+### ch3.decide.wrong.jab
+The spinner ships. It is a beautiful spinner. The next slow thing hides behind it for a month. "Try again," she says.
+
+### ch3.decide.hc.show
+DEVELOPER: Honeycomb? Show me the shopper. One real shopper, start to finish.
+
+### ch3.recovered
+On the wall, the order goes through. "Thank you!" Somewhere, a left-handed guitar is being put in a box.
 
 ### ch3.old.title
 PRETTY GOOD METRICS
@@ -624,6 +858,9 @@ The CDN sends back a very polite graph. The CDN is fine. The CDN is always fine.
 
 ### ch3.old.jab.3
 It spins beautifully. For fourteen seconds. The spinner is now your most-viewed page.
+
+### ch3.old.close
+[Close Pretty Good Metrics]
 
 ### ch3.old.exit
 Your aggregate metrics are a beautiful lie. You go looking for the truth.
@@ -692,7 +929,7 @@ GRAHAM SIENER: The average wasn't lying. It just wasn't talking about the one sh
 
 ## Chapter 4 — Hidden Failures · Gaming · Site Reliability Engineer
 
-Inspired by a space MMO studio whose fleet-battle code one engineer understands. Company: **Nullpoint Games**, the game **Starfall**, the engineer **Einar**. Narrator: Jessitron. This is the **MCP** chapter (Canvas is in scenario 1). The solve follows a real customer's story: with Honeycomb they found that only 93% of their most important API call was succeeding, mostly for reasons in their own control, and took it past 99%; and once Honeycomb was available through MCP, nearly three times as many of their people used it. Here the call is joining a fleet, the legacy reason is a limit from 2003, and the MCP client is Claw Codez. In Honeycomb nothing is a joke: the `jab` slots are nudges, in Claw Codez's voice. The room slots below still describe the placeholder five-hotspot room and are rewritten when the room art lands.
+Inspired by a space MMO studio whose fleet-battle code one engineer understands. Company: **Nullpoint Games**, the game **Starfall**, the engineer **Einar**. Narrator: Jessitron. This is the **MCP** chapter (Canvas is in scenario 1). The solve follows a real customer's story: with Honeycomb they found that only 93% of their most important API call was succeeding, mostly for reasons in their own control, and took it past 99%; and once Honeycomb was available through MCP, nearly three times as many of their people used it. Here the call is joining a fleet, the legacy reason is a limit from 2003, and the MCP client is Claw Codez. In Honeycomb nothing is a joke: the `jab` slots are nudges, in Claw Codez's voice. The room is written from the art drop of 2026-11-12: a wall display, a lent computer, and the persona.
 
 ### ch4.card.title
 THE SRE ON CALL
@@ -716,25 +953,130 @@ Pager Endurance 19 · Postmortem Writing 14 · Blameless 18 · Sleep 2
 Sworn to answer the call. Any call. At any hour.
 
 ### ch4.room.enter
-The ops room at Nullpoint Games, lit by a wall of space. Eight thousand pilots in one system. Chat scrolls with the word "lag" in nine languages. On a desk in the corner, a dusty monitor with a label: THE FLEET CODE — ASK EINAR.
+The ops room at Nullpoint Games. One wall is space: eight thousand ships, most of them moving. Chat scrolls with the word "lag" in nine languages. At the old desk in the corner, the SRE on call has a thumb over Einar's number.
 
-### ch4.look.laptop
-The laptop they've handed you. Every node green, every graph flat. According to this, tonight is going very well.
+### ch4.look.wall
+Eight thousand ships. Some moving. The rest are thinking about it.
 
-### ch4.use.laptop
-The biggest battle in the game's history is live. Pilots say they can't get in, and chat calls it lag. The dashboards say the cluster is healthy. The fleet code is twenty-three years old, Einar wrote most of it, and Einar is asleep in Reykjavík.
+### ch4.wall.chart
+The fleet is in. Most of it. The dots at the edge keep trying the door. Under the map, the health line is flat, green and extremely pleased with itself.
 
-### ch4.look.wallscreen
-Eight thousand ships. Some of them are moving. The rest are thinking about it.
+### ch4.wall.stat.1
+lag
 
-### ch4.look.einar
-Einar's desk. A monitor, a dust layer, a mug that says WORLD'S OKAYEST ENGINEER. The label says ASK EINAR. The label does not say how.
+### ch4.wall.stat.2
+laaaag
 
-### ch4.use.einar
-The old monitor wakes. A comment at the top of the file: "// do not touch — E, 2003". You do not touch.
+### ch4.wall.stat.3
+LAG
 
-### ch4.look.phone
-The ops phone. One contact is starred. It is Einar.
+### ch4.wall.stat.4
+retraso
+
+### ch4.wall.stat.5
+décalage
+
+### ch4.wall.stat.6
+Verzögerung
+
+### ch4.wall.stat.7
+can't join fleet
+
+### ch4.wall.stat.8
+is it just me
+
+### ch4.wall.ok.1
+o7
+
+### ch4.wall.ok.2
+in!
+
+### ch4.wall.ok.3
+finally
+
+### ch4.wall.ok.4
+gf
+
+### ch4.look.pc
+The console they've lent you: an ultrawide, a keyboard that glows, and a chair with opinions about your posture.
+
+### ch4.look.npc
+The SRE on call, tonight's incident commander. One hand on her forehead, the other holding a phone open at Einar's number. Beside her, his old monitor, under dust and a label: THE FLEET CODE. ASK EINAR.
+
+### ch4.npc.call.1
+SRE: Every node is green. Every graph is flat. And eight thousand people are typing the same three letters at me.
+
+### ch4.npc.call.2
+SRE: Einar wrote the fleet code in 2003. Einar is asleep in Reykjavík. I really don't want to make that call.
+
+### ch4.npc.call.3
+SRE: Take the console. Claw Codez is on it, wired to Honeycomb. Ask it something. Then tell me whether I dial.
+
+### ch4.pc.title
+NULLPOINT GAMES · OPS CONSOLE
+
+### ch4.pc.menu.email
+[Read email]
+
+### ch4.pc.menu.status
+[Check the battle]
+
+### ch4.pc.menu.old
+[Page Einar]
+
+### ch4.pc.menu.hc
+[Open Claw Codez]
+
+### ch4.pc.menu.leave
+[Leave computer]
+
+### ch4.pc.email.1
+Battle of M-7 tonight!!! (do NOT deploy)
+
+### ch4.pc.email.2
+RE: is it lag or is it us
+
+### ch4.pc.email.3
+Einar's out-of-office (in Icelandic)
+
+### ch4.pc.email.reply
+Eight thousand pilots are waiting. The inbox can wait longer.
+
+### ch4.pc.status.before
+THE BATTLE: LIVE. Pilots say they can't get in. Every dashboard says they can. Cause: unknown. Everyone's guess: lag.
+
+### ch4.pc.status.old
+THE BATTLE: STILL LIVE. Einar has been paged and has gone back to sleep. Cause: known only to Einar.
+
+### ch4.pc.status.found
+THE BATTLE: STILL STUCK, but you know why. Seven joins in a hundred hit a 2003 limit of 255 ships to a fleet. Cause: found. Fix: not deployed.
+
+### ch4.pc.status.hc
+THE BATTLE: EVERYONE'S IN. The 2003 limit is gone and joins are at 99%. Cause: found. Fix: deployed.
+
+### ch4.pc.leave.locked
+You stand up. You have asked nothing and learned nothing, and her thumb moves closer to Einar's number. Try a tool first.
+
+### ch4.pc.leave
+You push back from the console. Time to go and stop a phone call.
+
+### ch4.npc.ask
+SRE: A limit from 2003, and nobody had to wake him. So next time: do I just page Einar sooner?
+
+### ch4.decide.wrong
+[Page Einar sooner]
+
+### ch4.decide.hc
+[Get Honeycomb]
+
+### ch4.decide.wrong.jab
+Einar's phone now rings at the first sign of lag. Einar's phone is now at the bottom of a fjord. "Try again," she says.
+
+### ch4.decide.hc.show
+SRE: Honeycomb, through that crab thing? Show me. Ask it in front of me.
+
+### ch4.recovered
+On the wall of space, the ships that were stuck outside jump in. Chat fills with o7. Nobody types the word lag for almost a minute.
 
 ### ch4.old.title
 PAGE EINAR
@@ -759,6 +1101,9 @@ Eight thousand pilots watch a loading screen together. Chat has moved from "lag"
 
 ### ch4.old.jab.3
 Chat is also aware. Chat has been aware for forty minutes. Awareness is not a fix.
+
+### ch4.old.close
+[Put the phone down]
 
 ### ch4.old.exit
 You put the phone down. There has to be a way to understand code you didn't write, at 3 AM, without a human sacrifice.
@@ -830,7 +1175,7 @@ JESSITRON: Nobody had to be the hero who knows everything. Anyone on the team co
 
 ## Chapter 5 — Team Agents · Startup · Build & Release Engineer
 
-Fictional three-person startup. Company: **Agentry**. Narrator: Matt Nelson. This is the **Team Agents** chapter. The persona is the Build & Release Engineer who shipped on Friday. The solve follows Honeycomb's own Team Agents demo (Innovation Week 2026): an agent with a standing goal (watch every deploy) reads what the deploy was meant to do, leaves a specific Finding, shows its work on a Canvas, and offers the fix as a pull request; it also notices the runbook is out of date. In Honeycomb nothing is a joke: the `jab` slots are nudges. The room slots below still describe the placeholder five-hotspot room and are rewritten when the room art lands.
+Fictional three-person startup. Company: **Agentry**. Narrator: Matt Nelson. This is the **Team Agents** chapter. The persona is the Build & Release Engineer who shipped on Friday. The solve follows Honeycomb's own Team Agents demo (Innovation Week 2026): an agent with a standing goal (watch every deploy) reads what the deploy was meant to do, leaves a specific Finding, shows its work on a Canvas, and offers the fix as a pull request; it also notices the runbook is out of date. In Honeycomb nothing is a joke: the `jab` slots are nudges. The room is written from the art drop of 2026-11-12: a wall display, a lent computer, and the persona.
 
 ### ch5.card.title
 THE RELEASE ENGINEER
@@ -854,25 +1199,136 @@ Deploy Frequency 20 · Rollback Reflex 15 · Friday Deploys 1 · Sleep 3
 Strikes at 5:52 PM. Vanishes for the weekend.
 
 ### ch5.room.enter
-A startup loft at 3 AM. Three desks, two empty. A pager face-down on the floor where someone threw it. On the couch, the engineer who shipped Friday's release, one finger over the rollback key.
+A startup loft at 3 AM. Three desks, two empty. A pager face-down on the floor where someone threw it. A projector shows sign-ups: a calm line with no idea. On the couch, the engineer who shipped Friday's release, one finger over the rollback key.
 
-### ch5.look.laptop
-A laptop. The deploy log from Friday, 5:52 PM. Commit message: "small change."
+### ch5.look.wall
+Sign-ups, on a projector somebody expensed. A calm, healthy line. Eleven people would like a word with that line.
 
-### ch5.use.laptop
-Friday's release tightened sign-up validation. Since then eleven people have written to support saying they can't create an account. The error rate is 0.4%, same as ever. Nothing alerted. Nobody can see what the eleven have in common.
+### ch5.wall.chart
+Up close: sign-ups steady, error rate 0.4%, release shipped Friday at 5:52 PM. And the support inbox, which has said the same thing eleven times.
+
+### ch5.wall.box.1
+0.4%
+
+### ch5.wall.box.2
+5:52
+
+### ch5.wall.box.3
+11
+
+### ch5.wall.box.ok.3
+0
+
+### ch5.wall.stat.1
+can't sign up - O'Brien
+
+### ch5.wall.stat.2
+can't sign up - D'Souza
+
+### ch5.wall.stat.3
+can't sign up - O'Neil
+
+### ch5.wall.stat.4
+is it me? - N'Diaye
+
+### ch5.wall.stat.5
+HELLO?? - O'Malley
+
+### ch5.wall.stat.6
+still can't - O'Brien
+
+### ch5.wall.ok.1
+I'm in! - O'Brien
+
+### ch5.wall.ok.2
+thanks - D'Souza
+
+### ch5.wall.ok.3
+finally - O'Malley
+
+### ch5.look.pc
+The desk they've lent you is a door on two trestles. A laptop on a stack of books, a plant, and a stool that has seen things.
+
+### ch5.look.npc
+The Release Engineer, on the couch, laptop on his knees, one finger over the key that rolls back all of Friday. He has been holding that pose for a while.
 
 ### ch5.look.pager
-The pager, face-down. It is still buzzing. It will buzz until you fix this or it dies. It will not die first.
+The pager, face-down on the floor. It is still buzzing. It will buzz until this is fixed or it dies. It will not die first.
 
-### ch5.use.pager
-You turn it over. Eleven pages. All of them from support.
+### ch5.npc.call.1
+RELEASE ENGINEER: I shipped at 5:52 on a Friday. I know. I know. You don't have to say it.
 
-### ch5.look.wallchart
-Sign-ups. A calm, healthy line. Eleven people would like a word with that line.
+### ch5.npc.call.2
+RELEASE ENGINEER: Error rate's normal. Sign-ups are normal. And eleven people can't get in. Which eleven?
 
-### ch5.look.terminal
-A terminal with Friday's diff open. Two thousand lines. The commit message says "small change."
+### ch5.npc.call.3
+RELEASE ENGINEER: Take the door desk. The diff's on it, and Honeycomb. If you find nothing, I roll back all of Friday.
+
+### ch5.pc.title
+AGENTRY · THE DOOR DESK
+
+### ch5.pc.menu.email
+[Read email]
+
+### ch5.pc.menu.status
+[Check sign-ups]
+
+### ch5.pc.menu.old
+[Open Friday's diff]
+
+### ch5.pc.menu.hc
+[Open Honeycomb]
+
+### ch5.pc.menu.leave
+[Leave computer]
+
+### ch5.pc.email.1
+Shipped!! (small change)
+
+### ch5.pc.email.2
+RE: Shipped!! (support has questions)
+
+### ch5.pc.email.3
+Whose bike is on the wall
+
+### ch5.pc.email.reply
+Eleven people are locked out. The inbox can wait.
+
+### ch5.pc.status.before
+SIGN-UPS: NORMAL, says the chart. Eleven people say otherwise. Error rate 0.4%, same as ever. Cause: unknown.
+
+### ch5.pc.status.old
+SIGN-UPS: STILL NORMAL, still broken for eleven. You have read 2,000 lines of diff and suspect all of them. Cause: in there somewhere.
+
+### ch5.pc.status.found
+SIGN-UPS: STILL BROKEN for eleven, but you know why. Friday's validation rejects names with an apostrophe. Cause: found. Fix: not merged.
+
+### ch5.pc.status.hc
+SIGN-UPS: WORKING for everyone, apostrophes included. Cause: found. Fix: deployed.
+
+### ch5.pc.leave.locked
+You stand up. You have looked at nothing and learned nothing, and his finger drifts toward the rollback key. Try a tool first.
+
+### ch5.pc.leave
+You get off the stool. Time to go and save a Friday.
+
+### ch5.npc.ask
+RELEASE ENGINEER: One line. I nearly rolled back all of Friday for one line. New rule, right? No more Friday deploys?
+
+### ch5.decide.wrong
+[Ban Friday deploys]
+
+### ch5.decide.hc
+[Get Honeycomb]
+
+### ch5.decide.wrong.jab
+Friday deploys are banned. Everything now ships on Thursday at 5:52 PM instead. Nothing else has changed. "Try again," he says.
+
+### ch5.decide.hc.show
+RELEASE ENGINEER: Honeycomb found it on Friday night? Show me. Show me what it saw.
+
+### ch5.recovered
+The support inbox goes quiet. A welcome email goes out to a Mr O'Brien, who has been trying to join since Friday.
 
 ### ch5.old.title
 FRIDAY'S DIFF
@@ -897,6 +1353,9 @@ Friday's release had eleven changes. You rolled back all eleven. Sign-ups work a
 
 ### ch5.old.jab.3
 Sign-up now fails three times instead of once. Thorough.
+
+### ch5.old.close
+[Close the diff]
 
 ### ch5.old.exit
 You cannot find one line in two thousand by staring. You go find something that was watching.

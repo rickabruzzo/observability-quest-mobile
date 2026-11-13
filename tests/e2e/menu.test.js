@@ -1,11 +1,11 @@
-// The scenario menu: five rows, only the first playable; completion ticks and best scores that survive a
-// reload; replays keep the better score and restart the clock; ?ch=1 skips the menu; the claim placeholder.
+// The scenario menu: five rows, only the first playable; solved scenarios ticked (no number) and kept across a
+// reload; a replay keeps the fewer missteps and restarts the clock; ?ch=1 skips the menu; Charity on Claim.
 import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 import { startServer } from './_server.js';
 import { SCRIPT } from '../../js/script.js';
-import { openGame, throughIntro, pickScenario, run, dismiss, playShortest } from './_play.js';
+import { openGame, throughIntro, pickScenario, run, dismiss, playShortest, charitySays } from './_play.js';
 
 let server, browser;
 before(async () => { server = await startServer(); browser = await chromium.launch(); });
@@ -53,30 +53,48 @@ for (const [w, h] of [[844, 390], [667, 375]]) {
   });
 }
 
-test('finishing scenario 1 ticks it with its score; the mark survives a reload; a worse replay keeps the better score', async () => {
+test('solving scenario 1 ticks it, with no number; the status bar counts it; the mark survives a reload; a replay keeps the fewer missteps', async () => {
   const { ctx, page } = await openGame(browser, server);
+  assert.equal(await page.locator('#sb-done').innerText(), 'Solved: 0 of 5');
   await pickScenario(page);
   await playShortest(page);
+  assert.equal(await page.locator('#sb-done').innerText(), 'Solved: 1 of 5');
   await backToMenu(page);
   const row = page.locator('.menu-row[data-ch="1"]');
-  assert.match(await row.innerText(), new RegExp(`${SCRIPT['menu.done']}\\s*100`));
-  assert.match(await page.locator('#sb-score').innerText(), /Score: 100 of 500/);
-  assert.ok(await page.locator('#btn-menu-claim').isVisible(), 'the menu carries the claim button once one is done');
-  assert.deepEqual(await page.evaluate(() => JSON.parse(sessionStorage.getItem('oq.done'))), { 1: 100 });
+  assert.equal(await row.locator('.mr-tick').count(), 1);
+  assert.equal((await row.locator('.mr-mark').innerText()).trim(), SCRIPT['menu.done']);
+  assert.doesNotMatch(await page.locator('.menu').innerText(), /\d{2,}|score/i, 'no number on the menu');
+  assert.ok(await page.locator('#btn-menu-claim').isVisible(), 'the menu carries the claim button once one is solved');
+  assert.deepEqual(await page.evaluate(() => JSON.parse(sessionStorage.getItem('oq.done'))), { v: 2, done: { 1: 0 } });
 
   await page.reload({ waitUntil: 'load' });
   await page.waitForFunction(() => window.__oq?.ready === true);
   await throughIntro(page);
-  assert.match(await page.locator('.menu-row[data-ch="1"]').innerText(), /100/);
-  assert.match(await page.locator('#sb-score').innerText(), /Score: 100 of 500/);
+  assert.equal(await page.locator('.menu-row[data-ch="1"] .mr-tick').count(), 1);
+  assert.equal(await page.locator('#sb-done').innerText(), 'Solved: 1 of 5');
 
-  await pickScenario(page);
-  await playShortest(page, { wrongFirst: true });
-  assert.equal((await run(page)).score, 50);
-  assert.match(await page.locator('#sb-score').innerText(), /Score: 100 of 500/, 'the score never goes down');
-  await backToMenu(page);
-  assert.match(await page.locator('.menu-row[data-ch="1"]').innerText(), /100/);
-  assert.deepEqual(await page.evaluate(() => JSON.parse(sessionStorage.getItem('oq.done'))), { 1: 100 });
+  await pickScenario(page);                                            // a replay with a misstep keeps the clean record
+  await playShortest(page, { cave: true });
+  assert.equal((await run(page)).missteps, 1);
+  assert.deepEqual(await page.evaluate(() => JSON.parse(sessionStorage.getItem('oq.done'))), { v: 2, done: { 1: 0 } });
+  assert.equal(await page.locator('#sb-done').innerText(), 'Solved: 1 of 5');
+  await ctx.close();
+});
+
+test('an old-format oq.done (scenario → score) is read: 100 is a clean solve, and the game carries on', async () => {
+  const ctx = await browser.newContext({ viewport: { width: 844, height: 390 }, hasTouch: true, isMobile: true });
+  const page = await ctx.newPage();
+  const errors = []; page.on('pageerror', (e) => errors.push(e));
+  await page.addInitScript(() => { if (!sessionStorage.getItem('oq.seeded')) { sessionStorage.setItem('oq.done', '{"1":100}'); sessionStorage.setItem('oq.seeded', '1'); } });
+  await page.goto(server.baseURL, { waitUntil: 'load' });
+  await page.waitForFunction(() => window.__oq?.ready === true);
+  await throughIntro(page);
+  assert.equal(await page.locator('#sb-done').innerText(), 'Solved: 1 of 5');
+  assert.equal(await page.locator('.menu-row[data-ch="1"] .mr-tick').count(), 1);
+  await page.click('#btn-menu-claim');
+  const { lines } = await charitySays(page);
+  assert.equal(lines[0], SCRIPT['final.clean']);
+  assert.deepEqual(errors, []);
   await ctx.close();
 });
 
@@ -104,17 +122,21 @@ test('?ch=1 skips the menu; ?ch=2 (not built) and junk show it', async () => {
   }
 });
 
-test('Claim says it is not built yet and returns to the menu; so does the menu\'s claim button', async () => {
+test('Claim: Charity\'s portrait, her header, the clean line, the count line, the not-yet line, then the menu; the menu\'s Claim does the same', async () => {
   const { ctx, page } = await openGame(browser, server, { query: '?ch=1' });
   await playShortest(page);
   await page.click('#btn-claim');
-  await dismiss(page);
+  const portrait = await page.locator('.charity-portrait').evaluate((img) => new Promise((ok) => (img.complete ? ok(img.naturalWidth) : img.addEventListener('load', () => ok(img.naturalWidth)))));
+  assert.equal(portrait, 640);
+  const a = await charitySays(page);
+  assert.equal(a.head, SCRIPT['final.header']);
+  assert.deepEqual(a.lines, [SCRIPT['final.clean'], SCRIPT['final.count.one'], 'The prize desk opens in a later build. For now, back to the menu.']);
   await page.waitForFunction(() => document.body.dataset.screen === 'MENU');
   await page.waitForTimeout(400);
   await page.click('#btn-menu-claim');
-  await page.waitForSelector('.msg');
-  await page.click('.msg'); await page.click('.msg');
-  await page.waitForFunction(() => !document.querySelector('.msg'));
+  const b = await charitySays(page);
+  assert.deepEqual(b.lines.slice(0, 2), [SCRIPT['final.clean'], SCRIPT['final.count.one']]);
   assert.equal(await page.evaluate(() => document.body.dataset.screen), 'MENU');
+  assert.ok(await page.locator('.menu').isVisible());
   await ctx.close();
 });

@@ -2,11 +2,11 @@
 // hold (the rotate gate, a hidden tab), and counts what the player did. Pure apart from the clock, which is
 // injected, so it is tested without a browser.
 
-export const PHASES = ['card', 'room', 'pc', 'old', 'hc', 'monitor', 'cto', 'win'];
-const LABELS = { card: 'Class card', room: 'Room', pc: 'PC', old: 'Old tool', hc: 'Honeycomb screen', monitor: 'Monitor', cto: 'CTO', win: 'Win + verdict' };
+export const PHASES = ['card', 'room', 'pc', 'old', 'hc', 'deploy', 'monitor', 'cto', 'win'];
+const LABELS = { card: 'Class card', room: 'Room', pc: 'PC', old: 'Old tool', hc: 'Honeycomb screen', deploy: 'Deploy + recovery', monitor: 'Monitor', cto: 'CTO', win: 'Win + verdict' };
 const COUNT_LABELS = [
   ['windows', 'Message windows'], ['taps', 'Taps'], ['walks', 'Walks'], ['walkMs', 'Walking time'],
-  ['wrong', 'Wrong HC prompts'], ['oldPrompts', 'Old-tool prompts'], ['looks', 'Look uses'], ['visited', 'Hotspots visited'],
+  ['nudges', 'Honeycomb nudges'], ['oldPrompts', 'Old-tool prompts'], ['looks', 'Look uses'], ['visited', 'Hotspots visited'],
   ['emails', 'Emails opened'], ['vitals', 'Vitals checks'], ['monitor', 'Monitor visits'], ['signed', 'Signed'],
 ];
 
@@ -17,10 +17,10 @@ export function formatMs(ms) {
 
 export function createRunlog({ chapter, now = () => performance.now() } = {}) {
   const phases = Object.fromEntries(PHASES.map((p) => [p, 0]));
-  const counts = { windows: 0, taps: 0, walks: 0, walkMs: 0, wrong: 0, oldPrompts: 0, looks: 0, emails: 0, vitals: 0, monitor: 0, signed: 0 };
+  const counts = { windows: 0, taps: 0, walks: 0, walkMs: 0, nudges: 0, oldPrompts: 0, looks: 0, emails: 0, vitals: 0, monitor: 0, signed: 0 };
   const visited = new Set();
   const holds = new Set();
-  let current = null, since = null, heldAt = null, done = false, score = 0;
+  let current = null, since = null, heldAt = null, done = false, missteps = 0;
 
   // active time is the wall clock with held stretches cut out; `since` is when the current stretch began
   const active = () => (current && since !== null && heldAt === null ? now() - since : 0);
@@ -42,7 +42,7 @@ export function createRunlog({ chapter, now = () => performance.now() } = {}) {
     count(key, n = 1) { if (!done && key in counts) counts[key] += n; },
     walk(ms) { if (!done) { counts.walks++; counts.walkMs += Math.round(ms); } },
     visit(id) { if (!done) visited.add(id); },
-    end(points) { if (done) return; bank(); current = null; done = true; score = points; },
+    end(steps = 0) { if (done) return; bank(); current = null; done = true; missteps = steps; },
     snapshot() {
       const ph = { ...phases };
       if (current) ph[current] += active();
@@ -51,7 +51,7 @@ export function createRunlog({ chapter, now = () => performance.now() } = {}) {
       return {
         chapter, phase: current, phases: rounded, total, elapsed: total,
         counts: { ...counts, visited: visited.size }, visited: [...visited],
-        score, done, held: holds.size > 0,
+        missteps, done, held: holds.size > 0,
       };
     },
   };
@@ -63,7 +63,7 @@ export function summaryLines(s) {
   const out = [`Observability Quest · scenario ${s.chapter} · ${formatMs(s.total)}`];
   for (const p of PHASES) out.push(`${LABELS[p]}: ${formatMs(s.phases[p])}`);
   for (const [k, label] of COUNT_LABELS) out.push(`${label}: ${k === 'walkMs' ? formatMs(s.counts[k]) : s.counts[k]}`);
-  out.push(`Score: ${s.score}`);
+  out.push(`Missteps: ${s.missteps}`);
   return out;
 }
 

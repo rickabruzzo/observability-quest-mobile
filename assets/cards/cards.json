@@ -1,0 +1,13 @@
+{
+ "size": [
+  128,
+  80
+ ],
+ "cards": {
+  "P1": "P1_card.png",
+  "P2": "P2_card.png",
+  "P3": "P3_card.png",
+  "P4": "P4_card.png",
+  "P5": "P5_card.png"
+ }
+}
