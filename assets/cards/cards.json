@@ -9,5 +9,12 @@
   "P3": "P3_card.png",
   "P4": "P4_card.png",
   "P5": "P5_card.png"
+ },
+ "frames": {
+  "P1": [
+   "P1_card_sparkle_1.png",
+   "P1_card_sparkle_2.png",
+   "P1_card_sparkle_3.png"
+  ]
  }
 }

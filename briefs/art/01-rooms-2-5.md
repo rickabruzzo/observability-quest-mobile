@@ -162,6 +162,11 @@ bottom edge, the wall of space out of focus behind. (The game shows the team's c
 
 ### Room 5 — `R5_loft` (a three-person AI startup: the loft)
 
+> **Superseded 2026-11-13.** Rick redirected this room: it is now the building's **atrium** (night windows, bean
+> bags, plants, a pinball machine, a monitor on a stand with two small boxes, the lent laptop on a coffee
+> table). The delivered art and its measurements are in `art-drops/2026-11-12-room-ch5/HANDBACK.md`; the file
+> names are unchanged. The description below is the original brief, kept for the record.
+
 *Story:* Friday's release tightened sign-up validation. Since then eleven people have told support they cannot
 create an account, but the error rate is normal and nothing alerted. (What Honeycomb's Team Agent found on
 Friday evening: names with an apostrophe are rejected.) The persona is the **Build & Release Engineer** who

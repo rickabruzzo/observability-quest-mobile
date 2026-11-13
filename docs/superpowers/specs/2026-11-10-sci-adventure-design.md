@@ -209,7 +209,7 @@ The persona rests between lines: their talk frames play only while their own wor
 - *Fictional* three-engineer startup. No real customer. *Grounded (2026-11-12) in Honeycomb's Team Agents demo* (Innovation Week 2026): agents are given a **goal**, a standing responsibility, rather than a task; a goal runs on a schedule or a trigger such as a deploy; it is kept narrow with its own skills and connectors; it reports **Findings**; you can see every query it ran in Canvas; and it can open a pull request or update a runbook.
 - *Persona*: the Build & Release Engineer who shipped Friday's release, on the couch at 3 a.m., one finger over the rollback key.
 - *Stats*: Deploy Frequency 20 · Rollback Reflex 15 · Friday Deploys 1 · Sleep 3.
-- *Room*: a startup loft at 3 a.m.; three desks, two empty; a pager on the floor; a projector screen with a calm sign-ups chart, release readouts and a support inbox (art brief 01).
+- *Room*: the building's atrium at 3 a.m. (Rick, 2026-11-13: the startup loft felt like a different building, so the art was redone): bean bags, plants and a pinball machine; a pager on the floor; a big monitor on a stand with a calm sign-ups chart, two release readouts and a support inbox; the lent laptop on a coffee table; the engineer on the couch (art brief 01, room 5 redone).
 - *Situation*: Friday's release tightened sign-up validation. Eleven people have told support they can't create an account. The error rate is 0.4%, as ever; nothing alerted; nobody can see what the eleven share.
 - *Old tool*: **Friday's diff** — `[Read all two thousand lines]` `[Roll back everything]` `[Add a retry]`.
 - *Hero feature*: **Team Agents.**

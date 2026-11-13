@@ -4,6 +4,14 @@ Read `briefs/PROTOCOL.md` and `briefs/warp/PROTOCOL.md` first. Do this **after b
 Branch **`warp/scenarios-2-5`** from `origin/sci-adventure`. This is a large job; **two pull requests are
 welcome**: the engine made general plus scenario 2, then scenarios 3 to 5.
 
+> **Changed 2026-11-13 (second art drop).** If you started from the earlier version of this brief, these moved:
+> - **Room 5 is new art**, the building's atrium (same file names). Its column in the rooms table, its wall
+>   display (now **two** small boxes, so `wall.box.3` and `wall.box.ok.3` are gone from the script), the pager's
+>   rectangle and a new optional `pinball` hotspot (`look.pinball`) are all below.
+> - **Scenario 1's card sparkle is painted frames now**, not code-drawn glints: see "The card's sparkle".
+> - Room 2's plate and frames were rebuilt (desk cans recoloured); its numbers did not change.
+> - The script has 467 slots.
+
 ## Why
 
 The art for rooms 2 to 5 and all five persona cards has landed, the four scenarios' solves are grounded in
@@ -28,7 +36,8 @@ name in it; each scenario is a data module plus one small painter for its wall d
   manifest has `images` and `patches` (the one rectangle every figure frame is cut to; draw a frame at that
   rectangle over the room plate, as you do for the CTO).
 - **Honeycomb screens:** `assets/screens/ch{2,3,4,5}_hc.json` and PNGs, same format as scenario 1's.
-- **Cards:** `assets/cards/P{1..5}_card.png` (128×80) and `cards.json`.
+- **Cards:** `assets/cards/P{1..5}_card.png` (128×80) and `cards.json`, whose `frames` lists a card's extra
+  frames (only `P1` has any: `P1_card_sparkle_1..3.png`, same size and palette as the card).
 - **Narrator portraits** for the verdicts: scenario 2 `portrait_emily`, 3 `portrait_graham`, 4
   `portrait_jessitron`, 5 `portrait_matt` (frames in `assets/anim/`, as for Christine).
 
@@ -38,8 +47,8 @@ name in it; each scenario is a data module plus one small painter for its wall d
 |---|---|
 | Title card | `card.title`, `card.line` |
 | Persona card | `persona.name`, `persona.class`, `persona.stats`, `persona.flavor` |
-| Room | `room.enter`, `look.wall`, `look.pc`, `look.npc` (scenario 5 also `look.pager`) |
-| Wall close-up | `wall.chart` (shown on entering, once per visit), `wall.stat.1…` (the pool while things are broken), `wall.ok.1…` (the pool after the fix); scenario 3 also `wall.progress`, `wall.progress.ok`, `wall.cart`; scenario 5 also `wall.box.1..3`, `wall.box.ok.3` |
+| Room | `room.enter`, `look.wall`, `look.pc`, `look.npc` (scenario 5 also `look.pager`, `look.pinball`) |
+| Wall close-up | `wall.chart` (shown on entering, once per visit), `wall.stat.1…` (the pool while things are broken), `wall.ok.1…` (the pool after the fix); scenario 3 also `wall.progress`, `wall.progress.ok`, `wall.cart`; scenario 5 also `wall.box.1`, `wall.box.2` |
 | Persona | `npc.call.1..3` (before a tool is tried; the last repeats), `npc.ask`, `decide.wrong`, `decide.hc`, `decide.wrong.jab`, `decide.hc.show` |
 | Computer | `pc.title`, `pc.menu.email`, `pc.menu.status`, `pc.menu.old`, `pc.menu.hc`, `pc.menu.deploy`, `pc.menu.leave`, `pc.email.1..3`, `pc.email.reply`, `pc.status.before`, `.old`, `.found`, `.hc`, `pc.leave.locked`, `pc.leave`, `pc.deploy` |
 | After the fix | `recovered` (the line shown over the recovering wall display) |
@@ -54,20 +63,23 @@ A `wall.stat`/`wall.ok` entry with ` / ` in it is two lines.
 | | Scenario 2 | Scenario 3 | Scenario 4 | Scenario 5 |
 |---|---|---|---|---|
 | Room plate | `R2_war_room` | `R3_bullpen` | `R4_ops_room` | `R5_loft` |
-| `pc` rect (x, y, w, h) | 0, 76, 136, 112 | 190, 78, 130, 108 | 10, 88, 126, 98 | 8, 88, 114, 100 |
+| `pc` rect (x, y, w, h) | 0, 76, 136, 112 | 190, 78, 130, 108 | 10, 88, 126, 98 | 0, 128, 118, 68 |
 | hero at the pc (left edge) | 96 | 262 | 95 | 96 |
-| `wall` rect | 113, 26, 197, 92 | 100, 30, 120, 65 | 30, 2, 260, 100 | 155, 22, 94, 100 |
-| `npc` rect | 255, 52, 48, 120 | 8, 45, 94, 141 | 205, 78, 98, 107 | 230, 80, 90, 108 |
-| hero at the persona | 222 | 104 | 172 | 196 |
+| `wall` rect | 113, 26, 197, 92 | 100, 30, 120, 65 | 30, 2, 260, 100 | 115, 24, 90, 104 |
+| `npc` rect | 255, 52, 48, 120 | 8, 45, 94, 141 | 205, 78, 98, 107 | 232, 85, 88, 113 |
+| hero at the persona | 222 | 104 | 172 | 200 |
 | hero starts at | 170 | 146 | 150 | 150 |
-| PC close-up, screen (x0–x1, y0–y1) | 80–240, 31–136 | 81–237, 39–137 | 33–287, 34–147 | 66–255, 23–143 |
+| PC close-up, screen (x0–x1, y0–y1) | 80–240, 31–136 | 81–237, 39–137 | 33–287, 34–147 | 67–254, 32–152 |
 | Wall close-up file | `R2_wall_closeup` | `R3_wall_closeup` | `R4_wall_closeup` | `R5_wall_closeup` |
 
 - `wall` never walks; where `wall` and another hotspot overlap, the smaller target wins (scenario 2: `npc` over
   `wall`; scenario 4: `pc` and `npc` over `wall`).
 - Scenario 3 is mirrored: the computer is on the right and the persona on the left.
-- Scenario 5 has an optional fourth hotspot, `pager` (196, 155, 15, 9): Look only, no walk. Pad its hit area to
-  the 44 px minimum.
+- Scenario 5 is the atrium: the "wall" is a big monitor on a stand, the computer a laptop on a coffee table
+  (the hero stands at its right end; the open floor is x 118–232), the persona on the couch. It has two
+  optional Look-only hotspots with no walk: `pager` (194, 173, 18, 11; pad its hit area to the 44 px minimum;
+  the hero standing at the persona is right beside it) and `pinball` (250, 42, 68, 40: the backglass and the
+  top of the table, kept clear of the persona's head so a tap on him is never a tap on the machine).
 - The PC menu is drawn inside each close-up's screen rectangle. They differ in size; scenario 2's is the
   smallest (160×105). Check all four at 667×375.
 
@@ -105,14 +117,17 @@ for that, draw shapes.
 | Lane | 34–234, 84–88 | 13–239, 171–182 | a flat green health line, both states. That is the joke |
 | Chat column | 236–285, 15–98 | 244–304, 16–172 | lines from `wall.stat` scrolling up; fixed: `wall.ok`. In the room: grey bars |
 
-**Scenario 5: the projector.**
+**Scenario 5: the atrium monitor.** Whole screen: room x 115–204, y 24–84; close-up x 41–280, y 19–181.
 
 | Panel | Room | Close-up | What goes in it |
 |---|---|---|---|
-| Chart | 165–206, 36–56 | 69–178, 38–87 | sign-ups: a calm line with a small wobble, both states |
-| Wide box under it | 165–204, 60–78 | 69–178, 94–132 | the support inbox: `wall.stat` lines, newest on top; fixed: `wall.ok` |
-| Small 1, 2, 3 | 209–219 × 36–42, 46–56, 60–78 | 184–210 × 38–57, 64–87, 94–132 | `wall.box.1..3`; fixed: box 3 shows `wall.box.ok.3`. In the room: lights |
-| Chat panel | 223–240, 36–78 | 216–257, 38–132 | grey bars (too narrow for text) |
+| Chart | 119–179, 27–44 | 50–214, 27–74 | sign-ups: a calm line with a small wobble, both states. The art already has faint grid lines; draw over them |
+| Large panel under it | 119–157, 48–81 | 50–156, 84–174 | the support inbox: `wall.stat` lines, newest on top; fixed: `wall.ok`. In the room: short bars stacking up, red while broken, green and few once fixed |
+| Small 1, 2 | 162–179 × 48–63, 67–81 | 165–214 × 84–124, 134–174 | `wall.box.1` (the error rate) and `wall.box.2` (when Friday's release shipped), the same in both states: they are the readouts that noticed nothing. Each close-up box has a small grey tab at its top left (about 10×4); leave it showing. In the room: steady green lights |
+| Chat panel | 183–200, 27–81 | 223–272, 27–174 | grey bars (too narrow for text); the art has a divider at close-up y 159, leave the strip under it empty |
+
+The only thing on this display that changes when the fix lands is the inbox. That is the point of the scenario:
+everything else said "normal" all along.
 
 Entering a close-up shows `wall.chart` once per visit; a **Back** control or a tap off the display returns to
 the room, as in scenario 1.
@@ -141,10 +156,12 @@ Rick, 2026-11-12: a tight talk loop looked creepy. For scenarios 2–5:
   the menu, exactly as scenario 1 does with Otto. "Show me" at the persona works the same way too.
 - **The decision.** `decide.wrong` is that scenario's wrong instinct (a misstep, a jab, greyed, the choice
   comes back); `decide.hc` wins once the fix is deployed.
-- **The card's sparkle (scenario 1's card only, Rick's request).** Over the picture, about 20 gold glints, each
-  a 1 px dot growing to a 5 px plus and back over about 450 ms (centre `#FFFFFF`, arms `#FFE88C`), at random
-  times so they never pulse together. In the 128×80 picture they stay inside x 88–120, y 6–40 (round the pen
-  nib) and x 20–104, y 56–77 (the trail by the scroll). Reduced motion: none.
+- **The card's sparkle (scenario 1's card only, Rick's request).** Painted frames, not code: while the CTO's
+  card is open, swap its picture through `P1_card` → `_sparkle_1` → `_sparkle_2` → `_sparkle_3` → `_sparkle_2`
+  → `_sparkle_1` and round again, about 180 ms a frame (file names from `cards.json` › `frames.P1`, in that
+  order). The frames are whole 128×80 pictures in the card's own palette and differ from it only where the
+  magic is, so nothing else flickers. Preload them with the card. Reduced motion: `P1_card` only. No
+  code-drawn glints.
 - **The menu.** All five rows play; "coming soon" goes. `?ch=N` works for 1–5.
 - **The stopwatch.** Its labels become generic (Wall display, Persona) and it reports per scenario.
 

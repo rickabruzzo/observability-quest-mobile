@@ -1175,7 +1175,7 @@ JESSITRON: Nobody had to be the hero who knows everything. Anyone on the team co
 
 ## Chapter 5 — Team Agents · Startup · Build & Release Engineer
 
-Fictional three-person startup. Company: **Agentry**. Narrator: Matt Nelson. This is the **Team Agents** chapter. The persona is the Build & Release Engineer who shipped on Friday. The solve follows Honeycomb's own Team Agents demo (Innovation Week 2026): an agent with a standing goal (watch every deploy) reads what the deploy was meant to do, leaves a specific Finding, shows its work on a Canvas, and offers the fix as a pull request; it also notices the runbook is out of date. In Honeycomb nothing is a joke: the `jab` slots are nudges. The room is written from the art drop of 2026-11-12: a wall display, a lent computer, and the persona.
+Fictional three-person startup. Company: **Agentry**. Narrator: Matt Nelson. This is the **Team Agents** chapter. The persona is the Build & Release Engineer who shipped on Friday. The solve follows Honeycomb's own Team Agents demo (Innovation Week 2026): an agent with a standing goal (watch every deploy) reads what the deploy was meant to do, leaves a specific Finding, shows its work on a Canvas, and offers the fix as a pull request; it also notices the runbook is out of date. In Honeycomb nothing is a joke: the `jab` slots are nudges. The room is the building's atrium, written from the art drop as redone on 2026-11-13 (Rick: the loft felt like a different building): a big monitor on a stand, a lent laptop on a coffee table, the persona on the couch, a pager on the floor and a pinball machine.
 
 ### ch5.card.title
 THE RELEASE ENGINEER
@@ -1199,10 +1199,10 @@ Deploy Frequency 20 · Rollback Reflex 15 · Friday Deploys 1 · Sleep 3
 Strikes at 5:52 PM. Vanishes for the weekend.
 
 ### ch5.room.enter
-A startup loft at 3 AM. Three desks, two empty. A pager face-down on the floor where someone threw it. A projector shows sign-ups: a calm line with no idea. On the couch, the engineer who shipped Friday's release, one finger over the rollback key.
+The atrium at 3 AM. Bean bags, plants, a silent pinball machine. A pager face-down on the floor where someone threw it. The big monitor shows sign-ups: a calm line with no idea. On the couch, the engineer who shipped Friday's release, both hands on his head.
 
 ### ch5.look.wall
-Sign-ups, on a projector somebody expensed. A calm, healthy line. Eleven people would like a word with that line.
+Sign-ups, on a monitor the size of a door. A calm, healthy line. Eleven people would like a word with that line.
 
 ### ch5.wall.chart
 Up close: sign-ups steady, error rate 0.4%, release shipped Friday at 5:52 PM. And the support inbox, which has said the same thing eleven times.
@@ -1212,12 +1212,6 @@ Up close: sign-ups steady, error rate 0.4%, release shipped Friday at 5:52 PM. A
 
 ### ch5.wall.box.2
 5:52
-
-### ch5.wall.box.3
-11
-
-### ch5.wall.box.ok.3
-0
 
 ### ch5.wall.stat.1
 can't sign up - O'Brien
@@ -1247,13 +1241,16 @@ thanks - D'Souza
 finally - O'Malley
 
 ### ch5.look.pc
-The desk they've lent you is a door on two trestles. A laptop on a stack of books, a plant, and a stool that has seen things.
+They've lent you the coffee table. A laptop, a plant, and a coffee somebody gave up on. There is a bean bag, if you never want to stand up again.
 
 ### ch5.look.npc
-The Release Engineer, on the couch, laptop on his knees, one finger over the key that rolls back all of Friday. He has been holding that pose for a while.
+The Release Engineer, on the couch, laptop on his knees, both hands on his head. One key rolls back all of Friday. He has been not pressing it for a while.
 
 ### ch5.look.pager
 The pager, face-down on the floor. It is still buzzing. It will buzz until this is fixed or it dies. It will not die first.
+
+### ch5.look.pinball
+A pinball machine, all rockets and ringed planets. The high score belongs to AAA. Nobody here has had a free hand since Friday.
 
 ### ch5.npc.call.1
 RELEASE ENGINEER: I shipped at 5:52 on a Friday. I know. I know. You don't have to say it.
@@ -1262,10 +1259,10 @@ RELEASE ENGINEER: I shipped at 5:52 on a Friday. I know. I know. You don't have 
 RELEASE ENGINEER: Error rate's normal. Sign-ups are normal. And eleven people can't get in. Which eleven?
 
 ### ch5.npc.call.3
-RELEASE ENGINEER: Take the door desk. The diff's on it, and Honeycomb. If you find nothing, I roll back all of Friday.
+RELEASE ENGINEER: Take the laptop on the coffee table. The diff's on it, and Honeycomb. If you find nothing, I roll back all of Friday.
 
 ### ch5.pc.title
-AGENTRY · THE DOOR DESK
+AGENTRY · THE COFFEE TABLE
 
 ### ch5.pc.menu.email
 [Read email]
@@ -1289,7 +1286,7 @@ Shipped!! (small change)
 RE: Shipped!! (support has questions)
 
 ### ch5.pc.email.3
-Whose bike is on the wall
+Who unplugged the pinball machine
 
 ### ch5.pc.email.reply
 Eleven people are locked out. The inbox can wait.
@@ -1307,10 +1304,10 @@ SIGN-UPS: STILL BROKEN for eleven, but you know why. Friday's validation rejects
 SIGN-UPS: WORKING for everyone, apostrophes included. Cause: found. Fix: deployed.
 
 ### ch5.pc.leave.locked
-You stand up. You have looked at nothing and learned nothing, and his finger drifts toward the rollback key. Try a tool first.
+You stand up. You have looked at nothing and learned nothing, and his hand drifts toward the rollback key. Try a tool first.
 
 ### ch5.pc.leave
-You get off the stool. Time to go and save a Friday.
+You straighten up. Time to go and save a Friday.
 
 ### ch5.npc.ask
 RELEASE ENGINEER: One line. I nearly rolled back all of Friday for one line. New rule, right? No more Friday deploys?
