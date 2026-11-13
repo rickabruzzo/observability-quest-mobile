@@ -83,7 +83,8 @@ It is a stone circle of the game's own, not a copy of any particular monument: d
 exact arrangement. No runes, carvings or writing on the stones.
 
 Deliver it on its own: branch `art/card-ch2`, drop `art-drops/<date>-card-ch2/P2_card.png` with a short
-`HANDBACK.md`. Leave the old picture where it is.
+`HANDBACK.md`. Leave the old picture where it is. **This hand-off goes to Cloud Claude** (the company-account
+Claude in the browser), who builds the picture into the card. It is not a job for Warp.
 
 ### `P3_card` — the Frontend Developer, Bard of the Browser
 > [the person from the room 3 plate], with her glasses, in a bard's feathered cap, a short cape and a tunic

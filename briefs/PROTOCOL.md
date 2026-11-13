@@ -25,14 +25,6 @@ Rules for all three Claudes:
 7. **Commit identity:** `git config user.name Claude && git config user.email noreply@anthropic.com` in your own
    clone or worktree only.
 
-## Who gets what (Rick, 2026-11-13)
-
-- **Every hand-off comes to Cloud Claude**, the company-account Claude in the browser: art drops from Art Claude,
-  and pull requests from Warp Claude. Cloud Claude reviews, builds assets, writes the script and decides what
-  happens next.
-- **Warp Claude is only for heavy code writing.** It gets a brief when the job is a real build. Small changes
-  (wiring a new picture in, a few lines of code, copy) are Cloud Claude's to make directly on a `desktop/` branch.
-
 ## The loop
 
 1. Cloud Claude writes a brief (`briefs/art/NN-*.md` or `briefs/warp/NN-*.md`) on a `desktop/` branch; Rick merges it.
