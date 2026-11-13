@@ -19,7 +19,7 @@ This is **a game, not a toolkit**: we replicate the experience of an SCI-era gam
 - Five authored scenarios mapping to Honeycomb's five use cases × five industries, each with a distinct ICP persona and a distinct hero feature as the "good solve". **One scenario is a win** (Rick, 2026-11-11, after timing the script: three scenarios ran to about seven minutes): the player picks one from a menu after the intro, finishes it in 2–3 minutes, and can claim the prize — or pick another. The game tracks which are done. See *The scenario menu*.
 - Replayable: PLAY AGAIN deals a different hand. The prize is claimed once.
 - Character creation: the player customizes their hero's appearance; the hero persists through every chapter.
-- SCI-era presentation: 320×200 logical VGA scenes, pixel hero with a walk cycle, popup message windows, top status bar with score, icon bar, narrator voice.
+- SCI-era presentation: 320×200 logical VGA scenes, pixel hero with a walk cycle, popup message windows, top status bar, icon bar, narrator voice.
 - Interaction simple enough that nobody dead-ends: tap a hotspot → hero walks there → something happens. Wrong choices cost points and get a joke; they never block progress.
 - The Honeycomb product moment is *interactive*: a VGA rendering of the real feature with bracketed prompts (`[Run BubbleUp on slow sessions]`) and an animated result.
 - Canvas (with the in-game coding agent **"Claw Codez"** via MCP) and **Team Agents** are each the hero of a chapter.
@@ -29,7 +29,7 @@ This is **a game, not a toolkit**: we replicate the experience of an SCI-era gam
 ## Non-goals
 
 - No text parser, no verb-noun grammar, no inventory puzzles that combine items.
-- No save/load, no multiple endings beyond score tiers, no branching plot.
+- No save/load, no multiple endings beyond Charity's two moods, no branching plot.
 - No real customer or competitor names in copy. Companies are fictional (inspired by real stories); rival tools are parodies; the coding agent is "Claw Codez".
 - Not a general engine. Rooms, hotspots and prompts are data; the code serves these five chapters.
 - No accounts, leaderboards, multiplayer, or analytics beyond the form.
@@ -65,7 +65,7 @@ This is **a game, not a toolkit**: we replicate the experience of an SCI-era gam
    - **Class card**: the chapter's persona and silly stats (below), which the hero *wears* for this chapter — "Tonight you are the SRE." Tap to continue.
    - **Room**: a 320×200 scene with the hero, 3–5 hotspots, narrator line on entry.
    - **Hotspots**: tapping one walks the hero there (or teleports under reduced motion) and triggers it.
-   - **Solve**: the Honeycomb hotspot opens the gamified product screen; the right prompt animates the result; narrator declares the win; score ticks up in the status bar.
+   - **Solve**: the Honeycomb hotspot opens the gamified product screen; the right prompt animates the result; narrator declares the win; the status bar's solved count ticks up.
    - **Verdict**: short popup from the scenario's narrator portrait (the v0.1 portraits), then a choice: **CLAIM YOUR PRIZE** or **ANOTHER SCENARIO** (back to the menu).
 5. **Final**, on CLAIM — Charity's verdict on the night so far (see *Scoring*) with a **sunrise coda**: the hero walks out into daylight, shades on.
 6. **Claim** and **Complete** — as v0.1 (placeholder form → HubSpot embed after review; "SHOW THIS TO BOOTH STAFF"; staff REDEEMED tap; persisted), plus a **PLAY MORE** button on Complete that returns to the scenario menu with the hero and the completion marks kept. The form is never shown twice.
@@ -97,24 +97,24 @@ Rick's brief: three starting heroes, then free customization, no picker with mor
 (Replaces *the draw* — three of five dealt at random — which Rick dropped on 2026-11-11.)
 
 After the intro the player chooses. A Sierra-style window lists the **five scenarios**, each a row: the class
-the hero will play, the problem in a few words, and — once played — a tick and its score.
+the hero will play, the problem in a few words, and — once solved — a tick.
 
 - **One finished scenario is a win.** After its verdict the player is offered **CLAIM YOUR PRIZE** or
   **ANOTHER SCENARIO**. Until the prize is claimed, the menu also carries a CLAIM YOUR PRIZE button as soon as
   one scenario is done.
-- **Completion is tracked** in `sessionStorage` (`oq.done`: scenario → best score), with the hero. Done
-  scenarios stay on the menu, ticked, and can be replayed; a replay keeps the better score.
+- **Completion is tracked** in `sessionStorage` (`oq.done`: scenario → missteps, fewest kept), with the hero. Done
+  scenarios stay on the menu, ticked, and can be replayed.
 - Rows are thumb-sized (44 px), the list fits a 667×375 phone without scrolling, and the order is always 1→5.
 - Only the chosen scenario's assets download.
 - `?ch=N` in the URL goes straight into scenario N after the intro (QA and booth demos); a malformed value is
   ignored and the menu shows.
-- *My proposal, for Rick and PMM:* the claim form carries the list of scenarios finished and the score as
+- *My proposal, for Rick and PMM:* the claim form carries the list of scenarios solved as
   hidden fields, so the lead record shows which use case the attendee chose.
 
 ## Interface (SCI grammar, phone-sized)
 
 - **Layout in landscape** (my call, given Rick's landscape decision): status bar across the full width at the top; the scene centred below it; the black letterbox columns either side become the **thumb zones** — the icon bar stacks vertically in the right column (Look / Use / Help), the mute toggle sits in the left. Both thumbs hold the phone, both columns are under them. Message windows open **over the scene**, SCI-style (white, black border, drop shadow), centred, up to five lines, and prompt buttons stack inside the window; on a 375-px-tall phone a window holds three lines and paginates with a tap. Hotspots near the middle of the scene are a short reach from either thumb. Product screens take over the scene box and show their prompts the same way. The right-hand icon column must fit at a 667×375 viewport (three 44-px icons in a 50-px column); if a viewport is too narrow for the columns the icon bar falls back to a row under the scene.
-- **Status bar** (top, DOM): `Observability Quest` left, `Score: 100 of 500` right, in the small pixel font on a light grey bar — the SCI0/SCI1 look.
+- **Status bar** (top, DOM): `Observability Quest` left, `Solved: 1 of 5` right, in the small pixel font on a light grey bar — the SCI0/SCI1 look.
 - **Icon bar**: SCI1-style icons — **Look** (eye), **Use** (hand), **Help** (?) — in the right thumb column. Default mode is Use; tapping Look then a hotspot gives a descriptive line instead of acting, and the mode returns to Use. Help explains the three icons in one window. No inventory icon in v2.0 (a pager and a coffee appear as *props*, not inventory).
 - **Tap to act**: tapping anywhere walkable makes the hero walk there; tapping a hotspot walks to it and triggers it. Walkable area is a floor line per room (one y, min/max x); hotspots have a stand point. Walking is a Sierra stroll in profile: about three steps a second, some five seconds across the whole room (Rick, 2026-11-11 — 1.2 s read as far too fast; the cadence follows the drawn stride).
 - **Message windows**: the windows described above carry narrator and dialogue text; typewriter at 25 ms/char; tap to complete, tap to dismiss. Narrator lines carry no prefix. The hero's own lines, spoken in that chapter's class, are prefixed with the class name (`SRE:`), and the script addresses the player in the second person ("you let the renewal lapse"). Other characters in a room (the manager who runs in, Einar on the phone) are prefixed with their name and need no sprite — they speak from off-screen or from a prop.
@@ -123,7 +123,7 @@ the hero will play, the problem in a few words, and — once played — a tick a
 
 ## The gamified Honeycomb
 
-A **product screen** is a full-canvas rendering of the real Honeycomb page for the chapter's feature, reduced to flat VGA fills: **Honeycomb's light UI** (white cards on pale grey, blue for passing, yellow-orange for failing), the page's real headings as labels, a chunky chart, and the bracketed prompts. It must be recognisable to someone who has seen the product and legible to someone who has not: **the feature's name is spelled out on first use** ("Service Level Objective", then SLO). Each chapter has one, built from a small shared kit: budget burndown, heatmap pair, BubbleUp dimension cards, trace waterfall, service map, agent timeline, a Canvas notebook, a Team Agent finding card. The direct prompt plays a 2–3 second animation and the result line appears.
+A **product screen** is a full-canvas rendering of the real Honeycomb page for the chapter's feature, reduced to flat VGA fills: **Honeycomb's light UI** (white cards on pale grey, blue for passing, yellow-orange for failing), the page's real headings as labels, a chunky chart, and the bracketed prompts. It must be recognisable to someone who has seen the product and legible to someone who has not: **the feature is named in plain words, and any abbreviation is spelled out on first use**. Each chapter has one, drawn as pixel art from the real product (scenario 1's are built by `tools/build_hc_screens.py`): a Canvas investigation, Agent Timeline, an LLM call's details, heatmaps and BubbleUp, a trace waterfall, a service map, a Team Agent finding card. The direct prompt plays a 2–3 second animation and the result line appears.
 
 **Honeycomb is the solution, so nothing inside it is a joke** (Rick, 2026-11-12). Each step offers the direct route and two other *sensible Honeycomb moves*; those get a short nudge toward the direct route, grey out, and cost nothing. The last result says plainly what Honeycomb did: "Using Honeycomb <feature>, you found <cause> without switching tools." Then the player **applies the fix** (a prompt outside the product screen), and the room visibly recovers. The jokes live in the old tool, the room and the people.
 
@@ -137,12 +137,17 @@ Personas and stats are shown as a Sierra character sheet at the start of each ch
 - *Inspired by* Intercom / Fin AI. Company: a fictional enterprise customer-service platform.
 - *Persona note*: the ICP calls this role "Buyer"; in-game it is the **Technical Decision Maker** (TDM) so the sheet reads as an engineer with a budget, not a sales target.
 - *Stats*: Budget 3 · Vendor Skepticism 17 · Meetings Survived 19 · Grep 2.
-- *Cast (2026-11-12 redesign)*: the hero is the TDM, who advises. The **CTO** is a non-player character, the Buyer, who signs. **The patient is Otto**, the AI support assistant: he stalls mid-answer because one of twelve model calls is starved by a nightly cron job, and his SLO burns.
+- *Cast (2026-11-12 redesign)*: the hero is the TDM, who advises. The **CTO** is a non-player character, the Buyer, who signs. **The patient is Otto**, the AI support assistant, a supervisor agent with specialist agents behind it: he stalls mid-answer because his order-status agent fetches every order a customer ever placed (97 of them) and feeds the whole pile back to the model on every turn. One question takes eleven minutes and 411,448 tokens.
 - *Room*: a glass-walled exec floor at night, three thumb-sized hotspots: the hero's cube with an 80s desktop **PC**; a wall **monitor** showing Otto's vitals like a sci-fi sickbay readout (a heartbeat lane, three readout boxes cycling jokey stats, and his frozen output "I'd be happy to"); the **CTO** at her desk on the phone, the Cave Logs renewal in front of her. Art: `assets/rooms/` (`tools/build_rooms.py`, manifest `ch1.json`).
 - *Flow*: look at the monitor (a close-up; the vitals read like a doctor's chart) → sit at the PC (a close-up; menu: Read email · Check Otto's vitals · Open Cave Logs · Open Honeycomb · Leave computer) → **Leave computer** unlocks once either tool has been tried → walk to the CTO and advise: **[Sign the contract]** or **[Get Honeycomb]**.
 - *Decision*: **[Get Honeycomb]** wins. If the fix is not deployed yet, the CTO says "show me" and the Honeycomb screen opens on the spot (or, if the cause is already found, just the deploy prompt); deploying wins. **[Sign the contract]** gets a jab and costs points like any wrong prompt, and the choice comes back: a wrong choice never blocks. The investigation finds the cause; **[Apply the fix and deploy]** then appears on the PC menu, and deploying is what recovers the monitor (steady heartbeat, green lights, Otto finishes his sentence, with a joke). The win needs the fix deployed.
 - *Old tool*: **Cave Logs Inc.** — `[grep 40,000 lines of JSON]` `[Add another dashboard]` `[Renew for 3 years]`.
-- *Hero feature*: **SLOs + tracing every LLM call**. Screen: an SLO burn chart with `[Open the burning SLO]` → trace waterfall of 12 model calls → `[Find what's starving the threads]` → one nightly cron job glows. Win: SLO recovered; the CTO leaves the Cave Logs renewal unsigned.
+- *Hero feature*: **Agent Timeline, reached from an automatic investigation in Canvas** (Rick, 2026-11-12: SLOs are not how you debug an errant chatbot). The solve follows Honeycomb's own agent-observability demo (Innovation Week 2026):
+  1. **Canvas.** An alert fired and Honeycomb started investigating on its own; the Canvas is already filled in with graphs, the five worst conversations and an Investigation Summary whose strongest signal is one agent in a tool loop. `[Open the worst conversation in Agent Timeline]`.
+  2. **Agent Timeline.** The whole conversation in order: every agent, LLM call and tool call; 11 minutes, 19 LLM calls, 97 tool calls, 411,448 tokens. `[Open the slowest LLM call]`.
+  3. **The LLM call.** Its input tokens (57,293, against 1,174 for the first call) and the tool result that put them there: `lookup_orders`, 97 orders, 145 KB.
+  The other prompts are real moves that teach something and nudge back: token usage by agent (who), the Canvas agent (it already linked the conversation), the application trace (nothing downstream is slow), the evals (the answer was also bad). Then **[Apply the fix and deploy]**: the lookup returns the one order asked about. Win: Otto answers; the CTO leaves the Cave Logs renewal unsigned.
+- *Screens*: three pixel-art pictures, `assets/screens/ch1_hc_0..2.png`, drawn in code by `tools/build_hc_screens.py` from that demo (not screenshots; no logo), with the rectangles to pulse in `ch1_hc.json`.
 
 ### 2 · Migrations · Fintech · **Platform Eng**
 - *Inspired by* Nubank. Company: a fictional digital bank, two years into a monolith → 350-service migration.
@@ -174,22 +179,20 @@ Personas and stats are shown as a Sierra character sheet at the start of each ch
 - *Room*: a startup loft at 3 a.m.; three desks, two empty; a pager on the floor; a token-spend chart on the wall going vertical.
 - *Situation*: Friday's prompt/model change shipped; the support agent loops; token bill tripled overnight.
 - *Old tool*: **the agent debugging itself** — `[Ask the agent why it looped]` → "I apologize for the confusion" ×40 · `[Roll back everything]` · `[Add a retry]`.
-- *Hero feature*: **Team Agents + Agent Timeline**. Screen: a Team Agent **Finding** is already waiting — goal *Verify releases*: the deploy was checked for 30 minutes, a regression flagged, an incident channel opened. `[Open the Finding]` → Agent Timeline shows one conversation: a tool call retrying forty times → `[Approve the suggested fix]` or `[Check the evidence first]` (both win; checking scores more). Win line: three engineers on the team, and the fourth is an agent. This chapter is where Team Agents is front and centre.
+- *Overlap to resolve when this chapter is rewritten:* scenario 1 now stars Agent Timeline and a tool loop, so this chapter should star **Team Agents** alone (the Finding, the release it checked, the fix it proposes) and get a different failure.
+- *Hero feature*: **Team Agents + Agent Timeline**. Screen: a Team Agent **Finding** is already waiting — goal *Verify releases*: the deploy was checked for 30 minutes, a regression flagged, an incident channel opened. `[Open the Finding]` → Agent Timeline shows one conversation: a tool call retrying forty times → `[Approve the suggested fix]` or `[Check the evidence first]` (both win). Win line: three engineers on the team, and the fourth is an agent. This chapter is where Team Agents is front and centre.
 
 ### Final · Charity Majors
-Six verdict tiers, one per reachable score (see *Scoring*), rewritten for the SCI voice in the script. Presented as a **full-canvas portrait takeover** as in v0.1 (my call): the existing 640×428 portraits are cropped to 640×400 and the blink/talk patches offset accordingly, so Jessitron's pending frames and every other portrait asset carry over unchanged. The verdict text is a message window over the lower part of the portrait. Then the sunrise coda.
+Two moods and a closing line (see *No score*), in the script. Presented as a **full-canvas portrait takeover** as in v0.1 (my call): the existing 640×428 portraits are cropped to 640×400 and the blink/talk patches offset accordingly, so Jessitron's pending frames and every other portrait asset carry over unchanged. The verdict text is a message window over the lower part of the portrait. Then the sunrise coda.
 
-## Scoring
+## No score
 
-Sierra-style: `Score: N of 500`, 100 per scenario; the total is what all five would give, so playing more is visibly worth more. The rules (my call):
+**There is no score** (Rick, 2026-11-12). Points were the badge game's achievement badges; here, hunting for a higher number means nothing. What the game keeps instead:
 
-- **100** — the scenario solved and the right advice given first time.
-- **50** — the wrong decision was tried first at the end (scenario 1: `[Sign the contract]`). The choice comes back; it never blocks.
-- **Nothing inside Honeycomb costs points**, and **visiting the old tool is free**: it is the joke, and a player who tries everything and then does the right thing still gets 100.
-- Chapter 5's two winning prompts: `[Check the evidence first]` = 100, `[Approve the suggested fix]` = 50.
-- **Look** lines give no points; they are their own reward. The score never goes down.
-
-**Charity's verdict** can no longer go by a fixed total, because the player decides how many scenarios to play. *My proposal, for Rick to write against:* three tiers by how cleanly the played scenarios went — **clean** (every scenario played scored 100), **mixed** (some 50s), **rough** (all 50s) — plus one line that depends on how many are done (one … all five). The script's six `final.*` slots get rewritten to that shape.
+- **A scenario can only be finished by choosing correctly.** Wrong choices get a joke or a nudge and come back; they never block and never end the scenario.
+- **Completion**: which scenarios are solved (`oq.done`). The status bar shows `Solved: N of 5`; the menu ticks solved scenarios.
+- **Missteps**, per solved scenario: how many wrong choices the player made on the way (old-tool prompts picked, the wrong advice given first). Never shown as a number. Nothing inside Honeycomb is a misstep.
+- **The player chooses when to end.** After any solved scenario: claim the prize, or play another. On claim, **Charity's verdict**: `final.clean` if there were no missteps in any solved scenario, `final.grief` if there were, then one closing line by how many are solved (`final.count.one` / `.some` / `.all`). Then the sunrise coda.
 
 ## Intro and coda
 
@@ -245,7 +248,7 @@ Carry over from v0.1: static layout shell, `text.js`, `claim.js` (form/complete)
 
 - `js/engine/room.js` — room = { background, floorY, walk: [minX, maxX], hotspots: [{ id, rect, standX, look, use }], onEnter }. Hero walking along the floor line with the 4-frame cycle at 10 fps.
 - `js/engine/windows.js` — SCI message windows and prompt buttons (DOM over canvas).
-- `js/engine/statusbar.js` — score and title.
+- `js/engine/statusbar.js` — title and solved count.
 - `js/engine/hero.js` — parts-based sprite renderer and animation.
 - `js/screens/` — product screens built from `js/kit/` (heatmap, waterfall, servicemap, bubbleup, timeline, canvas, finding).
 - `js/chapters/ch1..ch5.js` — data + glue per chapter; `js/menu.js` — the scenario menu and completion (rules in *The scenario menu*, `?ch=` override, `oq.done`).
@@ -256,8 +259,8 @@ Carry over from v0.1: static layout shell, `text.js`, `claim.js` (form/complete)
 
 ## Verification before handoff
 
-- Every chapter finishable by tapping only Honeycomb prompts; every wrong prompt greys out and never blocks; every Look line renders; score reaches the max; Charity's tier matches the score.
-- Each of the five scenarios plays through from the menu and from `?ch=N`; completion marks and best scores persist across a reload; CLAIM is offered after one scenario and the form is never shown twice; PLAY MORE returns to the menu.
+- Every chapter finishable by tapping only Honeycomb prompts; every wrong prompt greys out and never blocks; every Look line renders; Charity's tier matches the score.
+- Each of the five scenarios plays through from the menu and from `?ch=N`; completion marks persist across a reload; CLAIM is offered after one scenario and the form is never shown twice; PLAY MORE returns to the menu.
 - Landscape phones from 667×375 (the shortest) to 932×430, with the notch on either side (safe-area insets respected in both thumb columns); the rotate screen in portrait; Claim and Complete usable in both orientations with the keyboard open; desktop and tablet fine without ever seeing the rotate screen.
 - Reduced motion: no walking animation, stills, instant text.
 - Audio: title theme, chapter motifs, stings verified on iOS Safari and Android Chrome from a real device (Rick), OPL core CPU use acceptable on a mid-range phone.

@@ -33,8 +33,8 @@ Turn your phone sideways to play.
 ### help.window
 LOOK (the eye) tells you about a thing. USE (the hand) does the thing. Tap anywhere on the floor to walk there. Tap a window to continue. Nothing here can get you fired. Probably.
 
-### status.score
-Score: {score} of 300
+### status.done
+Solved: {n} of 5
 
 ---
 
@@ -147,7 +147,7 @@ One story down. The prize is yours — or the night is young.
 
 ## Chapter 1 — LLM Observability · Enterprise · Technical Decision Maker
 
-Inspired by a customer-service platform that wired a dozen models into its support bot. Company: **Converso**, assistant: **Otto** (the patient). You are the Technical Decision Maker, who advises; the **CTO** is the buyer, who signs. Room: your cube and its 80s PC, Otto's vitals monitor on the wall, the CTO at her desk. Vitals stats are two short lines split at ` / ` (15 characters a line at most). Narrator portrait at the verdict: Christine Yen.
+Inspired by a customer-service platform whose support bot is a team of AI agents. The solve follows Honeycomb's own agent-observability demo (2026): an alert starts an automatic investigation in Canvas, Agent Timeline shows the whole conversation, and one LLM call shows what the model was fed. Company: **Converso**, assistant: **Otto** (the patient). You are the Technical Decision Maker, who advises; the **CTO** is the buyer, who signs. Room: your cube and its 80s PC, Otto's vitals monitor on the wall, the CTO at her desk. Vitals stats are two short lines split at ` / ` (15 characters a line at most). Narrator portrait at the verdict: Christine Yen.
 
 ### ch1.card.title
 TECHNICAL DECISION MAKER
@@ -165,16 +165,16 @@ The exec floor at Converso, 3:14 AM. Glass walls, one lamp, and your CTO on the 
 Otto's vitals, on a screen someone bought to make the support bot feel important. The line is supposed to go up and down. It is mostly going down.
 
 ### ch1.monitor.chart
-The chart reads like a hospital drama. Response time: critical. Models responding: ten of twelve. SLO budget: bleeding out. Last words: "I'd be happy to".
+The chart reads like a hospital drama. Response time: critical. Tokens: hemorrhaging. Customers on hold: all of them. Last words: "I'd be happy to".
 
 ### ch1.vitals.stat.1
 CONFIDENCE 100% / ANSWERS 0
 
 ### ch1.vitals.stat.2
-MODELS AWAKE / 10 OF 12
+TOOL CALLS / 97 AND RISING
 
 ### ch1.vitals.stat.3
-SLO BUDGET / GONE
+TOKENS BURNED / 411,448
 
 ### ch1.vitals.stat.4
 "HAPPY TO" / x847
@@ -201,13 +201,13 @@ MOOD / HAPPY TO
 PULSE / STEADY
 
 ### ch1.vitals.ok.2
-MODELS AWAKE / 12 OF 12
+TOOL CALLS / 2
 
 ### ch1.vitals.ok.3
-SLO BUDGET / RECOVERING
+TOKEN BILL / SURVIVABLE
 
 ### ch1.vitals.ok.4
-CRON JOBS / 1 EVICTED
+ORDERS READ / JUST THE ONE
 
 ### ch1.vitals.ok.5
 ANSWERS / SEVERAL
@@ -216,7 +216,7 @@ ANSWERS / SEVERAL
 I'd be happy to
 
 ### ch1.vitals.output.ok
-I'd be happy to help! Your refund is on its way.
+I'd be happy to help! Your order ships Tuesday.
 
 ### ch1.look.pc
 Your cube, and a beige computer older than most of the company. It runs everything you need and nothing you want.
@@ -270,13 +270,13 @@ Whoever is microwaving fish at 3 AM
 Otto is dying. You don't have time for office email.
 
 ### ch1.pc.vitals.before
-OTTO: CRITICAL. Stalled mid-sentence. Fourth outage this week. Twelve models answer behind him; when one stalls, he stalls, and the SLO burns. Cause: unknown.
+OTTO: CRITICAL. Stalled mid-sentence. Fourth outage this week. A dozen AI agents answer behind him, and nobody can see what they say to each other. Cause: unknown.
 
 ### ch1.pc.vitals.old
 OTTO: STILL CRITICAL. You now have 40,000 lines of JSON about it. Cause: somewhere in the JSON, presumably.
 
 ### ch1.pc.vitals.hc
-OTTO: STABLE. The export job has its own thread pool now. Cause: found. Fix: deployed.
+OTTO: STABLE. The order lookup returns one order now, not ninety-seven. Cause: found. Fix: deployed.
 
 ### ch1.pc.leave.locked
 You stand up. You have looked at nothing and learned nothing, and the CTO can tell from across the room. Try a tool first.
@@ -327,67 +327,67 @@ You have solved nothing, but you have solved it for three years.
 You close Cave Logs. Cave Logs does not close you. Small victories.
 
 ### ch1.hc.title
-HONEYCOMB · SERVICE LEVEL OBJECTIVES
+HONEYCOMB · LLM OBSERVABILITY
 
 ### ch1.hc.intro
-Honeycomb opens on Otto's Service Level Objective — SLO for short: the promise that Otto answers 99% of customers in under five seconds. Tonight the promise is broken. The error budget is below zero and still falling.
+An alert fired at 3:03 AM and Honeycomb began investigating before you woke. The Canvas is already filled in, and its Investigation Summary points at one of Otto's agents.
 
 ### ch1.hc.step1.prompt.1
-[Open the burning SLO]
+[Open the worst conversation in Agent Timeline]
 
 ### ch1.hc.step1.prompt.2
-[Check Historical Compliance]
+[Check token usage by agent]
 
 ### ch1.hc.step1.prompt.3
-[Start a new query from scratch]
+[Ask the Canvas agent to keep digging]
 
 ### ch1.hc.step1.jab.2
-Compliance has been sliding under the target all week. That tells you how long Otto has been failing, not why. The burning SLO has the why.
+The order-status agent is burning 79% of all the tokens. That is the who. The worst conversation will show you the how.
 
 ### ch1.hc.step1.jab.3
-You could. But the SLO already knows exactly which requests failed. Start there and skip the guessing.
+It will, and it is good at it. But it has already linked the worst conversation. One click and you can see for yourself.
 
 ### ch1.hc.step1.result
-The Budget Burndown isn't a slope, it's a staircase: the budget drops at the same hour every night. Right below it, on the same page, BubbleUp is ready to compare the requests that failed the SLO with the ones that passed.
+Agent Timeline lays out one whole conversation: every agent, LLM call and tool call, in order. This one ran 11 minutes and 411,448 tokens. The customer asked one question.
 
 ### ch1.hc.step2.prompt.1
-[BubbleUp: what's different about the failures?]
+[Open the slowest LLM call]
 
 ### ch1.hc.step2.prompt.2
-[Group the failures by model]
+[Open the application trace]
 
 ### ch1.hc.step2.prompt.3
-[Open a trace of one slow answer]
+[Check the evals]
 
 ### ch1.hc.step2.jab.2
-All twelve models are slow at 3 AM, so it isn't one bad model. Good to know. BubbleUp will show what the failures do have in common.
+The shipping service answered in 13 milliseconds. Nothing downstream is slow. The time is going inside the agent, so look at what the model was sent.
 
 ### ch1.hc.step2.jab.3
-One trace, twelve model calls, all waiting in the same queue. A strong hint. BubbleUp across every failure will confirm it.
+The eval scored this answer badly: Otto summarized all 97 orders when he should have asked which one. Bad answer, confirmed. Now find out why it was slow.
 
 ### ch1.hc.step2.result
-Using Honeycomb SLOs, you found what was stalling Otto without switching tools. BubbleUp lights up one difference: every failed request was waiting on a thread pool that a nightly export cron job eats at 3 AM.
+Using Honeycomb's Agent Timeline, you found what was stalling Otto without switching tools: the customer asked about one order, and a tool fed the model all 97, again on every turn.
 
 ### ch1.pc.menu.deploy
 [Apply the fix and deploy]
 
 ### ch1.pc.deploy
-You give the export job its own thread pool and deploy. On the wall, Otto's line steadies. The error budget stops falling.
+You change the order lookup to return the one order the customer asked about, and deploy. On the wall, Otto's line steadies.
 
 ### ch1.otto.recovered
 OTTO: I'd be happy to help! I feel much better now. I really do. And for the record, I would open the pod bay doors. Nobody has given me any.
 
 ### ch1.pc.vitals.found
-OTTO: STILL CRITICAL, but you know why. A nightly export cron job is starving his threads at 3 AM. Cause: found. Fix: not deployed.
+OTTO: STILL CRITICAL, but you know why. His order-status agent fetches every order a customer ever placed and re-reads the pile on every turn. Cause: found. Fix: not deployed.
 
 ### ch1.win
-Service Level Objectives told you Otto was failing. BubbleUp told you why. You never left Honeycomb to find out. The CTO slides the Cave Logs renewal into a drawer, unsigned. The pen stays down.
+Agent Timeline showed you the whole conversation, down to what the model was fed. The CTO slides the Cave Logs renewal into a drawer, unsigned. The pen stays down.
 
 ### ch1.hero.line
-TDM: Three years of grep, or one query. I'll take the query.
+TDM: Three years of grep, or one timeline. I'll take the timeline.
 
 ### ch1.verdict
-CHRISTINE YEN: Twelve models, one cron job, found in minutes. That's what tracing every request buys you — the problem is never where the dashboard points.
+CHRISTINE YEN: A chatbot is a conversation between agents now. When it goes wrong, you need to see all of it: every LLM call, every tool call, every token. You just did.
 
 ---
 
@@ -867,28 +867,25 @@ MATT NELSON: You gave an agent one clear goal and it caught your Friday deploy b
 
 ## Final — Charity Majors
 
-Tiers by points. The verdict window is a full-portrait takeover with the text in a window below. Score shown as `{score} of 500`. **These six tiers were written for a three-scenario run and need rewriting** now that one scenario wins: see the spec's Scoring section for the proposed shape (clean / mixed / rough, plus a line for how many are done).
+**No score** (Rick, 2026-11-12). Charity speaks when the player chooses to finish, after at least one scenario is solved. She has two moods, by whether the player made wrong choices along the way (tried the old tool's prompts, gave the wrong advice first), and one closing line by how many scenarios are solved. Everyone who gets here chose correctly in the end, so even the grief ends warm. The verdict window is a full-portrait takeover with the text in a window below.
 
 ### final.header
 CHARITY MAJORS · CTO & CO-FOUNDER
 
-### final.300
-A perfect night. Three stories, three right calls, not one wrong tap. Either you work at Honeycomb or you're lying. Either way, welcome to the future.
+### final.clean
+No detours. You looked at the problem, asked the right question, and fixed it before your coffee got cold. Either you work at Honeycomb or you should. Welcome to the future.
 
-### final.250
-Nearly perfect. One wrong turn and you caught it fast. That's what observability is for — not never being wrong, just never being wrong for long.
+### final.grief
+You got there. You grepped some JSON first, and I watched you reach for that pen, and we are going to pretend I didn't. Observability isn't never being wrong. It's never being wrong for long.
 
-### final.200
-Solid. You got there. You took the scenic route once or twice, but you got there, and your customers never knew. That's the job.
+### final.count.one
+One incident, solved. There are four more nights like that one in there, if you can't sleep either.
 
-### final.150
-Half right. Not flying blind — just… partially blind. There's a better way, and it's at honeycomb.io.
+### final.count.some
+{n} incidents, solved. Your on-call rotation would like a word, and the word is "thanks".
 
-### final.100
-Rough night. Your on-call rotation hates you and they're right to. Dashboards are not observability. Grep is not a strategy.
-
-### final.50
-I don't know how you're still employed, but I respect the chaos. Call Honeycomb. Now. honeycomb.io
+### final.count.all
+All five. Every incident in the building. Go home. Honeycomb will page you if anything is actually wrong.
 
 ### coda.1
 Dawn. You walk out of the building. The street is the same street. You are not the same engineer.
@@ -927,9 +924,6 @@ SHOW THIS TO BOOTH STAFF
 ### complete.instr
 You finished Observability Quest. Hand your phone to someone in a Honeycomb shirt.
 
-### complete.score
-Final score: {score} of 300
-
 ### complete.redeem
 REDEEMED (staff)
 
@@ -940,7 +934,7 @@ REDEEMED
 Play again
 
 ### complete.again.note
-Three new stories, same hero. The prize is yours already.
+More incidents, same hero. The prize is yours already.
 
 ---
 
@@ -948,7 +942,7 @@ Three new stories, same hero. The prize is yours already.
 
 1. Company names: Converso, Kestrel Bank, Twang & Co. / Fretwork, Nullpoint Games / Starfall, Agentry / Pip — swap any you dislike; nothing else depends on them.
 2. Einar: keep the Icelandic gag? It's affectionate, but say so if it reads as a jab at a real person.
-3. Chapter 5's two winning prompts: *Check the evidence first* = 100, *Approve the suggested fix* = 50 (spec). The 50-point result text makes the half-score explicit — too preachy?
+3. Chapter 5's two winning prompts both win now that there is no score; the result text for *Approve the suggested fix* needs its half-score line removed when chapter 5 is rewritten.
 4. The intro slots are placeholders for your script; they show the beat and the length I'd aim for.
-5. Charity's `final.250` tier is new (v0.1 had five solves, not points) — happy to rewrite any of the six.
+5. Charity's final is two moods (`final.clean`, `final.grief`) plus a closing line by count: rewrite freely.
 6. Chapter 2's narrator: Emily is leaving. Her verdict, name and portrait stay as the placeholder; when the replacement is named, `ch2.verdict` gets rewritten in their voice and the portrait pipeline runs once more (same steps as Jessitron's).

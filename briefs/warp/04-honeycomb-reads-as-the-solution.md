@@ -2,6 +2,10 @@
 
 Read `briefs/PROTOCOL.md` and `briefs/warp/PROTOCOL.md` first. Branch: **`warp/hc-solution`**, from `origin/sci-adventure`.
 
+> **Updated 2026-11-12, later the same day.** Section 2 (the SLO screens) is **replaced by brief 06**: scenario 1 is now
+> solved with Canvas and Agent Timeline, and its screens are ready-made pictures. Section 1 (no penalties inside Honeycomb,
+> found → deployed, apply the fix) stands, read together with brief 05 (no score).
+
 ## Why
 
 Rick played scenario 1 (2026-11-12). Two things were wrong with the Honeycomb screen:
