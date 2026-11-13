@@ -147,6 +147,39 @@ One story down. The prize is yours — or the night is young.
 
 ---
 
+## Controls and small labels
+
+Words on buttons that are not part of any scene. `chN.old.close` is each old tool's own close button.
+
+### ui.look
+Look
+
+### ui.use
+Use
+
+### ui.help
+Help
+
+### ui.back
+Back
+
+### ui.close.hc
+[Close Honeycomb]
+
+### ui.copy
+Copy results
+
+### ui.copied
+Copied
+
+### menu.soon
+coming soon
+
+### claim.soon
+The prize desk opens in a later build. For now, back to the menu.
+
+---
+
 ## The persona card
 
 The first time the player talks to a scenario's persona, their card pops up: a trading card with the persona in a silly fantasy outfit for their class, their stats and a line of flavor (two short lines at most, about 66 characters). Closing it starts the conversation. Every conversation with the persona ends in a short list of options, and one of them shows the card again. The scenario's title card no longer carries the stats (`chN.card.stats` goes when the card is built).
@@ -348,6 +381,9 @@ The new dashboard is beautiful. It is also green. Everything is green. Otto is f
 
 ### ch1.old.jab.3
 You have solved nothing, but you have solved it for three years.
+
+### ch1.old.close
+[Close Cave Logs]
 
 ### ch1.old.exit
 You close Cave Logs. Cave Logs does not close you. Small victories.

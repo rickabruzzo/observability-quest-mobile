@@ -120,3 +120,8 @@ block on. Test the restyle under `.hs-form` on a real phone.
 - Scripted timings at 200 wpm: shortest 2:10, everything 5:15. The deploy + recovery sequence is 21 s of the shortest path (two windows and about 5 s of watching Otto type).
 - Asset note: `ch1_hc_0.png` and `ch1_hc_2.png` have orange boxes baked in at their highlight rectangles, so the drawn pulse doubles them (stage 0) or barely shows (stage 2). Either drop the baked boxes or the drawn ones.
 - Not yet: the claim form and the sunrise coda after Charity; the claim form's hidden `quest_score` field in `js/claim.js` should become "scenarios solved" when it is wired.
+
+## Claim form (when it is built)
+
+- `js/claim.js` still fills a hidden `quest_score` field. With no score, it should carry the scenarios solved
+  (and, if PMM wants it, whether there were missteps). Found by Warp in the brief 04-06 review, 2026-11-13.
