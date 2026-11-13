@@ -12,7 +12,7 @@ def test_font_reads_the_games_5x7_glyphs():
 import pytest
 
 
-@pytest.mark.parametrize('ch', ['ch1', 'ch3', 'ch4'])
+@pytest.mark.parametrize('ch', ['ch1', 'ch3', 'ch4', 'ch5'])
 def test_three_stages_at_the_picture_size_with_highlights_inside(tmp_path, ch):
     m = hs.build(str(tmp_path), ch)
     assert m['pic'] == {'x': 4, 'y': 20, 'w': 188, 'h': 176}
@@ -27,7 +27,7 @@ def test_three_stages_at_the_picture_size_with_highlights_inside(tmp_path, ch):
     assert json.load(open(tmp_path / f'{ch}_hc.json')) == m
 
 
-@pytest.mark.parametrize('ch', ['ch1', 'ch3', 'ch4'])
+@pytest.mark.parametrize('ch', ['ch1', 'ch3', 'ch4', 'ch5'])
 def test_build_is_deterministic(tmp_path, ch):
     hs.build(str(tmp_path / 'a'), ch); hs.build(str(tmp_path / 'b'), ch)
     for i in range(3):

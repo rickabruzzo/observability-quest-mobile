@@ -1,0 +1,52 @@
+{
+ "pic": {
+  "x": 4,
+  "y": 20,
+  "w": 188,
+  "h": 176
+ },
+ "stages": [
+  {
+   "image": "ch5_hc_0.png",
+   "what": "Team Agents: goals, and one with a Finding waiting",
+   "highlights": [
+    {
+     "x": 12,
+     "y": 31,
+     "w": 174,
+     "h": 13
+    }
+   ]
+  },
+  {
+   "image": "ch5_hc_1.png",
+   "what": "The Finding: specific, with numbers and the place in the code",
+   "highlights": [
+    {
+     "x": 12,
+     "y": 14,
+     "w": 174,
+     "h": 65
+    }
+   ]
+  },
+  {
+   "image": "ch5_hc_2.png",
+   "what": "The agent's work on a Canvas: its queries and its fix",
+   "highlights": [
+    {
+     "x": 13,
+     "y": 16,
+     "w": 92,
+     "h": 56
+    },
+    {
+     "x": 13,
+     "y": 108,
+     "w": 172,
+     "h": 66
+    }
+   ]
+  }
+ ]
+}

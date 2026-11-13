@@ -4,8 +4,10 @@
 the text under a heading (up to the next heading) is the slot's copy. `tools/build_script.py` (next
 sub-project) turns this file into `js/script.js`, so edit the words here, not in code.
 
-Conventions: the narrator speaks with no prefix. The hero speaks as the chapter's class (`SRE:`). Other
-characters are prefixed by name. `[Bracketed]` lines are the tappable prompts, in the order shown. In an old tool they are
+Conventions: the narrator speaks with no prefix. **The player is always the Honeycomb Hero** (Rick, 2026-11-12): the one who gets paged, in the
+Honeycomb hoodie. Each chapter's **persona is the other person in the room**: it is their problem being
+solved, the class card introduces *them*, and they speak with their title as a prefix (`CTO:`). `chN.hero.line`
+is the persona's last word. Other characters are prefixed by name. `[Bracketed]` lines are the tappable prompts, in the order shown. In an old tool they are
 one plausible and two silly, and all wrong. **In Honeycomb none is silly** (Rick, 2026-11-12): one is the
 direct route and the others are sensible Honeycomb moves that get a nudge (`jab` slots) and cost nothing. `{name}` is the hero's name or "the Engineer". Slots marked **RICK** are
 yours to write; the placeholder shows the beat and the length.
@@ -99,37 +101,37 @@ optional). One row per scenario: the class you play, and the trouble in a few wo
 PICK YOUR NIGHT SHIFT
 
 ### menu.hint
-Five stories. Every one of them really happened to somebody. Finish one and the prize is yours.
+Five people paged you tonight. Every one of their problems really happened to somebody. Solve one and the prize is yours.
 
 ### menu.ch1.name
-TECHNICAL DECISION MAKER
+THE CTO
 
 ### menu.ch1.hook
 The AI support bot keeps freezing. The logs renewal is due Friday.
 
 ### menu.ch2.name
-PLATFORM ENGINEER
+THE PLATFORM ENGINEER
 
 ### menu.ch2.hook
 A bank, mid-migration. Something in the old monolith is still answering.
 
 ### menu.ch3.name
-DEVELOPER
+THE FRONTEND DEVELOPER
 
 ### menu.ch3.hook
 Checkout is slow, but only for some people. Nobody knows which.
 
 ### menu.ch4.name
-DEVOPS / SRE
+THE SRE ON CALL
 
 ### menu.ch4.hook
 Battle night. Pilots can't get in. One engineer understands the code.
 
 ### menu.ch5.name
-BUILD & RELEASE ENGINEER
+THE RELEASE ENGINEER
 
 ### menu.ch5.hook
-Three people, a fleet of AI agents, and a release that went out at 3 AM.
+Three people, one Friday deploy, and eleven customers who can't sign up.
 
 ### menu.done
 DONE
@@ -145,21 +147,21 @@ One story down. The prize is yours — or the night is young.
 
 ---
 
-## Chapter 1 — LLM Observability · Enterprise · Technical Decision Maker
+## Chapter 1 — Agent Observability · Enterprise · CTO
 
-Inspired by a customer-service platform whose support bot is a team of AI agents. The solve follows Honeycomb's own agent-observability demo (2026): an alert starts an automatic investigation in Canvas, Agent Timeline shows the whole conversation, and one LLM call shows what the model was fed. Company: **Converso**, assistant: **Otto** (the patient). You are the Technical Decision Maker, who advises; the **CTO** is the buyer, who signs. Room: your cube and its 80s PC, Otto's vitals monitor on the wall, the CTO at her desk. Vitals stats are two short lines split at ` / ` (15 characters a line at most). Narrator portrait at the verdict: Christine Yen.
+Inspired by a customer-service platform whose support bot is a team of AI agents. The solve follows Honeycomb's own agent-observability demo (2026): an alert starts an automatic investigation in Canvas, Agent Timeline shows the whole conversation, and one LLM call shows what the model was fed. Company: **Converso**, assistant: **Otto** (the patient). The persona is the **CTO**, the buyer, who signs; the Honeycomb Hero advises her. Room: your cube and its 80s PC, Otto's vitals monitor on the wall, the CTO at her desk. Vitals stats are two short lines split at ` / ` (15 characters a line at most). Narrator portrait at the verdict: Christine Yen.
 
 ### ch1.card.title
-TECHNICAL DECISION MAKER
+THE CTO
 
 ### ch1.card.stats
 Budget 3 · Vendor Skepticism 17 · Meetings Survived 19 · Grep 2
 
 ### ch1.card.line
-Tonight you are the Technical Decision Maker at Converso. You decide what the company buys. The company would like you to decide faster.
+You are the Honeycomb Hero, and this is who paged you: the CTO of Converso. Her AI support agent is failing customers, and she is one signature away from three more years of logs.
 
 ### ch1.room.enter
-The exec floor at Converso, 3:14 AM. Glass walls, one lamp, and your CTO on the phone, not enjoying it. On the wall, a screen the size of a door shows the vitals of Otto — the AI support assistant — who is frozen halfway through the sentence "I'd be happy to". He has been happy to for eleven minutes.
+The exec floor at Converso, 3:14 AM. Glass walls, one lamp, and the CTO who paged you, on the phone, not enjoying it. On the wall, a screen the size of a door shows the vitals of Otto — the AI support assistant — who is frozen halfway through the sentence "I'd be happy to". He has been happy to for eleven minutes.
 
 ### ch1.look.monitor
 Otto's vitals, on a screen someone bought to make the support bot feel important. The line is supposed to go up and down. It is mostly going down.
@@ -219,10 +221,10 @@ I'd be happy to
 I'd be happy to help! Your order ships Tuesday.
 
 ### ch1.look.pc
-Your cube, and a beige computer older than most of the company. It runs everything you need and nothing you want.
+The cube they've lent you, and a beige computer older than most of the company. It runs everything you need and nothing you want.
 
 ### ch1.look.cto
-Your CTO, on the phone with a customer who has been waiting on Otto. The Cave Logs renewal is on her desk — three years, with a comma in a place you didn't expect — and her pen is closer to it than you'd like.
+The CTO, on the phone with a customer who has been waiting on Otto. The Cave Logs renewal is on her desk — three years, with a comma in a place you didn't expect — and her pen is closer to it than you'd like.
 
 ### ch1.cto.call.1
 CTO: No — no, he IS helping you. He's been "happy to" for eleven minutes.
@@ -327,7 +329,7 @@ You have solved nothing, but you have solved it for three years.
 You close Cave Logs. Cave Logs does not close you. Small victories.
 
 ### ch1.hc.title
-HONEYCOMB · LLM OBSERVABILITY
+HONEYCOMB · AGENT OBSERVABILITY
 
 ### ch1.hc.intro
 An alert fired at 3:03 AM and Honeycomb began investigating before you woke. The Canvas is already filled in, and its Investigation Summary points at one of Otto's agents.
@@ -384,7 +386,7 @@ OTTO: STILL CRITICAL, but you know why. His order-status agent fetches every ord
 Agent Timeline showed you the whole conversation, down to what the model was fed. The CTO slides the Cave Logs renewal into a drawer, unsigned. The pen stays down.
 
 ### ch1.hero.line
-TDM: Three years of grep, or one timeline. I'll take the timeline.
+CTO: Three years of grep, or one timeline. I'll take the timeline.
 
 ### ch1.verdict
 CHRISTINE YEN: A chatbot is a conversation between agents now. When it goes wrong, you need to see all of it: every LLM call, every tool call, every token. You just did.
@@ -396,19 +398,19 @@ CHRISTINE YEN: A chatbot is a conversation between agents now. When it goes wron
 Inspired by a digital bank two years into a monolith-to-microservices migration. Company: **Kestrel Bank**. Narrator: Emily Nakashima — **placeholder: Emily is leaving Honeycomb; keep her lines and portrait until a replacement narrator is named** (2026-11-10).
 
 ### ch2.card.title
-PLATFORM ENGINEER
+THE PLATFORM ENGINEER
 
 ### ch2.card.stats
 YAML Tolerance 18 · Kubernetes 16 · Sleep 4 · "It's DNS" 20
 
 ### ch2.card.line
-Tonight you are the Platform Engineer at Kestrel Bank. You have migrated 350 services off the monolith. The monolith has not been informed.
+Tonight's page: the Platform Engineer at Kestrel Bank, who has moved 350 services off the monolith. The monolith has not been informed.
 
 ### ch2.room.enter
 The migration war room at Kestrel Bank. A whiteboard covered in arrows. Three hundred and fifty green tiles on the wall. In the corner, a beige server with a hand-written sign: DO NOT UNPLUG.
 
 ### ch2.look.laptop
-Your laptop. A ticket queue climbing like a stock you didn't buy.
+The laptop they've handed you. A ticket queue climbing like a stock you didn't buy.
 
 ### ch2.use.laptop
 The migration is "done". Customer transfers are taking a mysterious path through the new architecture — some of them arrive, slowly; some of them don't. Support tickets are climbing. Nobody can say which of 350 services is the problem, because every one of them is green.
@@ -504,31 +506,31 @@ BubbleUp lights one attribute: `legacy_route=true`. Every slow transfer took the
 A good migration goes unnoticed by customers. Tonight, yours finally does. You peel the sign off the monolith.
 
 ### ch2.hero.line
-PLATFORM ENG: Three hundred and fifty services and the problem was the one we said we'd turned off.
+PLATFORM ENGINEER: Three hundred and fifty services and the problem was the one we said we'd turned off.
 
 ### ch2.verdict
 EMILY NAKASHIMA: You followed one customer through 350 services in a single query. Root cause in minutes. That's the whole point of tracing — you don't guess the path, you see it.
 
 ---
 
-## Chapter 3 — Frontend Observability · E-commerce · Developer
+## Chapter 3 — Frontend Observability · E-commerce · Frontend Developer
 
 Inspired by a guitar maker whose store and lessons app were slow for some users. Company: **Twang & Co.**, lessons app **Fretwork**. Narrator: Graham Siener. The solve follows Honeycomb's own frontend-observability demo ("See everything"): the Web Launchpad shows the vitals are fine and one request is not; View Trace follows that request from the browser into the backend; the heatmap of that span and BubbleUp show what the slow ones share. In Honeycomb nothing is a joke: the `jab` slots are nudges. The room slots below still describe the placeholder five-hotspot room and are rewritten when the room art lands.
 
 ### ch3.card.title
-DEVELOPER
+THE FRONTEND DEVELOPER
 
 ### ch3.card.stats
 Caffeine 17 · "Works on my machine" 20 · CSS 11 · Patience with RUM tools 1
 
 ### ch3.card.line
-Tonight you are the Developer at Twang & Co. You sell guitars online and teach people to play them. Both are slow for someone. You do not know who.
+Tonight's page: the Frontend Developer at Twang & Co. She sells guitars online and teaches people to play them. Checkout is slow for someone. She does not know who.
 
 ### ch3.room.enter
 The dev bullpen at Twang & Co. Monitors everywhere, one of them showing somebody's checkout stuck at 13%: "Placing your order…" A left-handed guitar leans against a desk, unplugged, like it knows.
 
 ### ch3.look.laptop
-Your laptop. A conversion chart, sliding gently downhill since Tuesday.
+The laptop they've handed you. A conversion chart, sliding gently downhill since Tuesday.
 
 ### ch3.use.laptop
 Conversions are dropping. Some shoppers watch the checkout spinner for fourteen seconds. Most see nothing wrong. The RUM tool says average page load is 2.1 seconds and considers the matter closed.
@@ -627,31 +629,31 @@ You turn the left-handed stock check into one query instead of one per warehouse
 You found the eight percent. Left-handed players can buy a guitar in under fourteen seconds again. Somewhere, a very patient southpaw finally checks out.
 
 ### ch3.hero.line
-DEV: It worked on my machine. It turns out my machine is right-handed.
+DEVELOPER: It worked on my machine. It turns out my machine is right-handed.
 
 ### ch3.verdict
 GRAHAM SIENER: The average wasn't lying. It just wasn't talking about the one shopper in twelve who waited fourteen seconds. One trace from the browser to the backend, and BubbleUp, told you who.
 
 ---
 
-## Chapter 4 — Incident Response · Gaming · DevOps / SRE
+## Chapter 4 — Hidden Failures · Gaming · Site Reliability Engineer
 
 Inspired by a space MMO studio whose fleet-battle code one engineer understands. Company: **Nullpoint Games**, the game **Starfall**, the engineer **Einar**. Narrator: Jessitron. This is the **MCP** chapter (Canvas is in scenario 1). The solve follows a real customer's story: with Honeycomb they found that only 93% of their most important API call was succeeding, mostly for reasons in their own control, and took it past 99%; and once Honeycomb was available through MCP, nearly three times as many of their people used it. Here the call is joining a fleet, the legacy reason is a limit from 2003, and the MCP client is Claw Codez. In Honeycomb nothing is a joke: the `jab` slots are nudges, in Claw Codez's voice. The room slots below still describe the placeholder five-hotspot room and are rewritten when the room art lands.
 
 ### ch4.card.title
-DEVOPS / SRE
+THE SRE ON CALL
 
 ### ch4.card.stats
 Pager Endurance 19 · Postmortem Writing 14 · Blameless 18 · Sleep 2
 
 ### ch4.card.line
-Tonight you are the SRE at Nullpoint Games. Eight thousand players are in one star system, and the one engineer who understands the fleet code is asleep in another time zone.
+Tonight's page: the Site Reliability Engineer on call at Nullpoint Games. Eight thousand players are in one star system, and the one engineer who understands the fleet code is asleep in another time zone.
 
 ### ch4.room.enter
 The ops room at Nullpoint Games, lit by a wall of space. Eight thousand pilots in one system. Chat scrolls with the word "lag" in nine languages. On a desk in the corner, a dusty monitor with a label: THE FLEET CODE — ASK EINAR.
 
 ### ch4.look.laptop
-Your laptop. Every node green, every graph flat. According to this, tonight is going very well.
+The laptop they've handed you. Every node green, every graph flat. According to this, tonight is going very well.
 
 ### ch4.use.laptop
 The biggest battle in the game's history is live. Pilots say they can't get in, and chat calls it lag. The dashboards say the cluster is healthy. The fleet code is twenty-three years old, Einar wrote most of it, and Einar is asleep in Reykjavík.
@@ -760,120 +762,126 @@ JESSITRON: Nobody had to be the hero who knows everything. Anyone on the team co
 
 ---
 
-## Chapter 5 — Agent Observability · Startup · Build & Release Engineer
+## Chapter 5 — Team Agents · Startup · Build & Release Engineer
 
-Fictional three-person AI-agent startup. Company: **Agentry**, their support agent **Pip**. Narrator: Matt Nelson. This is the **Team Agents** chapter.
+Fictional three-person startup. Company: **Agentry**. Narrator: Matt Nelson. This is the **Team Agents** chapter. The persona is the Build & Release Engineer who shipped on Friday. The solve follows Honeycomb's own Team Agents demo (Innovation Week 2026): an agent with a standing goal (watch every deploy) reads what the deploy was meant to do, leaves a specific Finding, shows its work on a Canvas, and offers the fix as a pull request; it also notices the runbook is out of date. In Honeycomb nothing is a joke: the `jab` slots are nudges. The room slots below still describe the placeholder five-hotspot room and are rewritten when the room art lands.
 
 ### ch5.card.title
-BUILD & RELEASE ENGINEER
+THE RELEASE ENGINEER
 
 ### ch5.card.stats
 Deploy Frequency 20 · Rollback Reflex 15 · Friday Deploys 1 · Sleep 3
 
 ### ch5.card.line
-Tonight you are the Build & Release Engineer at Agentry. There are three of you. You shipped on a Friday. You know what you did.
+Tonight's page: the Build & Release Engineer at Agentry. There are three of them. He shipped on a Friday. He knows what he did.
 
 ### ch5.room.enter
-A startup loft at 3 AM. Three desks, two empty. A pager face-down on the floor where someone threw it. On the wall, the token-spend chart has stopped being a chart and become a wall.
+A startup loft at 3 AM. Three desks, two empty. A pager face-down on the floor where someone threw it. On the couch, the engineer who shipped Friday's release, one finger over the rollback key.
 
 ### ch5.look.laptop
-Your laptop. The deploy log from Friday, 5:52 PM. You remember thinking "it's a small change."
+A laptop. The deploy log from Friday, 5:52 PM. Commit message: "small change."
 
 ### ch5.use.laptop
-Friday's release changed Pip's prompt and swapped the model. Tonight Pip — the support agent — is answering customers by apologizing, forty times in a row, and billing you for every apology. The token bill tripled overnight.
+Friday's release tightened sign-up validation. Since then eleven people have written to support saying they can't create an account. The error rate is 0.4%, same as ever. Nothing alerted. Nobody can see what the eleven have in common.
 
 ### ch5.look.pager
 The pager, face-down. It is still buzzing. It will buzz until you fix this or it dies. It will not die first.
 
 ### ch5.use.pager
-You turn it over. Seventeen pages. All of them Pip.
+You turn it over. Eleven pages. All of them from support.
 
 ### ch5.look.wallchart
-Token spend. Vertical. The chart has become a wall and the wall has become a cliff.
+Sign-ups. A calm, healthy line. Eleven people would like a word with that line.
 
 ### ch5.look.terminal
-A terminal with Pip's own chat open. You could ask Pip what's wrong. Pip would love to help.
+A terminal with Friday's diff open. Two thousand lines. The commit message says "small change."
 
 ### ch5.old.title
-ASK THE AGENT
+FRIDAY'S DIFF
 
 ### ch5.old.intro
-Pip is right there. Pip is always right there. That is, in a sense, the problem.
+Two thousand lines across forty files. Somewhere in here is the reason. It is not labelled.
 
 ### ch5.old.prompt.1
-[Ask Pip why it looped]
+[Read all two thousand lines]
 
 ### ch5.old.jab.1
-PIP: I apologize for the confusion. PIP: I apologize for the confusion. PIP: I apologize for the confusion. You have been billed for three apologies.
+Line 1,412 looks suspicious. So did the last nine. It is 4 AM and you are now suspicious of whitespace.
 
 ### ch5.old.prompt.2
 [Roll back everything]
 
 ### ch5.old.jab.2
-Friday's release had eleven changes. You rolled back all eleven. Pip is fixed and so are the four features your customers liked. Your co-founder is awake.
+Friday's release had eleven changes. You rolled back all eleven. Sign-ups work again, and so do the three bugs Friday fixed. The co-founder is awake.
 
 ### ch5.old.prompt.3
 [Add a retry]
 
 ### ch5.old.jab.3
-Pip now retries the apology. The token chart finds a new gear.
+Sign-up now fails three times instead of once. Thorough.
 
 ### ch5.old.exit
-You cannot debug an agent by asking the agent. You go find something that was watching.
+You cannot find one line in two thousand by staring. You go find something that was watching.
 
 ### ch5.look.workstation
-A workstation. Honeycomb — and a notification: a Team Agent has a Finding waiting for you. It has been waiting since 6:22 PM Friday.
+A workstation. Honeycomb — and a notification: a Team Agent has a Finding waiting. It has been waiting since 6:22 PM Friday.
 
 ### ch5.hc.title
 HONEYCOMB · TEAM AGENTS
 
 ### ch5.hc.intro
-A Finding, from the Team Agent you set up with one goal: *Verify releases — check each deploy for regressions for 30 minutes after shipping.* It checked. It found one. It opened an incident channel. Nobody was looking.
+Team Agents are teammates with a goal, not a to-do list. This one's goal is to watch every deploy. It watched Friday's, and it left a Finding at 6:22 PM. Nobody was looking.
 
 ### ch5.hc.step1.prompt.1
 [Open the Finding]
 
 ### ch5.hc.step1.prompt.2
-[Dismiss it, you know what's wrong]
+[Check the overall error rate]
 
 ### ch5.hc.step1.prompt.3
-[Ask Pip to read it]
+[Read how the goal is set up]
 
 ### ch5.hc.step1.jab.2
-You do not know what's wrong. You know *that* it's wrong. The Finding knows what. Pride is expensive at 3 AM; tokens are more expensive.
+0.4%. Normal. That's the trouble with eleven people: they don't move a percentage. The Finding isn't about the percentage.
 
 ### ch5.hc.step1.jab.3
-PIP: I apologize for the confusion.
+It reads each pull request to learn what the deploy was meant to do, and it can reach the code, the tickets and the runbooks, nothing else. A specialist. Its Finding is waiting.
 
 ### ch5.hc.step1.result
-The Finding: thirty minutes after Friday's deploy, Pip's tool-call retries rose from 1.1 to 38 per conversation. The Agent Timeline shows one conversation end to end — a single lookup tool, called, failing, called again, forty times, each one a fresh apology.
+The Finding is specific: since Friday's deploy, sign-ups fail for names with an apostrophe. Eleven people. The overall error rate never moved, which is why nothing else noticed.
 
 ### ch5.hc.step2.prompt.1
-[Check the evidence first]
+[Check its work in Canvas]
 
 ### ch5.hc.step2.prompt.2
-[Approve the suggested fix]
+[Open the pull request now]
 
 ### ch5.hc.step2.prompt.3
-[Add a sorry-limit]
+[File an issue for Monday]
+
+### ch5.hc.step2.jab.2
+It will write one. But it's an agent, and agents can be wrong. Trust is earned. Look at what it did first.
 
 ### ch5.hc.step2.jab.3
-Pip now apologizes exactly three times, then falls silent. Customers prefer the silence. This is not the win you wanted.
+That works, if eleven people can wait until Monday. The agent has already found the line. Check its work and ship tonight.
 
-### ch5.hc.step2.result.1
-The timeline shows it plainly: the new model calls the lookup tool with the old argument name, the tool rejects it, the model apologizes and tries the same thing again. The fix is one line in the prompt. You ship it. Retries fall to 1.1. The wall becomes a chart again.
+### ch5.hc.step2.result
+Using Honeycomb's Team Agents, you found what Friday broke without switching tools. Its queries are all on the Canvas: where the errors are, what it ruled out, and the one line to fix.
 
-### ch5.hc.step2.result.2
-You approve the fix. It's right. You didn't check, but it's right, and you'll read it in the morning. The wall becomes a chart again. Half points — trust, but verify is literally the goal you gave it.
+### ch5.pc.menu.deploy
+[Merge the agent's fix and deploy]
+
+### ch5.pc.deploy
+One line: an apostrophe is allowed to be part of a name. You merge the agent's pull request and deploy. Somewhere, an O'Brien finally gets a welcome email.
 
 ### ch5.win
-Three engineers on the team, and the fourth one is an agent. It never slept, it never guessed, and it was right on Friday at 6:22 PM. You pick the pager up off the floor.
+Three engineers on the team, and the fourth is an agent that watched the deploy so nobody had to. It also fixed the runbook, which was querying a field Friday renamed. Nobody rolled back Friday.
 
 ### ch5.hero.line
-BUILD & RELEASE: I set it to verify releases and then I didn't read what it verified. Noted.
+RELEASE ENGINEER: I was going to roll back all of Friday. It was one line. It's always one line.
 
 ### ch5.verdict
-MATT NELSON: You gave an agent one clear goal and it caught your Friday deploy before you did. That's Team Agents — tireless, specific, and already writing the postmortem.
+MATT NELSON: You gave an agent a responsibility, not a task, and it caught the Friday deploy before anyone did. Specific, tireless, and it showed its work. That's a teammate.
 
 ---
 
@@ -952,9 +960,9 @@ More incidents, same hero. The prize is yours already.
 
 ## Open questions for Rick
 
-1. Company names: Converso, Kestrel Bank, Twang & Co. / Fretwork, Nullpoint Games / Starfall, Agentry / Pip — swap any you dislike; nothing else depends on them.
+1. Company names: Converso, Kestrel Bank, Twang & Co. / Fretwork, Nullpoint Games / Starfall, Agentry — swap any you dislike; nothing else depends on them.
 2. Einar: keep the Icelandic gag? It's affectionate, but say so if it reads as a jab at a real person.
-3. Chapter 5's two winning prompts both win now that there is no score; the result text for *Approve the suggested fix* needs its half-score line removed when chapter 5 is rewritten.
+3. Chapter 5 has one direct route now (check the agent's work, then merge its fix); opening the pull request unchecked gets a nudge.
 4. The intro slots are placeholders for your script; they show the beat and the length I'd aim for.
 5. Charity's final is two moods (`final.clean`, `final.grief`) plus a closing line by count: rewrite freely.
 6. Chapter 2's narrator: Emily is leaving. Her verdict, name and portrait stay as the placeholder; when the replacement is named, `ch2.verdict` gets rewritten in their voice and the portrait pipeline runs once more (same steps as Jessitron's).

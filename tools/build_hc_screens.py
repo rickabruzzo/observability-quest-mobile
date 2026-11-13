@@ -22,6 +22,12 @@ coding agent, not Honeycomb's own pages, with Honeycomb answering through MCP:
   1  a plain question, the query, and the success rate nobody had
   2  the follow-up, and BubbleUp's answer
 
+Scenario 5 (Team Agents demo, Innovation Week 2026):
+
+  0  Goals: standing responsibilities for agents, each with a state; one has a Finding
+  1  the Finding: what broke, for how many, and where in the code
+  2  the agent's work on a Canvas: the queries it ran and the fix it wrote
+
 Light UI, flat fills, the game's own 5x7 font. No Honeycomb logo is drawn (the logo only ever comes from the
 official files in assets/). Run from the project root:  python3 tools/build_hc_screens.py
 """
@@ -449,6 +455,86 @@ def mcp_bubbleup():
     return p.im, [hl]
 
 
+# ---- scenario 5: Team Agents (from Honeycomb's Team Agents demo, Innovation Week 2026) ----
+
+ADD = (226, 244, 220); DEL = (252, 232, 232); WARN = (255, 232, 200)
+
+
+def button(p, x, y, label, primary=True):
+    w = text_width(label) + 10
+    p.rect(x, y, w, 13, BLUE if primary else CARD, BLUE); p.text(x + 5, y + 3, label, CARD if primary else BLUE)
+    return x + w
+
+
+def goals():
+    """Stage 0. Team Agents' goals: standing responsibilities, each with a state. One has a Finding waiting."""
+    p = Pic(); p.chrome('Team Agents')
+    e = p.text(14, 16, 'Goals', BLUE); p.rect(14, 26, e - 14, 1, BLUE); p.text(e + 8, 16, 'Findings', MUTE)
+    p.card(12, 30, 174, 54)
+    rows = (('Watch every deploy', '1 finding', WARN, ORANGE), ('Catch slow queries', 'verifying', SKY, BLUE),
+            ('Keep search fast', 'watching', CHIP, MUTE), ('Tidy the runbooks', 'verifying', SKY, BLUE))
+    for i, (name, state, bg, fg) in enumerate(rows):
+        y = 34 + i * 12
+        if i == 0: p.rect(13, y - 2, 172, 11, (255, 246, 220))
+        p.text(16, y, name, INK if i == 0 else MUTE)
+        p.chip(183 - text_width(state) - 4, y, state, fg, bg)
+    hl = {'x': 12, 'y': 31, 'w': 174, 'h': 13}
+    p.card(12, 88, 174, 86)
+    p.text(16, 92, 'Watch every deploy')
+    p.rect(13, 102, 172, 1, FAINT)
+    e = p.text(16, 107, 'runs on', MUTE); p.chip(e + 5, 107, 'every deploy')
+    e = p.text(16, 120, 'skills', MUTE)
+    for name in ('read PR', 'queries', 'code'): e = p.chip(e + 5, 120, name) - 2
+    p.text(16, 133, 'connectors', MUTE)
+    e = 13
+    for name in ('code', 'tickets', 'runbooks'): e = p.chip(e + 3, 144, name)
+    p.greek(16, 158, [[30, 22, 40, 18], [26, 44, 20]])
+    return p.im, [hl]
+
+
+def finding():
+    """Stage 1. One Finding: specific, with numbers, and the place in the code."""
+    p = Pic(); p.chrome('Finding')
+    p.rect(12, 15, 3, 62, ORANGE)
+    p.text(18, 16, 'Sign-ups fail for names'); p.text(18, 26, 'with an apostrophe')
+    p.chip(18, 39, "since Friday's deploy", ORANGE, WARN)
+    p.card(18, 50, 56, 28); p.text(21, 53, 'people', MUTE); p.text(21, 62, '11', RED, 2)
+    p.card(76, 50, 110, 28); p.text(79, 53, 'overall errors', MUTE); e = p.text(79, 62, '0.4%', INK, 2); p.text(e + 6, 68, 'normal', GREEN_D)
+    hl = {'x': 12, 'y': 14, 'w': 174, 'h': 65}
+    p.text(14, 83, 'What happened', MUTE); p.greek(14, 94, [[24, 40, 18, 30, 22], [36, 20, 44, 14]])
+    p.text(14, 106, 'In the code')
+    p.rect(12, 116, 174, 33, (248, 249, 251), LINE)
+    p.text(15, 119, 'def check(name):', MUTE)
+    p.rect(13, 128, 172, 10, (255, 240, 190)); p.text(15, 129, '  if not name.isalpha():', INK)
+    p.text(15, 139, '    reject()', MUTE)
+    e = button(p, 12, 156, 'See its work'); button(p, e + 5, 156, 'Open PR', False)
+    return p.im, [hl]
+
+
+def agent_work():
+    """Stage 2. The agent's work, on a Canvas: the queries it ran, what they showed, and the fix it wrote."""
+    p = Pic(); p.chrome('Canvas / Finding')
+    for y in range(18, H, 8):
+        for x in range(16, W, 8): p.rect(x, y, 1, 1, FAINT)
+    p.card(13, 16, 92, 56); p.text(16, 19, 'Errors by name')
+    base = 58; p.rect(17, base, 84, 1, LINE)
+    for i, (h, c) in enumerate(((2, BLUE), (3, BLUE), (2, BLUE), (30, YELLOW))): p.rect(22 + i * 19, base - h, 12, h, c)
+    p.text(30, base + 4, 'a-z', MUTE); p.text(70, base + 4, "has '", INK)
+    hl1 = {'x': 13, 'y': 16, 'w': 92, 'h': 56}
+    p.card(108, 16, 77, 56); p.text(111, 19, 'Latency')
+    p.spark(112, 34, 68, 14, [.5, .55, .5, .45, .5, .55, .5, .5, .45, .5, .5], BLUE)
+    p.chip(112, 58, 'unchanged', GREEN_D, ADD)
+    p.card(13, 75, 92, 30); p.text(16, 78, 'Neighbours')
+    for i in range(3): p.rect(17 + i * 28, 90, 7, 7, ADD, GREEN_D); p.rect(27 + i * 28, 93, 12, 2, GREEK)
+    p.rect(112, 77, 44, 26, NOTE); p.greek(115, 82, [[16, 14], [22, 8], [12, 16]], (150, 120, 40))
+    p.card(13, 108, 172, 66); p.text(16, 111, 'Suggested fix')
+    p.rect(14, 121, 170, 10, DEL); p.text(16, 122, '- if not name.isalpha():', RED)
+    p.rect(14, 131, 170, 10, ADD); p.text(16, 132, '+ if not is_name(name):', GREEN_D)
+    x = 16 + 0; e = button(p, 16, 150, 'Open a pull request')
+    hl2 = {'x': 13, 'y': 108, 'w': 172, 'h': 66}
+    return p.im, [hl1, hl2]
+
+
 CHAPTERS = {
     'ch1': ((canvas, 'Canvas: the automatic investigation'),
             (agent_timeline, 'Agent Timeline: one conversation'),
@@ -456,6 +542,9 @@ CHAPTERS = {
     'ch3': ((launchpad, 'Web Launchpad: the vitals are green, one request is not'),
             (trace, 'Trace: from the click in the browser to the backend'),
             (bubbleup, 'Heatmap and BubbleUp: what the slow checkouts share')),
+    'ch5': ((goals, 'Team Agents: goals, and one with a Finding waiting'),
+            (finding, 'The Finding: specific, with numbers and the place in the code'),
+            (agent_work, "The agent's work on a Canvas: its queries and its fix")),
     'ch4': ((mcp_connected, "The coding agent, with Honeycomb's MCP tools connected"),
             (mcp_query, 'The question, the query Honeycomb ran, and the number: 93%'),
             (mcp_bubbleup, 'BubbleUp through MCP: what the failures share')),

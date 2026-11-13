@@ -232,3 +232,9 @@ question answered by a Honeycomb query (93%), and BubbleUp's answer. The story f
 ("From 93 to 99: how hipages found and fixed hidden failures with Honeycomb"), which is interviews and office footage with
 no product screens, so the pictures follow the MCP server's real tool names and Honeycomb's query and BubbleUp results
 instead. No customer is named in the game; the video is not in the repo.
+
+### Scenario 5's Honeycomb screens (2026-11-12): also drawn in code
+
+`assets/screens/ch5_hc_0..2.png` (Team Agents' goals; one Finding; the agent's work on a Canvas with its suggested fix) are
+modelled on Honeycomb's "Team Agents demo" (Jessitron and Martin Thwaites, Innovation Week 2026), which Rick supplied. The
+layouts follow the demo; the sign-up bug is the game's own; connector names are generic. Not screenshots; no logo.
