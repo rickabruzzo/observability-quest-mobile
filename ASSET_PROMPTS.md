@@ -217,3 +217,18 @@ Gemini API `gemini-3.1-flash-image`, 3:2, 1K, on Rick's personal account, follow
 Honeycomb's own demo video, "Debugging agentic workflows" (Ken Rimple, Innovation Week 2026), which Rick supplied: the
 layouts, the lane structure and the demo's numbers (11.2 minutes, 19 LLM calls, 97 tool calls, 411,448 tokens, 57,293 input
 tokens, 97 orders, 145 KB). They are not screenshots, the video is not in the repo, and no Honeycomb logo is drawn.
+
+### Scenario 3's Honeycomb screens (2026-11-12): also drawn in code
+
+`assets/screens/ch3_hc_0.png` (the Web Launchpad), `ch3_hc_1.png` (a trace from the browser into the backend) and
+`ch3_hc_2.png` (the heatmap with the slow spans boxed, and BubbleUp) come from the same tool, modelled on Honeycomb's demo
+video "Frontend observability with Honeycomb: see everything", which Rick supplied. The layouts follow the demo; the store,
+the endpoint times and the `handedness` attribute are the game's own. Not screenshots; the video is not in the repo.
+
+### Scenario 4's screens (2026-11-12): also drawn in code
+
+`assets/screens/ch4_hc_0..2.png` show the team's coding agent (Claw Codez) with the Honeycomb MCP server connected, a plain
+question answered by a Honeycomb query (93%), and BubbleUp's answer. The story follows the customer video Rick supplied
+("From 93 to 99: how hipages found and fixed hidden failures with Honeycomb"), which is interviews and office footage with
+no product screens, so the pictures follow the MCP server's real tool names and Honeycomb's query and BubbleUp results
+instead. No customer is named in the game; the video is not in the repo.

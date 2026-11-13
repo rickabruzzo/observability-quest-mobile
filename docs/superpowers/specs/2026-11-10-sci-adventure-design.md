@@ -160,18 +160,28 @@ Personas and stats are shown as a Sierra character sheet at the start of each ch
 ### 3 · Frontend Observability · E-commerce · **Dev**
 - *Inspired by* Fender. Company: a fictional online instrument store with a lessons app.
 - *Stats*: Caffeine 17 · "Works on my machine" 20 · CSS 11 · Patience with RUM tools 1.
-- *Room*: a dev bullpen; a storefront on the big monitor stuck at 13% loaded; a guitar leaning on the desk.
-- *Situation*: conversions dropping; some users slow; nobody knows which.
+- *Room*: a dev bullpen; a wall monitor showing a live checkout stuck at 13% ("Placing your order…"); a **left-handed** guitar leaning on the desk (the clue). The person to advise is the Product Manager, who wants to ship a loading spinner and blame the CDN (art brief 01).
+- *Situation*: conversions dropping; checkout takes fourteen seconds for about one shopper in twelve; everyone else sees nothing wrong, and the RUM tool's average agrees with them.
 - *Old tool*: **Pretty Good Metrics** — "avg page load 2.1 s. Looks fine." `[Stare at the average]` `[Blame the CDN]` `[Add a loading spinner]`.
-- *Hero feature*: **Core Web Vitals + BubbleUp on sessions** with custom attributes. Screen: Web Launchpad `[Open LCP for checkout]` → heatmap with a hot band → `[BubbleUp on the slow sessions]` → one browser version, 8% of users. Win: fixed; conversions up; guitars sold.
+- *Hero feature*: **Honeycomb for Frontend Observability: the Web Launchpad, a trace that runs from the browser into the backend, and BubbleUp** (grounded 2026-11-12 in Honeycomb's own demo, "See everything"; the point it makes is that you see not only that something is wrong but what is causing it, even in the backend):
+  1. **Web Launchpad.** Core Web Vitals are green, so the page itself is fine; the Slowest Requests by Endpoint table has one row that is not: `POST /api/checkout`, 14.2 s. `[View the trace for the slow checkout]`.
+  2. **Trace.** One trace from the browser's click through the gateway to the checkout service: the page did its part in milliseconds and waited on `PlaceOrder`, which runs a staircase of stock checks. `[BubbleUp the slow checkouts]`.
+  3. **Heatmap + BubbleUp.** The heatmap of that span's duration, the slow ones boxed, and what they share: a custom attribute, `handedness = left`. Every slow checkout has a left-handed guitar in the cart; its stock check runs one warehouse at a time.
+  The other prompts are real moves that nudge back: the Core Web Vitals (all green: it happens after the page is up), filtering the Launchpad to one browser (it is in all of them), one span's attributes (one trace can't say which attribute matters), the Errors tab (nothing failed, which is why nobody was paged). Then **[Apply the fix and deploy]**: one stock query instead of one per warehouse. Win: the eight percent can check out.
+- *Screens*: `assets/screens/ch3_hc_0..2.png` and `ch3_hc.json`, drawn in code by `tools/build_hc_screens.py` from that demo.
 
 ### 4 · Incident Response · Gaming · **DevOps/SRE**
-- *Inspired by* EVE Online (Fenris Creations / CCP Games). Company: a fictional MMO studio in the middle of a record fleet battle.
+- *Inspired by* EVE Online (Fenris Creations / CCP Games) for the setting: a fictional MMO studio in the middle of a record fleet battle. *The solve is grounded (2026-11-12) in a customer's story, hipages* ("From 93 to 99"): with Honeycomb they found that only 93% of the API calls that post a job were succeeding, mostly for reasons in their own control; fixing legacy issues took it past 99%; and after they adopted the Honeycomb MCP, active Honeycomb users nearly tripled. No customer is named in the game.
 - *Stats*: Pager Endurance 19 · Postmortem Writing 14 · Blameless 18 · Sleep 2.
-- *Room*: a dark ops room lit by a wall of space; 8,000 pilots in one system; chat scrolling with lag reports; one old desk with a dusty monitor labelled "the fleet code — ask Einar".
-- *Situation*: the battle is live; latency climbing; the only engineer who understands the 23-year-old fleet code is asleep in another time zone.
-- *Old tool / wrong move*: **page the one person** (`[Wake Einar]` — he answers in Icelandic and goes back to sleep), or `[Restart the node and hope]`.
-- *Hero feature*: **Canvas with Claw Codez via MCP**. Screen: a Canvas notebook; `[Ask: why did fleet latency spike?]` → Claw Codez (a small pixel claw-shaped robot) runs the queries live in the notebook, BubbleUp surfaces the one node, a hypothesis is tested and marked ✔, then `[Share the Canvas to #war-room]`. Win: the team "communicates in Honeycomb links"; a manager runs in: *"Have you seen Canvas? This thing's nuts."*
+- *Room*: a dark ops room lit by a wall of space; 8,000 pilots in one system; chat scrolling with "lag" in nine languages; one old desk with a dusty monitor labelled "the fleet code — ask Einar". The person to advise is the Incident Commander, thumb over Einar's number (art brief 01).
+- *Situation*: the battle is live; pilots say they can't get in and chat calls it lag; the dashboards say the cluster is healthy; the only engineer who understands the 23-year-old fleet code is asleep in another time zone.
+- *Old tool / wrong move*: **page the one person** (`[Wake Einar]` — he answers in Icelandic and goes back to sleep), `[Restart the node and hope]`, `[Post "we're aware" in chat]`.
+- *Hero feature*: **the Honeycomb MCP server: anyone on the team asks production a question, in plain words, from the coding agent they already use** (Claw Codez, a small pixel crab). This is the MCP chapter; Canvas is in scenario 1.
+  1. **Connected.** Claw Codez shows Honeycomb's tools (`run_query`, `run_bubbleup`, `get_trace`, `get_slos`). `[Ask: how many fleet joins succeed?]`.
+  2. **The number nobody had.** Honeycomb runs the query: 93%. Seven joins in a hundred fail, the game retries quietly, and it has been that way for as long as there is data. `[Ask: what do the failures share?]`.
+  3. **BubbleUp, through the same connection.** Every failed join has a fleet of more than 255 ships: a limit set in 2003. In their control all along.
+  The other prompts are real questions that nudge back: cluster health (healthy machines, unhappy pilots: ask about what users are trying to do), where a join slows down (it isn't slow, it fails), when it started (it never started), which pilots (it isn't who they are). Then **[Apply the fix and deploy]**: raise the limit; joins pass 99%. Win: the battle finishes with everyone in it; nobody woke Einar; half the studio is now asking production questions.
+- *Screens*: `assets/screens/ch4_hc_0..2.png` and `ch4_hc.json`, drawn in code by `tools/build_hc_screens.py`: the coding agent's dark window with Honeycomb's answers as light cards inside it. The customer video has no product footage, so these follow the MCP server's real tool names and Honeycomb's query and BubbleUp results.
 
 ### 5 · Agent Observability · Startup · **Build & Release Eng**
 - *Fictional* three-engineer AI-agent startup. No real customer.

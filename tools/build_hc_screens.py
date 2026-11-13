@@ -1,13 +1,26 @@
 #!/usr/bin/env python3
-"""Scenario 1's Honeycomb screens, drawn as VGA pixel art: assets/screens/ch1_hc_0..2.png + ch1_hc.json.
+"""The Honeycomb screens, drawn as VGA pixel art: assets/screens/<chapter>_hc_0..2.png + <chapter>_hc.json.
 
 They are not screenshots and do not try to match the product pixel for pixel. They are drawn from Honeycomb's
-own agent-observability demo (Innovation Week 2026) so that someone who has used the product recognises it and
-someone who has not can see what using it looks like:
+own demo videos so that someone who has used the product recognises it and someone who has not can see what
+using it looks like. Scenario 1 (agent observability demo, Innovation Week 2026):
 
   0  Canvas: an automatic investigation, already filled in (graphs, the worst conversations, a summary)
   1  Agent Timeline: one conversation, every agent, LLM call and tool call in order
   2  one LLM call opened: how many tokens went in, and the tool result that put them there
+
+Scenario 3 (frontend observability demo, "See everything"):
+
+  0  the Web Launchpad: Core Web Vitals, and Slowest Requests by Endpoint
+  1  a trace from the browser's click to the backend service that kept it waiting
+  2  the heatmap of that span's duration with the slow ones selected, and BubbleUp
+
+Scenario 4 (no product demo: a customer's story of hidden failures and the Honeycomb MCP). These show the team's
+coding agent, not Honeycomb's own pages, with Honeycomb answering through MCP:
+
+  0  the agent with Honeycomb's tools connected (the real tool names: run_query, run_bubbleup, get_trace, get_slos)
+  1  a plain question, the query, and the success rate nobody had
+  2  the follow-up, and BubbleUp's answer
 
 Light UI, flat fills, the game's own 5x7 font. No Honeycomb logo is drawn (the logo only ever comes from the
 official files in assets/). Run from the project root:  python3 tools/build_hc_screens.py
@@ -249,21 +262,218 @@ def llm_call():
     return p.im, hl
 
 
-STAGES = (('ch1_hc_0.png', canvas, 'Canvas: the automatic investigation'),
-          ('ch1_hc_1.png', agent_timeline, 'Agent Timeline: one conversation'),
-          ('ch1_hc_2.png', llm_call, 'One LLM call: what the model was sent'))
+# ---- scenario 3: Honeycomb for Frontend Observability (from Honeycomb's "See everything" demo) ----
+
+TEAL = (60, 160, 160); PINK = (250, 206, 214); NAVY = (30, 52, 120); SELECT = (255, 240, 200)
 
 
-def build(out=OUT):
+def launchpad():
+    """Stage 0. The Web Launchpad: Core Web Vitals all green, and one row in Slowest Requests that is not."""
+    p = Pic(); p.chrome('Web Launchpad')
+    e = p.text(14, 16, 'Performance', BLUE); p.rect(14, 26, e - 14, 1, BLUE); p.text(e + 8, 16, 'Errors', MUTE)
+    for i, (name, value, pts) in enumerate((('LCP', '1.9s', [.3, .5, .35, .6, .4, .5, .3, .55, .4, .45]),
+                                            ('CLS', '0.02', [.1, .1, .15, .1, .1, .2, .1, .1, .1, .1]),
+                                            ('INP', '60ms', [.2, .15, .2, .2, .3, .2, .15, .2, .25, .2]))):
+        x = 13 + i * 58
+        p.card(x, 30, 56, 47); p.text(x + 3, 33, name)
+        p.rect(x + 3, 43, 50, 6, MID); p.text(x + 30, 33, '100%', BLUE)
+        p.spark(x + 3, 52, 50, 13, pts, BLUE); p.text(x + 3, 67, value, BLUE)
+    p.card(13, 81, 172, 93); p.text(16, 84, 'Slowest requests')
+    p.rect(14, 94, 170, 1, FAINT)
+    rows = (('POST', '/api/checkout', '14.2s'), ('GET', '/api/products', '0.4s'), ('GET', '/api/cart', '0.3s'), ('GET', '/api/lessons', '0.2s'))
+    for i, (verb, path, t) in enumerate(rows):
+        y = 98 + i * 12
+        if i == 0: p.rect(14, y - 2, 170, 11, (255, 236, 180))
+        p.text(17, y, verb, MUTE); p.text(46, y, path, INK if i == 0 else MUTE)
+        p.text(182 - text_width(t), y, t, RED if i == 0 else MUTE)
+    hl = {'x': 13, 'y': 95, 'w': 172, 'h': 13}
+    # the row's menu, as when you click it
+    mx, my = 92, 110
+    p.rect(mx + 2, my + 2, 80, 36, GREEK); p.card(mx, my, 80, 36)
+    p.rect(mx + 1, my + 1, 78, 11, SKY); p.text(mx + 4, my + 3, 'View trace', BLUE)
+    p.text(mx + 4, my + 14, 'Filter', MUTE); p.text(mx + 4, my + 25, 'BubbleUp', MUTE)
+    for r, row in enumerate(ARROW):
+        for c, ch in enumerate(row):
+            if ch == '#': p.rect(mx + 68 + c, my + 6 + r, 1, 1, INK)
+            elif '#' in row[:c] and '#' in row[c:]: p.rect(mx + 68 + c, my + 6 + r, 1, 1, CARD)
+    p.greek(17, 152, [[30, 44], [26, 50]])
+    return p.im, [hl, {'x': mx, 'y': my, 'w': 80, 'h': 13}]
+
+
+def trace():
+    """Stage 1. One trace, browser to backend: the click, the request, and the service that kept it waiting."""
+    p = Pic(); p.chrome('Trace')
+    p.card(12, 15, 174, 159)
+    x = 15
+    for name, fill in (('web', BLUE), ('checkout', RED), ('stock', TEAL)):
+        p.rect(x, 19, 5, 5, fill); x = p.text(x + 7, 18, name, MUTE) + 4
+    bx, bw = 98, 85
+    for t, label in ((0, '0'), (5, '5s'), (10, '10s')):
+        tx = bx + round(t / 14.2 * (bw - 1)); p.text(tx, 29, label, MUTE); p.rect(tx, 38, 1, 133, FAINT)
+    p.rect(13, 38, 172, 1, FAINT)
+    spans = [(0, 'placeOrder', BLUE, 0, 14.2), (1, 'HTTP POST', BLUE, 0.05, 14.15), (2, 'api-gateway', ORANGE, 0.1, 14.05),
+             (3, 'PlaceOrder', RED, 0.15, 13.95), (4, 'getCart', PURPLE, 0.2, 0.25)]
+    spans += [(4, 'checkStock', TEAL, 0.5 + i * 2.2, 2.1) for i in range(6)] + [(4, 'charge', GREEN_D, 13.75, 0.3)]
+    hl = None
+    for i, (depth, name, colour, start, dur) in enumerate(spans):
+        y = 41 + i * 11
+        if name == 'PlaceOrder':
+            p.rect(13, y - 2, 172, 11, SKY, BLUE); hl = {'x': 13, 'y': y - 2, 'w': 172, 'h': 11}
+        if depth: p.rect(13 + depth * 3, y - 2, 1, 6, MUTE); p.rect(13 + depth * 3, y + 3, 3, 1, MUTE)
+        p.text(17 + depth * 3, y, name, INK if depth < 4 else MUTE)
+        x0 = bx + round(start / 14.2 * (bw - 1)); w = max(2, round(dur / 14.2 * (bw - 1)))
+        p.rect(x0, y, w, 7, colour)
+        if name == 'PlaceOrder': p.text(x0 + 3, y, '14.1s', CARD)
+    return p.im, [hl]
+
+
+def bubbleup():
+    """Stage 2. The heatmap of every checkout, the slow ones selected, and BubbleUp: what do they share?"""
+    p = Pic(); p.chrome('BubbleUp')
+    e = p.chip(14, 17, 'HEATMAP'); p.text(e + 5, 17, 'name = placeOrder', MUTE)
+    p.card(12, 27, 174, 58)
+    for label, y in (('14s', 31), ('7s', 52), ('0', 73)): p.text(15, y, label, MUTE)
+    px, pw = 36, 146
+    for y in (34, 55, 76): p.rect(px, y, pw, 1, FAINT)
+    p.rect(px, 30, pw, 22, SELECT, YELLOW)                                 # the box drawn round the slow ones
+    for i in range(48):                                                    # everyone else: fast, and a lot of them
+        x = px + 2 + i * 3; h = (i * 7) % 3
+        p.rect(x, 74 - h, 2, 2, (BLUE, MID, TEAL)[(i * 5) % 3]); 
+        if i % 4 == 0: p.rect(x, 71 - h, 2, 2, MID)
+    for i, (dx, dy) in enumerate(((6, 4), (19, 9), (31, 3), (44, 12), (58, 6), (71, 2), (83, 10), (97, 5), (110, 13), (122, 7), (135, 3))):
+        p.rect(px + dx, 32 + dy, 2, 2, NAVY)
+    e = p.text(14, 88, 'BubbleUp', BLUE); p.rect(14, 98, e - 14, 1, BLUE); p.text(e + 8, 88, 'Traces', MUTE)
+    p.rect(118, 90, 5, 5, YELLOW); p.text(125, 89, 'slow', MUTE); p.rect(153, 90, 5, 5, BLUE); p.text(160, 89, 'rest', MUTE)
+    cards = ((12, 78, 'handedness', (('right', .9, .03), ('left', .08, 1.0))),
+             (92, 48, 'browser', (('', .5, .45), ('', .3, .35), ('', .2, .2))),
+             (142, 44, 'city', (('', .3, .25), ('', .25, .3), ('', .2, .2), ('', .25, .25))))
+    hl = None
+    for i, (x, cw, name, groups) in enumerate(cards):
+        p.card(x, 103, cw, 71); p.text(x + 3, 106, name)
+        base = 160; gw = (cw - 8) // len(groups)
+        p.rect(x + 3, base, cw - 6, 1, LINE)
+        for j, (label, blue, yellow) in enumerate(groups):
+            gx = x + 5 + j * gw; bwid = max(3, min(12, (gw - 4) // 2))
+            hb = round(blue * 40); hy = round(yellow * 40)
+            p.rect(gx, base - hb, bwid, hb, BLUE); p.rect(gx + bwid + 1, base - hy, bwid, hy, YELLOW)
+            if label: p.text(gx + (2 * bwid + 1 - text_width(label)) // 2, base + 4, label, INK if label == 'left' else MUTE)
+        if i == 0: hl = {'x': x, 'y': 103, 'w': cw, 'h': 71}
+    return p.im, [hl, {'x': px, 'y': 30, 'w': pw, 'h': 22}]
+
+
+# ---- scenario 4: Honeycomb through MCP, inside the team's coding agent (the story follows a customer's: 93% to 99%) ----
+
+DARK = (22, 26, 34); PANEL = (36, 42, 56); LIGHT = (222, 228, 238); DIM = (120, 130, 150); TERM = (120, 208, 130)
+TOOL_BG = (44, 54, 76); TOOL_FG = (150, 190, 250); CLAWC = (242, 140, 40)
+CLAW = ['.##...##.', '#..#.#..#', '#...#...#', '.#.....#.', '..#####..', '.#######.', '.#.###.#.', '#..#.#..#']
+
+
+def agent_window(p, lines=()):
+    """The coding agent's window: dark, a claw for Claw Codez, and the Honeycomb MCP server shown as connected."""
+    p.rect(0, 0, W, H, DARK); p.rect(0, 0, W, 13, PANEL)
+    claw(p, 3, 2); p.text(15, 3, 'Claw Codez', LIGHT)
+    p.rect(W - 93, 4, 5, 5, TERM); p.text(W - 86, 3, 'MCP: honeycomb', DIM)
+    for i, line in enumerate(lines): p.text(6, 18 + i * 9, line, TERM)
+
+
+def claw(p, x, y):
+    for r, row in enumerate(CLAW):
+        for c, ch in enumerate(row):
+            if ch == '#': p.rect(x + c, y + r, 1, 1, CLAWC)
+
+
+def says(p, y, lines):
+    claw(p, 6, y)
+    for i, line in enumerate(lines): p.text(19, y + i * 9, line, LIGHT)
+
+
+def ask_box(p, y, h=14):
+    p.rect(5, y, W - 10, h, PANEL, DIM); e = p.text(9, y + (h - 7) // 2, '>', TERM); p.rect(e + 4, y + (h - 7) // 2, 5, 7, LIGHT)
+    return {'x': 5, 'y': y, 'w': W - 10, 'h': h}
+
+
+def mcp_connected():
+    """Stage 0. Claw Codez with Honeycomb's tools connected: production is one plain question away."""
+    p = Pic(); agent_window(p)
+    p.text(6, 18, 'connected tools', DIM)
+    x = 6
+    for name in ('run_query', 'get_trace'): x = p.chip(x, 29, name, TOOL_FG, TOOL_BG) + 4
+    x = 6
+    for name in ('run_bubbleup', 'get_slos'): x = p.chip(x, 41, name, TOOL_FG, TOOL_BG) + 4
+    says(p, 58, ('Honeycomb is', 'connected. Ask', 'production anything.'))
+    p.greek(6, 96, [[22, 40, 16], [30, 18, 44, 12], [26, 36]], (52, 60, 78))
+    p.greek(6, 118, [[18, 28, 34], [40, 22]], (52, 60, 78))
+    return p.im, [ask_box(p, 150, 18)]
+
+
+def mcp_query():
+    """Stage 1. The question, the query Honeycomb ran, and a number nobody had: 93%."""
+    p = Pic(); agent_window(p, ('> how many fleet', '  joins succeed?'))
+    p.chip(6, 40, 'run_query', TOOL_FG, TOOL_BG); p.text(68, 40, 'fleet.join', DIM)
+    cx, cy, cw, chh = 5, 51, W - 10, 70
+    p.card(cx, cy, cw, chh)
+    p.text(cx + 4, cy + 4, 'fleet.join success')
+    p.text(cx + 4, cy + 15, '93%', INK, 3)
+    bx, bw = cx + 64, 108
+    p.rect(bx, cy + 17, round(bw * .93), 10, BLUE); p.rect(bx + round(bw * .93), cy + 17, bw - round(bw * .93), 10, YELLOW)
+    p.rect(bx, cy + 31, 5, 5, BLUE); e = p.text(bx + 7, cy + 30, 'ok', MUTE)
+    p.rect(e + 8, cy + 31, 5, 5, YELLOW); p.text(e + 15, cy + 30, 'failed 7%', INK)
+    for x in range(cx + 5, cx + cw - 5):                              # thirty days, and it never moved
+        p.rect(x, cy + 44 + (x * 7 % 5 == 0), 1, 1, BLUE); p.rect(x, cy + 64 - (x * 3 % 7 == 0), 1, 1, YELLOW)
+    p.text(cx + cw - 46, cy + 50, '30 days', MUTE)
+    says(p, 126, ('7 joins in 100 fail.', 'The game retries,', 'so nobody saw it.'))
+    ask_box(p, 158, 14)
+    return p.im, [{'x': cx, 'y': cy, 'w': cw, 'h': chh}]
+
+
+def mcp_bubbleup():
+    """Stage 2. The follow-up, BubbleUp through the same connection, and the one thing the failures share."""
+    p = Pic(); agent_window(p, ('> what do the', '  failures share?'))
+    p.chip(6, 40, 'run_bubbleup', TOOL_FG, TOOL_BG)
+    cx, cy, cw, chh = 5, 51, W - 10, 76
+    p.card(cx, cy, cw, chh)
+    p.text(cx + 4, cy + 4, 'BubbleUp')
+    p.rect(cx + 92, cy + 5, 5, 5, YELLOW); e = p.text(cx + 99, cy + 4, 'failed', MUTE); p.rect(e + 6, cy + 5, 5, 5, BLUE); p.text(e + 13, cy + 4, 'ok', MUTE)
+    base = cy + 60
+    p.text(cx + 4, cy + 15, 'fleet.size'); p.rect(cx + 4, base, 92, 1, LINE)
+    for gx, label, blue, yellow in ((cx + 12, '<=255', 34, 1), (cx + 58, '>255', 3, 36)):
+        p.rect(gx, base - blue, 12, blue, BLUE); p.rect(gx + 13, base - yellow, 12, yellow, YELLOW)
+        p.text(gx + (25 - text_width(label)) // 2, base + 4, label, INK if yellow > 5 else MUTE)
+    hl = {'x': cx + 2, 'y': cy + 13, 'w': 97, 'h': chh - 15}
+    p.rect(cx + 102, cy + 14, 1, chh - 18, FAINT)
+    p.text(cx + 108, cy + 15, 'region'); p.rect(cx + 108, base, 64, 1, LINE)
+    for i, (blue, yellow) in enumerate(((20, 18), (14, 15), (9, 9))):
+        gx = cx + 111 + i * 21; p.rect(gx, base - blue, 7, blue, BLUE); p.rect(gx + 8, base - yellow, 7, yellow, YELLOW)
+    says(p, 132, ('Fails when a fleet', 'is over 255 ships.', 'Limit set in 2003.'))
+    ask_box(p, 162, 12)
+    return p.im, [hl]
+
+
+CHAPTERS = {
+    'ch1': ((canvas, 'Canvas: the automatic investigation'),
+            (agent_timeline, 'Agent Timeline: one conversation'),
+            (llm_call, 'One LLM call: what the model was sent')),
+    'ch3': ((launchpad, 'Web Launchpad: the vitals are green, one request is not'),
+            (trace, 'Trace: from the click in the browser to the backend'),
+            (bubbleup, 'Heatmap and BubbleUp: what the slow checkouts share')),
+    'ch4': ((mcp_connected, "The coding agent, with Honeycomb's MCP tools connected"),
+            (mcp_query, 'The question, the query Honeycomb ran, and the number: 93%'),
+            (mcp_bubbleup, 'BubbleUp through MCP: what the failures share')),
+}
+
+
+def build(out=OUT, chapter='ch1'):
+    """Builds one chapter's Honeycomb screens into `out`; returns (and writes) its manifest."""
     os.makedirs(out, exist_ok=True)
     m = {'pic': PIC, 'stages': []}
-    for name, draw, what in STAGES:
-        im, highlights = draw()
+    for i, (draw, what) in enumerate(CHAPTERS[chapter]):
+        im, highlights = draw(); name = f'{chapter}_hc_{i}.png'
         im.convert('P', palette=Image.ADAPTIVE, colors=64).save(os.path.join(out, name), optimize=True)
         m['stages'].append({'image': name, 'what': what, 'highlights': highlights})
-    with open(os.path.join(out, 'ch1_hc.json'), 'w') as f: json.dump(m, f, indent=1); f.write('\n')
+    with open(os.path.join(out, f'{chapter}_hc.json'), 'w') as f: json.dump(m, f, indent=1); f.write('\n')
     return m
 
 
 if __name__ == '__main__':
-    for s in build()['stages']: print(s['image'], '-', s['what'])
+    for ch in CHAPTERS:
+        for s in build(chapter=ch)['stages']: print(s['image'], '-', s['what'])

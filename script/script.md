@@ -123,7 +123,7 @@ Checkout is slow, but only for some people. Nobody knows which.
 DEVOPS / SRE
 
 ### menu.ch4.hook
-Launch night. Fleet battles are lagging. One engineer understands the code.
+Battle night. Pilots can't get in. One engineer understands the code.
 
 ### menu.ch5.name
 BUILD & RELEASE ENGINEER
@@ -513,7 +513,7 @@ EMILY NAKASHIMA: You followed one customer through 350 services in a single quer
 
 ## Chapter 3 — Frontend Observability · E-commerce · Developer
 
-Inspired by a guitar maker whose store and lessons app were slow for some users. Company: **Twang & Co.**, lessons app **Fretwork**. Narrator: Graham Siener.
+Inspired by a guitar maker whose store and lessons app were slow for some users. Company: **Twang & Co.**, lessons app **Fretwork**. Narrator: Graham Siener. The solve follows Honeycomb's own frontend-observability demo ("See everything"): the Web Launchpad shows the vitals are fine and one request is not; View Trace follows that request from the browser into the backend; the heatmap of that span and BubbleUp show what the slow ones share. In Honeycomb nothing is a joke: the `jab` slots are nudges. The room slots below still describe the placeholder five-hotspot room and are rewritten when the room art lands.
 
 ### ch3.card.title
 DEVELOPER
@@ -525,22 +525,22 @@ Caffeine 17 · "Works on my machine" 20 · CSS 11 · Patience with RUM tools 1
 Tonight you are the Developer at Twang & Co. You sell guitars online and teach people to play them. Both are slow for someone. You do not know who.
 
 ### ch3.room.enter
-The dev bullpen at Twang & Co. Monitors everywhere, one of them showing the storefront stuck at 13% loaded. A Telecaster leans against a desk, unplugged, like it knows.
+The dev bullpen at Twang & Co. Monitors everywhere, one of them showing somebody's checkout stuck at 13%: "Placing your order…" A left-handed guitar leans against a desk, unplugged, like it knows.
 
 ### ch3.look.laptop
 Your laptop. A conversion chart, sliding gently downhill since Tuesday.
 
 ### ch3.use.laptop
-Conversions are dropping. Some users see a spinner for fourteen seconds. Most see nothing wrong. The RUM tool says average page load is 2.1 seconds and considers the matter closed.
+Conversions are dropping. Some shoppers watch the checkout spinner for fourteen seconds. Most see nothing wrong. The RUM tool says average page load is 2.1 seconds and considers the matter closed.
 
 ### ch3.look.guitar
-A Telecaster. You could play it. You could also fix the site. One of these is in the job description.
+A left-handed electric guitar. Somebody in this bullpen plays it. It has been leaning there, strung the other way round, trying to tell you something.
 
 ### ch3.use.guitar
 Three chords. Nobody looks up. This is a very tired bullpen.
 
 ### ch3.look.bigscreen
-The storefront. Thirteen percent. It has been thirteen percent since you walked in.
+A live checkout. "Placing your order…" Thirteen percent. It has been thirteen percent since you walked in.
 
 ### ch3.look.terminal
 A terminal showing Pretty Good Metrics. The average is very pretty.
@@ -576,61 +576,67 @@ Your aggregate metrics are a beautiful lie. You go looking for the truth.
 A workstation. Honeycomb's Web Launchpad, already open to the storefront. Someone has been here before you and left a sticky note: "it's not the CDN".
 
 ### ch3.hc.title
-HONEYCOMB · WEB VITALS
+HONEYCOMB · FRONTEND OBSERVABILITY
 
 ### ch3.hc.intro
-Core Web Vitals for the storefront — but not as one average. As every session, with everything you know about it attached.
+Honeycomb opens on the Web Launchpad for the store. The Core Web Vitals are green: the page loads fine. One row under Slowest Requests is not fine. Checkout: fourteen seconds.
 
 ### ch3.hc.step1.prompt.1
-[Open LCP for checkout]
+[View the trace for the slow checkout]
 
 ### ch3.hc.step1.prompt.2
-[Look at the global average again]
+[Check the Core Web Vitals]
 
 ### ch3.hc.step1.prompt.3
-[Make the images smaller]
+[Filter the Launchpad to one browser]
 
 ### ch3.hc.step1.jab.2
-2.1 seconds. It will be 2.1 seconds forever. It is a number that has made peace with itself.
+Largest Contentful Paint, layout shift, input delay: all green, on every route. The page is fast. Whatever is losing sales happens after the page is up.
 
 ### ch3.hc.step1.jab.3
-The images are now very small. Checkout is still fourteen seconds for someone. A very small someone.
+Chrome, Safari, Firefox: the slow checkouts are in all of them, and so are the fast ones. It isn't the browser. Follow the slow request.
 
 ### ch3.hc.step1.result
-The heatmap of Largest Contentful Paint has a hot band at fourteen seconds — a thin, stubborn stripe of users living in a different reality from the average.
+One trace, from the click in the browser to the last call in the backend. The page did its part in milliseconds, then waited fourteen seconds on the checkout service's PlaceOrder.
 
 ### ch3.hc.step2.prompt.1
-[BubbleUp on the slow sessions]
+[BubbleUp the slow checkouts]
 
 ### ch3.hc.step2.prompt.2
-[Email everyone to try again]
+[Read this span's attributes]
 
 ### ch3.hc.step2.prompt.3
-[Switch the font]
+[Open the Errors tab]
 
 ### ch3.hc.step2.jab.2
-Everyone tries again. Eight percent of everyone waits fourteen seconds again. You have doubled the problem.
+This order: one left-handed guitar, shipped to Tulsa, paid by card. One of those might matter. One trace can't say which. Compare all the slow ones.
 
 ### ch3.hc.step2.jab.3
-The new font is lovely. It takes fourteen seconds to arrive.
+No errors. Every one of these orders went through, eventually. Slow isn't broken, which is why nobody got paged. Back to the slow ones.
 
 ### ch3.hc.step2.result
-One attribute lights up: a single browser version, eight percent of your users, hidden inside the average. A fix ships. Conversions climb. Guitars sold.
+Using Honeycomb for Frontend Observability, you found what was losing sales without switching tools: every slow checkout has a left-handed guitar in the cart, and its stock check crawls.
+
+### ch3.pc.menu.deploy
+[Apply the fix and deploy]
+
+### ch3.pc.deploy
+You turn the left-handed stock check into one query instead of one per warehouse, and deploy. On the wall, the order goes through.
 
 ### ch3.win
-You found the eight percent. The storefront loads. Somebody, somewhere, finally gets their guitar.
+You found the eight percent. Left-handed players can buy a guitar in under fourteen seconds again. Somewhere, a very patient southpaw finally checks out.
 
 ### ch3.hero.line
-DEV: It worked on my machine. It turns out my machine was in the 92%.
+DEV: It worked on my machine. It turns out my machine is right-handed.
 
 ### ch3.verdict
-GRAHAM SIENER: Averages hide people. You found the eight percent the average was quietly eating. That's frontend observability — real users, real sessions, no lies.
+GRAHAM SIENER: The average wasn't lying. It just wasn't talking about the one shopper in twelve who waited fourteen seconds. One trace from the browser to the backend, and BubbleUp, told you who.
 
 ---
 
 ## Chapter 4 — Incident Response · Gaming · DevOps / SRE
 
-Inspired by a space MMO studio whose fleet-battle code one engineer understands. Company: **Nullpoint Games**, the game **Starfall**, the engineer **Einar**. Narrator: Jessitron. This is the **Canvas** chapter.
+Inspired by a space MMO studio whose fleet-battle code one engineer understands. Company: **Nullpoint Games**, the game **Starfall**, the engineer **Einar**. Narrator: Jessitron. This is the **MCP** chapter (Canvas is in scenario 1). The solve follows a real customer's story: with Honeycomb they found that only 93% of their most important API call was succeeding, mostly for reasons in their own control, and took it past 99%; and once Honeycomb was available through MCP, nearly three times as many of their people used it. Here the call is joining a fleet, the legacy reason is a limit from 2003, and the MCP client is Claw Codez. In Honeycomb nothing is a joke: the `jab` slots are nudges, in Claw Codez's voice. The room slots below still describe the placeholder five-hotspot room and are rewritten when the room art lands.
 
 ### ch4.card.title
 DEVOPS / SRE
@@ -645,10 +651,10 @@ Tonight you are the SRE at Nullpoint Games. Eight thousand players are in one st
 The ops room at Nullpoint Games, lit by a wall of space. Eight thousand pilots in one system. Chat scrolls with the word "lag" in nine languages. On a desk in the corner, a dusty monitor with a label: THE FLEET CODE — ASK EINAR.
 
 ### ch4.look.laptop
-Your laptop. A latency graph climbing like a ship that has lost its argument with gravity.
+Your laptop. Every node green, every graph flat. According to this, tonight is going very well.
 
 ### ch4.use.laptop
-The biggest battle in the game's history is live. Latency is climbing. The fleet code is twenty-three years old and Einar wrote most of it. Einar is asleep. Einar is in Reykjavík. It is 7 AM in Reykjavík and Einar does not do 7 AM.
+The biggest battle in the game's history is live. Pilots say they can't get in, and chat calls it lag. The dashboards say the cluster is healthy. The fleet code is twenty-three years old, Einar wrote most of it, and Einar is asleep in Reykjavík.
 
 ### ch4.look.wallscreen
 Eight thousand ships. Some of them are moving. The rest are thinking about it.
@@ -690,61 +696,67 @@ Chat is also aware. Chat has been aware for forty minutes. Awareness is not a fi
 You put the phone down. There has to be a way to understand code you didn't write, at 3 AM, without a human sacrifice.
 
 ### ch4.look.workstation
-A workstation with a Honeycomb Canvas open. Someone has wired a coding agent into it — a small crab-shaped thing in the corner of the screen labelled CLAW CODEZ. It waves a claw.
+A workstation with the team's coding agent open: a small crab-shaped thing labelled CLAW CODEZ. Someone has connected it to Honeycomb through MCP. It waves a claw.
 
 ### ch4.hc.title
-HONEYCOMB · CANVAS
+HONEYCOMB · MCP
 
 ### ch4.hc.intro
-A notebook that talks to your telemetry. You type a question; Claw Codez, through MCP, runs the queries against the live data and writes down what it finds — in front of everyone.
+Claw Codez is connected to Honeycomb over MCP, the Model Context Protocol, so anyone on the team can ask production a question in plain words. Nobody has to know Einar's code.
 
 ### ch4.hc.step1.prompt.1
-[Ask: why did fleet latency spike?]
+[Ask: how many fleet joins succeed?]
 
 ### ch4.hc.step1.prompt.2
-[Ask: is it DNS?]
+[Ask: is the cluster healthy?]
 
 ### ch4.hc.step1.prompt.3
-[Ask Claw Codez to wake Einar]
+[Ask: where does a join slow down?]
 
 ### ch4.hc.step1.jab.2
-CLAW CODEZ: Checked. Not DNS. I ran three queries to be sure. It is still not DNS.
+CLAW CODEZ: CPU fine. Memory fine. Every node green. Healthy machines, unhappy pilots. Ask about what the pilots are trying to do.
 
 ### ch4.hc.step1.jab.3
-CLAW CODEZ: I don't have hands. Also I've met Einar.
+CLAW CODEZ: End to end, a join takes 40 milliseconds, when it works. It isn't slow. Ask how often it works.
 
 ### ch4.hc.step1.result
-Claw Codez runs the query, the heatmap draws itself, and BubbleUp fires on the slow spans: one node, `sector-7-grid-fleet-03`, carrying four times the ships of any other because the 2003 code balances by *system*, not by *fleet*. A hypothesis, tested, marked ✔.
+Claw Codez runs the query in Honeycomb and comes back with a number nobody had: 93%. Seven joins in a hundred fail, the game quietly retries, and everyone has been calling it lag.
 
 ### ch4.hc.step2.prompt.1
-[Share the Canvas to #war-room]
+[Ask: what do the failures share?]
 
 ### ch4.hc.step2.prompt.2
-[Screenshot it into chat]
+[Ask: when did this start?]
 
 ### ch4.hc.step2.prompt.3
-[Print it for Einar]
+[Ask: which pilots are failing?]
 
 ### ch4.hc.step2.jab.2
-A screenshot. Of a notebook. With the queries cropped out. The war room asks what the axes are.
+CLAW CODEZ: It didn't start. It has been seven percent for as far back as the data goes. This isn't tonight's incident. It's every night's.
 
 ### ch4.hc.step2.jab.3
-The printer is out of toner. The printer has been out of toner since 2003.
+CLAW CODEZ: Every region, every ship class, every client version. It isn't who they are. Ask what the failing requests have in common.
 
 ### ch4.hc.step2.result
-The whole investigation — question, queries, hypothesis, evidence — lands in #war-room as one link. Three engineers who were guessing are now reading the same page. Someone moves fleet-03's load. Latency drops.
+Using Honeycomb through MCP, you found what was failing without switching tools, or waking Einar: every failed join hit a 2003 limit of 255 ships to a fleet. It was in your control all along.
+
+### ch4.pc.menu.deploy
+[Apply the fix and deploy]
+
+### ch4.pc.deploy
+You raise the 2003 limit and deploy. Joins: 99% and climbing. On the wall, the ships that were thinking about it start to move.
 
 ### ch4.win
-The battle finishes. Eight thousand pilots never know how close it came. Einar wakes at ten, reads the Canvas, and types "huh." It is the highest praise Einar gives.
+From 93 to 99 in one night, by asking. The battle finishes with everyone in it. Einar wakes at ten, reads the thread, and types "huh." It is the highest praise Einar gives.
 
 ### ch4.hero.line
 SRE: We didn't need the one person who understood it. We needed to be able to ask.
 
 ### ch4.manager.line
-MANAGER (running in): Have you seen Canvas? This thing's nuts.
+MANAGER (running in): Half the studio is asking production questions. When did that happen?
 
 ### ch4.verdict
-JESSITRON: Nobody had to be the hero who knows everything. You asked a question, the agent did the digging, and the whole team watched the answer appear. That's incident response as a team sport.
+JESSITRON: Nobody had to be the hero who knows everything. Anyone on the team could have asked that question, in plain words. You didn't have a lag problem. You had a failure nobody knew was there.
 
 ---
 

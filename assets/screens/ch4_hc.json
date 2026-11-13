@@ -1,0 +1,46 @@
+{
+ "pic": {
+  "x": 4,
+  "y": 20,
+  "w": 188,
+  "h": 176
+ },
+ "stages": [
+  {
+   "image": "ch4_hc_0.png",
+   "what": "The coding agent, with Honeycomb's MCP tools connected",
+   "highlights": [
+    {
+     "x": 5,
+     "y": 150,
+     "w": 178,
+     "h": 18
+    }
+   ]
+  },
+  {
+   "image": "ch4_hc_1.png",
+   "what": "The question, the query Honeycomb ran, and the number: 93%",
+   "highlights": [
+    {
+     "x": 5,
+     "y": 51,
+     "w": 178,
+     "h": 70
+    }
+   ]
+  },
+  {
+   "image": "ch4_hc_2.png",
+   "what": "BubbleUp through MCP: what the failures share",
+   "highlights": [
+    {
+     "x": 7,
+     "y": 64,
+     "w": 97,
+     "h": 61
+    }
+   ]
+  }
+ ]
+}

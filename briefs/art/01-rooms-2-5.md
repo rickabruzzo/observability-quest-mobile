@@ -104,22 +104,25 @@ notes along its bottom edge, the war room dark and out of focus behind.
 
 ### Room 3 — `R3_bullpen` (Twang & Co.: the dev bullpen)
 
-*Story:* an online guitar store is slow for some shoppers and sales are sliding, but the monitoring tool's
-average says everything is fine. The hero is the Developer. The person is the **Product Manager**, who wants to
+*Story:* an online guitar store's checkout takes fourteen seconds for about one shopper in twelve, and sales are
+sliding, but the monitoring tool's average says everything is fine. (What Honeycomb finds: every slow order has a
+left-handed guitar in the cart.) The hero is the Developer. The person is the **Product Manager**, who wants to
 ship a loading spinner and blame the CDN.
 
 > A software team's bullpen in a converted warehouse. Right: a developer's desk with a laptop on a stand, its
 > lid covered in blank stickers, a second small monitor, headphones, a coffee mug, and one empty chair; a
 > generic solid-body electric guitar leans against the desk. In the middle of the back wall, a large wall
-> monitor showing an unfinished web page as empty outlines: across the top, one long thin empty bar; below it
+> monitor showing a web store's checkout page as empty outlines: across the top, one long thin empty bar; below it
 > on the left, one large empty rectangle; to its right, three smaller empty rectangles in a column; along the
 > bottom, one long thin empty lane. Brick wall, exposed pipes, a string of warm bulbs. Left: a standing desk
 > with a small lamp; behind it, facing right, a woman in her thirties with dark curly hair, glasses and a
 > cardigan, holding a phone in one hand and gesturing at the wall monitor with the other, anxious, mid-sentence.
 
-The guitar must be a generic shape, **not a recognisable real model**: no brand headstock, no logo. Display
-panels: the top bar (the page's loading bar, stuck at 13%), the large rectangle (the product picture that
-never loads), the three small rectangles (shopper readouts), the bottom lane (a conversions line sliding down).
+The guitar must be a generic shape, **not a recognisable real model**: no brand headstock, no logo. The story
+calls it left-handed; ask for that if the generator will do it, but do not spend tries on it. Display panels:
+the top bar (the checkout's "placing your order" progress bar, stuck at 13%), the large rectangle (the item in
+the cart: the game draws a guitar there), the three small rectangles (shopper readouts), the bottom lane (a
+conversions line sliding down).
 Talk edits: (1) mouth open, pointing hand jabbing at the monitor; (2) mouth half open, looking down at the
 phone held up in front of her. Note this room is mirrored: the hero's computer is on the **right**.
 
@@ -129,9 +132,11 @@ bezel, blank screen, a mug and the guitar's neck out of focus at the side.
 
 ### Room 4 — `R4_ops_room` (Nullpoint Games: the ops room)
 
-*Story:* the biggest space battle in an online game's history is live, with 8,000 players in one place, and the
-servers are lagging. Only one engineer understands the 23-year-old fleet code, and he is asleep in another time
-zone. The hero is the DevOps/SRE. The person is the **Incident Commander**, about to phone him.
+*Story:* the biggest space battle in an online game's history is live, with 8,000 players in one place. Pilots
+say they cannot get in and call it lag; every dashboard says the servers are healthy. (What Honeycomb finds:
+seven fleet joins in a hundred fail, and always have.) Only one engineer understands the 23-year-old fleet code,
+and he is asleep in another time zone. The hero is the DevOps/SRE. The person is the **Incident Commander**,
+about to phone him.
 
 > A game studio's operations room, dark, lit mostly by its screens. Left: a low curved console desk with an
 > ultrawide monitor, a mechanical keyboard with a soft glow, a headset, and one empty gaming chair. The back
@@ -143,14 +148,14 @@ zone. The hero is the DevOps/SRE. The person is the **Incident Commander**, abou
 > headset around her neck, holding a phone up in one hand with her thumb hovering over it, the other hand
 > pressed to her forehead, torn.
 
-Display panels: the star map (the fleet as moving dots, freezing), the lane under it (a latency line climbing),
-the chat column (lag reports scrolling). A few dim stars in the map panel are fine; anything that looks like a
+Display panels: the star map (the fleet as moving dots, with some stuck outside), the lane under it (a health
+line that stays flat and green while the pilots complain), the chat column (lag reports scrolling). A few dim stars in the map panel are fine; anything that looks like a
 ship, a planet with a name, or a known game's interface is a redo. Talk edits: (1) mouth open, phone lowered,
 free hand flung toward the wall; (2) phone raised to her ear, eyes shut, wincing.
 
 `R4_wall_closeup`: the wall display straight on: the star-map panel with its grid, the lane, the chat column.
 `R4_pc_closeup`: an ultrawide monitor straight on, thin bezel, blank screen, the glow of the keyboard along the
-bottom edge, the wall of space out of focus behind.
+bottom edge, the wall of space out of focus behind. (The game shows the team's coding agent on it.)
 
 ### Room 5 — `R5_loft` (a three-person AI startup: the loft)
 
