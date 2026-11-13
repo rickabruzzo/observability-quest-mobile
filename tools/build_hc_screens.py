@@ -172,7 +172,7 @@ def canvas():
     e = p.text(x0 + 4, y0 + 60, 'Worst: ', INK); e2 = p.text(e, y0 + 60, '52262ea7', LINK); p.rect(e, y0 + 68, e2 - e, 1, LINK)
     sy = y0 + 74
     p.text(x0 + 4, sy, 'Strongest signal:')
-    p.rect(x0 + 3, sy + 10, cw - 6, 54, None, ORANGE); p.rect(x0 + 4, sy + 11, cw - 8, 52, None, ORANGE)
+    p.rect(x0 + 4, sy + 11, cw - 8, 52, (250, 251, 253))
     p.chip(x0 + 7, sy + 15, 'order-status')
     p.chip(x0 + 7, sy + 27, 'tool loop', RED, (252, 232, 232))
     for i in range(3):
@@ -257,7 +257,6 @@ def llm_call():
     e = p.text(x0 + 4, 29, 'Gen AI', BLUE); p.rect(x0 + 4, 37, e - x0 - 4, 1, BLUE); p.text(e + 7, 29, 'Fields', MUTE)
     p.rect(x0 + 1, 39, cw - 2, 1, FAINT)
     p.text(x0 + 4, 43, 'Input tokens', MUTE)
-    p.rect(x0 + 5, 52, 76, 19, None, ORANGE); p.rect(x0 + 4, 53, 78, 17, None, ORANGE)              # circled, as in the demo
     p.text(x0 + 8, 55, '57,293', INK, 2)
     p.text(x0 + 4, 74, 'call 1: 1,174', MUTE)
     p.rect(x0 + 4, 84, cw - 8, 4, PURPLE); p.rect(x0 + cw - 8, 84, 4, 4, GREEN_D)                   # token usage: nearly all input
@@ -265,7 +264,7 @@ def llm_call():
     p.chip(x0 + 4, 103, 'USER', BLUE, SKY)
     p.text(x0 + 4, 112, 'Where is my'); p.text(x0 + 4, 121, 'order?')
     ty = 130
-    p.rect(x0 + 2, ty, cw - 4, 42, (255, 248, 236), ORANGE)
+    p.rect(x0 + 2, ty, cw - 4, 42, (255, 248, 236))
     p.chip(x0 + 5, ty + 4, 'TOOL', ORANGE, (255, 232, 200))
     p.text(x0 + 5, ty + 13, 'lookup_orders', INK)
     e = p.text(x0 + 5, ty + 23, '97', RED); p.text(e + 4, ty + 23, 'orders', INK)
@@ -507,7 +506,7 @@ def finding():
     p.chip(18, 39, "since Friday's deploy", ORANGE, WARN)
     p.card(18, 50, 56, 28); p.text(21, 53, 'people', MUTE); p.text(21, 62, '11', RED, 2)
     p.card(76, 50, 110, 28); p.text(79, 53, 'overall errors', MUTE); e = p.text(79, 62, '0.4%', INK, 2); p.text(e + 6, 68, 'normal', GREEN_D)
-    hl = {'x': 12, 'y': 14, 'w': 174, 'h': 65}
+    hl = {'x': 16, 'y': 14, 'w': 170, 'h': 65}
     p.text(14, 83, 'What happened', MUTE); p.greek(14, 94, [[24, 40, 18, 30, 22], [36, 20, 44, 14]])
     p.text(14, 106, 'In the code')
     p.rect(12, 116, 174, 33, (248, 249, 251), LINE)
