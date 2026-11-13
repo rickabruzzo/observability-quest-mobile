@@ -19,9 +19,11 @@ that is not in your pull request does not exist for it.**
   git fetch origin
   git worktree add ../oqm-art-<topic> -b art/<topic> origin/sci-adventure
   cd ../oqm-art-<topic>
-  git config user.name Claude && git config user.email noreply@anthropic.com    # this worktree only
   ```
-  Run no other git command in the main folder.
+  Run no other git command in the main folder. Commit as Claude by naming the identity on each commit:
+  `git -c user.name=Claude -c user.email=noreply@anthropic.com commit -m "..."`. Do not run
+  `git config user.name` or `git config user.email`: a worktree shares its config file with the main folder, so
+  that would stamp Rick's own merges as Claude.
 
 ## Making the pictures
 

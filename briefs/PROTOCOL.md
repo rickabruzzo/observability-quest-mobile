@@ -22,8 +22,11 @@ Rules for all three Claudes:
 6. **House rules.** No real competitor names (Cave Logs Inc., Old Artifact, Pretty Good Metrics, Claw Codez).
    No Sierra or other third-party art or code. The Honeycomb logo comes only from the official files in
    `assets/`, never generated.
-7. **Commit identity:** `git config user.name Claude && git config user.email noreply@anthropic.com` in your own
-   clone or worktree only.
+7. **Commit identity:** name it on each commit,
+   `git -c user.name=Claude -c user.email=noreply@anthropic.com commit -m "..."`. Never run `git config user.name`
+   or `git config user.email` in a worktree of Rick's folder: a worktree shares one config file with the main
+   folder, so the setting also stamps Rick's own merges as Claude. Only a separate clone (Cloud Claude's) may
+   set it with `git config`. Rick's merges carry Rick's own identity.
 
 ## The loop
 
