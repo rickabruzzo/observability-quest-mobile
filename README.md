@@ -22,7 +22,7 @@ npm run serve          # http://localhost:8080  (any static server works)
 
 v2 is played **landscape**: on a desktop browser make the window wider than it is tall; on a phone on the
 same Wi-Fi open `http://<your-laptop-ip>:8080` and turn the phone sideways (portrait shows the rotate screen).
-Flow today: title → character sheet → intro cutscene (tap to advance, **Skip** to jump) → scenario menu → scenario 1 (class card; the exec floor with the PC, Otto's vitals monitor and the CTO; Cave Logs and Honeycomb from the PC's menu; the CTO's decision; verdict) → a timing summary with **Copy results**. Scenarios 2–5 show on the menu, disabled. `?ch=1` skips the menu; `?preview=1` sends the intro to the old preview room (tap the floor to walk). `anim-preview.html` still shows
+Flow today: title → character sheet → intro cutscene (tap to advance, **Skip** to jump) → scenario menu → scenario 1 (class card; the exec floor with the PC, Otto's vitals monitor and the CTO; Cave Logs and Honeycomb from the PC's menu — Canvas, Agent Timeline, the LLM call; deploy the fix and watch Otto recover; the CTO's decision; verdict) → a timing summary with **Copy results**, whose Claim plays Charity's verdict. There is no score: the status bar counts scenarios solved. Scenarios 2–5 show on the menu, disabled. `?ch=1` skips the menu; `?preview=1` sends the intro to the old preview room (tap the floor to walk). `anim-preview.html` still shows
 the v0.1 portrait animations.
 
 ## Test
@@ -123,7 +123,10 @@ js/engine/message.js      word wrap, pagination, typewriter (pure); js/engine/wi
 js/engine/prompts.js      bracketed prompts step by step, and the score (100 clean, 50 after a wrong one)
 js/engine/runlog.js       the stopwatch: phases, counts, time on hold (rotate gate, hidden tab) cut out
 js/engine/vitals.js       Otto's monitor as a function of time: heartbeat, readout boxes, lights, output line
-js/engine/scenario.js     what a tool try unlocks, the CTO's lines, the decision, the score
+js/engine/scenario.js     what a tool try unlocks, Otto found → deployed, the CTO's lines, the decision, missteps
+js/engine/screens.js      a Honeycomb screen from its pictures (assets/screens/chN_hc.json): wipe, highlight pulse
+js/engine/verdict.js      Charity's mood and count lines from oq.done (scenario → missteps)
+js/screens/charity.js     Charity's portrait takeover on Claim
 js/engine/images.js       loads a room manifest and its pictures once
 js/menu.js                the menu's rules: rows, oq.done best scores, ?ch=N
 js/script.js              GENERATED from script/script.md by `python3 tools/build_script.py` — never edit

@@ -114,3 +114,9 @@ block on. Test the restyle under `.hs-form` on a real phone.
 - Positions nudged from the art hand-back by a pixel or two (lights onto their chips, traces inside their frames): see the comment on `MONITOR` in `js/chapters/ch1.js`.
 - Strings with no slot (mine): `[Close Cave Logs]`, `[Close Honeycomb]`, `Back` (monitor close-up), plus brief 02's list.
 - Not yet: sound for the monitor (a heartbeat blip, an alarm) and for the CTO's call; the tool screens still take over the whole scene rather than appearing on the PC's CRT.
+
+## Scenario 1 solved the real way, no score (Warp briefs 04 §1, 05, 06, 2026-11-12)
+- Shipped: the Honeycomb screen is the three pictures from `assets/screens/ch1_hc*` (Canvas → Agent Timeline → the LLM call), wiped in with highlights that pulse; nudges are free; the investigation finds the cause and `[Apply the fix and deploy]` on the PC recovers Otto on the monitor close-up; the CTO's Get Honeycomb needs the fix deployed ("show me" opens the investigation or the deploy prompt on the spot). No score anywhere: `Solved: N of 5`, `oq.done` keeps missteps (old format read), the menu ticks with no number, Claim plays Charity's verdict before the prize-desk placeholder.
+- Scripted timings at 200 wpm: shortest 2:10, everything 5:15. The deploy + recovery sequence is 21 s of the shortest path (two windows and about 5 s of watching Otto type).
+- Asset note: `ch1_hc_0.png` and `ch1_hc_2.png` have orange boxes baked in at their highlight rectangles, so the drawn pulse doubles them (stage 0) or barely shows (stage 2). Either drop the baked boxes or the drawn ones.
+- Not yet: the claim form and the sunrise coda after Charity; the claim form's hidden `quest_score` field in `js/claim.js` should become "scenarios solved" when it is wired.
