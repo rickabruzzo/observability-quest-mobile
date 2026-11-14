@@ -39,6 +39,14 @@ These are a bit wider than the painted build's, because the simpler figures came
 - **R2 glasses restored (Rick):** the redraw had dropped his reading glasses. They are now pushed up on his head in the plate and all six frames, as in the painted build (a Gemini edit of each, with only the head area composited back). The swap area is unchanged.
 - The style words are the test's, plus: "the moderate detail of a 1990s point-and-click game character standing in a room, not a modern cartoon".
 
+## Close-ups repainted for the era look (Rick, 2026-11-13)
+
+Rick: the close-ups were flatter and cleaner than the rooms, while the references put the **most** detail in close-ups. **Hardware stays modern; this is art direction only.** All 10 close-ups plus `R2_wall_closeup_fixed` are in this drop:
+- **What changed:** the bezels, frames, stands, keyboards and surroundings are repainted with bevels, dithered shading, wear and light falloff.
+- **The screen areas are pixel-identical to the main build.** The old screen interiors were pasted back, so every panel and screen rectangle in the main hand-backs still holds and no code changes are needed.
+- `R2_wall_closeup_fixed` is the new frame with the fixed board's drawing pasted in.
+- **Kept:** R1 monitor t2, R1 PC t2, R2 wall t1, R2 PC t2, R3 wall t2, R3 PC t2, R4 wall t1, R4 PC t2, R5 wall t2, R5 PC t2. R2 PC t1 was rejected for writing on the background whiteboard. Script: `scratch/room_gen/gen_era_cu.py`; tries are in `raw/era_cu/`.
+
 ## Known, left as is (Rick, 2026-11-13)
 
 - **R1 scale:** by her place on the view plane, the CTO and her desk read about 15% too small next to the other personas. Not worth a precise rescale now; if room 1 is ever regenerated, make the desk and CTO about 15% larger.
