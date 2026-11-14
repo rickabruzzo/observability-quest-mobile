@@ -16,7 +16,8 @@ export const SHOTS = [
   { id: 'message', ms: 5000, image: 'B_nightstand', lcd: 'marquee', text: CTO },
   { id: 'misery', ms: 2000, image: 'C_misery' },
   { id: 'wide', ms: 1400, image: 'A_room_dark', title: 'dim' },                       // back to the wide dark room, steady in the pager's glow…
-  { id: 'bedroom', ms: 15000, image: 'D_bedroom_vga', hero: true, clickAt: 0 },   // …click: the light is on, and this is the room
+  { id: 'bedroom', ms: 15000, image: 'D_bedroom_vga', hero: true, clickAt: 0, heroScale: 0.85 },   // …click: the light is on, and this is the room.
+  // heroScale: the 136-px hero would overtop his own 132-px door, so the bedroom draws him at 0.85 (brief 09).
 ];
 export const TOTAL_MS = SHOTS.reduce((n, s) => n + s.ms, 0);
 
@@ -66,16 +67,17 @@ export function heroAt(tMs) {
 // The whole exit is the profile view — there is no back view, so the few steps up to the threshold are
 // walked side on too, and the hero stays side on at the door rather than turning to face the player for
 // one beat before vanishing. The frame comes from distance travelled, the same rule the room walk uses.
-const AMBLE = 60, AMBLE_UP = 40;                      // px/s: a sleepy walk
+const AMBLE = 100, AMBLE_UP = 66;                     // px/s: a sleepy walk — about a step and a half a second on the 76-px stride at 0.85
 const DOOR_OPEN_MS = 350, DOOR_GONE_MS = 300, DOOR_SHUT_MS = 400;
 const STEP = SIDE_POSES.slice(1);                     // w1..w8
 const PER_FRAME_PX = STRIDE_PX / STEP.length;
-const frameAfter = (px) => STEP[Math.floor(Math.abs(px) / PER_FRAME_PX) % STEP.length];
+// The frame for a distance walked, in the hero's own pixels: a hero drawn at heroScale covers heroScale × STRIDE_PX scene px per cycle.
+const frameAfter = (px, heroScale = 1) => STEP[Math.floor(Math.abs(px) / heroScale / PER_FRAME_PX) % STEP.length];
 
-export function exitPlan({ standX, doorX, floorY, doorY = floorY }) {
+export function exitPlan({ standX, doorX, floorY, doorY = floorY, heroScale = 1 }) {
   const across = Math.round((Math.abs(doorX - standX) / AMBLE) * 1000);
   const up = Math.round((Math.abs(floorY - doorY) / AMBLE_UP) * 1000);
-  return { standX, doorX, floorY, doorY, across, up, open: DOOR_OPEN_MS, gone: DOOR_GONE_MS, shut: DOOR_SHUT_MS, total: across + up + DOOR_OPEN_MS + DOOR_GONE_MS + DOOR_SHUT_MS };
+  return { standX, doorX, floorY, doorY, heroScale, across, up, open: DOOR_OPEN_MS, gone: DOOR_GONE_MS, shut: DOOR_SHUT_MS, total: across + up + DOOR_OPEN_MS + DOOR_GONE_MS + DOOR_SHUT_MS };
 }
 
 /** Where the hero is tMs into the plan. x is the sprite's left edge, y the row the feet stand on. */
@@ -84,13 +86,13 @@ export function exitAt(p, tMs) {
   const at = (x, y, pose, visible, doorOpen, done = false) => ({ x, y, pose, view: 'side', flip, visible, doorOpen, done });
   if (t < p.across) {
     const x = Math.round(p.standX + (p.doorX - p.standX) * (t / p.across));
-    return at(x, p.floorY, frameAfter(x - p.standX), true, false);
+    return at(x, p.floorY, frameAfter(x - p.standX, p.heroScale), true, false);
   }
   let u = t - p.across;
   const acrossPx = Math.abs(p.doorX - p.standX);
   if (u < p.up) {
     const y = Math.round(p.floorY + (p.doorY - p.floorY) * (u / p.up));
-    return at(p.doorX, y, frameAfter(acrossPx + Math.abs(y - p.floorY)), true, false);   // the cycle carries on up
+    return at(p.doorX, y, frameAfter(acrossPx + Math.abs(y - p.floorY), p.heroScale), true, false);   // the cycle carries on up
   }
   u -= p.up;
   if (u < p.open) return at(p.doorX, p.doorY, 'stand', true, true);

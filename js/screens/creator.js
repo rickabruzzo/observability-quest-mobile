@@ -1,6 +1,6 @@
 // Character creation — a Quest-for-Glory-style sheet (spec: Character creation › Sheet language).
 
-import { drawHero, drawHeroCrop, HEAD_CROP } from '../engine/hero.js';
+import { drawHero, drawHeroCrop, HEAD_CROP, HERO_W, HERO_H } from '../engine/hero.js';
 import { OPTIONS, SKIN, HAIR, HOODIE, JEANS } from '../engine/hero-parts.js';
 import { FACE_ROWS, KIT_ROWS, LABELS, BODY_LABELS, pick, randomHero, cleanName, displayName, sanitizeHero } from '../creator-state.js';
 import { colButton } from '../engine/ui.js';
@@ -15,10 +15,10 @@ export function createCreatorScreen(game) {
   function thumb(key, value) {
     const crop = THUMB[key];
     const c = document.createElement('canvas');
-    c.width = crop.w * 2; c.height = crop.h * 2;
+    c.width = crop.w; c.height = crop.h;                          // the 56-px head is already thumbnail size: 1 sprite px per canvas px
     c.setAttribute('aria-hidden', 'true');
     // a thumbnail previews the choice on the current hero
-    drawHeroCrop(c.getContext('2d'), pick(hero, key, value), crop, 2);
+    drawHeroCrop(c.getContext('2d'), pick(hero, key, value), crop, 1);
     return c;
   }
 
@@ -58,7 +58,7 @@ export function createCreatorScreen(game) {
   }
 
   function renderHero() {
-    heroCtx.clearRect(0, 0, 28, 72);
+    heroCtx.clearRect(0, 0, HERO_W, HERO_H);
     drawHero(heroCtx, hero, 'idle', 0, 0, 1);
   }
 
@@ -108,7 +108,7 @@ export function createCreatorScreen(game) {
       ctx.overlay.innerHTML = `
         <div class="sheet">
           <div class="frame"><div class="jewel l" aria-hidden="true"></div><div class="jewel r" aria-hidden="true"></div>
-            <div class="frame-inner"><canvas id="hero-view" width="28" height="72" aria-label="Your hero"></canvas></div></div>
+            <div class="frame-inner"><canvas id="hero-view" width="${HERO_W}" height="${HERO_H}" aria-label="Your hero"></canvas></div></div>
           <div class="sheet-rows"></div>
         </div>`;
       els = { rows: ctx.overlay.querySelector('.sheet-rows'), nameBtn: null };

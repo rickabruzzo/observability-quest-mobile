@@ -5,7 +5,7 @@
 import { SHOTS, HERO_STEPS, frameAt, heroAt, nextShot, exitPlan, exitAt } from '../intro/timeline.js';
 import { lcdScale, marqueeScale, marqueeX, drawLcd, lcdPages, drawLcdPage } from '../intro/pager.js';
 import { createSfx } from '../intro/sfx.js';
-import { composeHero, drawHero, HERO_W, HERO_H } from '../engine/hero.js';
+import { blit, composeHero, drawHero, HERO_W, HERO_H } from '../engine/hero.js';
 import { drawHeroSide, SIDE_FOOT_DY } from '../engine/hero-side.js';
 import { HOODIE, JEANS, HC_MARK, HC_MARK_PIXELS, OUTLINE } from '../engine/hero-parts.js';
 import { colButton } from '../engine/ui.js';
@@ -58,9 +58,11 @@ function lastOpaqueRow(px) {
   return HERO_H - 1;
 }
 
-function drawSilhouette(g, px, x, y, color) {
-  g.fillStyle = color;
-  for (let r = 0; r < HERO_H; r++) for (let c = 0; c < HERO_W; c++) if (px[(r * HERO_W + c) * 4 + 3]) g.fillRect(x + c, y + r, 1, 1);
+/** The sprite's silhouette in one colour (the flash into day clothes), at the hero's scale. */
+function drawSilhouette(g, px, x, y, [r, gg, b], scale = 1) {
+  const flat = new Uint8ClampedArray(px.length);
+  for (let i = 0; i < px.length; i += 4) if (px[i + 3]) { flat[i] = r; flat[i + 1] = gg; flat[i + 2] = b; flat[i + 3] = 255; }
+  blit(g, flat, x, y, scale);
 }
 
 function shade(hex, f) {
@@ -70,10 +72,11 @@ function shade(hex, f) {
 
 const SHOE = '#2E2E36';
 
-/** Day clothes on the floor, in the hero's own colours: jeans, the Honeycomb hoodie in a heap, a pair of shoes. (x, y) = left, floor row. */
-export function drawClothes(g, cfg, x, y) {
+/** Day clothes on the floor, in the hero's own colours: jeans, the Honeycomb hoodie in a heap, a pair of shoes.
+ * (x, y) = left, floor row; k scales the heap (the shapes were sized for a 28-px hero: a hero at heroScale wants 2 × heroScale). */
+export function drawClothes(g, cfg, x, y, k = 1) {
   const hood = HOODIE[cfg.hoodie] || HOODIE.ink, jean = JEANS[cfg.jeans] || JEANS.indigo;
-  const R = (c, dx, dy, w, h) => { g.fillStyle = c; g.fillRect(x + dx, y + dy, w, h); };
+  const R = (c, dx, dy, w, h) => { g.fillStyle = c; g.fillRect(x + Math.round(dx * k), y + Math.round(dy * k), Math.max(1, Math.round(w * k)), Math.max(1, Math.round(h * k))); };
   const shapes = [
     [jean, 0, -5, 16, 4], [jean, 2, -3, 6, 3], [jean, 10, -3, 6, 3],                    // jeans: waist and two legs, dropped flat
     [hood, 19, -9, 14, 7], [hood, 21, -10, 5, 1], [hood, 31, -6, 5, 4],                 // hoodie: body, hood, a sleeve
@@ -85,7 +88,7 @@ export function drawClothes(g, cfg, x, y) {
   R(shade(hood, 1.3), 19, -9, 14, 1); R(shade(hood, 0.7), 19, -3, 14, 1); R(shade(hood, 0.7), 31, -3, 5, 1);
   R(shade(SHOE, 1.6), 38, -4, 6, 1); R(shade(SHOE, 1.6), 45, -3, 6, 1);
   const mx0 = Math.min(...HC_MARK_PIXELS.map((p) => p[0])), my0 = Math.min(...HC_MARK_PIXELS.map((p) => p[1]));
-  for (const [mx, my, k] of HC_MARK_PIXELS) R(HC_MARK[k], 24 + (mx - mx0), -8 + (my - my0), 1, 1);   // the mark, face up
+  for (const [mx, my, col] of HC_MARK_PIXELS) { g.fillStyle = HC_MARK[col]; g.fillRect(x + Math.round(24 * k) + (mx - mx0), y + Math.round(-8 * k) + (my - my0), 1, 1); }   // the mark, face up, at the sprite's own size
 }
 
 export function createIntroScreen(game) {
@@ -152,18 +155,19 @@ export function createIntroScreen(game) {
 
   function paintHero(ctx, m) {
     const g = ctx.ctx2d, cfg = ctx.hero;
-    const standX = Number.isFinite(m.stand?.x) ? m.stand.x : m.bed.x + STAND_DX, standY = m.floorY - HERO_H;
+    const hs = SHOTS[shot].heroScale ?? 1;                        // the bedroom draws the hero smaller than his sprite
+    const standX = Number.isFinite(m.stand?.x) ? m.stand.x : m.bed.x + STAND_DX, standY = m.floorY - Math.round(HERO_H * hs);
     if (ctx.reducedMotion) {
       const bareRoom = assets.images.get('D_laptop_gone');      // the hero already has their item
       if (bareRoom) g.drawImage(bareRoom, 0, 0, 320, 200);
       showTitle(ctx, m, true);
-      drawHero(g, cfg, 'idle', standX, standY, 1);
+      drawHero(g, cfg, 'idle', standX, standY, hs);
       heroState = { pose: 'idle', view: 'front', outfit: 'hoodie', x: standX, visible: true, pile: false, holding: true, doorOpen: false };
       if (t >= REDUCED_BEDROOM_MS) finish();
       return;
     }
     const h = heroAt(t);
-    const e = h.walking ? exitAt(exitPlan({ standX, doorX: m.door.x, floorY: m.floorY, doorY: Number.isFinite(m.door.y) ? m.door.y : m.floorY }), t - WALK_AT) : null;
+    const e = h.walking ? exitAt(exitPlan({ standX, doorX: m.door.x, floorY: m.floorY, doorY: Number.isFinite(m.door.y) ? m.door.y : m.floorY, heroScale: hs }), t - WALK_AT) : null;
     const pile = h.outfit === 'pj' && !!m.clothes;         // on the floor until the change puts them on the hero
     // The room is painted with a laptop on the dresser, and again without it: taking it is a cut between the two.
     // Sierra inventory style — it is simply the hero's now; nothing is drawn in their hand.
@@ -172,12 +176,12 @@ export function createIntroScreen(game) {
     if (bareRoom && h.holding) { g.drawImage(bareRoom, 0, 0, 320, 200); plate = 'D_laptop_gone'; }
     if (e?.doorOpen) { openDoor(g, m); plate = assets.images.get('D_door_open') ? 'D_door_open' : plate; }
     showTitle(ctx, m, h.titled);
-    if (pile) drawClothes(g, cfg, m.clothes.x, m.clothes.y);
+    if (pile) drawClothes(g, cfg, m.clothes.x, m.clothes.y, 2 * hs);
     heroState = { pose: h.pose, view: 'front', outfit: h.outfit, x: standX, visible: h.visible, pile, holding: h.holding, doorOpen: !!e?.doorOpen, plate };
     sound('title', h.titled); sound('rustle', h.stirring); sound('step', h.standing); sound('pickup', h.outfit === 'hoodie');
     sound('take', h.holding); sound('door', !!e?.doorOpen); sound('shut', !!e && !e.visible && !e.doorOpen);
     if (e) {
-      if (e.visible) drawHeroSide(g, cfg, e.pose, e.x, e.y - HERO_H + SIDE_FOOT_DY, 1, { flip: e.flip });   // the way out is side on throughout
+      if (e.visible) drawHeroSide(g, cfg, e.pose, e.x, e.y - Math.round(HERO_H * hs) + SIDE_FOOT_DY, hs, { flip: e.flip });   // the way out is side on throughout
       Object.assign(heroState, { pose: e.pose, view: e.view, outfit: 'hoodie', x: e.x, visible: e.visible });
       if (e.done) finish();
       return;
@@ -185,12 +189,12 @@ export function createIntroScreen(game) {
     if (!h.visible) return;
     if (h.pose === 'situp') {
       const px = composeHero(cfg, 'situp', 'pj');
-      drawHero(g, cfg, 'situp', m.bed.x, m.bed.y - (lastOpaqueRow(px) + 1), 1, { outfit: 'pj' });   // bed.y is the blanket line
+      drawHero(g, cfg, 'situp', m.bed.x, m.bed.y - Math.round((lastOpaqueRow(px) + 1) * hs), hs, { outfit: 'pj' });   // bed.y is the blanket line
       heroState.x = m.bed.x;
       return;
     }
-    if (h.flash) drawSilhouette(g, composeHero(cfg, 'idle', h.outfit), standX, standY, '#FFFFFF');
-    else drawHero(g, cfg, 'idle', standX, standY, 1, { outfit: h.outfit });
+    if (h.flash) drawSilhouette(g, composeHero(cfg, 'idle', h.outfit), standX, standY, [255, 255, 255], hs);
+    else drawHero(g, cfg, 'idle', standX, standY, hs, { outfit: h.outfit });
   }
 
   function paint(ctx, dt = 0) {

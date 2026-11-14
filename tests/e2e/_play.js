@@ -1,6 +1,11 @@
 // Shared moves for the scenario e2e tests: get through the intro, pick a scenario, tap things, close windows.
 import assert from 'node:assert/strict';
 import { SCRIPT } from '../../js/script.js';
+import { CH1 } from '../../js/chapters/ch1.js';
+import { personaLine, speakerOf } from '../../js/engine/conversation.js';
+
+/** What the window shows for a script key: the persona's lines lose their `CTO:` prefix (the name is on the window). */
+export const shown = (key) => personaLine(SCRIPT[key], speakerOf(SCRIPT[CH1.persona.name])).text;
 
 /** Title → sheet → Start → Skip; lands on the menu, or straight in the chapter with ?ch=1. */
 export async function openGame(browser, server, { w = 844, h = 390, query = '', reduced = false } = {}) {
@@ -97,15 +102,36 @@ export async function leavePc(page) {
   assert.equal(await dismiss(page), SCRIPT['ch1.pc.leave']);
   await inState(page, 'room');
 }
-/** Walk to the CTO and hear her question; the two prompts are up. */
-export async function askCto(page) {
+/** The persona's card, if it is up: a tap anywhere closes it. Resolves true if it was. */
+export async function closeCard(page) {
+  const up = await page.waitForFunction(() => !!document.querySelector('#persona-card') || !!window.__oq.chapter.window, null, { timeout: 9000 })
+    .then(() => page.evaluate(() => !!document.querySelector('#persona-card')));
+  if (!up) return false;
+  await page.waitForTimeout(250);                        // the flip
+  await page.click('#persona-card');
+  await page.waitForFunction(() => !document.querySelector('#persona-card'));
+  return true;
+}
+/** Use on the CTO: the walk over, her card the first time this visit (closed), then her line is up. */
+export async function talkToCto(page) {
   await tapSpot(page, 'cto');
-  assert.equal(await dismiss(page), SCRIPT['ch1.cto.ask']);
+  await closeCard(page);
+  await winOpen(page);
+}
+/** Walk to the CTO and hear her question; the options are up. */
+export async function askCto(page) {
+  await talkToCto(page);
+  assert.equal(await dismiss(page), shown('ch1.cto.ask'));
   await inState(page, 'decide');
+}
+/** The persona's options are up (after one of her lines); pick one by id: sign, hc, show, leave. */
+export async function pickOption(page, id) {
+  await page.waitForFunction((i) => window.__oq.chapter.state === 'decide' && !window.__oq.chapter.window && document.querySelector(`#decide-${i}`), id, { timeout: 9000 });
+  await page.click(`#decide-${id}`);
 }
 export async function winLines(page) {
   assert.equal(await dismiss(page), SCRIPT['ch1.win']);
-  assert.equal(await dismiss(page), SCRIPT['ch1.hero.line']);
+  assert.equal(await dismiss(page), shown('ch1.hero.line'));
   assert.equal((await ch(page)).state, 'verdict');
   assert.equal(await dismiss(page), SCRIPT['ch1.verdict']);
   await page.waitForSelector('#summary');

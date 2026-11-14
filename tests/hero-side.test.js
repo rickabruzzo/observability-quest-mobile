@@ -17,7 +17,7 @@ for (const n of names) {
     const got = Buffer.from(composeHeroSide(cfg, pose, outfit).buffer);
     assert.equal(got.length, HERO_W * HERO_H * 4);
     const firstDiff = got.findIndex((b, i) => b !== want[i]);
-    assert.equal(firstDiff, -1, `first differing byte ${firstDiff} → pixel ${Math.floor(firstDiff / 4) % 28},${Math.floor(firstDiff / 4 / 28)}`);
+    assert.equal(firstDiff, -1, `first differing byte ${firstDiff} → pixel ${Math.floor(firstDiff / 4) % HERO_W},${Math.floor(firstDiff / 4 / HERO_W)}`);
   });
 }
 
@@ -43,14 +43,26 @@ function fakeCtx() {
   return { calls, fillStyle: '', fillRect(x, y, w, h) { calls.push([x, y, w, h, this.fillStyle]); } };
 }
 
-test('drawHeroSide paints scale-sized rects at the offset; flip mirrors x exactly as drawHero does', () => {
-  const a = fakeCtx(); drawHeroSide(a, PRESETS.masc, 'w1', 10, 20, 2);
-  assert.ok(a.calls.length > 0);
-  assert.ok(a.calls.every(([, , w, h]) => w === 2 && h === 2));
-  assert.ok(a.calls.every(([x, y]) => x >= 10 && y >= 20));
-  const b = fakeCtx(); drawHeroSide(b, PRESETS.masc, 'w1', 10, 20, 2, { flip: true });
-  const xsA = new Set(a.calls.map(([x]) => x)), xsB = new Set(b.calls.map(([x]) => x));
-  assert.deepEqual([...xsB].sort((p, q) => p - q), [...xsA].map((x) => 10 + (27 * 2) - (x - 10)).sort((p, q) => p - q));
+/** Every pixel the calls covered, 'x,y' → colour. */
+function painted(ctx) {
+  const m = new Map();
+  for (const [x, y, w, h, c] of ctx.calls) for (let dy = 0; dy < h; dy++) for (let dx = 0; dx < w; dx++) m.set(`${x + dx},${y + dy}`, c);
+  return m;
+}
+const same = (a, b) => a.size === b.size && [...a].every(([k, v]) => b.get(k) === v);
+
+test('drawHeroSide paints the sprite at the offset exactly as drawHero does, and flips to walk left', () => {
+  const px = composeHeroSide(PRESETS.masc, 'w1');
+  const want = new Map();
+  for (let y = 0; y < HERO_H; y++) for (let x = 0; x < HERO_W; x++) { const i = (y * HERO_W + x) * 4; if (px[i + 3]) want.set(`${10 + x},${20 + y}`, `rgb(${px[i]},${px[i + 1]},${px[i + 2]})`); }
+  const a = fakeCtx(); drawHeroSide(a, PRESETS.masc, 'w1', 10, 20, 1);
+  assert.ok(same(painted(a), want));
+  const b = fakeCtx(); drawHeroSide(b, PRESETS.masc, 'w1', 10, 20, 1, { flip: true });
+  const mirrored = new Map([...want].map(([k, v]) => { const [x, y] = k.split(',').map(Number); return [`${10 + (HERO_W - 1) - (x - 10)},${y}`, v]; }));
+  assert.ok(same(painted(b), mirrored));
+  const c = fakeCtx(); drawHeroSide(c, PRESETS.masc, 'w1', 0, 0, 0.85);
+  const ys = [...painted(c).keys()].map((k) => +k.split(',')[1]);
+  assert.equal(Math.max(...ys), Math.round(HERO_H * 0.85) - 1, 'a scaled hero still stands on its last row');
 });
 
 test('drawHeroSide forwards the outfit', () => {
@@ -68,9 +80,8 @@ test('an unknown pose falls back to standing rather than throwing', () => {
 });
 
 test('the profile stands on the same floor line as the front view, once SIDE_FOOT_DY is applied', () => {
-  // Both sprites are 28x72 but the profile's shoes end a row higher, so a hero drawn at the same
-  // y would hop a pixel every time it stopped walking. SIDE_FOOT_DY is that difference; the screens
-  // add it when they draw the side view against the floor.
+  // Both sprites are 56x144 and both stand on hero_gen.FLOOR; SIDE_FOOT_DY is whatever difference remains
+  // (none now), and the screens add it when they draw the side view against the floor.
   const lowest = (px) => { let b = -1; for (let y = 0; y < HERO_H; y++) for (let x = 0; x < HERO_W; x++) if (px[(y * HERO_W + x) * 4 + 3]) b = y; return b; };
   for (const name of ['masc', 'fem', 'nb']) {
     const front = lowest(composeHero(PRESETS[name], 'idle'));

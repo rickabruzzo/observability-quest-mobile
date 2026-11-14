@@ -2,6 +2,7 @@ import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 import { startServer } from './_server.js';
+import { HERO_W } from '../../js/engine/hero.js';
 
 let server, browser;
 before(async () => { server = await startServer(); browser = await chromium.launch(); });
@@ -35,7 +36,7 @@ test('tap right: hero walks right over time, lands at the tap, ends idle', async
   await page.waitForFunction(() => window.__oq.preview.walking === false, null, { timeout: 6000 });
   const end = await pv(page);
   assert.equal(end.pose, 'idle');
-  assert.ok(Math.abs(end.x - (Math.floor(0.85 * 320) - 14)) <= 1, `x=${end.x}`);
+  assert.ok(Math.abs(end.x - (Math.floor(0.85 * 320) - HERO_W / 2)) <= 1, `x=${end.x}`);   // feet under the tap: x is the left edge
   await ctx.close();
 });
 

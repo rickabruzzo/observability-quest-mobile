@@ -9,7 +9,6 @@ import { createWindows } from '../engine/window.js';
 import { UI as CHAPTER_UI } from './chapter.js';
 import { playCharity } from './charity.js';
 
-export const MENU_UI = { soon: 'coming soon' };   // a string the script has no slot for
 
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -30,7 +29,7 @@ export function createMenuScreen(game) {
               <button type="button" class="menu-row${r.done ? ' done' : ''}" data-ch="${r.ch}" ${r.enabled ? '' : 'disabled aria-disabled="true"'}>
                 <span class="mr-name">${esc(r.name)}</span>
                 <span class="mr-hook">${esc(r.hook)}</span>
-                <span class="mr-mark">${r.done ? `<i class="mr-tick" aria-hidden="true"></i>${esc(SCRIPT['menu.done'])}` : r.enabled ? '' : esc(MENU_UI.soon)}</span>
+                <span class="mr-mark">${r.done ? `<i class="mr-tick" aria-hidden="true"></i>${esc(SCRIPT['menu.done'])}` : r.enabled ? '' : esc(SCRIPT['menu.soon'])}</span>
               </button>`).join('')}
           </div>
         </div>`;

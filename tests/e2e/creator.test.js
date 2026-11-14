@@ -31,10 +31,11 @@ test('sheet: 5 FACE rows, 5 KIT rows, every option 44px+, hero drawn', async () 
   assert.equal(await page.locator('.sheet-row').count(), 4); // name row + hoodie, jeans, glasses (nothing is carried)
   assert.equal(await page.locator('.opt[data-key="hold"]').count(), 0);
   const painted = await page.evaluate(() => {
-    const c = document.querySelector('#hero-view'); const d = c.getContext('2d').getImageData(0, 0, 28, 72).data;
-    let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i]) n++; return n;
+    const c = document.querySelector('#hero-view'); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+    let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i]) n++; return [n, c.width, c.height];
   });
-  assert.ok(painted > 600, `painted ${painted}`);
+  assert.deepEqual(painted.slice(1), [56, 144], 'the sheet draws the 56×144 sprite');
+  assert.ok(painted[0] > 2400, `painted ${painted[0]}`);
   await ctx.close();
 });
 
@@ -138,7 +139,7 @@ for (const [w, h] of [[1700, 1100], [1280, 800], [1240, 1044]]) {
       const opts = [...document.querySelectorAll('.opt')].map((e) => e.getBoundingClientRect());
       return { hero: r('#hero-view'), inner: r('.frame-inner'), scene: r('#scene-box'), right: Math.max(...opts.map((b) => b.right)), bottom: Math.max(...opts.map((b) => b.bottom)) };
     });
-    assert.ok(Math.abs(m.hero.w / m.hero.h - 28 / 72) < 0.02, `hero stretched: ${JSON.stringify(m.hero)}`);
+    assert.ok(Math.abs(m.hero.w / m.hero.h - 56 / 144) < 0.02, `hero stretched: ${JSON.stringify(m.hero)}`);
     // the sprite's empty side margins may tuck under the frame (as on a phone); the figure itself must not
     assert.ok(m.hero.w <= m.inner.w * 1.15 && m.hero.h <= m.inner.h + 1 && m.hero.y >= m.inner.y - 1, `hero does not fit its frame: ${JSON.stringify(m)}`);
     assert.ok(m.right > m.scene.x + m.scene.w * 0.6, `rows huddle in the corner: ${JSON.stringify(m)}`);

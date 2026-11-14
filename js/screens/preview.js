@@ -11,6 +11,7 @@ import { actionAt, applyCursor, drawIcon, MARKER_MS } from '../engine/cursor.js'
 export const FLOOR_Y = 180;          // the hero's feet sit on this logical row
 const START_X = 146;
 const MIN_X = 0, MAX_X = 320 - HERO_W;
+const HERO_SCALE = 1;
 // things in the room you can use: where they are, where the hero stands to use them, what they say
 const HOTSPOTS = [{ id: 'desk', x: 166, y: 64, w: 110, h: 68, standX: 150, text: 'A desk. Nothing is on fire here. Yet.' }];
 const HINT = 'Tap the floor to walk';
@@ -36,8 +37,9 @@ export function createPreviewScreen(game) {
     const g = ctx.ctx2d;
     paintRoom(g);
     // side on while walking (mirrored when heading left), facing the player when stopped
-    if (view === 'side') drawHeroSide(g, hero, pose, x, FLOOR_Y - HERO_H + SIDE_FOOT_DY, 1, { flip });
-    else drawHero(g, hero, pose, x, FLOOR_Y - HERO_H, 1, { flip });
+    const heroY = FLOOR_Y - Math.round(HERO_H * HERO_SCALE);
+    if (view === 'side') drawHeroSide(g, hero, pose, x, heroY + SIDE_FOOT_DY, HERO_SCALE, { flip });
+    else drawHero(g, hero, pose, x, heroY, HERO_SCALE, { flip });
     if (marker) drawIcon(g, marker.icon, marker.x, marker.y);        // where the tap landed, and what it will do
   }
 
