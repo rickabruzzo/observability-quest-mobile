@@ -28,6 +28,24 @@ Rules for all three Claudes:
    folder, so the setting also stamps Rick's own merges as Claude. Only a separate clone (Cloud Claude's) may
    set it with `git config`. Rick's merges carry Rick's own identity.
 
+## The era-look fork (opened 2026-11-13)
+
+Rick forked the build to try a 1990s look without losing the one he approved. While the fork is open there are
+two integration branches:
+
+| Branch | What it is | Who builds on it |
+|---|---|---|
+| `sci-adventure` | The build as approved on 2026-11-13, tagged **`v0.2-painted-rooms`**: personas painted at portrait level. The point to come back to. | Nobody, unless Rick says so |
+| `era-look` | The same build with the era look: simple figures in the rooms, the hero at their size, portraits in conversations. | **All new work** |
+
+- **Branch from `origin/era-look` and open pull requests against `era-look`.** Rules 1 to 3 hold with `era-look`
+  in place of `sci-adventure`: never push or merge into it yourself.
+- **The two looks use the same file names**, so code does not care which is built. The rooms come from
+  `tools/build_rooms.py`, whose `LOOK` is `era` on the fork; `python3 tools/build_rooms.py painted` rebuilds the
+  approved look from the same checkout. Only Cloud Claude rebuilds assets.
+- **How it ends** is Rick's call: `era-look` is merged into `sci-adventure`, or it is dropped and the tag is
+  where the game stands. Until then, do not copy fork work onto `sci-adventure`.
+
 ## The loop
 
 1. Cloud Claude writes a brief (`briefs/art/NN-*.md` or `briefs/warp/NN-*.md`) on a `desktop/` branch; Rick merges it.

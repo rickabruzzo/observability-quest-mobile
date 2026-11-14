@@ -1,8 +1,19 @@
 # Warp brief 08 — scenarios 2 to 5, playable
 
 Read `briefs/PROTOCOL.md` and `briefs/warp/PROTOCOL.md` first. Do this **after brief 07** (the persona card).
-Branch **`warp/scenarios-2-5`** from `origin/sci-adventure`. This is a large job; **two pull requests are
-welcome**: the engine made general plus scenario 2, then scenarios 3 to 5.
+Branch **`warp/scenarios-2-5`** from **`origin/era-look`** and open the pull requests against `era-look` (the
+fork rule in `briefs/PROTOCOL.md`). This is a large job; **two pull requests are welcome**: the engine made
+general plus scenario 2, then scenarios 3 to 5.
+
+> **On the era-look fork (2026-11-13, evening).** Everything below still holds, with these differences:
+> - **The room art is the era look**: every persona redrawn as a simple figure, every close-up repainted. Same
+>   file names, already built; the rooms, hotspots, panels and screen rectangles did not move. Room 1's art
+>   changed too. The figure patches are a little larger again: read them from `chN.json`.
+> - **The hero is 56 px wide and 136 tall** (brief 09). Every "hero at" number in the rooms table below is for
+>   the old 28 px hero. Use brief 09's table (item 8) in its place, and take his size from the constants.
+> - **The persona speaks from a close-up portrait** (brief 10). It is driven by the chapter's data, so give
+>   each scenario `persona.portrait` (`p2` to `p5`) and write the persona's lines as the script has them.
+> - Do briefs **09, 10 and 07 first**; this one comes last.
 
 > **Changed 2026-11-13, after Rick's art review** (`handbacks/2026-11-13-art-rooms-and-cards.md`). All the art
 > for rooms 2–5 and the five cards is now approved. If you started from an earlier version of this brief:

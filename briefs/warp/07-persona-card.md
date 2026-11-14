@@ -1,8 +1,8 @@
 # Warp brief 07 — the persona card
 
 Read `briefs/PROTOCOL.md` and `briefs/warp/PROTOCOL.md` first. Do this **after briefs 04–06**. Branch
-**`warp/persona-card`** from `origin/sci-adventure` (or add it to your open branch if 04–06 are not merged, and
-say so in the hand-back).
+**`warp/persona-card`** from **`origin/era-look`** and open the pull request against `era-look` (the fork rule
+in `briefs/PROTOCOL.md`; the card itself is the same in both looks).
 
 ## Why
 

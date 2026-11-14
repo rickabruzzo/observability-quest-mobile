@@ -279,6 +279,20 @@ The **coda** (after Charity) is unchanged in intent: the hero walks out into daw
 - **Logo**: from the official SVG only. Rendered to the exact pixel size needed with crisp edges. Never generated.
 - All provenance recorded in `ASSET_PROMPTS.md`.
 
+### The era look (a fork; Rick, 2026-11-13)
+
+Rick, on the approved rooms: the rooms and personas look "too nice" for a 1990s Sierra game, the hero looks like an earlier era than they do, and beside a persona "there is still a huge difference in detail levels." He forked the build to try a fix without losing what he had approved: tag **`v0.2-painted-rooms`** is that point, branch **`era-look`** is the experiment. His references were King's Quest VI and Space Quest 6 (about sixty screenshots, looked at, never used as art).
+
+What those games do, and what the fork does:
+
+- **Everyone standing in a room is the same simple kind of drawing**: a dark outline, three or four tones a garment, a face of a few marks. On the fork every persona is redrawn that way in all five rooms, with their talk, idle and win frames. They stay painted into the room plates; **only the hero is a sprite**.
+- **The rooms themselves do not change**, and neither does their framing: the furniture sets the scale, and the hero is drawn to it. He grows from 28×72 to about **56×136** and is redrawn to a model sheet (`art-drops/2026-11-13-era-look-portraits/hero_model_sheet.png`), in the bedroom too (Warp brief 09). The character creator keeps every option.
+- **Detail lives in close-ups.** A persona speaks from a head-and-shoulders portrait beside their words, in the narrators' style, with a blink and a moving mouth (Warp brief 10). The trading cards and the object close-ups keep their painted detail; the ten object close-ups were repainted with more of it (bevels, wear, light), **hardware still modern**, screen areas unchanged.
+- **The intro's painted cut scenes are the reference** the rest of the game should match, and stay as they are. So do the title screen and the scenario menu's pictures.
+- Left as is: room 1's CTO reads about 15% small beside the new hero; the hero, at 136 px, stands in front of the lower part of the wall display in rooms 1 and 3 when he is at the persona.
+
+Both looks use the same file names. `tools/build_rooms.py` builds either (`LOOK`), so going back to the painted look is a rebuild, not a rewrite. How the fork ends is Rick's call.
+
 ## Technical approach
 
 Carry over from v0.1: static layout shell, `text.js`, `claim.js` (form/complete), `sprites.js`, the asset tooling, the e2e harness, fonts. Replace: the game state machine, the scene layer, the audio synth. New:
