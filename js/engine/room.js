@@ -1,5 +1,6 @@
 // Rooms, the pure part. A room is data:
-//   { paint(g), floorY, walk: [minX, maxX], start, hotspots: [{ id, rect: {x,y,w,h}, standX, walk, look, use }] }
+//   { paint(g), floorY, walk: [minX, maxX], start, heroScale, hotspots: [{ id, rect: {x,y,w,h}, standX, walk, look, use }] }
+// heroScale (default 1) draws the hero at a fraction of his 56×144, nearest neighbour, feet still on floorY.
 // x values for the hero are the sprite's left edge, as everywhere in the engine. `look` is a script key;
 // `use` is a script key, { tool: name } to open a tool screen, { scene: name } to open a close-up, or
 // { action: name } for the chapter's own logic. `walk: false` acts at once from where the hero stands

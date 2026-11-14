@@ -13,6 +13,8 @@ import { colButton } from '../engine/ui.js';
 import { drawIcon, applyCursor, MARKER_MS } from '../engine/cursor.js';
 import { hotspotAt, walkTarget } from '../engine/room.js';
 import { createWindows } from '../engine/window.js';
+import { personaLine, speakerOf, talkWindow } from '../engine/conversation.js';
+import { load as loadSprites } from '../anim/sprites.js';
 import { createTool, choose, promptsOf } from '../engine/prompts.js';
 import { createRunlog, summaryLines, formatMs, PHASES, PHASE_LABELS, COUNT_LABELS } from '../engine/runlog.js';
 import { createScenario, notePrompt, noteFound, noteDeployed, ottoState, canLeave, canDeploy, vitalsLine, ctoUse, decide, missteps } from '../engine/scenario.js';
@@ -44,6 +46,7 @@ const GLITCH = '#@%&*?!/<>';
 
 export function createChapterScreen(game) {
   let ch, room, hero, run, wins, token = null, scen, art = null, hcArt = null, loading = null, recovering = null;
+  let persona = null, gctx = null;             // who speaks from the close-up ({ title, name, portrait: { still, frames }, where, seed }); the game ctx, for the scene's scale
   let state = 'card', mode = 'use', busy = false;
   let x = 0, pose = 'idle', view = 'front', flip = false, plan = null, elapsed = 0, walkMs = 0, pending = null, marker = null, cursor = null;
   let tools = {}, introShown = new Set(), toolName = null, toolFrom = null, toolEl = null, reveal = null, portrait = null;
@@ -99,8 +102,9 @@ export function createChapterScreen(game) {
       g.fillStyle = f.output.glitch ? '#FF3030' : '#E8ECF4';
       g.fillRect(o.x0 + 2 + (shown % per) * 3, o.y0 + 2 + Math.floor(shown / per) * 5, 2, 4);
     }
-    if (view === 'side') drawHeroSide(g, hero, pose, x, room.floorY - HERO_H + SIDE_FOOT_DY, 1, { flip });
-    else drawHero(g, hero, pose, x, room.floorY - HERO_H, 1, { flip });
+    const hs = room.heroScale ?? 1, heroY = room.floorY - Math.round(HERO_H * hs);     // feet on the floor line at any scale
+    if (view === 'side') drawHeroSide(g, hero, pose, x, heroY + SIDE_FOOT_DY, hs, { flip });
+    else drawHero(g, hero, pose, x, heroY, hs, { flip });
     if (marker) drawIcon(g, marker.icon, marker.x, marker.y);
   }
   function paintMonitor(ctx) {
@@ -131,11 +135,30 @@ export function createChapterScreen(game) {
 
   // ---- sequencing ----
   const live = () => token;
-  /** Shows a line and waits for the player to dismiss it; resolves false if the screen went away meanwhile. */
+  /** Shows a line and waits for the player to dismiss it; resolves false if the screen went away meanwhile.
+   * The persona's own lines (`CTO: …`) open the conversation window: their portrait, their name, the prefix dropped. */
   async function line(key, opts) {
     const t = live();
-    await wins.say(say(key), opts);
+    const { spoken, text } = persona ? personaLine(say(key), persona.title) : { spoken: false, text: say(key) };
+    if (spoken) {
+      const patch = art?.manifest.patches?.[room.image] ?? null;
+      const { className, maxWidth } = talkWindow(persona.where, patch, gctx?.fit?.scale ?? 1);
+      await wins.say(text, { ...opts, where: className, maxWidth, portrait: { name: persona.name, seed: persona.seed, ...persona.portrait } });
+    } else await wins.say(text, opts);
     return t === live();
+  }
+  /** The persona's close-up: the still and its three patches, loaded once per visit; a missing frame is just a still. */
+  function loadPersona(ctx) {
+    const p = ch.persona;
+    if (!p) { persona = null; return; }
+    const base = `portrait_${p.portrait}`;
+    persona = { title: speakerOf(say(p.name)), name: say(p.name), where: p.where ?? 'top-left', seed: p.portrait.charCodeAt(p.portrait.length - 1),
+      portrait: { still: null, frames: { talk1: `${base}_talk1`, talk2: `${base}_talk2`, blink: `${base}_blink` } } };
+    const me = persona;
+    const img = new Image();
+    img.onload = () => { if (persona === me) me.portrait.still = img; };
+    img.src = `assets/${base}.png`;
+    loadSprites(Object.values(me.portrait.frames), { optional: true }).catch(() => {});
   }
   /** A line about the CTO: she stops talking on the phone while it is open. */
   async function ctoLine(key) {
@@ -401,11 +424,10 @@ export function createChapterScreen(game) {
   async function useCto(ctx) {
     run.phase('cto');
     const u = ctoUse(scen);
-    if (u.kind === 'call') {
-      if (await ctoLine(ch.cto.calls[u.n - 1])) run.phase('room');
+    if (u.kind === 'call') {                                        // her own words: she keeps talking in the room while they show
+      if (await line(ch.cto.calls[u.n - 1])) run.phase('room');
       return;
     }
-    ctoQuiet = true;
     if (!(await line(ch.cto.ask))) return;
     showDecision(ctx);
   }
@@ -432,8 +454,8 @@ export function createChapterScreen(game) {
       return;
     }
     if (r.outcome === 'win') { win(ctx); return; }
+    ctoQuiet = false;                                               // she speaks again: the loop is back while her line shows
     if (!(await line(ch.cto.show))) return;
-    ctoQuiet = false;
     if (r.outcome === 'deploy') enterPc(ctx, { view: 'deploy' });   // found already: just deploy it
     else openTool(ctx, 'hc', 'cto');
   }
@@ -521,6 +543,7 @@ export function createChapterScreen(game) {
       mode = 'use'; busy = false; tools = {}; introShown = new Set(); toolName = null; toolFrom = null; toolEl = null; reveal = null;
       scen = createScenario(); vitalsMode = 'critical'; vitalsT = 0; nudges = []; talkT = 0; ctoQuiet = false; lastDraw = ''; sceneEl = null; monFrame = null;
       art = null; hcArt = null; recovering = null;
+      gctx = ctx; loadPersona(ctx);
       // the room's and the Honeycomb screen's pictures load while the card is read; either may fail and play on
       const want = (url, set) => loadManifest(url, { timeout: LOAD_WAIT_MS }).then(set, () => {});
       loading = Promise.all([want(ch.manifest, (a) => { art = a; }), want(ch.tools.hc.screens, (a) => { hcArt = a; })]);

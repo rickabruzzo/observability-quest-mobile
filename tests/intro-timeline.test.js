@@ -62,10 +62,13 @@ import { SIDE_POSES } from '../js/engine/hero-side.js';
 import { STRIDE_PX } from '../js/engine/walk.js';
 test('the way out: across the floor, up to the threshold, door opens, hero gone, door shuts', () => {
   const p = exitPlan({ standX: 158, doorX: 261, floorY: 178, doorY: 153 });
-  assert.ok(p.total > 2500 && p.total < 5000, String(p.total));      // 103 px at a stroll, a few steps up, the door
+  assert.ok(p.total > 1700 && p.total < 5000, String(p.total));      // 103 px at a stroll, a few steps up, the door
   const a = exitAt(p, 0); assert.deepEqual([a.x, a.y, a.visible, a.doorOpen, a.done], [158, 178, true, false, false]);
   const mid = exitAt(p, p.across / 2); assert.ok(mid.x > 158 && mid.x < 261 && mid.y === 178 && /^w[1-8]$/.test(mid.pose));
-  assert.ok(p.across >= 103 / 70 * 1000, 'the walk out is a stroll: no faster than 70 px/s');
+  // A stroll: about a step and a half a second. The era hero's stride is 76 px (× the bedroom's 0.85), so the
+  // same cadence is about 100 px/s; the old ceiling of 70 px/s was for the 38-px stride (Warp brief 09).
+  assert.ok(p.across >= 103 / 130 * 1000, 'the walk out is a stroll: no faster than 130 px/s');
+  assert.ok(p.across <= 103 / 80 * 1000, 'but not a dawdle: at least 80 px/s, or the long stride goes to slow motion');
   const up = exitAt(p, p.across + p.up / 2); assert.equal(up.x, 261); assert.ok(up.y < 178 && up.y > 153);
   assert.ok(/^w[1-8]$/.test(up.pose), 'the few steps up to the door still walk — there is no back view');
   const open = exitAt(p, p.across + p.up + 10); assert.deepEqual([open.x, open.y, open.pose, open.visible, open.doorOpen], [261, 153, 'stand', true, true]);
@@ -88,6 +91,20 @@ test('the exit frame comes from distance travelled, so the feet do not slide', (
   assert.equal(atPx(STRIDE_PX), 'w1', 'one full cycle per stride');
   assert.equal(atPx(STRIDE_PX * 2), 'w1');
   assert.deepEqual([...new Set(Array.from({ length: STRIDE_PX }, (_, d) => atPx(d)))], SIDE_POSES.slice(1));
+});
+test('a scaled hero strides a scaled distance: the cycle repeats every STRIDE_PX × heroScale scene px', () => {
+  const p = exitPlan({ standX: 0, doorX: 190, floorY: 180, doorY: 180, heroScale: 0.5 });
+  const atPx = (px) => exitAt(p, (px / 190) * p.across).pose;
+  assert.equal(atPx(0), 'w1');
+  assert.equal(atPx(STRIDE_PX / 2), 'w1', 'half the stride at half the size');
+  assert.notEqual(atPx(STRIDE_PX / 4), 'w1');
+  assert.deepEqual([...new Set(Array.from({ length: STRIDE_PX / 2 }, (_, d) => atPx(d)))], SIDE_POSES.slice(1));
+  assert.equal(exitPlan({ standX: 0, doorX: 190, floorY: 180, doorY: 180 }).heroScale, 1);
+});
+test('the bedroom draws the hero at 0.85 of his size: taller than 136 px he would overtop his own 132-px door', () => {
+  const bedroom = SHOTS.at(-1);
+  assert.equal(bedroom.id, 'bedroom'); assert.equal(bedroom.heroScale, 0.85);
+  assert.ok(SHOTS.slice(0, -1).every((s) => s.heroScale === undefined), 'only the shot with the hero carries a scale');
 });
 test('the way out with the door on the hero\'s own row skips the walk up; leftward doors flip', () => {
   const p = exitPlan({ standX: 200, doorX: 40, floorY: 176, doorY: 176 });
