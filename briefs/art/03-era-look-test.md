@@ -1,5 +1,11 @@
 # Art brief 03 — era-look test: room 2 with both people drawn as the references draw them (one image)
 
+> **Done, 2026-11-13.** Rick approved the test's style (try 2, "getting close enough") and Art Claude carried it
+> through all five rooms, the close-ups, five conversation portraits and a hero model sheet. See
+> `handbacks/2026-11-13-art-final.md` and the three `art-drops/2026-11-13-era-look-*/HANDBACK.md` files. The
+> style words that worked are the ones below plus "the moderate detail of a 1990s point-and-click game character
+> standing in a room, not a modern cartoon".
+
 Read `briefs/art/PROTOCOL.md` first. For **Art Claude** on Rick's personal account (Gemini API
 `gemini-3.1-flash-image`). Rick art directs; his direction beats this brief.
 

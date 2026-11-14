@@ -100,6 +100,23 @@ def test_a_cards_extra_frames_change_only_where_their_source_does(tmp_path):
     assert json.load(open(out / 'cards.json')) == m
 
 
+def test_the_fork_builds_the_era_look_and_can_go_back_to_the_painted_one():
+    assert br.LOOK == 'era' and br.ROOMS == br.rooms('era')
+    era, painted = br.rooms('era'), br.rooms('painted')
+    assert set(era) == set(painted) == {'ch1', 'ch2', 'ch3', 'ch4', 'ch5'}
+    for ch in era:
+        # the same file names in both looks, so nothing in the game changes when the look does
+        assert era[ch]['plates'] == painted[ch]['plates'] and era[ch]['edits'] == painted[ch]['edits'], ch
+        assert era[ch]['src'] == 'art-drops/2026-11-13-era-look-rooms' and era[ch]['exact'] is True
+        for n in list(era[ch]['plates']) + list(era[ch]['edits']):
+            assert os.path.exists(os.path.join(br.ROOT, era[ch]['src'], n + '.png')), n
+    assert painted['ch1']['src'] == 'scratch/room_gen' and not painted['ch1'].get('exact')
+    assert painted['ch2']['src'] == 'art-drops/2026-11-12-room-ch2' and painted['ch5']['src'] == 'art-drops/2026-11-12-room-ch5'
+    try: br.rooms('sepia')
+    except KeyError: pass
+    else: raise AssertionError('an unknown look was accepted')
+
+
 def test_every_room_and_card_in_the_drops_is_listed_with_its_source():
     for ch in ('ch2', 'ch3', 'ch4', 'ch5'):
         r = br.ROOMS[ch]

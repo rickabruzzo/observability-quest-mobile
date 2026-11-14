@@ -21,24 +21,37 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC, OUT = 'scratch/room_gen', 'assets/rooms'
 COLOURS = 192
 MAX_DRIFT = 0.25                    # a talk frame changes one figure; past a quarter of the frame it is another picture
-# Each chapter: where its 640x400 files are, the plates (room first), and the edits of the room plate.
-# Chapter 1's sources predate the art drops and live in scratch/ on the machine that made them.
-ROOMS = {
-    'ch1': {'src': SRC, 'plates': ['R1_exec_floor', 'R1_monitor_closeup', 'R1_pc_closeup'],
-            'edits': {'R1_cto_talk_1': 'R1_exec_floor', 'R1_cto_talk_2': 'R1_exec_floor'}},
-    # Rooms 2-5 come from the art drops as reviewed with Rick on 2026-11-13. Each has a win frame (the persona
-    # once the fix has landed); room 2 also has its whiteboard after the fix, a second close-up plate.
-    'ch2': {'src': 'art-drops/2026-11-12-room-ch2', 'exact': True,
-            'plates': ['R2_war_room', 'R2_wall_closeup', 'R2_wall_closeup_fixed', 'R2_pc_closeup'],
-            'edits': {n: 'R2_war_room' for n in ('R2_npc_talk_1', 'R2_npc_talk_2', 'R2_npc_look', 'R2_npc_scratch', 'R2_npc_mark', 'R2_npc_win')}},
-    'ch3': {'src': 'art-drops/2026-11-12-room-ch3', 'exact': True, 'plates': ['R3_bullpen', 'R3_wall_closeup', 'R3_pc_closeup'],
-            'edits': {n: 'R3_bullpen' for n in ('R3_npc_talk_1', 'R3_npc_talk_2', 'R3_npc_win')}},
-    'ch4': {'src': 'art-drops/2026-11-12-room-ch4', 'exact': True, 'plates': ['R4_ops_room', 'R4_wall_closeup', 'R4_pc_closeup'],
-            'edits': {n: 'R4_ops_room' for n in ('R4_npc_talk_1', 'R4_npc_talk_2', 'R4_npc_win')}},
-    # Room 5 is the atrium (same file names as the loft it replaced).
-    'ch5': {'src': 'art-drops/2026-11-12-room-ch5', 'exact': True, 'plates': ['R5_loft', 'R5_wall_closeup', 'R5_pc_closeup'],
-            'edits': {n: 'R5_loft' for n in ('R5_npc_talk_1', 'R5_npc_talk_2', 'R5_npc_win')}},
+# Each chapter: the plates (room first) and the edits of the room plate. Rooms 2-5 each have a win frame (the
+# persona once the fix has landed); room 2 also has its whiteboard after the fix, a second close-up plate.
+# Room 5 is the atrium (same file names as the loft it replaced).
+_FILES = {
+    'ch1': (['R1_exec_floor', 'R1_monitor_closeup', 'R1_pc_closeup'], 'R1_exec_floor', ('R1_cto_talk_1', 'R1_cto_talk_2')),
+    'ch2': (['R2_war_room', 'R2_wall_closeup', 'R2_wall_closeup_fixed', 'R2_pc_closeup'], 'R2_war_room',
+            ('R2_npc_talk_1', 'R2_npc_talk_2', 'R2_npc_look', 'R2_npc_scratch', 'R2_npc_mark', 'R2_npc_win')),
+    'ch3': (['R3_bullpen', 'R3_wall_closeup', 'R3_pc_closeup'], 'R3_bullpen', ('R3_npc_talk_1', 'R3_npc_talk_2', 'R3_npc_win')),
+    'ch4': (['R4_ops_room', 'R4_wall_closeup', 'R4_pc_closeup'], 'R4_ops_room', ('R4_npc_talk_1', 'R4_npc_talk_2', 'R4_npc_win')),
+    'ch5': (['R5_loft', 'R5_wall_closeup', 'R5_pc_closeup'], 'R5_loft', ('R5_npc_talk_1', 'R5_npc_talk_2', 'R5_npc_win')),
 }
+# Two looks, the same file names. Where each look's 640x400 files are, and whether its figure frames are exact:
+#   painted  the build Rick approved on 2026-11-13 (tag v0.2-painted-rooms): personas painted at portrait level.
+#            Chapter 1's sources predate the art drops and live in scratch/ on the machine that made them.
+#   era      the era-look fork: the same rooms with every persona redrawn as a simple 1990s game character, and
+#            the close-ups repainted. One drop holds all five rooms.
+# To go back to the painted look: set LOOK = 'painted' (or run `python3 tools/build_rooms.py painted`) and rebuild.
+_SOURCES = {
+    'painted': {'ch1': (SRC, False), **{f'ch{n}': (f'art-drops/2026-11-12-room-ch{n}', True) for n in (2, 3, 4, 5)}},
+    'era': {ch: ('art-drops/2026-11-13-era-look-rooms', True) for ch in _FILES},
+}
+LOOK = 'era'
+
+
+def rooms(look):
+    """The chapters of one look: where each one's files are, its plates and its edits."""
+    return {ch: {'src': _SOURCES[look][ch][0], 'exact': _SOURCES[look][ch][1], 'plates': list(plates), 'edits': {n: room for n in edits}}
+            for ch, (plates, room, edits) in _FILES.items()}
+
+
+ROOMS = rooms(LOOK)
 # The persona cards' pictures: 640x400 in the drops, 128x80 in the card's window. P2 is the druid (its own drop;
 # the armoured picture in room 2's drop is retired). P4 was redone in place as Knight Watch.
 CARDS = {'P1': 'art-drops/2026-11-12-card-ch1/P1_card.png', 'P2': 'art-drops/2026-11-13-card-ch2/P2_card.png',
@@ -129,7 +142,9 @@ def build_cards(out='assets/cards', cards=None, frames=None):
 
 
 if __name__ == '__main__':
-    for name, r in ROOMS.items():
+    look = sys.argv[1] if len(sys.argv) > 1 else LOOK
+    print(f'look: {look}')
+    for name, r in rooms(look).items():
         src = os.path.join(ROOT, r['src'])
         if not os.path.exists(os.path.join(src, r['plates'][0] + '.png')): print(f'{name}: sources not in this checkout ({r["src"]}); left as built'); continue
         build(src, os.path.join(ROOT, OUT), name, r['plates'], r['edits'], r.get('crops'), r.get('exact', False))
