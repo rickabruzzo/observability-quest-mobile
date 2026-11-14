@@ -84,6 +84,12 @@ They differ from the plate only inside **x 238–320, y 38–200** (his figure).
 - **The sticker shapes on the laptop close-up's bezel are gone**; the screen rectangle is unchanged (x 73–256, y 41–159).
 - **Pinball look line (Rick's):** "You already hit your 5-hour token spend today."
 
+## P5 card animation (2026-11-13)
+
+`P5_card_fx_1.png`, `_2.png`, `_3.png` (640×400): the same card with the effect in new positions: the crossbow bolt's rocket flame flares and flickers, and the loose scrolls flutter. Each is a Gemini edit of the card's full-size original; only the effect areas were composited back, so the person never moves. Changed area: the flame (x 24–170, y 19–75) and the scrolls (x 220–285, y 85–160); his face never changes.
+- **Loop:** `P5_card` → `_fx_1` → `_fx_2` → `_fx_3` → `_fx_2` → `_fx_1`, about 160–200 ms a frame, the same as the CTO's sparkle. Reduced motion: `P5_card` only.
+- Provenance: `scratch/card_gen/edit_fx.py` (`P5_fx`), 3 tries, all 3 kept.
+
 ## Flaws kept
 
 - **The pinball machine sits right behind his head**, so his outline is less clear against the bright backglass. Rick accepted it.
