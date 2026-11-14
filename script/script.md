@@ -625,9 +625,6 @@ The whiteboard says what it has always said: everything. It is not narrowing thi
 ### ch2.old.exit
 Three hundred and fifty green lies. You close the tab.
 
-### ch2.look.workstation
-A workstation. Honeycomb. The intern set it up. The intern is asleep. The intern is smarter than all of you.
-
 ### ch2.hc.title
 HONEYCOMB · SERVICE MAP
 
@@ -760,6 +757,15 @@ The spare desk: a laptop under a crust of stickers, and a guitar leaning beside 
 ### ch3.look.npc
 The Frontend Developer, on the phone with support, who are on the phone with a customer, who is looking at a spinner. On her screen is a pull request: a nicer spinner.
 
+### ch3.look.sign
+A handwritten sign, taped up where every guitar shop tapes one: NO STAIRWAY.
+
+### ch3.look.guitar
+A demo guitar, leaning on the spare desk. It would be so easy to pick it up. There is a sign about that.
+
+### ch3.use.guitar
+You pick it up and get four notes in. "No Stairway to Heaven," says the Developer, without looking up. You put it back.
+
 ### ch3.npc.call.1
 DEVELOPER: Yes, I know it's slow for them. It isn't slow for me. It isn't slow for anyone I can find.
 
@@ -865,9 +871,6 @@ It spins beautifully. For fourteen seconds. The spinner is now your most-viewed 
 ### ch3.old.exit
 Your aggregate metrics are a beautiful lie. You go looking for the truth.
 
-### ch3.look.workstation
-A workstation. Honeycomb's Web Launchpad, already open to the storefront. Someone has been here before you and left a sticky note: "it's not the CDN".
-
 ### ch3.hc.title
 HONEYCOMB · FRONTEND OBSERVABILITY
 
@@ -935,7 +938,7 @@ Inspired by a space MMO studio whose fleet-battle code one engineer understands.
 THE SRE ON CALL
 
 ### ch4.card.stats
-Pager Endurance 19 · Postmortem Writing 14 · Blameless 18 · Sleep 2
+Notification Endurance 19 · Postmortem Writing 14 · Blameless 18 · Sleep 2
 
 ### ch4.card.line
 Tonight's page: the Site Reliability Engineer on call at Nullpoint Games. Eight thousand players are in one star system, and the one engineer who understands the fleet code is asleep in another time zone.
@@ -944,10 +947,10 @@ Tonight's page: the Site Reliability Engineer on call at Nullpoint Games. Eight 
 THE SRE ON CALL
 
 ### ch4.persona.class
-Knight of the Pager
+Knight Watch
 
 ### ch4.persona.stats
-Pager Endurance 19 · Postmortem Writing 14 · Blameless 18 · Sleep 2
+Notification Endurance 19 · Postmortem Writing 14 · Blameless 18 · Sleep 2
 
 ### ch4.persona.flavor
 Sworn to answer the call. Any call. At any hour.
@@ -1108,9 +1111,6 @@ Chat is also aware. Chat has been aware for forty minutes. Awareness is not a fi
 ### ch4.old.exit
 You put the phone down. There has to be a way to understand code you didn't write, at 3 AM, without a human sacrifice.
 
-### ch4.look.workstation
-A workstation with the team's coding agent open: a small crab-shaped thing labelled CLAW CODEZ. Someone has connected it to Honeycomb through MCP. It waves a claw.
-
 ### ch4.hc.title
 HONEYCOMB · MCP
 
@@ -1175,7 +1175,7 @@ JESSITRON: Nobody had to be the hero who knows everything. Anyone on the team co
 
 ## Chapter 5 — Team Agents · Startup · Build & Release Engineer
 
-Fictional three-person startup. Company: **Agentry**. Narrator: Matt Nelson. This is the **Team Agents** chapter. The persona is the Build & Release Engineer who shipped on Friday. The solve follows Honeycomb's own Team Agents demo (Innovation Week 2026): an agent with a standing goal (watch every deploy) reads what the deploy was meant to do, leaves a specific Finding, shows its work on a Canvas, and offers the fix as a pull request; it also notices the runbook is out of date. In Honeycomb nothing is a joke: the `jab` slots are nudges. The room is the building's atrium, written from the art drop as redone on 2026-11-13 (Rick: the loft felt like a different building): a big monitor on a stand, a lent laptop on a coffee table, the persona on the couch, a pager on the floor and a pinball machine.
+Fictional three-person startup. Company: **Agentry**. Narrator: Matt Nelson. This is the **Team Agents** chapter. The persona is the Build & Release Engineer who shipped on Friday. The solve follows Honeycomb's own Team Agents demo (Innovation Week 2026): an agent with a standing goal (watch every deploy) reads what the deploy was meant to do, leaves a specific Finding, shows its work on a Canvas, and offers the fix as a pull request; it also notices the runbook is out of date. In Honeycomb nothing is a joke: the `jab` slots are nudges. The room is the building's atrium, written from the art drop as redone on 2026-11-13 (Rick: the loft felt like a different building): a big monitor on a stand with three readout boxes, a lent laptop on a coffee table, the persona on the couch, and a pinball machine. There is no pager in this room: the pager is the Honeycomb Hero's (Rick, 2026-11-13). The pinball line is Rick's.
 
 ### ch5.card.title
 THE RELEASE ENGINEER
@@ -1199,7 +1199,7 @@ Deploy Frequency 20 · Rollback Reflex 15 · Friday Deploys 1 · Sleep 3
 Strikes at 5:52 PM. Vanishes for the weekend.
 
 ### ch5.room.enter
-The atrium at 3 AM. Bean bags, plants, a silent pinball machine. A pager face-down on the floor where someone threw it. The big monitor shows sign-ups: a calm line with no idea. On the couch, the engineer who shipped Friday's release, both hands on his head.
+The atrium at 3 AM. Bean bags, plants, a silent pinball machine. The big monitor shows sign-ups: a calm line with no idea. On the couch, the engineer who shipped Friday's release, both hands on his head.
 
 ### ch5.look.wall
 Sign-ups, on a monitor the size of a door. A calm, healthy line. Eleven people would like a word with that line.
@@ -1212,6 +1212,12 @@ Up close: sign-ups steady, error rate 0.4%, release shipped Friday at 5:52 PM. A
 
 ### ch5.wall.box.2
 5:52
+
+### ch5.wall.box.3
+11
+
+### ch5.wall.box.ok.3
+0
 
 ### ch5.wall.stat.1
 can't sign up - O'Brien
@@ -1246,11 +1252,8 @@ They've lent you the coffee table. A laptop, a plant, and a coffee somebody gave
 ### ch5.look.npc
 The Release Engineer, on the couch, laptop on his knees, both hands on his head. One key rolls back all of Friday. He has been not pressing it for a while.
 
-### ch5.look.pager
-The pager, face-down on the floor. It is still buzzing. It will buzz until this is fixed or it dies. It will not die first.
-
 ### ch5.look.pinball
-A pinball machine, all rockets and ringed planets. The high score belongs to AAA. Nobody here has had a free hand since Friday.
+You already hit your 5-hour token spend today.
 
 ### ch5.npc.call.1
 RELEASE ENGINEER: I shipped at 5:52 on a Friday. I know. I know. You don't have to say it.
@@ -1356,9 +1359,6 @@ Sign-up now fails three times instead of once. Thorough.
 
 ### ch5.old.exit
 You cannot find one line in two thousand by staring. You go find something that was watching.
-
-### ch5.look.workstation
-A workstation. Honeycomb — and a notification: a Team Agent has a Finding waiting. It has been waiting since 6:22 PM Friday.
 
 ### ch5.hc.title
 HONEYCOMB · TEAM AGENTS
