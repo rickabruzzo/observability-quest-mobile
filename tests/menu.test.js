@@ -4,9 +4,9 @@ import { parseDone, serializeDone, recordDone, solvedCount, menuRows, parseCh, a
 import * as menu from '../js/menu.js';
 import { SCRIPT } from '../js/script.js';
 
-test('five scenarios, in order; only the first is built', () => {
+test('five scenarios, in order; all five are built', () => {
   assert.deepEqual(SCENARIOS, [1, 2, 3, 4, 5]);
-  assert.deepEqual(AVAILABLE, [1, 2]);
+  assert.deepEqual(AVAILABLE, [1, 2, 3, 4, 5]);
 });
 
 test('completion is scenario → missteps, stored with a version; junk and unknown scenarios are dropped', () => {
@@ -42,7 +42,7 @@ test('menu rows: five, from the script, the built scenarios enabled, solved ones
   const rows = menuRows(SCRIPT, { 1: 3 });
   assert.equal(rows.length, 5);
   assert.deepEqual(rows.map((r) => r.ch), [1, 2, 3, 4, 5]);
-  assert.deepEqual(rows.map((r) => r.enabled), [true, true, false, false, false]);
+  assert.deepEqual(rows.map((r) => r.enabled), [true, true, true, true, true]);
   assert.equal(rows[0].name, SCRIPT['menu.ch1.name']);
   assert.equal(rows[0].done, true); assert.equal(rows[1].done, false);
   for (const r of rows) assert.deepEqual(Object.keys(r).sort(), ['ch', 'done', 'enabled', 'hook', 'name']);
@@ -57,7 +57,8 @@ test('?ch=N: a whole number 1..5, anything else is ignored', () => {
 test('after the intro: a built ?ch goes straight in, ?preview=1 goes to the preview room, anything else the menu', () => {
   assert.deepEqual(afterIntro('?ch=1'), { screen: 'CHAPTER', ch: 1 });
   assert.deepEqual(afterIntro('?ch=2'), { screen: 'CHAPTER', ch: 2 });
-  assert.deepEqual(afterIntro('?ch=3'), { screen: 'MENU' });
+  assert.deepEqual(afterIntro('?ch=5'), { screen: 'CHAPTER', ch: 5 });
+  assert.deepEqual(afterIntro('?ch=6'), { screen: 'MENU' });
   assert.deepEqual(afterIntro(''), { screen: 'MENU' });
   assert.deepEqual(afterIntro('?preview=1'), { screen: 'PREVIEW' });
 });

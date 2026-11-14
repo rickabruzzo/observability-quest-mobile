@@ -184,6 +184,22 @@ body[data-cols="narrow"] .btn-sierra .long, body:not([data-cols="narrow"]) .btn-
 /* scenario 2's whiteboard: one theory at a time on the sheet taped to the board, in marker ink, centred */
 .wall-box.sheet { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: #2B2F36; font-size: calc(17px * var(--ui-scale, 1)); line-height: 1.1; padding: 2px; box-sizing: border-box; }
 .wall-box.sheet .fit { display: block; white-space: nowrap; transform-origin: 50% 50%; }
+/* scenario 3's checkout page: dark ink on the pale page */
+.wall-box.page { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: #2B2F36; font-size: calc(15px * var(--ui-scale, 1)); line-height: 1.1; padding: 0 2px; box-sizing: border-box; }
+.wall-box.page.left { align-items: flex-start; text-align: left; }
+.wall-box.page .fit { display: block; white-space: nowrap; transform-origin: 50% 50%; }
+.wall-ui.ok .wall-box.page { color: #1E6B2A; }
+/* scenario 4's chat column: the pilots' lines, newest at the bottom */
+.wall-box.chat { display: flex; flex-direction: column; justify-content: flex-end; color: #C8D0E8; font-size: calc(14px * var(--ui-scale, 1)); line-height: 1.15; padding: 2px 4px; box-sizing: border-box; }
+.wall-box.chat .fit { display: block; white-space: nowrap; transform-origin: 0 50%; }
+.wall-ui.ok .wall-box.chat { color: #3CE070; }
+/* scenario 5's atrium monitor: three readouts, the inbox newest on top */
+.wall-box.readout { display: flex; flex-direction: column; justify-content: center; align-items: center; color: #8FD3FF; font-size: calc(26px * var(--ui-scale, 1)); line-height: 1; }
+.wall-box.readout.bad { color: #FF5A5A; } .wall-box.readout.good { color: #3CE070; }
+.wall-box.readout .fit { display: block; white-space: nowrap; transform-origin: 50% 50%; }
+.wall-box.inbox { display: flex; flex-direction: column; justify-content: flex-start; color: #FF9A8A; font-size: calc(14px * var(--ui-scale, 1)); line-height: 1.2; padding: 3px 4px; box-sizing: border-box; }
+.wall-box.inbox .fit { display: block; white-space: nowrap; transform-origin: 0 50%; }
+.wall-ui.ok .wall-box.inbox { color: #3CE070; }
 /* the PC: green on dark, everything inside the CRT's screen */
 .pc-screen { position: absolute; display: flex; flex-direction: column; gap: 4px; padding: 4px 6px; overflow: hidden; font-family: var(--font-text); color: #3CE070; }
 .pc-title { font-size: calc(20px * var(--ui-scale, 1)); line-height: 1.1; color: #FFB000; text-align: center; white-space: nowrap; }

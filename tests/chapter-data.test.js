@@ -13,9 +13,9 @@ import { AVAILABLE, SCENARIOS } from '../js/menu.js';
 const ids = Object.keys(CHAPTERS).map(Number);
 const keysIn = (v) => JSON.stringify(v).match(/"(ch\d\.[a-z0-9.]+|ui\.[a-z.]+|persona\.[a-z]+|help\.[a-z]+)"/g)?.map((k) => JSON.parse(k)) ?? [];
 
-test('every built scenario is on the menu, and the menu offers only built ones', () => {
-  assert.deepEqual(AVAILABLE, ids);
-  assert.ok(ids.every((n) => SCENARIOS.includes(n)));
+test('all five scenarios are built and on the menu', () => {
+  assert.deepEqual(ids, [1, 2, 3, 4, 5]);
+  assert.deepEqual(AVAILABLE, SCENARIOS);
 });
 
 for (const n of ids) {
@@ -71,7 +71,7 @@ test('brief 09\'s stand points for the 56-px hero', () => {
   assert.equal(at(1, 'cto'), 148);
 });
 
-test('scenario 3 is mirrored and has the sign and the guitar; scenario 5 the pinball machine; scenario 4 the manager\'s line', { skip: !CHAPTERS[5] && 'scenarios 3–5 come with the second pull request' }, () => {
+test('scenario 3 is mirrored and has the sign and the guitar; scenario 5 the pinball machine; scenario 4 the manager\'s line', () => {
   const r3 = CHAPTERS[3].room, by = Object.fromEntries(r3.hotspots.map((h) => [h.id, h]));
   assert.ok(by.pc.rect.x > 160 && by.npc.rect.x < 100);
   assert.equal(by.sign.walk, false); assert.equal(by.sign.look, 'ch3.look.sign'); assert.ok(!by.sign.use);

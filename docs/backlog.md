@@ -126,5 +126,5 @@ block on. Test the restyle under `.hs-form` on a real phone.
 - `js/claim.js` still fills a hidden `quest_score` field. With no score, it should carry the scenarios solved
   (and, if PMM wants it, whether there were missteps). Found by Warp in the brief 04-06 review, 2026-11-13.
 - Persona card (2026-11-13, Warp brief 07): the card's picture is still; brief 08 adds the painted frames from `assets/cards/cards.json` and Knight Watch's phone. The stopwatch summary's own labels stay in code until the summary comes out before the booth build.
-- Scenarios 3–5 (brief 08, second pull request): data modules and wall painters for the checkout page, the wall of space and the atrium monitor; then `AVAILABLE` grows to all five and the menu's `menu.soon` goes unused.
+- The menu's `menu.soon` slot is unused now that all five scenarios play (brief 08); delete it from the script when convenient.
 - Scenario 4's coding-agent tool needs a close label slot (`ch4.hc.close`, "[Close Claw Codez]"); until then the data carries the string.
