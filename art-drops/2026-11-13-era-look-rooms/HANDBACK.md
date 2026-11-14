@@ -39,6 +39,15 @@ These are a bit wider than the painted build's, because the simpler figures came
 - **R2 glasses restored (Rick):** the redraw had dropped his reading glasses. They are now pushed up on his head in the plate and all six frames, as in the painted build (a Gemini edit of each, with only the head area composited back). The swap area is unchanged.
 - The style words are the test's, plus: "the moderate detail of a 1990s point-and-click game character standing in a room, not a modern cartoon".
 
+## Known, left as is (Rick, 2026-11-13)
+
+- **R1 scale:** by her place on the view plane, the CTO and her desk read about 15% too small next to the other personas. Not worth a precise rescale now; if room 1 is ever regenerated, make the desk and CTO about 15% larger.
+- **R3:** a few stray light pixels on the left edge of her glasses; it reads as a glint at game size.
+
+## Sign-off update
+
+Rick approved all five rooms on 2026-11-13, after the R2 glasses fix.
+
 ## Provenance
 
 Gemini API `gemini-3.1-flash-image`, 3:2, 1K, 2026-11-13. Script: `scratch/room_gen/gen_era.py` (exact prompts). Plates: 2 tries each (R1 t2, R3 t1, R4 t2, R5 t2; R2 from the test, t2). Frames: 2 tries each. Kept:
