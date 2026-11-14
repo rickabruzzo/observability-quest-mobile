@@ -25,12 +25,12 @@ for (const [w, h] of [[844, 390], [667, 375]]) {
     assert.equal(await page.locator('.menu-hint').innerText(), SCRIPT['menu.hint']);
     const rows = page.locator('.menu-row');
     assert.equal(await rows.count(), 5);
-    assert.deepEqual(await rows.evaluateAll((bs) => bs.map((b) => b.disabled)), [false, true, true, true, true]);
+    assert.deepEqual(await rows.evaluateAll((bs) => bs.map((b) => b.disabled)), [false, false, true, true, true]);
     for (let n = 1; n <= 5; n++) {
       const t = (await rows.nth(n - 1).innerText()).replace(/\s+/g, ' ');
       assert.ok(t.includes(SCRIPT[`menu.ch${n}.name`]) && t.includes(SCRIPT[`menu.ch${n}.hook`]), t);
     }
-    assert.match(await rows.nth(1).innerText(), /coming soon/);
+    assert.match(await rows.nth(2).innerText(), /coming soon/);
     const bad = await page.evaluate(() => {
       const b = document.querySelector('#scene-box').getBoundingClientRect(), m = document.querySelector('.menu');
       const out = [];
@@ -46,7 +46,7 @@ for (const [w, h] of [[844, 390], [667, 375]]) {
     });
     assert.deepEqual(bad, []);
     assert.equal(await page.locator('#btn-menu-claim').count(), 0, 'no claim before a scenario is done');
-    await page.locator('.menu-row[data-ch="2"]').click({ force: true });
+    await page.locator('.menu-row[data-ch="3"]').click({ force: true });
     await page.waitForTimeout(200);
     assert.equal(await page.evaluate(() => document.body.dataset.screen), 'MENU', 'a disabled row does nothing');
     await ctx.close();
@@ -113,8 +113,8 @@ test('a replay from the menu starts at the class card with the clock reset', asy
   await ctx.close();
 });
 
-test('?ch=1 skips the menu; ?ch=2 (not built) and junk show it', async () => {
-  for (const [q, want] of [['?ch=1', 'CHAPTER'], ['?ch=2', 'MENU'], ['?ch=x', 'MENU']]) {
+test('?ch=1 skips the menu; ?ch=3 (not built) and junk show it', async () => {
+  for (const [q, want] of [['?ch=1', 'CHAPTER'], ['?ch=3', 'MENU'], ['?ch=x', 'MENU']]) {
     const { ctx, page } = await openGame(browser, server, { query: q });
     assert.equal(await page.evaluate(() => document.body.dataset.screen), want, q);
     if (want === 'CHAPTER') assert.equal(await page.evaluate(() => window.__oq.chapter.state), 'card');

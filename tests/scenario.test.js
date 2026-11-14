@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createScenario, notePrompt, noteFound, noteDeployed, ottoState, canLeave, canDeploy, vitalsLine, ctoUse, decide, missteps } from '../js/engine/scenario.js';
+import { createScenario, notePrompt, noteFound, noteDeployed, wallState, canLeave, canDeploy, statusLine, personaUse, decide, missteps } from '../js/engine/scenario.js';
 import * as scenario from '../js/engine/scenario.js';
 
 test('Leave computer is locked until a prompt has been picked in either tool', () => {
@@ -15,27 +15,27 @@ test('Leave computer is locked until a prompt has been picked in either tool', (
 
 test('Otto: critical, then the cause is found, then the fix is deployed; the monitor recovers only on deployed', () => {
   const s = createScenario();
-  assert.equal(ottoState(s), 'critical');
+  assert.equal(wallState(s), 'broken');
   noteFound(s);
-  assert.equal(ottoState(s), 'found');
+  assert.equal(wallState(s), 'found');
   noteDeployed(s);
-  assert.equal(ottoState(s), 'deployed');
+  assert.equal(wallState(s), 'fixed');
   const early = createScenario();
   noteDeployed(early);
-  assert.equal(ottoState(early), 'critical', 'nothing to deploy before the cause is found');
+  assert.equal(wallState(early), 'broken', 'nothing to deploy before the cause is found');
 });
 
 test('Check Otto\'s vitals: before → old (Cave Logs tried) → found → hc (deployed)', () => {
   const s = createScenario();
-  assert.equal(vitalsLine(s), 'before');
+  assert.equal(statusLine(s), 'before');
   notePrompt(s, 'hc');
-  assert.equal(vitalsLine(s), 'before', 'a Honeycomb prompt alone is not the Cave Logs line');
+  assert.equal(statusLine(s), 'before', 'a Honeycomb prompt alone is not the Cave Logs line');
   notePrompt(s, 'old');
-  assert.equal(vitalsLine(s), 'old');
+  assert.equal(statusLine(s), 'old');
   noteFound(s);
-  assert.equal(vitalsLine(s), 'found');
+  assert.equal(statusLine(s), 'found');
   noteDeployed(s);
-  assert.equal(vitalsLine(s), 'hc');
+  assert.equal(statusLine(s), 'hc');
 });
 
 test('[Apply the fix and deploy] shows once the cause is found and goes away once used', () => {
@@ -49,9 +49,9 @@ test('[Apply the fix and deploy] shows once the cause is found and goes away onc
 
 test('the CTO before a tool is tried: her calls in order, the last one repeats; after, her question', () => {
   const s = createScenario();
-  assert.deepEqual([1, 2, 3, 4, 5].map(() => ctoUse(s)), [1, 2, 3, 3, 3].map((n) => ({ kind: 'call', n })));
+  assert.deepEqual([1, 2, 3, 4, 5].map(() => personaUse(s)), [1, 2, 3, 3, 3].map((n) => ({ kind: 'call', n })));
   notePrompt(s, 'old');
-  assert.deepEqual(ctoUse(s), { kind: 'ask' });
+  assert.deepEqual(personaUse(s), { kind: 'ask' });
 });
 
 test('[Get Honeycomb]: deployed → win; found → deploy on the spot; not found → show me (the investigation)', () => {
@@ -65,9 +65,9 @@ test('[Get Honeycomb]: deployed → win; found → deploy on the spot; not found
 
 test('[Sign the contract]: a jab once, then greyed; the choice always comes back', () => {
   const s = createScenario(); notePrompt(s, 'hc');
-  assert.deepEqual(decide(s, 'sign'), { outcome: 'jab' });
-  assert.equal(s.signed, true);
-  assert.deepEqual(decide(s, 'sign'), { outcome: 'tried' });
+  assert.deepEqual(decide(s, 'wrong'), { outcome: 'jab' });
+  assert.equal(s.wrong, true);
+  assert.deepEqual(decide(s, 'wrong'), { outcome: 'tried' });
   assert.deepEqual(decide(s, 'hc'), { outcome: 'show' });
 });
 
@@ -77,9 +77,9 @@ test('missteps: every old-tool prompt picked plus wrong advice; nothing inside H
   assert.equal(missteps(s), 0);
   notePrompt(s, 'old'); notePrompt(s, 'old');
   assert.equal(missteps(s), 2);
-  decide(s, 'sign');
+  decide(s, 'wrong');
   assert.equal(missteps(s), 3);
-  decide(s, 'sign');
+  decide(s, 'wrong');
   assert.equal(missteps(s), 3, 'a greyed prompt cannot be picked twice');
 });
 

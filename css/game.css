@@ -169,7 +169,9 @@ body[data-cols="narrow"] .btn-sierra .long, body:not([data-cols="narrow"]) .btn-
 /* ---- close-ups (js/screens/chapter.js): text placed from the scene's own rectangles ---- */
 .scene-ui { position: absolute; inset: 0; pointer-events: none; }
 .scene-ui button { pointer-events: auto; }
-/* Otto's vitals, close up: two lines a box, condensed sideways (never shrunk) when a line is wider than its box */
+/* the wall display's close-up: the painter's boxes are text placed from the scene's rectangles (brief 08) */
+.wall-box { position: absolute; overflow: hidden; font-family: var(--font-text); }
+/* scenario 1's vitals monitor: two lines a box, condensed sideways (never shrunk) when a line is wider than its box */
 .mon-box, .mon-out { position: absolute; overflow: hidden; font-family: var(--font-text); font-size: calc(18px * var(--ui-scale, 1)); line-height: 1.1; color: #FF8A5C; }
 .mon-box { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
 .mon-box .fit { display: block; max-width: none; white-space: nowrap; transform-origin: 50% 50%; }
@@ -177,8 +179,11 @@ body[data-cols="narrow"] .btn-sierra .long, body:not([data-cols="narrow"]) .btn-
 .mon-out { padding: 2px 3px; color: #C8D0E8; overflow-wrap: anywhere; }
 .mon-cursor { display: inline-block; width: 0.5em; height: 0.9em; margin-left: 1px; vertical-align: -0.1em; background: currentColor; }
 .mon-cursor.off { visibility: hidden; }
-.monitor-ui.ok .mon-box { color: #3CE070; }
-.monitor-ui.ok .mon-out { color: #3CE070; }
+.wall-ui.ok .mon-box { color: #3CE070; }
+.wall-ui.ok .mon-out { color: #3CE070; }
+/* scenario 2's whiteboard: one theory at a time on the sheet taped to the board, in marker ink, centred */
+.wall-box.sheet { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: #2B2F36; font-size: calc(17px * var(--ui-scale, 1)); line-height: 1.1; padding: 2px; box-sizing: border-box; }
+.wall-box.sheet .fit { display: block; white-space: nowrap; transform-origin: 50% 50%; }
 /* the PC: green on dark, everything inside the CRT's screen */
 .pc-screen { position: absolute; display: flex; flex-direction: column; gap: 4px; padding: 4px 6px; overflow: hidden; font-family: var(--font-text); color: #3CE070; }
 .pc-title { font-size: calc(20px * var(--ui-scale, 1)); line-height: 1.1; color: #FFB000; text-align: center; white-space: nowrap; }

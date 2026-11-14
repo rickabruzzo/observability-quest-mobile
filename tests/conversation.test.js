@@ -34,8 +34,8 @@ test('the prefix is dropped once, from the start only; a second mention inside t
 test('scenario 1: the calls, the question, the show line and her last word are hers; the jab, the win and the look are not', () => {
   const title = speakerOf(SCRIPT[CH1.persona.name]);
   assert.equal(title, 'CTO');
-  for (const k of [...CH1.cto.calls, CH1.cto.ask, CH1.cto.show, 'ch1.hero.line']) assert.equal(personaLine(SCRIPT[k], title).spoken, true, k);
-  for (const k of [CH1.cto.jab, 'ch1.win', 'ch1.look.cto', 'ch1.room.enter']) assert.equal(personaLine(SCRIPT[k], title).spoken, false, k);
+  for (const k of [...CH1.persona.calls, CH1.persona.ask, CH1.persona.options.hc.show, 'ch1.hero.line']) assert.equal(personaLine(SCRIPT[k], title).spoken, true, k);
+  for (const k of [CH1.persona.options.wrong.jab, 'ch1.win', 'ch1.look.cto', 'ch1.room.enter']) assert.equal(personaLine(SCRIPT[k], title).spoken, false, k);
   assert.equal(CH1.persona.portrait, 'p1');
   assert.equal(CH1.persona.where, 'top-left');                       // the CTO is on the right
 });

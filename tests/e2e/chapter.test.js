@@ -20,7 +20,7 @@ const PHONES = [[844, 390], [667, 375]];
 const PIC = { x: 4, y: 20, w: 188, h: 176 };
 const into = async (page) => { await page.click('#class-card'); assert.equal(await dismiss(page), SCRIPT['ch1.room.enter']); };
 const scen = (page) => page.evaluate(() => window.__oq.chapter.scenario);
-const otto = (page) => page.evaluate(() => ({ state: window.__oq.chapter.otto, tone: window.__oq.chapter.vitals.tone }));
+const wallOf = (page) => page.evaluate(() => ({ state: window.__oq.chapter.wall.state, tone: window.__oq.chapter.wall.tone }));
 /** Records every piece of text that ever appears on the page, so a test can say "never showed X". */
 const watchText = (page) => page.evaluate(() => {
   window.__seen = new Set([document.body.innerText]);
@@ -42,8 +42,8 @@ for (const [w, h] of PHONES) {
     assert.equal(s.missteps, 0); assert.equal(s.done, true); assert.ok(!('score' in s));
     const sum = Object.values(s.phases).reduce((a, b) => a + b, 0);
     assert.ok(Math.abs(sum - s.total) <= 50, `phases ${sum} vs total ${s.total}`);
-    for (const p of ['card', 'room', 'pc', 'hc', 'deploy', 'cto', 'win']) assert.ok(s.phases[p] > 0, `${p}: ${JSON.stringify(s.phases)}`);
-    assert.equal(s.phases.old, 0); assert.equal(s.phases.monitor, 0);
+    for (const p of ['card', 'room', 'pc', 'hc', 'deploy', 'persona', 'win']) assert.ok(s.phases[p] > 0, `${p}: ${JSON.stringify(s.phases)}`);
+    assert.equal(s.phases.old, 0); assert.equal(s.phases.wall, 0);
     assert.match(await page.locator('#summary h2').innerText(), /\d+:\d\d/);
     assert.match(await page.locator('#summary').innerText(), /Missteps\s+0/);
     const fits = await page.evaluate(() => { const r = document.querySelector('#summary').getBoundingClientRect(), b = document.querySelector('#scene-box').getBoundingClientRect(), e = document.querySelector('#summary'); return r.top >= b.top - 1 && r.bottom <= b.bottom + 1 && e.scrollHeight <= e.clientHeight + 1; });
@@ -75,7 +75,7 @@ test('Copy results prints one JSON line to the console, with missteps and no sco
   const json = lines.map((l) => { try { return JSON.parse(l); } catch { return null; } }).find((v) => v?.oq === 'run');
   assert.ok(json, lines.join('\n'));
   assert.equal(json.missteps, 0); assert.ok(!('score' in json));
-  assert.ok(json.phases.deploy > 0 && 'nudges' in json.counts && 'signed' in json.counts);
+  assert.ok(json.phases.deploy > 0 && 'nudges' in json.counts && 'wrong' in json.counts);
   await ctx.close();
 });
 
@@ -159,7 +159,7 @@ test('the CTO before a tool is tried: her three calls in order, the last one rep
     await pickOption(page, 'leave');                                  // every conversation ends in options; leave goes back to the room
     await inState(page, 'room');
   }
-  assert.ok((await run(page)).phases.cto > 0);
+  assert.ok((await run(page)).phases.persona > 0);
   await ctx.close();
 });
 
@@ -176,14 +176,14 @@ test('the cause found and the fix deployed: Otto stays critical until the deploy
   assert.equal(await page.locator('.pc-item[data-id="deploy"]').count(), 0, 'nothing to deploy yet');
   await pcPick(page, 'hc'); await solveHc(page);
   await inState(page, 'pc');
-  assert.deepEqual(await otto(page), { state: 'found', tone: 'red' }, 'found is not fixed');
+  assert.deepEqual(await wallOf(page), { state: 'found', tone: 'red' }, 'found is not fixed');
   assert.equal(await page.locator('.pc-item[data-id="deploy"]').innerText(), SCRIPT['ch1.pc.menu.deploy']);
   await pcPick(page, 'vitals');
   assert.equal(await dismiss(page), SCRIPT['ch1.pc.vitals.found']);
   await pcPick(page, 'deploy');
   assert.equal(await dismiss(page), SCRIPT['ch1.pc.deploy']);
   await page.waitForFunction(() => window.__oq.chapter.state === 'recover');
-  assert.deepEqual(await otto(page), { state: 'deployed', tone: 'green' });
+  assert.deepEqual(await wallOf(page), { state: 'fixed', tone: 'green' });
   await winOpen(page);                                              // Otto speaks once he has finished his sentence
   assert.equal(await page.locator('.mon-out').innerText().then((t) => t.trim()), SCRIPT['ch1.vitals.output.ok']);
   assert.equal(await dismiss(page), SCRIPT['ch1.otto.recovered']);
@@ -203,7 +203,7 @@ test('found but not deployed at the CTO: Get Honeycomb → "show me" → the dep
   const { ctx, page } = await openGame(browser, server, { query: '?ch=1' });
   await into(page); await toPc(page); await pcPick(page, 'hc'); await solveHc(page); await inState(page, 'pc');
   await leavePc(page);
-  assert.equal((await otto(page)).tone, 'red');
+  assert.equal((await wallOf(page)).tone, 'red');
   await askCto(page);
   await page.click('#decide-hc');
   assert.equal(await dismiss(page), shown('ch1.decide.hc.show'));
@@ -240,7 +240,7 @@ test('Cave Logs only, then the CTO: Get Honeycomb → "show me" → the investig
   const s = await run(page);
   assert.equal(s.missteps, 3);
   assert.ok(s.phases.old > 0);
-  assert.equal(s.counts.oldPrompts, 3); assert.equal(s.counts.vitals, 1);
+  assert.equal(s.counts.oldPrompts, 3); assert.equal(s.counts.status, 1);
   await page.click('#btn-claim');
   const { lines } = await charitySays(page);
   assert.equal(lines[0], SCRIPT['final.grief']);
@@ -258,7 +258,7 @@ test('Sign first: the jab, a misstep, the prompt greys and the choice comes back
   assert.equal(await dismiss(page), SCRIPT['ch1.decide.sign.jab']);
   await inState(page, 'decide');
   assert.equal(await page.locator('#decide-sign').isDisabled(), true);
-  assert.equal((await scen(page)).signed, true);
+  assert.equal((await scen(page)).wrong, true);
   await page.click('#decide-hc');
   assert.equal(await dismiss(page), shown('ch1.decide.hc.show'));
   await toolOpen(page, 'hc');
@@ -278,7 +278,7 @@ test('Sign first: the jab, a misstep, the prompt greys and the choice comes back
   await winLines(page);
   const s = await run(page);
   assert.equal(s.missteps, 1);
-  assert.equal(s.counts.signed, 1); assert.equal(s.counts.nudges, 1);
+  assert.equal(s.counts.wrong, 1); assert.equal(s.counts.nudges, 1);
   assert.equal(await page.locator('#sb-done').innerText(), 'Solved: 1 of 5');
   await page.click('#btn-claim');
   const { lines } = await charitySays(page);
@@ -292,13 +292,13 @@ test('the monitor close-up: the chart once a visit, a tap steps a box, Back and 
   const x0 = (await ch(page)).x;
   await tapSpot(page, 'monitor');
   assert.equal(await dismiss(page), SCRIPT['ch1.monitor.chart']);
-  assert.equal((await ch(page)).state, 'monitor');
+  assert.equal((await ch(page)).state, 'wall');
   assert.equal((await ch(page)).x, x0, 'no walk');
   const texts = () => page.locator('.mon-box').evaluateAll((els) => els.map((e) => e.innerText.replace(/\s+/g, ' ').trim()));
-  const before = (await page.evaluate(() => window.__oq.chapter.vitals)).boxes.map((b) => b.stat);
+  const before = (await page.evaluate(() => window.__oq.chapter.wall.frame)).boxes.map((b) => b.stat);
   const sc = await page.locator('#scene').boundingBox();
   await page.mouse.click(sc.x + (125 / 320) * sc.width, sc.y + (140 / 200) * sc.height);    // box 2
-  const after = (await page.evaluate(() => window.__oq.chapter.vitals)).boxes.map((b) => b.stat);
+  const after = (await page.evaluate(() => window.__oq.chapter.wall.frame)).boxes.map((b) => b.stat);
   assert.notEqual(after[1], before[1], 'the tapped box moved on');
   assert.equal(new Set(after).size, 3);
   await page.waitForTimeout(250);
@@ -310,8 +310,8 @@ test('the monitor close-up: the chart once a visit, a tap steps a box, Back and 
   assert.equal(await dismiss(page), SCRIPT['ch1.monitor.chart'], 'once per visit');
   await page.mouse.click(sc.x + 0.5 * sc.width, sc.y + (190 / 200) * sc.height);             // off the glass
   await inState(page, 'room');
-  assert.equal((await run(page)).counts.monitor, 2);
-  assert.ok((await run(page)).phases.monitor > 0);
+  assert.equal((await run(page)).counts.wall, 2);
+  assert.ok((await run(page)).phases.wall > 0);
   await ctx.close();
 });
 
@@ -319,11 +319,11 @@ test('the CTO talks on the phone, and stops while a window about her is open', a
   const { ctx, page } = await openGame(browser, server, { query: '?ch=1' });
   await into(page);
   const frames = new Set();
-  for (let i = 0; i < 12; i++) { frames.add(await page.evaluate(() => window.__oq.chapter.ctoFrame)); await page.waitForTimeout(110); }
-  assert.deepEqual([...frames].sort(), [0, 1, 2]);
+  for (let i = 0; i < 12; i++) { frames.add(await page.evaluate(() => window.__oq.chapter.personaFrame)); await page.waitForTimeout(110); }
+  assert.deepEqual([...frames].sort(), [null, ...CH1.persona.frames.talk].sort());
   await page.click('#btn-look'); await tapSpot(page, 'cto');
   await winOpen(page);
-  for (let i = 0; i < 6; i++) { assert.equal(await page.evaluate(() => window.__oq.chapter.ctoFrame), 0); await page.waitForTimeout(110); }
+  for (let i = 0; i < 6; i++) { assert.equal(await page.evaluate(() => window.__oq.chapter.personaFrame), null); await page.waitForTimeout(110); }
   assert.equal(await dismiss(page), SCRIPT['ch1.look.cto']);
   await ctx.close();
 });
@@ -419,11 +419,11 @@ test('reduced motion: no walking, a still monitor and CTO, instant text, the sam
   await winOpen(page);
   assert.ok((await page.locator('.msg').innerText()).length > 20, 'text typed at once');
   await dismiss(page);
-  const v1 = await page.evaluate(() => window.__oq.chapter.vitals);
+  const v1 = await page.evaluate(() => window.__oq.chapter.wall.frame);
   await page.waitForTimeout(700);
-  const v2 = await page.evaluate(() => window.__oq.chapter.vitals);
+  const v2 = await page.evaluate(() => window.__oq.chapter.wall.frame);
   assert.deepEqual(v1.boxes, v2.boxes); assert.deepEqual(v1.lights, v2.lights);
-  assert.equal(await page.evaluate(() => window.__oq.chapter.ctoFrame), 0);
+  assert.equal(await page.evaluate(() => window.__oq.chapter.personaFrame), null);
   const x0 = (await ch(page)).x;
   await tapSpot(page, 'pc');
   await inState(page, 'pc');
@@ -490,7 +490,7 @@ for (const [w, h] of PHONES) {
     assert.ok(m.box.y + m.box.h <= shoulders + 0.5, `window bottom ${m.box.y + m.box.h} vs the hero's shoulders ${shoulders}`);
     // she keeps talking in the room while her line is up (not reduced motion)
     const frames = new Set();
-    for (let i = 0; i < 10; i++) { frames.add(await page.evaluate(() => window.__oq.chapter.ctoFrame)); await page.waitForTimeout(110); }
+    for (let i = 0; i < 10; i++) { frames.add(await page.evaluate(() => window.__oq.chapter.personaFrame)); await page.waitForTimeout(110); }
     assert.ok(frames.size > 1, 'the CTO\'s talk frames play while she speaks');
     await dismiss(page);
     await pickOption(page, 'leave');
@@ -550,7 +550,7 @@ test('the first Use on the CTO opens her card; closing it starts her line; the s
   await tapSpot(page, 'cto');
   await page.waitForSelector('#persona-card', { timeout: 9000 });
   assert.equal((await ch(page)).window, null, 'no line while the card is up');
-  assert.equal(await page.evaluate(() => window.__oq.chapter.ctoFrame), 0, 'she holds her plate frame while the card is up');
+  assert.equal(await page.evaluate(() => window.__oq.chapter.personaFrame), null, 'she holds her plate frame while the card is up');
   const m = await cardMetrics(page);
   assert.equal(await page.locator('.pcard .name').innerText(), SCRIPT['ch1.persona.name']);
   assert.equal(await page.locator('.pcard .class').innerText(), SCRIPT['ch1.persona.class']);
@@ -578,7 +578,7 @@ test('the first Use on the CTO opens her card; closing it starts her line; the s
   assert.equal((await ch(page)).window, null);
   await pickOption(page, 'leave'); await inState(page, 'room');
   const s = await run(page);
-  assert.equal(s.counts.cards, 2); assert.ok(s.phases.cto > 0);
+  assert.equal(s.counts.cards, 2); assert.ok(s.phases.persona > 0);
   await ctx.close();
 });
 
@@ -611,7 +611,7 @@ for (const [w, h] of PHONES) {
     assert.ok(Math.min(...m.texts.map((t) => t.font)) >= 14 - 0.01, `smallest font ${Math.min(...m.texts.map((t) => t.font))}`);
     assert.ok(Math.abs(m.card.h / m.scene.h - 0.94) < 0.02 && Math.abs(m.card.w / m.card.h - 5 / 7) < 0.02, JSON.stringify(m.card));
     assert.ok(m.card.x >= 0 && m.card.y >= 0 && m.card.x + m.card.w <= m.scene.w + 0.5 && m.card.y + m.card.h <= m.scene.h + 0.5);
-    assert.equal(m.pic.tag, 'IMG');                                                  // the card art exists on this branch
+    assert.equal(m.pic.tag, 'CANVAS');                                               // the card art, drawn so its frames can move (brief 08)
     assert.equal(m.pic.w, 128); assert.equal(m.pic.h, 80);
     await ctx.close();
   });

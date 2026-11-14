@@ -2,12 +2,12 @@
 // hold (the rotate gate, a hidden tab), and counts what the player did. Pure apart from the clock, which is
 // injected, so it is tested without a browser.
 
-export const PHASES = ['card', 'room', 'pc', 'old', 'hc', 'deploy', 'monitor', 'cto', 'win'];
-const LABELS = { card: 'Class card', room: 'Room', pc: 'PC', old: 'Old tool', hc: 'Honeycomb screen', deploy: 'Deploy + recovery', monitor: 'Monitor', cto: 'CTO', win: 'Win + verdict' };
+export const PHASES = ['card', 'room', 'pc', 'old', 'hc', 'deploy', 'wall', 'persona', 'win'];
+const LABELS = { card: 'Title card', room: 'Room', pc: 'PC', old: 'Old tool', hc: 'Honeycomb screen', deploy: 'Deploy + recovery', wall: 'Wall display', persona: 'Persona', win: 'Win + verdict' };
 const COUNT_LABELS = [
   ['windows', 'Message windows'], ['taps', 'Taps'], ['walks', 'Walks'], ['walkMs', 'Walking time'],
   ['nudges', 'Honeycomb nudges'], ['oldPrompts', 'Old-tool prompts'], ['looks', 'Look uses'], ['visited', 'Hotspots visited'],
-  ['emails', 'Emails opened'], ['vitals', 'Vitals checks'], ['monitor', 'Monitor visits'], ['signed', 'Signed'], ['cards', 'Card views'],
+  ['emails', 'Emails opened'], ['status', 'Status checks'], ['wall', 'Wall display visits'], ['wrong', 'Wrong advice'], ['cards', 'Card views'],
 ];
 
 export function formatMs(ms) {
@@ -17,7 +17,7 @@ export function formatMs(ms) {
 
 export function createRunlog({ chapter, now = () => performance.now() } = {}) {
   const phases = Object.fromEntries(PHASES.map((p) => [p, 0]));
-  const counts = { windows: 0, taps: 0, walks: 0, walkMs: 0, nudges: 0, oldPrompts: 0, looks: 0, emails: 0, vitals: 0, monitor: 0, signed: 0, cards: 0 };
+  const counts = { windows: 0, taps: 0, walks: 0, walkMs: 0, nudges: 0, oldPrompts: 0, looks: 0, emails: 0, status: 0, wall: 0, wrong: 0, cards: 0 };
   const visited = new Set();
   const holds = new Set();
   let current = null, since = null, heldAt = null, done = false, missteps = 0;
