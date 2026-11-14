@@ -5,17 +5,22 @@
 // Positions are the art hand-back's measurements on the 320x200 scene (assets/rooms/, built by
 // tools/build_rooms.py); areas are { x0, x1, y0, y1 } inclusive.
 
+import { HERO_W } from '../engine/hero.js';
+import { SCENE_W } from '../engine/room.js';
+
 export const MANIFEST = 'assets/rooms/ch1.json';
 
 export const ROOM = {
   image: 'R1_exec_floor',
   floorY: 192,                         // the hero's feet
-  walk: [0, 292],                      // the hero's left edge
-  start: 142,                          // between the cube and the CTO's desk
-  // listed in drawing order: where two overlap the later one wins, so the monitor beats the PC at its corner
+  walk: [0, SCENE_W - HERO_W],         // the hero's left edge
+  start: 128,                          // between the cube and the CTO's desk (the 56-px hero's left edge: brief 09)
+  heroScale: 1,
+  // listed in drawing order: where two overlap the later one wins, so the monitor beats the PC at its corner.
+  // Stand points are for the 56-px hero (brief 09, item 8): the same centres as before, the CTO's re-measured.
   hotspots: [
-    { id: 'pc', rect: { x: 0, y: 75, w: 135, h: 111 }, standX: 87, look: 'ch1.look.pc', use: { scene: 'pc' } },
-    { id: 'cto', rect: { x: 206, y: 82, w: 100, h: 102 }, standX: 176, look: 'ch1.look.cto', use: { action: 'cto' } },
+    { id: 'pc', rect: { x: 0, y: 75, w: 135, h: 111 }, standX: 73, look: 'ch1.look.pc', use: { scene: 'pc' } },
+    { id: 'cto', rect: { x: 206, y: 82, w: 100, h: 102 }, standX: 148, look: 'ch1.look.cto', use: { action: 'cto' } },
     { id: 'monitor', rect: { x: 114, y: 26, w: 92, h: 50 }, walk: false, look: 'ch1.look.monitor', use: { scene: 'monitor' } },
   ],
   // the CTO on the phone: room → talk_1 → room → talk_2, drawn at the manifest's patch position
