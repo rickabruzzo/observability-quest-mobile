@@ -1,49 +1,67 @@
-# Art brief 03 — era-look test: room 2 repainted as a painting (one image)
+# Art brief 03 — era-look test: room 2 and both figures, drawn the 1992–93 way (one image)
 
 Read `briefs/art/PROTOCOL.md` first. For **Art Claude** on Rick's personal account (Gemini API
 `gemini-3.1-flash-image`). Rick art directs; his direction beats this brief.
 
-**This belongs to the `era-look` fork**, not the main build. Branch from `origin/era-look`, and if you open a
-pull request its base is `era-look`. Nothing on `sci-adventure` changes. The approved art stays exactly as it
-is (tag `v0.2-painted-rooms`); this is an experiment that may be thrown away.
+**This belongs to the `era-look` fork**, not the main build. Branch from `origin/era-look`. Nothing on
+`sci-adventure` changes: the approved art stays exactly as it is (tag `v0.2-painted-rooms`). This is an
+experiment that may be thrown away.
 
 ## Why
 
-Rick, 2026-11-13: the rooms and personas look "too nice" for a 1990s Sierra game, and the hero looks older than
-they do. The yardstick he picked is **King's Quest VI (1992)**: a middle ground between the two.
+Rick, 2026-11-13: the rooms and personas look "too nice" for a 1990s Sierra game, the hero looks older than
+they do, and next to a persona "there is still a huge difference in detail levels". His yardsticks are
+**King's Quest VI (1992)** and **Space Quest V (1993)**: both 320×200 in 256 colours, both a middle ground
+between the hero and today's rooms.
 
-That game's rooms were **paintings**: painted by hand, scanned, and reduced to 320×200 in 256 colours. They have
-no line work. Ours were generated as pixel art, with dark outlines and crisp shading, and no filter turns one
-into the other (blurring smears the outlines; cutting colours goes grey). So this test does what Sierra did:
-**you make the painting, and the build does the scanner's job.**
+Cloud Claude tried to get there from the existing files and could not: blurring smears, cutting colours goes
+grey, and flattening the shading barely moves it. The look has to be drawn in. And Cloud Claude cannot see the
+reference screenshots, so **matching the look is done here, by you and Rick, looking at them together.**
 
 ## What to make
 
-**One image:** the approved room 2 plate, `R2_war_room`, repainted as a painting. Edit from its **full-size
-original** (the 1264×790 crop, before the resize to 640×400), not from the pixel version.
+**One image:** room 2 with the cloud engineer **and the hero**, both drawn by the same hand at that era's level
+of finish. Edit from the approved `R2_war_room` so the layout holds.
 
-> Repaint this exact scene as a hand-painted background for a 1992 VGA adventure game: gouache and acrylic on
-> board, visible brushwork, soft painted edges. No black outlines, no ink lines and no pixel-art line work
-> anywhere: edges are made by one colour meeting another. Rich, saturated colour; the same night lighting.
+Start from this, and change the style words to fit what you and Rick see in his references:
+
+> Redraw this exact scene the way a 1993 VGA adventure game drew its screens: 320x200, 256 colours, a bold
+> comic-book look. Flat areas of colour with only two or three tones on any surface. Strong dark outlines round
+> the figures and the furniture. Simple, confident shapes. No fine texture, no soft gradients, no smooth
+> modelling, no anti-aliasing, no tiny clutter. Faces are simple: a few pixels for the eyes and the mouth.
 > Keep every object, its position and its size, the man's pose and clothes, and the framing exactly as in the
-> reference. Add nothing and remove nothing. No text, no letters, no numbers, no logos.
+> reference.
+> Add one more person, drawn in exactly the same way and the same height as the man: a software developer in
+> their thirties standing a body's width to his left and a little nearer the viewer, in pure side profile
+> facing him, arms relaxed, in a plain dark navy hoodie with the hood down, blue jeans and dark sneakers, short
+> dark hair and a short beard.
+> No text, no letters, no numbers, no logos.
 
 ## Rules
 
-- **Same picture, different hand.** If the desk, the whiteboard or the man moves or changes size, it is a
-  redo: the hotspots and the talk frames depend on them.
-- **A painting, not pixel art.** Do not pixelate it and do not ask for "pixel art", "16-bit" or "retro game
-  sprite" in the prompt. The pixels come from the build.
-- **Original.** Describe the style in words only. Do not attach, trace or imitate any image from a Sierra game
-  or any other game, and do not name an artist.
-- The whiteboard keeps its drawing as loose painted marks; it must still read as a tangle of boxes and arrows.
-- At most 4 tries. Show Rick the best two.
+- **Same room, different finish.** If the desk, the whiteboard or the engineer moves or changes size, it is a
+  redo: the hotspots depend on them.
+- **The two people must match each other.** Same outline weight, same number of tones, same amount of face.
+  That match is the point of the test.
+- **The hero:** side profile, standing, relaxed, nothing in his hands, **nothing on the hoodie's chest**. The
+  game adds the Honeycomb mark from the official file. Never generate a logo. Nobody real.
+- **Original.** Look at Rick's references and describe what you see in words. Do not attach a screenshot from
+  any game to the generator, and do not trace or copy one.
+- At most 5 tries. Show Rick the best two beside the approved room.
 
 ## Deliver
 
 - Branch `art/era-look-test` from `origin/era-look`.
-- `art-drops/<date>-era-look-test/R2_war_room_painted.png` at **full size** (the 16:10 crop, about 1264×790).
-  **Do not resize it to 640×400** and do not use nearest-neighbour on it.
-- A short `HANDBACK.md`: tries and which was kept, anything that moved, the exact prompt, Rick's reaction.
-- The hand-off goes to Cloud Claude, who reduces it to game size and mocks the hero and a portrait
-  conversation on it for Rick to compare with the approved room.
+- `art-drops/<date>-era-look-test/R2_era_test.png` at 640×400 (the usual crop and nearest-neighbour resize),
+  and the same picture **without the hero** as `R2_era_test_room.png` if you can get it by pasting the hero's
+  area back from a second edit; if not, say so.
+- `HANDBACK.md`: the exact prompt that worked, the style words you and Rick settled on, tries and which was
+  kept, the region the hero occupies (320×200), anything that moved, and Rick's reaction.
+- The hand-off goes to Cloud Claude, who builds it to game size and puts the portrait conversation on it.
+
+## What this does not settle
+
+If Rick likes it, two questions follow, both his: the same pass over the other four rooms and their frames,
+and how a drawn hero keeps the character creator (a body, skin, hair, beard, hoodie, jeans and glasses to mix)
+and the walk. Colours can be swapped on a drawn figure; hair styles, beards, bodies and walking limbs each need
+their own drawing.
