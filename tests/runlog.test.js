@@ -13,14 +13,14 @@ test('phases are timed back to back and add up to the total', () => {
   r.phase('pc'); now.add(3000);
   r.phase('hc'); now.add(20000);
   r.phase('pc'); now.add(1000);
-  r.phase('monitor'); now.add(5000);
+  r.phase('wall'); now.add(5000);
   r.phase('deploy'); now.add(8000);
-  r.phase('cto'); now.add(7000);
+  r.phase('persona'); now.add(7000);
   r.phase('win'); now.add(9000);
   r.end(2);
   const s = r.snapshot();
-  assert.deepEqual(PHASES, ['card', 'room', 'pc', 'old', 'hc', 'deploy', 'monitor', 'cto', 'win']);
-  assert.deepEqual(s.phases, { card: 4000, room: 12000, pc: 4000, old: 6000, hc: 20000, deploy: 8000, monitor: 5000, cto: 7000, win: 9000 });
+  assert.deepEqual(PHASES, ['card', 'room', 'pc', 'old', 'hc', 'deploy', 'wall', 'persona', 'win']);
+  assert.deepEqual(s.phases, { card: 4000, room: 12000, pc: 4000, old: 6000, hc: 20000, deploy: 8000, wall: 5000, persona: 7000, win: 9000 });
   assert.equal(s.total, 75000);
   assert.equal(Object.values(s.phases).reduce((a, b) => a + b, 0), s.total);
   assert.equal(s.missteps, 2);
@@ -48,14 +48,14 @@ test('the clock is frozen while held: a snapshot taken on hold does not move', (
   assert.equal(r.snapshot().held, true);
 });
 
-test('counts: windows, taps, walks and walking time, wrong prompts, old-tool prompts, looks, distinct hotspots, emails, vitals, monitor, signed', () => {
+test('counts: windows, taps, walks and walking time, wrong prompts, old-tool prompts, looks, distinct hotspots, emails, vitals, monitor, signed, cards', () => {
   const r = createRunlog({ chapter: 1, now: clock() });
   r.count('windows'); r.count('windows'); r.count('taps', 3); r.walk(1200); r.walk(800);
   r.count('nudges'); r.count('oldPrompts', 3); r.count('looks');
-  r.count('emails', 2); r.count('vitals'); r.count('monitor', 2); r.count('signed');
+  r.count('emails', 2); r.count('status'); r.count('wall', 2); r.count('wrong'); r.count('cards');
   r.visit('pc'); r.visit('pc'); r.visit('cto');
   const c = r.snapshot().counts;
-  assert.deepEqual(c, { windows: 2, taps: 3, walks: 2, walkMs: 2000, nudges: 1, oldPrompts: 3, looks: 1, emails: 2, vitals: 1, monitor: 2, signed: 1, visited: 2 });
+  assert.deepEqual(c, { windows: 2, taps: 3, walks: 2, walkMs: 2000, nudges: 1, oldPrompts: 3, looks: 1, emails: 2, status: 1, wall: 2, wrong: 1, cards: 1, visited: 2 });
   assert.deepEqual(r.snapshot().visited, ['pc', 'cto']);
 });
 
@@ -81,6 +81,6 @@ test('summary lines carry the total, every phase and every count', () => {
   r.count('taps', 9); r.end(1);
   const text = summaryLines(r.snapshot()).join('\n');
   assert.match(text, /1:43/);
-  for (const w of ['Class card', 'Room', 'PC', 'Old tool', 'Honeycomb screen', 'Deploy', 'Monitor', 'CTO', 'Win', 'Taps', 'Honeycomb nudges', 'Emails', 'Vitals', 'Signed', 'Missteps: 1']) assert.match(text, new RegExp(w));
+  for (const w of ['Title card', 'Room', 'PC', 'Old tool', 'Honeycomb screen', 'Deploy', 'Wall display', 'Persona', 'Win', 'Taps', 'Honeycomb nudges', 'Emails', 'Status checks', 'Wrong advice', 'Card views', 'Missteps: 1']) assert.match(text, new RegExp(w));
   assert.doesNotMatch(text, /score/i);
 });
