@@ -99,8 +99,9 @@ export function createChapterScreen(game) {
       g.fillStyle = f.output.glitch ? '#FF3030' : '#E8ECF4';
       g.fillRect(o.x0 + 2 + (shown % per) * 3, o.y0 + 2 + Math.floor(shown / per) * 5, 2, 4);
     }
-    if (view === 'side') drawHeroSide(g, hero, pose, x, room.floorY - HERO_H + SIDE_FOOT_DY, 1, { flip });
-    else drawHero(g, hero, pose, x, room.floorY - HERO_H, 1, { flip });
+    const hs = room.heroScale ?? 1, heroY = room.floorY - Math.round(HERO_H * hs);     // feet on the floor line at any scale
+    if (view === 'side') drawHeroSide(g, hero, pose, x, heroY + SIDE_FOOT_DY, hs, { flip });
+    else drawHero(g, hero, pose, x, heroY, hs, { flip });
     if (marker) drawIcon(g, marker.icon, marker.x, marker.y);
   }
   function paintMonitor(ctx) {

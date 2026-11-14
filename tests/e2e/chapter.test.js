@@ -224,7 +224,7 @@ test('Cave Logs only, then the CTO: Get Honeycomb → "show me" → the investig
   await pcPick(page, 'vitals');
   assert.equal(await dismiss(page), SCRIPT['ch1.pc.vitals.old']);
   await leavePc(page);
-  assert.equal((await ch(page)).x, 87, 'the hero stands at the PC');
+  assert.equal((await ch(page)).x, 73, 'the hero stands at the PC');
   await askCto(page);
   await page.click('#decide-hc');
   assert.equal(await dismiss(page), SCRIPT['ch1.decide.hc.show']);
@@ -425,7 +425,7 @@ test('reduced motion: no walking, a still monitor and CTO, instant text, the sam
   await pcPick(page, 'hc'); await solveHc(page); await inState(page, 'pc');
   await deployAndRecover(page); await inState(page, 'pc');
   await leavePc(page);
-  assert.notEqual(x0, 87); assert.equal((await ch(page)).x, 87);
+  assert.notEqual(x0, 73); assert.equal((await ch(page)).x, 73);
   await askCto(page);
   assert.equal((await ch(page)).walking, false);
   await page.click('#decide-hc');

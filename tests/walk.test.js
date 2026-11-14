@@ -2,14 +2,18 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { planWalk, stepWalk, STRIDE_PX, WALK_SPEED, SETTLE_MS } from '../js/engine/walk.js';
 import { SIDE_POSES } from '../js/engine/hero-side.js';
+import { HERO_W } from '../js/engine/hero.js';
 
-test('a Sierra stroll: about three steps a second, so a full room takes about five seconds', () => {
+test('a Sierra stroll: about three steps a second; at the era size a full room takes a little over two seconds', () => {
   // The stride is fixed by the drawn leg angles (STRIDE_PX per two steps); the speed is what sets the cadence.
-  // At 110 px/s the profile walk took nearly six steps a second — a scurry (Warp hand-back 01, 2026-11-11).
+  // At 110 px/s the old 28-px profile walk took nearly six steps a second — a scurry (Warp hand-back 01,
+  // 2026-11-11). The era hero is twice the size, so stride and speed both double (brief 09) and the cadence
+  // stays; the room, which did not grow, is crossed in half the time.
   const steps = (WALK_SPEED / STRIDE_PX) * 2;
   assert.ok(steps >= 2.5 && steps <= 3.6, `${steps.toFixed(2)} steps a second`);
-  const d = planWalk(0, 292).duration;
-  assert.ok(d >= 4000 && d <= 5800, `${d} ms`);
+  assert.equal(WALK_SPEED, 120); assert.equal(STRIDE_PX, 76);
+  const d = planWalk(0, 320 - HERO_W).duration;
+  assert.ok(d >= 2000 && d <= 2900, `${d} ms`);
 });
 
 test('duration from distance and speed', () => {
@@ -33,7 +37,7 @@ test('walking is the side view; standing still is the front view', () => {
 });
 
 test('one full cycle of eight frames per STRIDE_PX of travel', () => {
-  assert.equal(STRIDE_PX, 38);
+  assert.equal(STRIDE_PX, 76);                                   // twice the 28-px hero's 38: the legs are twice as long
   const p = planWalk(0, 1000, { speed: 1000 });                 // 1 px per ms: elapsed ms == px travelled
   const seen = [];
   for (let d = 0; d < STRIDE_PX; d++) seen.push(stepWalk(p, d).pose);

@@ -1,11 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { hotspotAt, walkTarget, clampWalk, checkRoom, MIN_HIT } from '../js/engine/room.js';
+import { HERO_W } from '../js/engine/hero.js';
 import { ROOM, CH1 } from '../js/chapters/ch1.js';
 import { SCRIPT } from '../js/script.js';
 
 const room = {
-  floorY: 180, walk: [0, 292], start: 146,
+  floorY: 180, walk: [0, 320 - HERO_W], start: 146,
   hotspots: [
     { id: 'a', rect: { x: 10, y: 10, w: 40, h: 40 }, standX: 20, look: 'k.a' },
     { id: 'b', rect: { x: 40, y: 40, w: 40, h: 40 }, standX: 50, look: 'k.b' },
@@ -23,10 +24,12 @@ test('hotspot lookup: inside, outside, edges, and the later-listed one wins an o
 });
 
 test('a floor tap walks the hero so their feet land where the tap was, inside the walk range', () => {
-  assert.equal(walkTarget(room, 100), 86);                  // the sprite is 28 wide; x is its left edge
+  assert.equal(HERO_W, 56);
+  assert.equal(walkTarget(room, 100), 100 - HERO_W / 2);    // x is the sprite's left edge
   assert.equal(walkTarget(room, 2), 0);
-  assert.equal(walkTarget(room, 319), 292);
+  assert.equal(walkTarget(room, 319), 320 - HERO_W);
   assert.equal(clampWalk(room, -40), 0);
+  assert.equal(clampWalk(room, 400), 320 - HERO_W);
 });
 
 test('a room is checked: rects inside the scene and at least MIN_HIT, stand points walkable, keys exist', () => {
@@ -42,10 +45,13 @@ test('a room is checked: rects inside the scene and at least MIN_HIT, stand poin
 test('chapter 1 room: the PC, the monitor and the CTO, from the art hand-back, checked against the real script', () => {
   const by = Object.fromEntries(ROOM.hotspots.map((h) => [h.id, h]));
   assert.deepEqual(Object.keys(by).sort(), ['cto', 'monitor', 'pc']);
-  assert.deepEqual(by.pc.rect, { x: 0, y: 75, w: 135, h: 111 }); assert.equal(by.pc.standX, 87);
+  // stand points for the 56-px hero (brief 09, item 8): the same centres as before, the persona re-measured
+  assert.deepEqual(by.pc.rect, { x: 0, y: 75, w: 135, h: 111 }); assert.equal(by.pc.standX, 73);
   assert.deepEqual(by.monitor.rect, { x: 114, y: 26, w: 92, h: 50 }); assert.equal(by.monitor.walk, false);
-  assert.deepEqual(by.cto.rect, { x: 206, y: 82, w: 100, h: 102 }); assert.equal(by.cto.standX, 176);
-  assert.equal(ROOM.floorY, 192); assert.deepEqual(ROOM.walk, [0, 292]);
+  assert.deepEqual(by.cto.rect, { x: 206, y: 82, w: 100, h: 102 }); assert.equal(by.cto.standX, 148);
+  assert.equal(ROOM.floorY, 192); assert.deepEqual(ROOM.walk, [0, 320 - HERO_W]); assert.equal(ROOM.start, 128);
+  assert.ok(by.cto.standX + HERO_W <= 206, 'the hero at the CTO does not overlap the CTO\'s hotspot');
+  assert.equal(ROOM.heroScale ?? 1, 1);
   assert.deepEqual(checkRoom(ROOM, SCRIPT), []);
   for (const h of ROOM.hotspots) assert.ok(h.rect.w >= MIN_HIT && h.rect.h >= MIN_HIT, h.id);
   assert.ok(MIN_HIT >= 28);
@@ -58,7 +64,7 @@ test('chapter 1 room: where the PC and the monitor overlap, the monitor wins; ea
 });
 
 test('a hotspot that does not walk needs no stand point', () => {
-  const r = { floorY: 192, walk: [0, 292], start: 142, hotspots: [{ id: 'm', rect: { x: 10, y: 10, w: 40, h: 40 }, walk: false, look: 'k' }] };
+  const r = { floorY: 192, walk: [0, 320 - HERO_W], start: 142, hotspots: [{ id: 'm', rect: { x: 10, y: 10, w: 40, h: 40 }, walk: false, look: 'k' }] };
   assert.deepEqual(checkRoom(r, { k: 'x' }), []);
 });
 

@@ -6,8 +6,8 @@
 
 import { SIDE_POSES } from './hero-side.js';
 
-export const WALK_SPEED = 60;  // logical px per second — about three steps a second with STRIDE_PX; a full 320 px room in about 5 s
-export const STRIDE_PX = 38;   // floor covered by one full cycle — two steps, the eight frames of SIDE_LEG
+export const WALK_SPEED = 120; // logical px per second — about three steps a second with STRIDE_PX; a 320 px room in a little over 2 s
+export const STRIDE_PX = 76;   // floor covered by one full cycle — two steps, the eight frames of SIDE_LEG (the 56-px hero's legs)
 export const SETTLE_MS = 220;  // on arrival, the side-on stance is held this long before the hero turns to face the player
 const FRAMES = SIDE_POSES.slice(1);                   // w1..w8; SIDE_POSES[0] is 'stand'
 const PER_FRAME_PX = STRIDE_PX / FRAMES.length;
