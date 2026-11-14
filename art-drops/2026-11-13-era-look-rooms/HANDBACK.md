@@ -36,7 +36,7 @@ These are a bit wider than the painted build's, because the simpler figures came
 
 - **R2 idle `R2_npc_look`:** here he turns his **back to the room** to study the board, which is closer to Rick's "mostly turned toward the service map" than the painted version.
 - **R1:** the CTO's suit came out a little lighter blue than the painted plate.
-- **The era R2 plate** is the era-test plate without the hero (glasses on his face).
+- **R2 glasses restored (Rick):** the redraw had dropped his reading glasses. They are now pushed up on his head in the plate and all six frames, as in the painted build (a Gemini edit of each, with only the head area composited back). The swap area is unchanged.
 - The style words are the test's, plus: "the moderate detail of a 1990s point-and-click game character standing in a room, not a modern cartoon".
 
 ## Provenance
