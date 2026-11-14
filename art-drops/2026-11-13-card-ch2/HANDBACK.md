@@ -25,6 +25,12 @@ Rick picked this take (2026-11-13, "4 works") from a round made just before the 
 - Reads as a druid at 128×80 (nearest-neighbour): the green robe, the staff and the glowing stone are all clear.
 - No writing, logos or frame. Nothing important in the outer 6%.
 
+## P2 card animation (2026-11-13)
+
+`P2_card_fx_1.png`, `_2.png`, `_3.png` (640×400): the same card with the effect in new positions: the green glow on the staff crystal and the cables pulses, the light veins on the monolith shift, the two stone lights alternate green and red, and the fireflies move. Each is a Gemini edit of the card's full-size original; only the effect areas were composited back, so the person never moves. Changed area: the stone circle, staff top and fireflies; the druid himself never changes (x 70–175, y 25–200 is untouched).
+- **Loop:** `P2_card` → `_fx_1` → `_fx_2` → `_fx_3` → `_fx_2` → `_fx_1`, about 160–200 ms a frame, the same as the CTO's sparkle. Reduced motion: `P2_card` only.
+- Provenance: `scratch/card_gen/edit_fx.py` (`P2_fx`), 3 tries, all 3 kept.
+
 ## Provenance
 
 - **Tool:** Gemini API `gemini-3.1-flash-image`, 3:2, 1K, 2026-11-13. The plate `R2_war_room` was attached as the character reference.
