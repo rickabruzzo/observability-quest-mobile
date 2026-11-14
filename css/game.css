@@ -186,8 +186,28 @@ body[data-cols="narrow"] .btn-sierra .long, body:not([data-cols="narrow"]) .btn-
 .pc-item { min-height: 44px; padding: 1px 6px; background: rgba(60, 224, 112, 0.08); color: #3CE070; border: 1px solid #2A9A50; font-family: var(--font-text); font-size: calc(20px * var(--ui-scale, 1)); line-height: 1.05; text-align: left; cursor: pointer; }
 .pc-grid.view-email .pc-item { font-size: calc(18px * var(--ui-scale, 1)); }
 .pc-item:active { background: #3CE070; color: #05140A; }
-/* the CTO's question: two prompts low over the cube, clear of the hero and the CTO */
-.decide-prompts { position: absolute; left: 3%; bottom: 10px; display: flex; flex-direction: column; gap: 8px; width: 44%; pointer-events: auto; }   /* over the cube: the hero and the CTO stay in view */
+/* the persona's options: up to three prompts low over the cube, clear of the hero and the CTO */
+.decide-prompts { position: absolute; left: 3%; bottom: 10px; display: flex; flex-direction: column; gap: 6px; width: 44%; pointer-events: auto; }   /* over the cube: the hero and the CTO stay in view */
+
+/* ---- the persona card (brief 07): our own trading-card frame, 5:7, 94% of the scene's height, over the dimmed room.
+   Sizes are for a 667×375 phone (scene 347 tall) and scale with the scene through --k. ---- */
+.pcard-dim { position: absolute; inset: 0; z-index: 5; background: rgba(0, 0, 0, 0.55); cursor: pointer; --k: calc(var(--scene-h) / 346px); }   /* 346: the scene on a 667×375 phone */
+.pcard { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); height: 94%; aspect-ratio: 5 / 7;
+         box-sizing: border-box; padding: calc(6px * var(--k)); background: #2A3346; border: 3px solid #0E1220;
+         box-shadow: 0 0 0 2px #C9A227, 4px 5px 0 #000; font-family: var(--font-text); color: #1A1C22;
+         display: flex; flex-direction: column; gap: calc(4px * var(--k)); animation: pcard-in 200ms ease-out; }
+.pcard.still { animation: none; }
+@keyframes pcard-in { from { transform: translate(-50%, -50%) rotateY(90deg); } to { transform: translate(-50%, -50%) rotateY(0); } }
+.pcard .name   { background: #E9DDB8; border: 2px solid #0E1220; padding: 1px 6px; font-size: calc(20px * var(--k)); line-height: calc(22px * var(--k)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pcard .art    { border: 2px solid #0E1220; background: #000; aspect-ratio: 16 / 10; overflow: hidden; }
+.pcard .art img, .pcard .art canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; image-rendering: crisp-edges; object-fit: fill; }
+.pcard .class  { background: #E9DDB8; border: 2px solid #0E1220; padding: 0 6px; font-size: calc(17px * var(--k)); line-height: calc(20px * var(--k)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pcard .body   { flex: 1; min-height: 0; background: #F3EBD2; border: 2px solid #0E1220; padding: 3px 6px; overflow: hidden;
+                 display: flex; flex-direction: column; justify-content: space-between; }
+.pcard .stat   { display: flex; justify-content: space-between; gap: 6px; font-size: calc(16px * var(--k)); line-height: calc(17px * var(--k)); }
+.pcard .stat span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pcard .stat b { font-weight: normal; color: #8A2E1C; }
+.pcard .flavor { font-style: italic; font-size: calc(14px * var(--k)); line-height: calc(15px * var(--k)); color: #4A4636; border-top: 1px solid #B9AE8A; padding-top: 2px; }
 
 /* ---- scenario menu: a solved scenario's tick (drawn, so no glyph is needed) ---- */
 .mr-tick { display: inline-block; width: 0.35em; height: 0.7em; margin-right: 0.35em; border: solid currentColor; border-width: 0 3px 3px 0; transform: rotate(45deg) translateY(-0.12em); vertical-align: middle; }

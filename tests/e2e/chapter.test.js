@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 import { startServer } from './_server.js';
 import { SCRIPT } from '../../js/script.js';
-import { openGame, pickScenario, ch, run, winOpen, dismiss, tapSpot, toolOpen, promptsShown, prompt, playShortest, inState, pcPick, toPc, solveHc, leavePc, askCto, winLines, deployAndRecover, charitySays, shown } from './_play.js';
+import { openGame, pickScenario, ch, run, winOpen, dismiss, tapSpot, toolOpen, promptsShown, prompt, playShortest, inState, pcPick, toPc, solveHc, leavePc, askCto, winLines, deployAndRecover, charitySays, shown, talkToCto, closeCard, pickOption } from './_play.js';
 import { readFileSync } from 'node:fs';
 import { CH1 } from '../../js/chapters/ch1.js';
 import { HERO_H } from '../../js/engine/hero.js';
@@ -154,8 +154,9 @@ test('the CTO before a tool is tried: her three calls in order, the last one rep
   const { ctx, page } = await openGame(browser, server, { query: '?ch=1' });
   await into(page);
   for (const n of [1, 2, 3, 3]) {
-    await tapSpot(page, 'cto');
+    await talkToCto(page);
     assert.equal(await dismiss(page), shown(`ch1.cto.call.${n}`));
+    await pickOption(page, 'leave');                                  // every conversation ends in options; leave goes back to the room
     await inState(page, 'room');
   }
   assert.ok((await run(page)).phases.cto > 0);
@@ -470,8 +471,7 @@ for (const [w, h] of PHONES) {
   test(`${w}x${h}: the CTO speaks from her portrait — her name, a painted picture, the window beside her and off the hero's body; narration has no portrait`, async () => {
     const { ctx, page } = await openGame(browser, server, { w, h, query: '?ch=1' });
     await into(page);
-    await tapSpot(page, 'cto');
-    await winOpen(page);
+    await talkToCto(page);
     const m = await talkWindow(page);
     assert.equal(m.talk, true, 'a conversation window');
     assert.equal(m.name, SCRIPT['ch1.persona.name']);
@@ -493,6 +493,7 @@ for (const [w, h] of PHONES) {
     for (let i = 0; i < 10; i++) { frames.add(await page.evaluate(() => window.__oq.chapter.ctoFrame)); await page.waitForTimeout(110); }
     assert.ok(frames.size > 1, 'the CTO\'s talk frames play while she speaks');
     await dismiss(page);
+    await pickOption(page, 'leave');
     await inState(page, 'room');
     // narration about her: an ordinary window, no portrait, no name
     await page.click('#btn-look'); await tapSpot(page, 'cto');
@@ -507,13 +508,135 @@ for (const [w, h] of PHONES) {
 test('reduced motion: the portrait is the still, and her line is complete at once', async () => {
   const { ctx, page } = await openGame(browser, server, { query: '?ch=1', reduced: true });
   await into(page);
-  await tapSpot(page, 'cto');
-  await winOpen(page);
+  await talkToCto(page);
   const m = await talkWindow(page);
   assert.equal(m.talk, true); assert.ok(m.canvas.painted > 0);
   const a = await page.evaluate(() => document.querySelector('.msg-portrait canvas').toDataURL());
   await page.waitForTimeout(700);
   const b = await page.evaluate(() => document.querySelector('.msg-portrait canvas').toDataURL());
   assert.equal(a, b, 'the still does not move');
+  await ctx.close();
+});
+
+// ---- the persona card (Warp brief 07) ----
+/** The card measured: its box, every text node's box, the smallest font, the picture's natural size. */
+const cardMetrics = (page) => page.evaluate(() => {
+  const dim = document.querySelector('#persona-card'), card = dim.querySelector('.pcard'), cr = card.getBoundingClientRect();
+  const sc = document.querySelector('#scene').getBoundingClientRect();
+  const walker = document.createTreeWalker(card, NodeFilter.SHOW_TEXT), texts = [];
+  for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+    if (!n.textContent.trim()) continue;
+    const r = document.createRange(); r.selectNodeContents(n); const b = r.getBoundingClientRect();
+    const el = n.parentElement;
+    texts.push({ text: n.textContent.trim().slice(0, 24), inside: b.left >= cr.left - 0.5 && b.right <= cr.right + 0.5 && b.top >= cr.top - 0.5 && b.bottom <= cr.bottom + 0.5, font: parseFloat(getComputedStyle(el).fontSize), clipped: el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1 });
+  }
+  const pic = card.querySelector('.art img, .art canvas');
+  return { card: { x: cr.left - sc.left, y: cr.top - sc.top, w: cr.width, h: cr.height }, scene: { w: sc.width, h: sc.height }, texts,
+    pic: pic ? { tag: pic.tagName, w: pic.naturalWidth ?? pic.width, h: pic.naturalHeight ?? pic.height } : null, still: card.classList.contains('still') };
+});
+
+test('the title card shows who paged you and one line: no stats', async () => {
+  const { ctx, page } = await openGame(browser, server, { query: '?ch=1' });
+  assert.equal(await page.locator('#class-card .card-stats').count(), 0);
+  assert.equal(await page.locator('#class-card h2').innerText(), SCRIPT['ch1.card.title']);
+  assert.equal(await page.locator('#class-card p').innerText(), SCRIPT['ch1.card.line']);
+  assert.doesNotMatch(await page.locator('#class-card').innerText(), /Budget 3|Grep 2/);
+  await ctx.close();
+});
+
+test('the first Use on the CTO opens her card; closing it starts her line; the second Use does not; [Show me your card again] does and returns to the same options', async () => {
+  const { ctx, page } = await openGame(browser, server, { query: '?ch=1' });
+  await into(page);
+  await tapSpot(page, 'cto');
+  await page.waitForSelector('#persona-card', { timeout: 9000 });
+  assert.equal((await ch(page)).window, null, 'no line while the card is up');
+  assert.equal(await page.evaluate(() => window.__oq.chapter.ctoFrame), 0, 'she holds her plate frame while the card is up');
+  const m = await cardMetrics(page);
+  assert.equal(await page.locator('.pcard .name').innerText(), SCRIPT['ch1.persona.name']);
+  assert.equal(await page.locator('.pcard .class').innerText(), SCRIPT['ch1.persona.class']);
+  assert.equal(await page.locator('.pcard .stat').count(), 4);
+  assert.equal(await page.locator('.pcard .flavor').innerText(), SCRIPT['ch1.persona.flavor']);
+  assert.ok(m.pic && m.pic.w > 0 && m.pic.h > 0, `a picture: ${JSON.stringify(m.pic)}`);
+  // a floor tap while the card is up does nothing but close it: the hero does not walk, no hotspot fires
+  const x0 = (await ch(page)).x;
+  assert.equal(await closeCard(page), true);
+  await winOpen(page);
+  assert.equal((await ch(page)).x, x0);
+  assert.equal(await dismiss(page), shown('ch1.cto.call.1'));
+  await pickOption(page, 'leave'); await inState(page, 'room');
+  // the second Use: straight to her line
+  await tapSpot(page, 'cto');
+  await winOpen(page);
+  assert.equal(await page.locator('#persona-card').count(), 0, 'the card opens by itself only once');
+  assert.equal(await dismiss(page), shown('ch1.cto.call.2'));
+  // the card again, from the options; closing it returns to the same options
+  assert.ok(await page.locator('#decide-show').isVisible() && await page.locator('#decide-leave').isVisible());
+  await pickOption(page, 'show');
+  await page.waitForSelector('#persona-card');
+  await closeCard(page);
+  await page.waitForFunction(() => document.querySelector('#decide-show') && window.__oq.chapter.state === 'decide');
+  assert.equal((await ch(page)).window, null);
+  await pickOption(page, 'leave'); await inState(page, 'room');
+  const s = await run(page);
+  assert.equal(s.counts.cards, 2); assert.ok(s.phases.cto > 0);
+  await ctx.close();
+});
+
+test('after a tool is tried the options are the decision and the card; showing the card is never a misstep', async () => {
+  const { ctx, page } = await openGame(browser, server, { query: '?ch=1' });
+  await into(page); await toPc(page); await pcPick(page, 'hc'); await solveHc(page); await inState(page, 'pc'); await leavePc(page);
+  await askCto(page);
+  for (const id of ['sign', 'hc', 'show']) assert.ok(await page.locator(`#decide-${id}`).isVisible(), id);
+  assert.equal(await page.locator('#decide-leave').count(), 0);
+  await pickOption(page, 'show'); await page.waitForSelector('#persona-card'); await closeCard(page);
+  await page.waitForFunction(() => document.querySelector('#decide-hc') && window.__oq.chapter.state === 'decide');
+  await pickOption(page, 'hc');
+  assert.equal(await dismiss(page), shown('ch1.decide.hc.show'));       // found but not deployed: she sends you to deploy it
+  await inState(page, 'pc');
+  const s = await run(page);
+  assert.equal(s.missteps, 0); assert.equal(s.counts.cards, 2);
+  await ctx.close();
+});
+
+for (const [w, h] of PHONES) {
+  test(`${w}x${h}: every text node of the card is inside it, nothing clipped, no font under 14 px; the card is 5:7 at 94% of the scene`, async () => {
+    const { ctx, page } = await openGame(browser, server, { w, h, query: '?ch=1' });
+    await into(page);
+    await tapSpot(page, 'cto');
+    await page.waitForSelector('#persona-card'); await page.waitForTimeout(300);
+    const m = await cardMetrics(page);
+    assert.ok(m.texts.length >= 11, `${m.texts.length} text nodes`);                 // name, class, 4 × (stat, number), flavor
+    assert.deepEqual(m.texts.filter((t) => !t.inside), [], 'outside the card');
+    assert.deepEqual(m.texts.filter((t) => t.clipped), [], 'clipped');
+    assert.ok(Math.min(...m.texts.map((t) => t.font)) >= 14 - 0.01, `smallest font ${Math.min(...m.texts.map((t) => t.font))}`);
+    assert.ok(Math.abs(m.card.h / m.scene.h - 0.94) < 0.02 && Math.abs(m.card.w / m.card.h - 5 / 7) < 0.02, JSON.stringify(m.card));
+    assert.ok(m.card.x >= 0 && m.card.y >= 0 && m.card.x + m.card.w <= m.scene.w + 0.5 && m.card.y + m.card.h <= m.scene.h + 0.5);
+    assert.equal(m.pic.tag, 'IMG');                                                  // the card art exists on this branch
+    assert.equal(m.pic.w, 128); assert.equal(m.pic.h, 80);
+    await ctx.close();
+  });
+}
+
+test('the card falls back to the persona cropped from the room plate when the card art is missing', async () => {
+  const { ctx, page } = await openGame(browser, server, { query: '?ch=1' });
+  await page.route('**/assets/cards/P1_card.png', (r) => r.abort());
+  await into(page);
+  await tapSpot(page, 'cto');
+  await page.waitForSelector('#persona-card .art canvas', { timeout: 9000 });
+  const painted = await page.evaluate(() => { const c = document.querySelector('#persona-card .art canvas'); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i]) n++; return [n, c.width, c.height]; });
+  assert.deepEqual(painted.slice(1), [112, 70]); assert.ok(painted[0] > 112 * 70 * 0.9, `painted ${painted[0]}`);
+  await ctx.close();
+});
+
+test('reduced motion: the card just appears, and Escape closes it', async () => {
+  const { ctx, page } = await openGame(browser, server, { query: '?ch=1', reduced: true });
+  await into(page);
+  await tapSpot(page, 'cto');
+  await page.waitForSelector('#persona-card');
+  assert.equal((await cardMetrics(page)).still, true);
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('#persona-card'));
+  await winOpen(page);
+  assert.equal(await dismiss(page), shown('ch1.cto.call.1'));
   await ctx.close();
 });

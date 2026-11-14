@@ -6,7 +6,7 @@
 export const CTO_CALLS = 3;
 
 export function createScenario() {
-  return { tried: false, oldTried: false, oldPicks: 0, found: false, deployed: false, signed: false, calls: 0 };
+  return { tried: false, oldTried: false, oldPicks: 0, found: false, deployed: false, signed: false, calls: 0, cardSeen: false };
 }
 
 /** A prompt was picked in a tool ('old' or 'hc'). Opening a tool and backing out is not a try. */
@@ -38,6 +38,13 @@ export function vitalsLine(s) {
   if (s.found) return 'found';
   if (s.oldTried) return 'old';
   return 'before';
+}
+
+/** Use on the persona: the first time this visit their card opens by itself (Warp brief 07). True once. */
+export function firstTalk(s) {
+  if (s.cardSeen) return false;
+  s.cardSeen = true;
+  return true;
 }
 
 /** Use on the CTO: before a tool is tried, her next call line (the last repeats); after, her question. */

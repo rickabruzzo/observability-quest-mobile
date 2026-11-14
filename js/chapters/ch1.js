@@ -75,8 +75,14 @@ export const PC = {
 };
 
 /** The persona: the CTO. Her lines are the script's `CTO: …` lines; they show in the conversation window with her
- * close-up portrait (assets/portrait_p1.png and its frames), which sits top left because she stands on the right. */
-export const PERSONA = { name: 'ch1.persona.name', portrait: 'p1', where: 'top-left' };
+ * close-up portrait (assets/portrait_p1.png and its frames), which sits top left because she stands on the right.
+ * Her card (brief 07): name, class, four stats and a line of flavor from the script; the picture is the card art,
+ * or, if that file is missing, the CTO cropped from the room plate. */
+export const PERSONA = {
+  name: 'ch1.persona.name', class: 'ch1.persona.class', stats: 'ch1.persona.stats', flavor: 'ch1.persona.flavor',
+  art: 'assets/cards/P1_card.png', crop: { image: 'R1_exec_floor', x: 192, y: 62, w: 112, h: 70 },
+  portrait: 'p1', where: 'top-left',
+};
 
 /** The CTO, on the phone with the Cave Logs renewal. */
 export const CTO = {
@@ -114,7 +120,7 @@ const step = (n) => ({
 export const CH1 = {
   id: 1,
   manifest: MANIFEST,
-  card: { title: 'ch1.card.title', stats: 'ch1.card.stats', line: 'ch1.card.line' },
+  card: { title: 'ch1.card.title', line: 'ch1.card.line' },
   enter: 'ch1.room.enter',
   room: ROOM,
   persona: PERSONA,
@@ -123,7 +129,7 @@ export const CH1 = {
   cto: CTO,
   tools: {
     old: {
-      kind: 'old', title: 'ch1.old.title', intro: 'ch1.old.intro', exit: 'ch1.old.exit',
+      kind: 'old', title: 'ch1.old.title', intro: 'ch1.old.intro', exit: 'ch1.old.exit', close: 'ch1.old.close',
       steps: [{ prompts: [1, 2, 3].map((i) => ({ key: `ch1.old.prompt.${i}`, jab: `ch1.old.jab.${i}` })) }],
       paint: paintOld,
     },
