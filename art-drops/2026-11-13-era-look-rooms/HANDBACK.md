@@ -54,7 +54,7 @@ Rick: the close-ups were flatter and cleaner than the rooms, while the reference
 
 ## Sign-off update
 
-Rick approved all five rooms on 2026-11-13, after the R2 glasses fix.
+Rick approved all five rooms on 2026-11-13, after the R2 glasses fix, and approved the repainted close-ups the same evening.
 
 ## Provenance
 
