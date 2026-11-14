@@ -1,6 +1,11 @@
 // Shared moves for the scenario e2e tests: get through the intro, pick a scenario, tap things, close windows.
 import assert from 'node:assert/strict';
 import { SCRIPT } from '../../js/script.js';
+import { CH1 } from '../../js/chapters/ch1.js';
+import { personaLine, speakerOf } from '../../js/engine/conversation.js';
+
+/** What the window shows for a script key: the persona's lines lose their `CTO:` prefix (the name is on the window). */
+export const shown = (key) => personaLine(SCRIPT[key], speakerOf(SCRIPT[CH1.persona.name])).text;
 
 /** Title → sheet → Start → Skip; lands on the menu, or straight in the chapter with ?ch=1. */
 export async function openGame(browser, server, { w = 844, h = 390, query = '', reduced = false } = {}) {
@@ -100,12 +105,12 @@ export async function leavePc(page) {
 /** Walk to the CTO and hear her question; the two prompts are up. */
 export async function askCto(page) {
   await tapSpot(page, 'cto');
-  assert.equal(await dismiss(page), SCRIPT['ch1.cto.ask']);
+  assert.equal(await dismiss(page), shown('ch1.cto.ask'));
   await inState(page, 'decide');
 }
 export async function winLines(page) {
   assert.equal(await dismiss(page), SCRIPT['ch1.win']);
-  assert.equal(await dismiss(page), SCRIPT['ch1.hero.line']);
+  assert.equal(await dismiss(page), shown('ch1.hero.line'));
   assert.equal((await ch(page)).state, 'verdict');
   assert.equal(await dismiss(page), SCRIPT['ch1.verdict']);
   await page.waitForSelector('#summary');

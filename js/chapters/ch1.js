@@ -74,6 +74,10 @@ export const PC = {
   leave: 'ch1.pc.leave', locked: 'ch1.pc.leave.locked',
 };
 
+/** The persona: the CTO. Her lines are the script's `CTO: …` lines; they show in the conversation window with her
+ * close-up portrait (assets/portrait_p1.png and its frames), which sits top left because she stands on the right. */
+export const PERSONA = { name: 'ch1.persona.name', portrait: 'p1', where: 'top-left' };
+
 /** The CTO, on the phone with the Cave Logs renewal. */
 export const CTO = {
   calls: [1, 2, 3].map((i) => `ch1.cto.call.${i}`),
@@ -113,6 +117,7 @@ export const CH1 = {
   card: { title: 'ch1.card.title', stats: 'ch1.card.stats', line: 'ch1.card.line' },
   enter: 'ch1.room.enter',
   room: ROOM,
+  persona: PERSONA,
   monitor: MONITOR,
   pc: PC,
   cto: CTO,

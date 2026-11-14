@@ -6,7 +6,11 @@ import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 import { startServer } from './_server.js';
 import { SCRIPT } from '../../js/script.js';
-import { openGame, pickScenario, ch, run, winOpen, dismiss, tapSpot, toolOpen, promptsShown, prompt, playShortest, inState, pcPick, toPc, solveHc, leavePc, askCto, winLines, deployAndRecover, charitySays } from './_play.js';
+import { openGame, pickScenario, ch, run, winOpen, dismiss, tapSpot, toolOpen, promptsShown, prompt, playShortest, inState, pcPick, toPc, solveHc, leavePc, askCto, winLines, deployAndRecover, charitySays, shown } from './_play.js';
+import { readFileSync } from 'node:fs';
+import { CH1 } from '../../js/chapters/ch1.js';
+import { HERO_H } from '../../js/engine/hero.js';
+import { TOP } from '../../js/engine/hero-parts.js';
 
 let server, browser;
 before(async () => { server = await startServer(); browser = await chromium.launch(); });
@@ -151,7 +155,7 @@ test('the CTO before a tool is tried: her three calls in order, the last one rep
   await into(page);
   for (const n of [1, 2, 3, 3]) {
     await tapSpot(page, 'cto');
-    assert.equal(await dismiss(page), SCRIPT[`ch1.cto.call.${n}`]);
+    assert.equal(await dismiss(page), shown(`ch1.cto.call.${n}`));
     await inState(page, 'room');
   }
   assert.ok((await run(page)).phases.cto > 0);
@@ -201,7 +205,7 @@ test('found but not deployed at the CTO: Get Honeycomb → "show me" → the dep
   assert.equal((await otto(page)).tone, 'red');
   await askCto(page);
   await page.click('#decide-hc');
-  assert.equal(await dismiss(page), SCRIPT['ch1.decide.hc.show']);
+  assert.equal(await dismiss(page), shown('ch1.decide.hc.show'));
   await inState(page, 'pc');
   assert.deepEqual(await page.locator('.pc-item').evaluateAll((bs) => bs.map((b) => b.dataset.id)), ['deploy'], 'one prompt over the PC');
   await deployAndRecover(page);
@@ -227,7 +231,7 @@ test('Cave Logs only, then the CTO: Get Honeycomb → "show me" → the investig
   assert.equal((await ch(page)).x, 73, 'the hero stands at the PC');
   await askCto(page);
   await page.click('#decide-hc');
-  assert.equal(await dismiss(page), SCRIPT['ch1.decide.hc.show']);
+  assert.equal(await dismiss(page), shown('ch1.decide.hc.show'));
   await solveHc(page);
   await inState(page, 'pc');
   await deployAndRecover(page);
@@ -255,7 +259,7 @@ test('Sign first: the jab, a misstep, the prompt greys and the choice comes back
   assert.equal(await page.locator('#decide-sign').isDisabled(), true);
   assert.equal((await scen(page)).signed, true);
   await page.click('#decide-hc');
-  assert.equal(await dismiss(page), SCRIPT['ch1.decide.hc.show']);
+  assert.equal(await dismiss(page), shown('ch1.decide.hc.show'));
   await toolOpen(page, 'hc');
   await prompt(page, 0); await dismiss(page);                       // one step done, then back out
   await promptsShown(page);
@@ -264,7 +268,7 @@ test('Sign first: the jab, a misstep, the prompt greys and the choice comes back
   await askCto(page);
   assert.equal(await page.locator('#decide-sign').isDisabled(), true, 'still greyed');
   await page.click('#decide-hc');
-  assert.equal(await dismiss(page), SCRIPT['ch1.decide.hc.show']);
+  assert.equal(await dismiss(page), shown('ch1.decide.hc.show'));
   await toolOpen(page, 'hc');
   assert.equal((await ch(page)).tool.step, 1, 'progress kept');
   await prompt(page, 0); assert.equal(await dismiss(page), SCRIPT['ch1.hc.step2.result']);
@@ -445,5 +449,71 @@ test('while a window is open, a floor tap does not walk', async () => {
   await page.waitForTimeout(300);
   assert.equal((await ch(page)).walking, false);
   assert.equal((await ch(page)).x, x0);
+  await ctx.close();
+});
+
+// ---- the persona speaks from a close-up portrait (Warp brief 10) ----
+const PATCH = JSON.parse(readFileSync('assets/rooms/ch1.json', 'utf8')).patches[CH1.room.image];
+/** The open window, measured against the scene: its box, its portrait, its name, the hero's x. */
+const talkWindow = (page) => page.evaluate(() => {
+  const el = document.querySelector('.msg'), sc = document.querySelector('#scene').getBoundingClientRect();
+  const r = el.getBoundingClientRect(), c = el.querySelector('.msg-portrait canvas'), name = el.querySelector('.msg-name');
+  let painted = 0;
+  if (c) { const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; for (let i = 3; i < d.length; i += 4) if (d[i]) painted++; }
+  const fontPx = Math.min(...[...el.querySelectorAll('.msg-line, .msg-name')].map((n) => parseFloat(getComputedStyle(n).fontSize)));
+  return { talk: el.classList.contains('talk'), name: name?.textContent ?? null, text: el.dataset.text, fontPx,
+    box: { x: r.left - sc.left, y: r.top - sc.top, w: r.width, h: r.height }, scene: { w: sc.width, h: sc.height },
+    canvas: c ? { w: c.width, h: c.height, css: c.getBoundingClientRect().height, painted } : null, heroX: window.__oq.chapter.x };
+});
+
+for (const [w, h] of PHONES) {
+  test(`${w}x${h}: the CTO speaks from her portrait — her name, a painted picture, the window beside her and off the hero's body; narration has no portrait`, async () => {
+    const { ctx, page } = await openGame(browser, server, { w, h, query: '?ch=1' });
+    await into(page);
+    await tapSpot(page, 'cto');
+    await winOpen(page);
+    const m = await talkWindow(page);
+    assert.equal(m.talk, true, 'a conversation window');
+    assert.equal(m.name, SCRIPT['ch1.persona.name']);
+    assert.equal(m.text, shown('ch1.cto.call.1'));                                   // the CTO: prefix is dropped
+    assert.notEqual(m.text, SCRIPT['ch1.cto.call.1']);
+    assert.ok(m.canvas && m.canvas.w > 0 && m.canvas.h > 0, 'the portrait has a size');
+    assert.ok(m.canvas.painted > m.canvas.w * m.canvas.h * 0.5, `the portrait is painted (${m.canvas.painted})`);
+    assert.ok(m.canvas.css >= 96, `portrait ${m.canvas.css} CSS px tall`);
+    assert.ok(m.fontPx >= 14, `font ${m.fontPx}`);
+    // inside the scene
+    assert.ok(m.box.x >= -0.5 && m.box.y >= -0.5 && m.box.x + m.box.w <= m.scene.w + 0.5 && m.box.y + m.box.h <= m.scene.h + 0.5, JSON.stringify(m.box));
+    const k = m.scene.w / 320;
+    assert.ok(m.box.x + m.box.w <= PATCH.x * k + 0.5, `clear of the CTO: window right ${m.box.x + m.box.w} vs patch ${PATCH.x * k}`);
+    // the hero stands at her desk, his head under the top of the scene: the window ends above his shoulders
+    const shoulders = (CH1.room.floorY - HERO_H + TOP + 40) * k;
+    assert.ok(m.box.y + m.box.h <= shoulders + 0.5, `window bottom ${m.box.y + m.box.h} vs the hero's shoulders ${shoulders}`);
+    // she keeps talking in the room while her line is up (not reduced motion)
+    const frames = new Set();
+    for (let i = 0; i < 10; i++) { frames.add(await page.evaluate(() => window.__oq.chapter.ctoFrame)); await page.waitForTimeout(110); }
+    assert.ok(frames.size > 1, 'the CTO\'s talk frames play while she speaks');
+    await dismiss(page);
+    await inState(page, 'room');
+    // narration about her: an ordinary window, no portrait, no name
+    await page.click('#btn-look'); await tapSpot(page, 'cto');
+    await winOpen(page);
+    const n = await talkWindow(page);
+    assert.equal(n.talk, false); assert.equal(n.canvas, null); assert.equal(n.name, null);
+    assert.equal(await dismiss(page), SCRIPT['ch1.look.cto']);
+    await ctx.close();
+  });
+}
+
+test('reduced motion: the portrait is the still, and her line is complete at once', async () => {
+  const { ctx, page } = await openGame(browser, server, { query: '?ch=1', reduced: true });
+  await into(page);
+  await tapSpot(page, 'cto');
+  await winOpen(page);
+  const m = await talkWindow(page);
+  assert.equal(m.talk, true); assert.ok(m.canvas.painted > 0);
+  const a = await page.evaluate(() => document.querySelector('.msg-portrait canvas').toDataURL());
+  await page.waitForTimeout(700);
+  const b = await page.evaluate(() => document.querySelector('.msg-portrait canvas').toDataURL());
+  assert.equal(a, b, 'the still does not move');
   await ctx.close();
 });
