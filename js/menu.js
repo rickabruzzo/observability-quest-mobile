@@ -3,7 +3,7 @@
 // button shows. No points anywhere.
 
 export const SCENARIOS = [1, 2, 3, 4, 5];
-export const AVAILABLE = [1];               // built so far; the rest show, disabled
+export const AVAILABLE = [1, 2, 3, 4, 5];   // all five play
 export const DONE_KEY = 'oq.done';
 const VERSION = 2;                          // 1 (unversioned) stored scenario → score
 
