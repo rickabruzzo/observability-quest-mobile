@@ -33,7 +33,6 @@ From `briefs/art/01-rooms-2-5.md` (room 5) and `briefs/art/02-persona-cards.md` 
 | `pc`: coffee table with the laptop (left) | 0, 128, 118, 68 | x 96 |
 | `monitor`: dashboard monitor on its stand | 115, 24, 90, 104 | no walk; the tap opens the close-up |
 | `npc`: engineer on the sofa (right) | 232, 85, 88, 113 | x 200 |
-| `pager` (optional) | 194, 173, 18, 11 | — |
 | `pinball` (optional, background) | 250, 42, 68, 83 | — |
 
 **Walking:** feet on y 192; hero's left edge from x 0 to x 292. Open floor x 118–232. The hero standing at x 200 is in front of the pager.
@@ -80,6 +79,10 @@ They differ from the plate only inside **x 238–320, y 38–200** (his figure).
   - `ch5.pc.email.3` "Whose bike is on the wall": there's no bike now; the pinball machine could take the joke ("Whose pinball machine is this").
   - The pinball machine has no look line yet.
   - The pager and the sofa match.
+
+- **The pager is gone (Rick, 2026-11-13).** The pager belongs to the Honeycomb Hero (the intro), not this engineer, so it's removed from the plate and every NPC frame; drop the `pager` hotspot and `ch5.look.pager`, and fix `ch5.room.enter` ("A pager face-down on the floor"). The floor where it was is plain.
+- **The sticker shapes on the laptop close-up's bezel are gone**; the screen rectangle is unchanged (x 73–256, y 41–159).
+- **Pinball look line (Rick's):** "You already hit your 5-hour token spend today."
 
 ## Flaws kept
 
