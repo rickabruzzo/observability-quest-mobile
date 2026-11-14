@@ -8,14 +8,15 @@
   "R5_wall_closeup": "R5_wall_closeup.png",
   "R5_pc_closeup": "R5_pc_closeup.png",
   "R5_npc_talk_1": "R5_npc_talk_1.png",
-  "R5_npc_talk_2": "R5_npc_talk_2.png"
+  "R5_npc_talk_2": "R5_npc_talk_2.png",
+  "R5_npc_win": "R5_npc_win.png"
  },
  "patches": {
   "R5_loft": {
-   "x": 247,
-   "y": 68,
-   "w": 64,
-   "h": 70
+   "x": 233,
+   "y": 39,
+   "w": 87,
+   "h": 156
   }
  }
 }

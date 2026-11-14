@@ -9,7 +9,9 @@ From `briefs/art/01-rooms-2-5.md` (room 2) and `briefs/art/02-persona-cards.md` 
 | `R2_war_room.png` | Room plate |
 | `R2_npc_talk_1.png`, `R2_npc_talk_2.png` | Talking: the frames to loop while he speaks |
 | `R2_npc_look.png`, `R2_npc_scratch.png`, `R2_npc_mark.png` | Idle: turned to the board studying it; scratching his head; making a pen mark |
-| `R2_wall_closeup.png` | The whiteboard service map straight on |
+| `R2_wall_closeup.png` | The whiteboard service map straight on, with a **blank sheet of paper taped in the upper left** for the theory text (updated 2026-11-13) |
+| `R2_wall_closeup_fixed.png` | **New 2026-11-13.** The same close-up with one bold glowing yellow-green path traced through the tangle, left edge to right edge: the transfer path after the fix (`ch2.recovered`, `ch2.win`). The sheet stays blank. |
+| `R2_npc_win.png` | **New 2026-11-13.** Win frame: he caps his marker with both hands, a tired, relieved smile, glasses now on his face (`ch2.win`: "The Cloud Engineer caps his marker.") |
 | `R2_pc_closeup.png` | The hero's monitor on its arm, blank screen, blank sticky notes |
 | `P2_card.png` | Slayer of the Monolith: armour of server parts and cable, a wrench war hammer mid-swing, a boot on a cracked monolith with two red lights, a cable coiled on his arm, a cavern of green lights. Reads at 128×80. |
 
@@ -47,13 +49,27 @@ Box and circle centres on the close-up are not measured. If the code wants to dr
 
 Every NPC frame differs from the plate only inside **x 240–309, y 48–173** (his figure).
 
+
+## Updates for the revised script (2026-11-13)
+
+Cloud Claude rewrote chapter 2 around this drop; these changes fit the art to it:
+- **Theory text (`ch2.wall.stat.*`, `ch2.wall.ok.*`) goes on the taped sheet** in `R2_wall_closeup`: blank white area **x 49–107, y 32–100** (320×200). Dark ink reads well on it, like marker on paper. The sheet is the same in both close-ups.
+- **After the win,** show `R2_wall_closeup_fixed` instead of `R2_wall_closeup`. The path is painted in, so the code doesn't need to draw it or know node positions. It differs from `R2_wall_closeup` only along the path (roughly x 16–302, y 36–195).
+- **`R2_npc_win`** differs from the plate only inside **x 234–309, y 37–170**, inside the existing figure region.
+- **`ch2.json` fix needed:** its `patches.R2_war_room` is `x 239, y 48, w 70, h 90` (to y 138), but the NPC frames change down to **y 173**. Use **x 234, y 37, w 76, h 137** so the talk_2, look, scratch, mark and win frames aren't cut off at the waist.
+- **Script loose end:** `ch2.look.workstation` describes a separate workstation; the room has only the one desk.
+- **Brief 01's Room 2 section** still describes the old status wall, server cabinet and plug. The picture here is the current one.
+
 ## Flaws kept
 
-- **The cans on the cubicle desk read as a well-known energy drink** (blue, silver and red) when you look closely at full size. At 320×200 there's no legible logo. The close-ups use a plain silver can instead. Worth a Photoshop repaint of the colours if it bothers anyone.
 - **The PC close-up's screen is about 50% of the frame's width and 53% of its height**, below the brief's 60%.
 - **The whiteboard close-up** has a few boxes with ruled lines inside (like little documents). None are letters.
 
 ## Provenance
+
+- **2026-11-13 updates:** blank sheet: an edit of the close-up, 2 tries, t2 kept, its sheet area pasted in as a block. Fixed path: an edit of the sheet version, 2 tries, t1 kept, only the path and its glow composited. Win frame: an edit of the plate, 2 tries; t1 reframed the room, so t2 was kept, with only his figure composited. Script: `scratch/room_gen/gen_set.py` (`R2_wall_sheet`, `R2_wall_fixed`, `R2_npc_win`).
+
+- **Desk cans recoloured 2026-11-13:** the cans looked like a known energy drink up close. A Gemini edit of the plate made them plain green and orange with no labels; only the desk area (full res x 40–300, y 380–615; about x 10–76, y 89–148 at 320×200) was pasted back into the plate and all five NPC frames, so the frames still differ from the plate only in his figure.
 
 - **Tool:** Gemini API `gemini-3.1-flash-image`, 3:2, 1K, 2026-11-12, on Rick's personal account.
 - **Plate:** `R2c`: an edit of try 3 of the redesigned room (`R2b`) with try 1 as a second reference, turning the right window into wall (`scratch/room_gen/edit_r2.py`). Try 2 of that edit kept. Rick picked the desk, board, figure and wall in rounds.

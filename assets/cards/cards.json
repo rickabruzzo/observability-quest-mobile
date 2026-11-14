@@ -9,5 +9,27 @@
   "P3": "P3_card.png",
   "P4": "P4_card.png",
   "P5": "P5_card.png"
+ },
+ "frames": {
+  "P1": [
+   "P1_card_sparkle_1.png",
+   "P1_card_sparkle_2.png",
+   "P1_card_sparkle_3.png"
+  ],
+  "P2": [
+   "P2_card_fx_1.png",
+   "P2_card_fx_2.png",
+   "P2_card_fx_3.png"
+  ],
+  "P3": [
+   "P3_card_fx_1.png",
+   "P3_card_fx_2.png",
+   "P3_card_fx_3.png"
+  ],
+  "P5": [
+   "P5_card_fx_1.png",
+   "P5_card_fx_2.png",
+   "P5_card_fx_3.png"
+  ]
  }
 }

@@ -15,7 +15,7 @@ picture that goes in the card's window**, one per persona:
 | `P1_card` | the CTO (scenario 1) | Archmage of the Budget |
 | `P2_card` | the Cloud Engineer (scenario 2) | Druid of the Monolith (**redo**, see below) |
 | `P3_card` | the Frontend Developer (scenario 3) | Bard of the Browser |
-| `P4_card` | the SRE on call (scenario 4) | Knight of the Pager |
+| `P4_card` | the SRE on call (scenario 4) | Knight Watch (**redone**, see below) |
 | `P5_card` | the Release Engineer (scenario 5) | Rogue of the Friday Deploy |
 
 ## Order of work
@@ -94,7 +94,14 @@ Claude in the browser), who builds the picture into the card. It is not a job fo
 
 The instrument is a generic shape, not a recognisable real guitar model. Sparks, not musical notation.
 
-### `P4_card` — the SRE on call, Knight of the Pager
+### `P4_card` — the SRE on call, Knight Watch (redone, Rick 2026-11-13)
+
+> **Superseded 2026-11-13.** Rick redirected this card: the class is **Knight Watch**. She is a sentry on the
+> walls at night, scanning with a brass spyglass, with a **smartphone** in a holster on her belt (blank,
+> glowing; the game scrolls notifications on it) and a plain steel shield wearing a red 999+ notification
+> badge. **No pager**: the pager is the Honeycomb Hero's. The delivered picture is described in
+> `art-drops/2026-11-12-room-ch4/HANDBACK.md`. The prompt below is the original, kept for the record.
+
 > [the person from the room 4 plate], in full plate armour with no helmet, her headset round her neck, standing
 > guard on a castle rampart at night. Sword raised high in one hand, a tall shield on the other arm bearing a
 > plain bell shape. A small old pager hangs from her belt, glowing green, its screen blank. A lantern at her
@@ -109,7 +116,7 @@ The instrument is a generic shape, not a recognisable real guitar model. Sparks,
 ## Accept when
 
 - one fictional person, recognisably the persona from the room plate;
-- the class reads at a glance at 128×80: wizard, armoured hammer-swinger, bard, knight, rogue;
+- the class reads at a glance at 128×80: wizard, druid, bard, knight, rogue;
 - an action pose, face visible;
 - no writing, no logo, no frame; nothing that matters in the outer 6%;
 - it sits with the rooms: the same VGA look, no smooth gradients, no photo-realism.

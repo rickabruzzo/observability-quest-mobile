@@ -6,19 +6,21 @@
  "images": {
   "R2_war_room": "R2_war_room.png",
   "R2_wall_closeup": "R2_wall_closeup.png",
+  "R2_wall_closeup_fixed": "R2_wall_closeup_fixed.png",
   "R2_pc_closeup": "R2_pc_closeup.png",
   "R2_npc_talk_1": "R2_npc_talk_1.png",
   "R2_npc_talk_2": "R2_npc_talk_2.png",
   "R2_npc_look": "R2_npc_look.png",
   "R2_npc_scratch": "R2_npc_scratch.png",
-  "R2_npc_mark": "R2_npc_mark.png"
+  "R2_npc_mark": "R2_npc_mark.png",
+  "R2_npc_win": "R2_npc_win.png"
  },
  "patches": {
   "R2_war_room": {
-   "x": 239,
-   "y": 48,
-   "w": 70,
-   "h": 90
+   "x": 235,
+   "y": 37,
+   "w": 74,
+   "h": 135
   }
  }
 }

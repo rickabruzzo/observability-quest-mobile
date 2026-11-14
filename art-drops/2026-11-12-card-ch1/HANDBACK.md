@@ -6,14 +6,19 @@ From brief `briefs/art/02-persona-cards.md`, P1 only. Made by Art Claude on Rick
 
 | File | Size | What |
 |---|---|---|
+| `P1_card_sparkle_1.png`, `_2.png`, `_3.png` | 640×400 | Painted sparkle frames (added 2026-11-13): the same card with the gold glints, light trails and nib glow in new positions. |
 | `P1_card.png` | 640×400 | The CTO as Archmage of the Budget: blue wizard robes and hat over her dark blazer, a staff topped with a glowing pen nib, and a blank contract scroll with a red ribbon. Night skyline behind her. |
 
 ## Changes from the brief
 
 - **None to the picture.** Rick picked try 1 of 3.
-- **Rick asked for a small animation or magic sparkle.** Gemini frames could not be made: the API project hit its monthly spending cap mid-session. So for now the sparkle is **code**: twinkling glints drawn over the still (see below). If Rick raises the cap, painted sparkle frames can replace this; they would differ from `P1_card.png` only inside the zones below.
+- **Rick asked for a small animation or magic sparkle.** Added 2026-11-13: three painted sparkle frames. Each is a Gemini edit of the card; only the magic zones (below) were composited back, so her face, hat and body never change.
+  - **Loop:** `P1_card` → `_sparkle_1` → `_sparkle_2` → `_sparkle_3` → `_sparkle_2` → `_sparkle_1`, about 160–200 ms a frame. Reduced motion: `P1_card` only.
+  - The code-drawn glints described below are optional now; use them on top for extra twinkle, or skip them.
 
 ## Facts the code depends on (320×200, about ±3 px)
+
+- **The sparkle frames differ from `P1_card` only inside** x 220–320, y 8–100 (around the nib), x 50–260, y 128–192 (the trail by the scroll and robe) and x 15–80, y 100–175 (the trail by her cape). The scroll and ribbon sit inside the second zone and may shift a pixel or two between frames.
 
 - **Face:** x 140–185, y 40–75. Keep the card's frame, name and stats off it.
 - **Outer 6%:** nothing important. The cape tip reaches about x 30 on the left; the card frame may cover it.
@@ -29,6 +34,8 @@ From brief `briefs/art/02-persona-cards.md`, P1 only. Made by Art Claude on Rick
 - The gold trail crosses the bottom edge at about x 90–190; that's inside the outer 6% but only light, nothing important.
 
 ## Provenance
+
+- **Sparkle frames (2026-11-13):** 3 edits of the raw card (`scratch/card_gen/edit_sparkle.py`), all 3 kept, composited back inside the zones above (diff > 70, MaxFilter(7), MinFilter(3)).
 
 - **Tool:** Gemini API `gemini-3.1-flash-image`, 3:2, 1K, 2026-11-12. The `R1_exec_floor` plate was attached as the reference for the CTO's look and the game style.
 - **Prompt:** the brief's opening and closing lines around the P1 description, plus: "She fills most of the height of the picture, seen from about the knees up, her face clearly visible and recognisably the same woman as in the reference. Keep the outer edge of the picture free of anything important. Original costume, not from any game, film or card game. Avoid: text, runes, writing on the scroll, card frame, border, photorealism, smooth gradients."
