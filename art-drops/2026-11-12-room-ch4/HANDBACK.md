@@ -8,6 +8,7 @@ From `briefs/art/01-rooms-2-5.md` (room 4) and `briefs/art/02-persona-cards.md` 
 |---|---|
 | `R4_ops_room.png` | Room plate |
 | `R4_npc_talk_1.png`, `R4_npc_talk_2.png` | The persona in two other moments; differ from the plate only in the region below |
+| `R4_npc_win.png` | **New 2026-11-13.** Win frame: phone lowered, a two-finger salute (o7) and a tired grin (`ch4.recovered`, `ch4.win`) |
 | `R4_wall_closeup.png` | The wall display straight on, all panels blank |
 | `R4_pc_closeup.png` | The hero's computer screen straight on, blank |
 | `P4_card.png` | `P4_card`: Knight of the Pager. Plate armour, no helmet, headset round her neck, sword raised, a shield with a plain bell, a green pager on her belt, a lantern at her feet, a rampart at night. Reads at 128×80. |
@@ -45,11 +46,21 @@ From `briefs/art/01-rooms-2-5.md` (room 4) and `briefs/art/02-persona-cards.md` 
 
 The loop plate → talk_1 → plate → talk_2 swaps cleanly. Changed region: talk_1: x 227–318, y 78–181. talk_2: x 227–318, y 78–182. (the region includes a few stray pixels round the figure that match the plate to within a shade).
 
+## Updates for the revised script (2026-11-13)
+
+Cloud Claude rewrote chapter 4 around this drop; these changes fit the art to it:
+- **A blank masking-tape label on the old CRT** at about **x 217–256, y 88–119**, for `ch4.look.npc`'s "a label: THE FLEET CODE. ASK EINAR." The words are left to the game, as the brief asks: draw them on the tape in the close-up of a look, or just say them. (A try with the words painted in came out misspelled.) It's in the plate and every NPC frame.
+- **New `R4_npc_win`:** the pilots' "o7" salute. With the talk frames, the frame-swap area is **x 227, y 77, w 92, h 106**.
+- **`R4_pc_closeup` redone:** the old screen was see-through (the wall of space showed through its top half). The screen is now solid, even and blank, at x 33–285, y 34–147. This is where Claw Codez's chat goes.
+- **The wall display needed no change:** the star map (fleet dots), the lane under it (the smug flat green health line) and the chat column (lag in nine languages, then o7) all match `ch4.wall.*`.
+
 ## Flaws kept
 
 See "Changes from the brief". Nothing else known.
 
 ## Provenance
+
+- **2026-11-13 updates:** label: an edit of the plate, 2 tries, t2 (blank tape) kept, only the label composited. Win frame: an edit, 2 tries, t1 kept, only her figure composited. PC close-up: an edit of the old close-up, 2 tries, t1 kept. Script: `gen_set.py` (`R4_label`, `R4_npc_win`, `R4_pc2`).
 
 - **Tool:** Gemini API `gemini-3.1-flash-image`, 3:2, 1K, 2026-11-12, on Rick's personal account.
 - **Plate:** the brief's room prompt with its opening and closing lines, `scratch/room_gen/raw/R1_exec_floor.png` attached as the style reference (`scratch/room_gen/gen_rooms.py`).
