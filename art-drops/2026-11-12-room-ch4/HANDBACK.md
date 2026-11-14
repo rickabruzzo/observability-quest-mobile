@@ -54,6 +54,15 @@ Cloud Claude rewrote chapter 4 around this drop; these changes fit the art to it
 - **`R4_pc_closeup` redone:** the old screen was see-through (the wall of space showed through its top half). The screen is now solid, even and blank, at x 33–285, y 34–147. This is where Claw Codez's chat goes.
 - **The wall display needed no change:** the star map (fleet dots), the lane under it (the smug flat green health line) and the chat column (lag in nine languages, then o7) all match `ch4.wall.*`.
 
+## P4 card redone: Knight Watch (Rick, 2026-11-13)
+
+`P4_card.png` is replaced. Rick's direction:
+- **Class: "Knight Watch"** (was Knight of the Pager). She's on sentry duty at the top of the walls, at night, scanning with a brass spyglass.
+- **No pager.** The pager belongs to the Honeycomb Hero. She carries a **smartphone** in a holster on her belt, with its screen blank and glowing. **Card animation: a scroll of urgent notifications on that screen.** The screen is about **x 213–228, y 149–169** (320×200); the code draws the scrolling alerts there.
+- **Shield:** a plain steel shield wearing a big red app-icon notification badge, **999+**, on its top right corner (about x 253–290, y 77–113). The badge is the only text in the picture, at Rick's request. At 128×80 the number doesn't read; if the small card should show it, draw it over the badge in code.
+- **For the script:** rename `ch4.persona.class` and the card title line to Knight Watch, and replace "Pager Endurance" in `ch4.card.stats` / `ch4.persona.stats` (for example "Notification Endurance"). `ch4.persona.flavor` ("Sworn to answer the call") still fits.
+- Provenance: a new card (3 tries, brief 02's frame lines plus Rick's watch direction, `R4_ops_room` as the reference); t1 kept, then two edits of it for the badge and a plain shield (`gen_set.py`: `P4_watch`, `P4_badge`, `P4_plain`). t2 of the first round was rejected for drawing a third arm.
+
 ## Flaws kept
 
 See "Changes from the brief". Nothing else known.
