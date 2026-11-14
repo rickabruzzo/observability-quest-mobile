@@ -81,6 +81,12 @@ Cloud Claude rewrote chapter 3 around this drop. These changes fit the art to it
 - **The guitar is on the right of the laptop in the close-up.** From the chair, facing the screen, the guitar that leans on the desk's left in the wide shot is on your right.
 - **Guitar headstocks:** the room guitar now has tuning pegs on both sides (a 3+3 shape) instead of six in a row, so it no longer reads as a Fender. The close-up's headstock is also two-sided (it drew four a side). This was patched into the plate and all three of her frames, at about x 187–228, y 84–155.
 
+## P3 card animation (2026-11-13)
+
+`P3_card_fx_1.png`, `_2.png`, `_3.png` (640×400): the same card with the effect in new positions: the sparks off the strings scatter to new positions and sizes. Each is a Gemini edit of the card's full-size original; only the effect areas were composited back, so the person never moves. Changed area: x 67–320, y 0–180 (the spark burst right of her and one by her knee); her face never changes.
+- **Loop:** `P3_card` → `_fx_1` → `_fx_2` → `_fx_3` → `_fx_2` → `_fx_1`, about 160–200 ms a frame, the same as the CTO's sparkle. Reduced motion: `P3_card` only.
+- Provenance: `scratch/card_gen/edit_fx.py` (`P3_fx`), 3 tries, all 3 kept.
+
 ## Flaws kept
 
 See "Changes from the brief". Nothing else known.
