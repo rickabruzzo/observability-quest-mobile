@@ -123,7 +123,7 @@ export const CH4 = {
     },
     hc: {
       kind: 'hc', title: 'ch4.hc.title', intro: 'ch4.hc.intro',
-      close: '[Close Claw Codez]',       // needs a script slot (ch4.hc.close); the string stands in meanwhile
+      close: 'ch4.hc.close',
       steps: [step(1), step(2)],
       screens: 'assets/screens/ch4_hc.json',
     },

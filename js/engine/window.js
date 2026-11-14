@@ -97,7 +97,8 @@ export function createWindows(ctx, { onShow } = {}) {
       if (portrait) {
         el.querySelector('.msg-name').textContent = portrait.name;
         side = el.querySelector('.msg-portrait').offsetWidth + (parseFloat(cs.columnGap) || 0);
-        nameW = Math.ceil(measureFn(parseFloat(getComputedStyle(el.querySelector('.msg-name')).fontSize))(portrait.name));
+        const ns = getComputedStyle(el.querySelector('.msg-name'));       // the name's width as it is set: its letters and their spacing
+        nameW = Math.ceil(measureFn(parseFloat(ns.fontSize))(portrait.name) + (parseFloat(ns.letterSpacing) || 0) * portrait.name.length);
       }
       const width = Math.min(MAX_LINE_PX, avail - pad - 2 - side);           // never wider than the reading measure
       const maxLines = portrait ? TALK_LINES : linesFor(ctx.fit?.sceneH ?? 370);

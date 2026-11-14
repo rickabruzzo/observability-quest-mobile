@@ -8,7 +8,8 @@ import { chromium } from 'playwright';
 import { startServer } from './_server.js';
 import { SCRIPT } from '../../js/script.js';
 import { CHAPTERS } from '../../js/chapters/index.js';
-import { personaLine, speakerOf } from '../../js/engine/conversation.js';
+import { readFileSync } from 'node:fs';
+import { personaLine, speakerOf, talkWindow } from '../../js/engine/conversation.js';
 import { openGame, ch, run, winOpen, dismiss, tapSpot, toolOpen, promptsShown, prompt, inState, pcPick, closeCard, pickOption } from './_play.js';
 
 let server, browser;
@@ -148,6 +149,36 @@ for (const n of NS) {
       await ctx.close();
     });
   }
+
+  test(`scenario ${n}: the persona's first line opens the conversation window — their name, a painted portrait, the prefix dropped, the name inside the window at both phone sizes`, async () => {
+    for (const [w, h] of PHONES) {
+      const { ctx, page } = await openGame(browser, server, { w, h, query: `?ch=${n}` });
+      await into(n, page); await talk(n, page);
+      const m = await page.evaluate(() => {
+        const el = document.querySelector('.msg'), cv = el.querySelector('.msg-portrait canvas'), name = el.querySelector('.msg-name');
+        let painted = 0;
+        if (cv) { const d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data; for (let i = 3; i < d.length; i += 4) if (d[i]) painted++; }
+        const range = document.createRange(); if (name) range.selectNodeContents(name);
+        const sc = document.querySelector('#scene').getBoundingClientRect(), box = el.getBoundingClientRect();
+        return { talk: el.classList.contains('talk'), name: name?.textContent ?? null, text: el.dataset.text, painted, area: cv ? cv.width * cv.height : 0,
+          nameLines: name ? Math.round(name.getBoundingClientRect().height / parseFloat(getComputedStyle(name).lineHeight)) : 0, boxW: box.width, scale: sc.width / 320,
+          nameRight: name ? range.getBoundingClientRect().right : 0, boxRight: box.right - parseFloat(getComputedStyle(el).borderRightWidth),
+          inScene: box.left >= sc.left - 1 && box.right <= sc.right + 1 && box.top >= sc.top - 1 && box.bottom <= sc.bottom + 1 };
+      });
+      assert.equal(m.talk, true, `"${m.text.slice(0, 40)}…" is shown as narration, not in the conversation window`);
+      assert.equal(m.name, SCRIPT[c.persona.name]);
+      assert.ok(m.painted > m.area * 0.5, `the portrait is painted (${m.painted} of ${m.area})`);
+      assert.equal(m.text, shown(n, c.persona.calls[0]));
+      assert.ok(!/^[A-Z][A-Z ]+:/.test(m.text), `the prefix is still on the words: "${m.text.slice(0, 40)}…"`);
+      assert.ok(m.nameRight <= m.boxRight, `${w}x${h}: the name runs ${Math.round(m.nameRight - m.boxRight)} px past the window's edge`);
+      assert.ok(m.inScene, `${w}x${h}: the window is inside the scene`);
+      const patch = JSON.parse(readFileSync(`assets/rooms/ch${n}.json`, 'utf8')).patches[c.room.image];
+      const widest = talkWindow(c.persona.where, patch, m.scale).maxWidth;
+      if (m.nameLines > 1) assert.ok(m.boxW >= widest - 2, `${w}x${h}: the name wraps onto ${m.nameLines} lines though the window (${Math.round(m.boxW)} px) could be ${widest} px wide`);
+      assert.deepEqual(page.errors, []);
+      await ctx.close();
+    }
+  });
 
   test(`scenario ${n}: reduced motion plays through — no walking, the persona rests, the wall is a still, the same win`, async () => {
     const { ctx, page } = await openGame(browser, server, { query: `?ch=${n}`, reduced: true });

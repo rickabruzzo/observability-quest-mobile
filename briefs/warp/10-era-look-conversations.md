@@ -1,5 +1,10 @@
 # Warp brief 10 — era-look fork: the persona speaks from a close-up portrait
 
+> **Built and reviewed, 2026-11-14** (`handbacks/2026-11-13-warp-era-conversations.md`,
+> `handbacks/2026-11-14-cloud-era-review.md`). One thing this brief left open and the review settled: the
+> "title" in step 2 is `chN.persona.name` without its THE, word for word. The script's prefixes now match it in
+> all five scenarios, and `tests/script-personas.test.js` fails if one drifts.
+
 Read `briefs/warp/PROTOCOL.md` and `briefs/PROTOCOL.md` first, **and the fork rule in `briefs/PROTOCOL.md`**:
 this is for the `era-look` fork. Branch `warp/era-conversations` from `origin/era-look`; the pull request's
 base is `era-look`. Do it **after brief 09**. Scenario 1 is enough to build and test it on: the window is driven

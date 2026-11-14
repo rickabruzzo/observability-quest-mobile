@@ -6,7 +6,10 @@ sub-project) turns this file into `js/script.js`, so edit the words here, not in
 
 Conventions: the narrator speaks with no prefix. **The player is always the Honeycomb Hero** (Rick, 2026-11-12): the one who gets paged, in the
 Honeycomb hoodie. Each chapter's **persona is the other person in the room**: it is their problem being
-solved, the class card introduces *them*, and they speak with their title as a prefix (`CTO:`). `chN.hero.line`
+solved, the class card introduces *them*, and they speak with their title as a prefix (`CTO:`). **The prefix is
+`chN.persona.name` without its THE, word for word** (`THE SRE ON CALL` speaks as `SRE ON CALL:`): that is how the
+game knows a line is theirs and shows it beside their portrait with the prefix dropped, so a shorter title would
+be shown as narration (`tests/script-personas.test.js` holds it). `chN.hero.line`
 is the persona's last word. Other characters are prefixed by name. `[Bracketed]` lines are the tappable prompts, in the order shown. In an old tool they are
 one plausible and two silly, and all wrong. **In Honeycomb none is silly** (Rick, 2026-11-12): one is the
 direct route and the others are sensible Honeycomb moves that get a nudge (`jab` slots) and cost nothing. `{name}` is the hero's name or "the Engineer". Slots marked **RICK** are
@@ -758,13 +761,13 @@ A demo guitar, leaning on the spare desk. It would be so easy to pick it up. The
 You pick it up and get four notes in. "No Stairway to Heaven," says the Developer, without looking up. You put it back.
 
 ### ch3.npc.call.1
-DEVELOPER: Yes, I know it's slow for them. It isn't slow for me. It isn't slow for anyone I can find.
+FRONTEND DEVELOPER: Yes, I know it's slow for them. It isn't slow for me. It isn't slow for anyone I can find.
 
 ### ch3.npc.call.2
-DEVELOPER: Pretty Good Metrics says two seconds. Two! I have refreshed it a hundred times.
+FRONTEND DEVELOPER: Pretty Good Metrics says two seconds. Two! I have refreshed it a hundred times.
 
 ### ch3.npc.call.3
-DEVELOPER: (hand over the phone) Take that desk. Find me one shopper it's slow for. Just one.
+FRONTEND DEVELOPER: (hand over the phone) Take that desk. Find me one shopper it's slow for. Just one.
 
 ### ch3.pc.title
 TWANG & CO. · SPARE LAPTOP
@@ -815,7 +818,7 @@ You stand up. You have looked at nothing and learned nothing, and she can hear i
 You close the laptop. Time to go and talk someone out of a spinner.
 
 ### ch3.npc.ask
-DEVELOPER: So it was never the frontend. What do I do now? Ship the spinner anyway, just in case?
+FRONTEND DEVELOPER: So it was never the frontend. What do I do now? Ship the spinner anyway, just in case?
 
 ### ch3.decide.wrong
 [Ship the loading spinner]
@@ -827,7 +830,7 @@ DEVELOPER: So it was never the frontend. What do I do now? Ship the spinner anyw
 The spinner ships. It is a beautiful spinner. The next slow thing hides behind it for a month. "Try again," she says.
 
 ### ch3.decide.hc.show
-DEVELOPER: Honeycomb? Show me the shopper. One real shopper, start to finish.
+FRONTEND DEVELOPER: Honeycomb? Show me the shopper. One real shopper, start to finish.
 
 ### ch3.recovered
 On the wall, the order goes through. "Thank you!" Somewhere, a left-handed guitar is being put in a box.
@@ -914,7 +917,7 @@ You turn the left-handed stock check into one query instead of one per warehouse
 You found the eight percent. Left-handed players can buy a guitar in under fourteen seconds again. Somewhere, a very patient southpaw finally checks out.
 
 ### ch3.hero.line
-DEVELOPER: It worked on my machine. It turns out my machine is right-handed.
+FRONTEND DEVELOPER: It worked on my machine. It turns out my machine is right-handed.
 
 ### ch3.verdict
 GRAHAM SIENER: The average wasn't lying. It just wasn't talking about the one shopper in twelve who waited fourteen seconds. One trace from the browser to the backend, and BubbleUp, told you who.
@@ -995,13 +998,13 @@ The console they've lent you: an ultrawide, a keyboard that glows, and a chair w
 The SRE on call, tonight's incident commander. One hand on her forehead, the other holding a phone open at Einar's number. Beside her, his old monitor, under dust and a label: THE FLEET CODE. ASK EINAR.
 
 ### ch4.npc.call.1
-SRE: Every node is green. Every graph is flat. And eight thousand people are typing the same three letters at me.
+SRE ON CALL: Every node is green. Every graph is flat. And eight thousand people are typing the same three letters at me.
 
 ### ch4.npc.call.2
-SRE: Einar wrote the fleet code in 2003. Einar is asleep in Reykjavík. I really don't want to make that call.
+SRE ON CALL: Einar wrote the fleet code in 2003. Einar is asleep in Reykjavík. I really don't want to make that call.
 
 ### ch4.npc.call.3
-SRE: Take the console. Claw Codez is on it, wired to Honeycomb. Ask it something. Then tell me whether I dial.
+SRE ON CALL: Take the console. Claw Codez is on it, wired to Honeycomb. Ask it something. Then tell me whether I dial.
 
 ### ch4.pc.title
 NULLPOINT GAMES · OPS CONSOLE
@@ -1052,7 +1055,7 @@ You stand up. You have asked nothing and learned nothing, and her thumb moves cl
 You push back from the console. Time to go and stop a phone call.
 
 ### ch4.npc.ask
-SRE: A limit from 2003, and nobody had to wake him. So next time: do I just page Einar sooner?
+SRE ON CALL: A limit from 2003, and nobody had to wake him. So next time: do I just page Einar sooner?
 
 ### ch4.decide.wrong
 [Page Einar sooner]
@@ -1064,7 +1067,7 @@ SRE: A limit from 2003, and nobody had to wake him. So next time: do I just page
 Einar's phone now rings at the first sign of lag. Einar's phone is now at the bottom of a fjord. "Try again," she says.
 
 ### ch4.decide.hc.show
-SRE: Honeycomb, through that crab thing? Show me. Ask it in front of me.
+SRE ON CALL: Honeycomb, through that crab thing? Show me. Ask it in front of me.
 
 ### ch4.recovered
 On the wall of space, the ships that were stuck outside jump in. Chat fills with o7. Nobody types the word lag for almost a minute.
@@ -1104,6 +1107,9 @@ HONEYCOMB · MCP
 
 ### ch4.hc.intro
 Claw Codez is connected to Honeycomb over MCP, the Model Context Protocol, so anyone on the team can ask production a question in plain words. Nobody has to know Einar's code.
+
+### ch4.hc.close
+[Close Claw Codez]
 
 ### ch4.hc.step1.prompt.1
 [Ask: how many fleet joins succeed?]
@@ -1151,7 +1157,7 @@ You raise the 2003 limit and deploy. Joins: 99% and climbing. On the wall, the s
 From 93 to 99 in one night, by asking. The battle finishes with everyone in it. Einar wakes at ten, reads the thread, and types "huh." It is the highest praise Einar gives.
 
 ### ch4.hero.line
-SRE: We didn't need the one person who understood it. We needed to be able to ask.
+SRE ON CALL: We didn't need the one person who understood it. We needed to be able to ask.
 
 ### ch4.manager.line
 MANAGER (running in): Half the studio is asking production questions. When did that happen?
