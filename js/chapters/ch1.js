@@ -5,17 +5,22 @@
 // Positions are the art hand-back's measurements on the 320x200 scene (assets/rooms/, built by
 // tools/build_rooms.py); areas are { x0, x1, y0, y1 } inclusive.
 
+import { HERO_W } from '../engine/hero.js';
+import { SCENE_W } from '../engine/room.js';
+
 export const MANIFEST = 'assets/rooms/ch1.json';
 
 export const ROOM = {
   image: 'R1_exec_floor',
   floorY: 192,                         // the hero's feet
-  walk: [0, 292],                      // the hero's left edge
-  start: 142,                          // between the cube and the CTO's desk
-  // listed in drawing order: where two overlap the later one wins, so the monitor beats the PC at its corner
+  walk: [0, SCENE_W - HERO_W],         // the hero's left edge
+  start: 128,                          // between the cube and the CTO's desk (the 56-px hero's left edge: brief 09)
+  heroScale: 1,
+  // listed in drawing order: where two overlap the later one wins, so the monitor beats the PC at its corner.
+  // Stand points are for the 56-px hero (brief 09, item 8): the same centres as before, the CTO's re-measured.
   hotspots: [
-    { id: 'pc', rect: { x: 0, y: 75, w: 135, h: 111 }, standX: 87, look: 'ch1.look.pc', use: { scene: 'pc' } },
-    { id: 'cto', rect: { x: 206, y: 82, w: 100, h: 102 }, standX: 176, look: 'ch1.look.cto', use: { action: 'cto' } },
+    { id: 'pc', rect: { x: 0, y: 75, w: 135, h: 111 }, standX: 73, look: 'ch1.look.pc', use: { scene: 'pc' } },
+    { id: 'cto', rect: { x: 206, y: 82, w: 100, h: 102 }, standX: 148, look: 'ch1.look.cto', use: { action: 'cto' } },
     { id: 'monitor', rect: { x: 114, y: 26, w: 92, h: 50 }, walk: false, look: 'ch1.look.monitor', use: { scene: 'monitor' } },
   ],
   // the CTO on the phone: room → talk_1 → room → talk_2, drawn at the manifest's patch position
@@ -69,6 +74,16 @@ export const PC = {
   leave: 'ch1.pc.leave', locked: 'ch1.pc.leave.locked',
 };
 
+/** The persona: the CTO. Her lines are the script's `CTO: …` lines; they show in the conversation window with her
+ * close-up portrait (assets/portrait_p1.png and its frames), which sits top left because she stands on the right.
+ * Her card (brief 07): name, class, four stats and a line of flavor from the script; the picture is the card art,
+ * or, if that file is missing, the CTO cropped from the room plate. */
+export const PERSONA = {
+  name: 'ch1.persona.name', class: 'ch1.persona.class', stats: 'ch1.persona.stats', flavor: 'ch1.persona.flavor',
+  art: 'assets/cards/P1_card.png', crop: { image: 'R1_exec_floor', x: 192, y: 62, w: 112, h: 70 },
+  portrait: 'p1', where: 'top-left',
+};
+
 /** The CTO, on the phone with the Cave Logs renewal. */
 export const CTO = {
   calls: [1, 2, 3].map((i) => `ch1.cto.call.${i}`),
@@ -105,15 +120,16 @@ const step = (n) => ({
 export const CH1 = {
   id: 1,
   manifest: MANIFEST,
-  card: { title: 'ch1.card.title', stats: 'ch1.card.stats', line: 'ch1.card.line' },
+  card: { title: 'ch1.card.title', line: 'ch1.card.line' },
   enter: 'ch1.room.enter',
   room: ROOM,
+  persona: PERSONA,
   monitor: MONITOR,
   pc: PC,
   cto: CTO,
   tools: {
     old: {
-      kind: 'old', title: 'ch1.old.title', intro: 'ch1.old.intro', exit: 'ch1.old.exit',
+      kind: 'old', title: 'ch1.old.title', intro: 'ch1.old.intro', exit: 'ch1.old.exit', close: 'ch1.old.close',
       steps: [{ prompts: [1, 2, 3].map((i) => ({ key: `ch1.old.prompt.${i}`, jab: `ch1.old.jab.${i}` })) }],
       paint: paintOld,
     },

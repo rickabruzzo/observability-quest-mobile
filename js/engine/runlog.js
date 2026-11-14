@@ -7,7 +7,7 @@ const LABELS = { card: 'Class card', room: 'Room', pc: 'PC', old: 'Old tool', hc
 const COUNT_LABELS = [
   ['windows', 'Message windows'], ['taps', 'Taps'], ['walks', 'Walks'], ['walkMs', 'Walking time'],
   ['nudges', 'Honeycomb nudges'], ['oldPrompts', 'Old-tool prompts'], ['looks', 'Look uses'], ['visited', 'Hotspots visited'],
-  ['emails', 'Emails opened'], ['vitals', 'Vitals checks'], ['monitor', 'Monitor visits'], ['signed', 'Signed'],
+  ['emails', 'Emails opened'], ['vitals', 'Vitals checks'], ['monitor', 'Monitor visits'], ['signed', 'Signed'], ['cards', 'Card views'],
 ];
 
 export function formatMs(ms) {
@@ -17,7 +17,7 @@ export function formatMs(ms) {
 
 export function createRunlog({ chapter, now = () => performance.now() } = {}) {
   const phases = Object.fromEntries(PHASES.map((p) => [p, 0]));
-  const counts = { windows: 0, taps: 0, walks: 0, walkMs: 0, nudges: 0, oldPrompts: 0, looks: 0, emails: 0, vitals: 0, monitor: 0, signed: 0 };
+  const counts = { windows: 0, taps: 0, walks: 0, walkMs: 0, nudges: 0, oldPrompts: 0, looks: 0, emails: 0, vitals: 0, monitor: 0, signed: 0, cards: 0 };
   const visited = new Set();
   const holds = new Set();
   let current = null, since = null, heldAt = null, done = false, missteps = 0;

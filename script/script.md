@@ -199,9 +199,6 @@ Inspired by a customer-service platform whose support bot is a team of AI agents
 ### ch1.card.title
 THE CTO
 
-### ch1.card.stats
-Budget 3 · Vendor Skepticism 17 · Meetings Survived 19 · Grep 2
-
 ### ch1.card.line
 You are the Honeycomb Hero, and this is who paged you: the CTO of Converso. Her AI support agent is failing customers, and she is one signature away from three more years of logs.
 
@@ -460,9 +457,6 @@ Inspired by a digital bank two years into a monolith-to-microservices migration.
 ### ch2.card.title
 THE CLOUD ENGINEER
 
-### ch2.card.stats
-YAML Tolerance 18 · Kubernetes 16 · Sleep 4 · "It's DNS" 20
-
 ### ch2.card.line
 Tonight's page: the Cloud Engineer at Kestrel Bank, who has moved 350 services to Kubernetes for three hundred credit unions. The whiteboard says it's finished.
 
@@ -690,9 +684,6 @@ Inspired by a guitar maker whose store and lessons app were slow for some users.
 
 ### ch3.card.title
 THE FRONTEND DEVELOPER
-
-### ch3.card.stats
-Caffeine 17 · "Works on my machine" 20 · CSS 11 · Patience with RUM tools 1
 
 ### ch3.card.line
 Tonight's page: the Frontend Developer at Twang & Co. She sells guitars online and teaches people to play them. Checkout is slow for someone. She does not know who.
@@ -937,9 +928,6 @@ Inspired by a space MMO studio whose fleet-battle code one engineer understands.
 ### ch4.card.title
 THE SRE ON CALL
 
-### ch4.card.stats
-Notification Endurance 19 · Postmortem Writing 14 · Blameless 18 · Sleep 2
-
 ### ch4.card.line
 Tonight's page: the Site Reliability Engineer on call at Nullpoint Games. Eight thousand players are in one star system, and the one engineer who understands the fleet code is asleep in another time zone.
 
@@ -1179,9 +1167,6 @@ Fictional three-person startup. Company: **Agentry**. Narrator: Matt Nelson. Thi
 
 ### ch5.card.title
 THE RELEASE ENGINEER
-
-### ch5.card.stats
-Deploy Frequency 20 · Rollback Reflex 15 · Friday Deploys 1 · Sleep 3
 
 ### ch5.card.line
 Tonight's page: the Build & Release Engineer at Agentry. There are three of them. He shipped on a Friday. He knows what he did.

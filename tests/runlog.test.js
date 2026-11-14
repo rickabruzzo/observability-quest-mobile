@@ -48,14 +48,14 @@ test('the clock is frozen while held: a snapshot taken on hold does not move', (
   assert.equal(r.snapshot().held, true);
 });
 
-test('counts: windows, taps, walks and walking time, wrong prompts, old-tool prompts, looks, distinct hotspots, emails, vitals, monitor, signed', () => {
+test('counts: windows, taps, walks and walking time, wrong prompts, old-tool prompts, looks, distinct hotspots, emails, vitals, monitor, signed, cards', () => {
   const r = createRunlog({ chapter: 1, now: clock() });
   r.count('windows'); r.count('windows'); r.count('taps', 3); r.walk(1200); r.walk(800);
   r.count('nudges'); r.count('oldPrompts', 3); r.count('looks');
-  r.count('emails', 2); r.count('vitals'); r.count('monitor', 2); r.count('signed');
+  r.count('emails', 2); r.count('vitals'); r.count('monitor', 2); r.count('signed'); r.count('cards');
   r.visit('pc'); r.visit('pc'); r.visit('cto');
   const c = r.snapshot().counts;
-  assert.deepEqual(c, { windows: 2, taps: 3, walks: 2, walkMs: 2000, nudges: 1, oldPrompts: 3, looks: 1, emails: 2, vitals: 1, monitor: 2, signed: 1, visited: 2 });
+  assert.deepEqual(c, { windows: 2, taps: 3, walks: 2, walkMs: 2000, nudges: 1, oldPrompts: 3, looks: 1, emails: 2, vitals: 1, monitor: 2, signed: 1, cards: 1, visited: 2 });
   assert.deepEqual(r.snapshot().visited, ['pc', 'cto']);
 });
 

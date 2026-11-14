@@ -13,9 +13,12 @@ import { colButton } from '../engine/ui.js';
 import { drawIcon, applyCursor, MARKER_MS } from '../engine/cursor.js';
 import { hotspotAt, walkTarget } from '../engine/room.js';
 import { createWindows } from '../engine/window.js';
+import { personaLine, speakerOf, talkWindow } from '../engine/conversation.js';
+import { load as loadSprites } from '../anim/sprites.js';
 import { createTool, choose, promptsOf } from '../engine/prompts.js';
 import { createRunlog, summaryLines, formatMs, PHASES, PHASE_LABELS, COUNT_LABELS } from '../engine/runlog.js';
-import { createScenario, notePrompt, noteFound, noteDeployed, ottoState, canLeave, canDeploy, vitalsLine, ctoUse, decide, missteps } from '../engine/scenario.js';
+import { createScenario, notePrompt, noteFound, noteDeployed, ottoState, canLeave, canDeploy, vitalsLine, ctoUse, decide, missteps, firstTalk } from '../engine/scenario.js';
+import { parseStats, cardPicture, personaOptions, OPTION_KEYS } from '../engine/persona.js';
 import { paintHc } from '../engine/screens.js';
 import { playCharity } from './charity.js';
 import { vitalsFrame, beatSamples, talkFrame, stepAt } from '../engine/vitals.js';
@@ -26,14 +29,12 @@ export const CHAPTERS = { 1: CH1 };
 export const REVEAL_MS = 2000;               // a direct prompt's next picture wipes in, then its highlights pulse
 const RECOVER_HOLD_MS = 900;                 // after Otto finishes his sentence, a beat before he speaks
 const LOAD_WAIT_MS = 6000;                   // the card waits this long for the room's pictures, then plays without
-// Strings the script has no slot for (listed in the hand-back for Rick).
+// The one string the script has no slot for: the stopwatch summary is Rick's tuning tool and comes out before the
+// booth build. Everything else the player reads is a script slot (ui.*, menu.soon, claim.soon, chN.old.close).
 export const UI = {
-  look: 'Look', use: 'Use', help: 'Help', back: 'Back',
-  exitOld: '[Close Cave Logs]', exitHc: '[Close Honeycomb]',
-  copy: 'Copy results', copied: 'Copied',
-  claimSoon: 'The prize desk opens in a later build. For now, back to the menu.',
   summaryTitle: (n, t) => `Scenario ${n} · ${t}`,
 };
+const CARD_IN_MS = 200;                      // the persona card's entrance (a flip); reduced motion: it just appears
 
 const say = (key) => SCRIPT[key] ?? key;
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -44,7 +45,8 @@ const GLITCH = '#@%&*?!/<>';
 
 export function createChapterScreen(game) {
   let ch, room, hero, run, wins, token = null, scen, art = null, hcArt = null, loading = null, recovering = null;
-  let state = 'card', mode = 'use', busy = false;
+  let persona = null, gctx = null;             // who speaks from the close-up ({ title, name, portrait: { still, frames }, where, seed }); the game ctx, for the scene's scale
+  let state = 'card', mode = 'use', busy = false, pcardClose = null;
   let x = 0, pose = 'idle', view = 'front', flip = false, plan = null, elapsed = 0, walkMs = 0, pending = null, marker = null, cursor = null;
   let tools = {}, introShown = new Set(), toolName = null, toolFrom = null, toolEl = null, reveal = null, portrait = null;
   let vitalsMode = 'critical', vitalsT = 0, nudges = [], talkT = 0, ctoQuiet = false, lastDraw = '';
@@ -99,8 +101,9 @@ export function createChapterScreen(game) {
       g.fillStyle = f.output.glitch ? '#FF3030' : '#E8ECF4';
       g.fillRect(o.x0 + 2 + (shown % per) * 3, o.y0 + 2 + Math.floor(shown / per) * 5, 2, 4);
     }
-    if (view === 'side') drawHeroSide(g, hero, pose, x, room.floorY - HERO_H + SIDE_FOOT_DY, 1, { flip });
-    else drawHero(g, hero, pose, x, room.floorY - HERO_H, 1, { flip });
+    const hs = room.heroScale ?? 1, heroY = room.floorY - Math.round(HERO_H * hs);     // feet on the floor line at any scale
+    if (view === 'side') drawHeroSide(g, hero, pose, x, heroY + SIDE_FOOT_DY, hs, { flip });
+    else drawHero(g, hero, pose, x, heroY, hs, { flip });
     if (marker) drawIcon(g, marker.icon, marker.x, marker.y);
   }
   function paintMonitor(ctx) {
@@ -131,11 +134,30 @@ export function createChapterScreen(game) {
 
   // ---- sequencing ----
   const live = () => token;
-  /** Shows a line and waits for the player to dismiss it; resolves false if the screen went away meanwhile. */
+  /** Shows a line and waits for the player to dismiss it; resolves false if the screen went away meanwhile.
+   * The persona's own lines (`CTO: …`) open the conversation window: their portrait, their name, the prefix dropped. */
   async function line(key, opts) {
     const t = live();
-    await wins.say(say(key), opts);
+    const { spoken, text } = persona ? personaLine(say(key), persona.title) : { spoken: false, text: say(key) };
+    if (spoken) {
+      const patch = art?.manifest.patches?.[room.image] ?? null;
+      const { className, maxWidth } = talkWindow(persona.where, patch, gctx?.fit?.scale ?? 1);
+      await wins.say(text, { ...opts, where: className, maxWidth, portrait: { name: persona.name, seed: persona.seed, ...persona.portrait } });
+    } else await wins.say(text, opts);
     return t === live();
+  }
+  /** The persona's close-up: the still and its three patches, loaded once per visit; a missing frame is just a still. */
+  function loadPersona(ctx) {
+    const p = ch.persona;
+    if (!p) { persona = null; return; }
+    const base = `portrait_${p.portrait}`;
+    persona = { title: speakerOf(say(p.name)), name: say(p.name), where: p.where ?? 'top-left', seed: p.portrait.charCodeAt(p.portrait.length - 1),
+      portrait: { still: null, frames: { talk1: `${base}_talk1`, talk2: `${base}_talk2`, blink: `${base}_blink` } } };
+    const me = persona;
+    const img = new Image();
+    img.onload = () => { if (persona === me) me.portrait.still = img; };
+    img.src = `assets/${base}.png`;
+    loadSprites(Object.values(me.portrait.frames), { optional: true }).catch(() => {});
   }
   /** A line about the CTO: she stops talking on the phone while it is open. */
   async function ctoLine(key) {
@@ -149,18 +171,62 @@ export function createChapterScreen(game) {
     back?.remove(); back = null;
   }
 
-  // ---- the class card ----
+  // ---- the title card: who paged the hero tonight, in one line (the stats moved to the persona card) ----
   function showCard(ctx) {
     state = 'card'; run.phase('card');
     const g = ctx.ctx2d; g.fillStyle = '#000'; g.fillRect(0, 0, 320, 200);
-    const stats = say(ch.card.stats).split(/\s*·\s*/).map((s) => { const m = s.match(/^(.*?)\s+(\S+)$/); return m ? [m[1], m[2]] : [s, '']; });
     ctx.overlay.innerHTML = `
       <div class="card more" id="class-card" role="dialog">
         <h2>${esc(say(ch.card.title))}</h2>
-        <div class="card-stats">${stats.map(([k, v]) => `<div class="stat"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('')}</div>
         <p>${esc(say(ch.card.line))}</p>
       </div>`;
     run.count('windows');
+  }
+
+  // ---- the persona card: a trading card over the dimmed room; a tap anywhere, Enter or Escape closes it ----
+  /** Opens the card and resolves when it is closed (false if the screen went away). Nothing else is tappable. */
+  function showPersonaCard(ctx) {
+    const p = ch.persona, t = live();
+    const was = state; state = 'pcard'; ctoQuiet = true;
+    run.count('cards'); run.count('windows');
+    const stats = parseStats(say(p.stats));
+    const dim = document.createElement('div');
+    dim.className = 'pcard-dim'; dim.id = 'persona-card'; dim.setAttribute('role', 'dialog'); dim.setAttribute('aria-label', say(p.name));
+    dim.innerHTML = `<div class="pcard${ctx.reducedMotion ? ' still' : ''}">
+        <div class="name">${esc(say(p.name))}</div>
+        <div class="art"></div>
+        <div class="class">${esc(say(p.class))}</div>
+        <div class="body">
+          <div class="stats">${stats.map(([k, v]) => `<div class="stat"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('')}</div>
+          <div class="flavor">${esc(say(p.flavor))}</div>
+        </div></div>`;
+    // the picture: the card art, or the persona cropped from the room plate if that file is missing — never empty
+    const artBox = dim.querySelector('.art');
+    const crop = () => {
+      const pic = cardPicture(p, false), plate = img(pic.image), c = document.createElement('canvas');
+      c.width = pic.w; c.height = pic.h;
+      if (plate) c.getContext('2d').drawImage(plate, pic.x, pic.y, pic.w, pic.h, 0, 0, pic.w, pic.h);
+      artBox.replaceChildren(c);
+    };
+    const pic = cardPicture(p, !!p.art);
+    if (pic.kind === 'art') {
+      const im = new Image(); im.alt = ''; im.decoding = 'async';
+      im.onerror = crop; im.src = pic.src;
+      artBox.appendChild(im);
+    } else crop();
+    ctx.overlay.appendChild(dim);
+    return new Promise((done) => {
+      const close = () => {
+        if (!dim.isConnected) return;
+        dim.remove(); document.removeEventListener('keydown', onKey, true);
+        if (t === live()) { state = was; ctoQuiet = false; }
+        done(t === live());
+      };
+      const onKey = (e) => { if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); close(); } };
+      dim.addEventListener('pointerdown', (e) => { e.stopPropagation(); close(); });
+      document.addEventListener('keydown', onKey, true);
+      pcardClose = close;
+    });
   }
   /** The card is dismissed: into the room once its pictures are in (they started loading when the card opened). */
   async function leaveCard(ctx) {
@@ -178,9 +244,9 @@ export function createChapterScreen(game) {
     icons.forEach((b) => b.remove()); icons = [];
     if (!on) return;
     const mk = (id, label, fn) => { const b = colButton({ id, long: label, onClick: fn }); ctx.colR.appendChild(b); icons.push(b); return b; };
-    mk('btn-look', UI.look, () => { if (state === 'room' && !busy) { mode = mode === 'look' ? 'use' : 'look'; markMode(); } });
-    mk('btn-use', UI.use, () => { if (state === 'room' && !busy) { mode = 'use'; markMode(); } });
-    mk('btn-help', UI.help, () => { if (state === 'room' && !busy && !wins.open) line('help.window'); });
+    mk('btn-look', say('ui.look'), () => { if (state === 'room' && !busy) { mode = mode === 'look' ? 'use' : 'look'; markMode(); } });
+    mk('btn-use', say('ui.use'), () => { if (state === 'room' && !busy) { mode = 'use'; markMode(); } });
+    mk('btn-help', say('ui.help'), () => { if (state === 'room' && !busy && !wins.open) line('help.window'); });
     markMode();
   }
   function markMode() {
@@ -257,7 +323,7 @@ export function createChapterScreen(game) {
   async function enterMonitor(ctx) {
     state = 'monitor'; run.phase('monitor'); run.count('monitor');
     monitorUi(ctx);
-    back = colButton({ id: 'btn-back', long: UI.back, onClick: () => { if (state === 'monitor' && !wins.open) enterRoom(ctx); } });
+    back = colButton({ id: 'btn-back', long: say('ui.back'), onClick: () => { if (state === 'monitor' && !wins.open) enterRoom(ctx); } });
     ctx.colR.appendChild(back);
     lastDraw = ''; paint(ctx);
     await line(ch.monitor.chart);
@@ -358,7 +424,7 @@ export function createChapterScreen(game) {
       box.appendChild(b);
     }
     const exit = document.createElement('button');
-    exit.type = 'button'; exit.className = 'prompt exit'; exit.id = 'tool-exit'; exit.textContent = def.kind === 'old' ? UI.exitOld : UI.exitHc;
+    exit.type = 'button'; exit.className = 'prompt exit'; exit.id = 'tool-exit'; exit.textContent = say(def.close ?? 'ui.close.hc');   // per tool: [Close Cave Logs], [Close Honeycomb]
     exit.addEventListener('click', () => leaveTool(ctx));
     box.appendChild(exit);
     box.hidden = false;
@@ -397,32 +463,36 @@ export function createChapterScreen(game) {
     } else enterRoom(ctx);                                       // backed out of "show me": back to the room
   }
 
-  // ---- the CTO ----
+  // ---- the CTO: her card the first time, then her line, then the options every conversation ends in ----
   async function useCto(ctx) {
     run.phase('cto');
+    if (firstTalk(scen)) { if (!(await showPersonaCard(ctx))) return; }   // the card's time belongs to the cto phase
     const u = ctoUse(scen);
-    if (u.kind === 'call') {
-      if (await ctoLine(ch.cto.calls[u.n - 1])) run.phase('room');
-      return;
-    }
-    ctoQuiet = true;
-    if (!(await line(ch.cto.ask))) return;
-    showDecision(ctx);
+    const ok = u.kind === 'call'
+      ? await line(ch.cto.calls[u.n - 1])                           // her own words: she keeps talking in the room while they show
+      : await line(ch.cto.ask);
+    if (ok) showDecision(ctx);
   }
+  /** The option list, drawn like the decision prompts: before a tool is tried, the card again or leave; after, the decision and the card. */
   function showDecision(ctx) {
     state = 'decide'; ctoQuiet = true; setIcons(ctx, false); clearScene(ctx);
+    const label = { sign: say(ch.cto.sign), hc: say(ch.cto.hc), show: say(OPTION_KEYS.show), leave: say(OPTION_KEYS.leave) };
     sceneEl = document.createElement('div');
     sceneEl.className = 'scene-ui decide'; sceneEl.id = 'decide';
-    sceneEl.innerHTML = `<div class="decide-prompts">
-      <button type="button" class="prompt" id="decide-sign"${scen.signed ? ' disabled' : ''}>${esc(say(ch.cto.sign))}</button>
-      <button type="button" class="prompt" id="decide-hc">${esc(say(ch.cto.hc))}</button></div>`;
+    sceneEl.innerHTML = `<div class="decide-prompts">${personaOptions(scen).map((id) =>
+      `<button type="button" class="prompt" id="decide-${id}"${id === 'sign' && scen.signed ? ' disabled' : ''}>${esc(label[id])}</button>`).join('')}</div>`;
     ctx.overlay.appendChild(sceneEl);
-    sceneEl.querySelector('#decide-sign').addEventListener('click', () => advise(ctx, 'sign'));
-    sceneEl.querySelector('#decide-hc').addEventListener('click', () => advise(ctx, 'hc'));
+    for (const b of sceneEl.querySelectorAll('button')) b.addEventListener('click', () => advise(ctx, b.id.slice('decide-'.length)));
     paint(ctx);
   }
   async function advise(ctx, choice) {
     if (state !== 'decide' || wins.open) return;
+    if (choice === 'show') {                                        // never a wrong choice: the card, then the same options
+      clearScene(ctx);
+      if (await showPersonaCard(ctx)) showDecision(ctx);
+      return;
+    }
+    if (choice === 'leave') { clearScene(ctx); ctoQuiet = false; enterRoom(ctx); return; }
     const r = decide(scen, choice);
     if (r.outcome === 'tried') return;
     clearScene(ctx);
@@ -432,8 +502,8 @@ export function createChapterScreen(game) {
       return;
     }
     if (r.outcome === 'win') { win(ctx); return; }
+    ctoQuiet = false;                                               // she speaks again: the loop is back while her line shows
     if (!(await line(ch.cto.show))) return;
-    ctoQuiet = false;
     if (r.outcome === 'deploy') enterPc(ctx, { view: 'deploy' });   // found already: just deploy it
     else openTool(ctx, 'hc', 'cto');
   }
@@ -485,7 +555,7 @@ export function createChapterScreen(game) {
         <div class="sum-btns">
           <button type="button" class="prompt" id="btn-claim">${esc(say('after.claim'))}</button>
           <button type="button" class="prompt" id="btn-more">${esc(say('after.more'))}</button>
-          <button type="button" class="prompt" id="btn-copy">${esc(UI.copy)}</button>
+          <button type="button" class="prompt" id="btn-copy">${esc(say('ui.copy'))}</button>
         </div>
       </div>`;
     const t = live();
@@ -493,7 +563,7 @@ export function createChapterScreen(game) {
     ctx.overlay.querySelector('#btn-claim').addEventListener('click', async () => {
       if (wins.open) return;
       if (ctx.overlay.querySelector('#charity')) return;
-      if (await playCharity(ctx, wins, UI.claimSoon, () => t === live())) game.go('MENU');
+      if (await playCharity(ctx, wins, say('claim.soon'), () => t === live())) game.go('MENU');
     });
     ctx.overlay.querySelector('#btn-copy').addEventListener('click', (e) => copyResults(e.currentTarget));
   }
@@ -509,7 +579,7 @@ export function createChapterScreen(game) {
       ta.remove();
     };
     try { navigator.clipboard.writeText(text).catch(fallback); } catch { fallback(); }
-    btn.textContent = UI.copied;
+    btn.textContent = say('ui.copied');
   }
 
   return {
@@ -521,6 +591,7 @@ export function createChapterScreen(game) {
       mode = 'use'; busy = false; tools = {}; introShown = new Set(); toolName = null; toolFrom = null; toolEl = null; reveal = null;
       scen = createScenario(); vitalsMode = 'critical'; vitalsT = 0; nudges = []; talkT = 0; ctoQuiet = false; lastDraw = ''; sceneEl = null; monFrame = null;
       art = null; hcArt = null; recovering = null;
+      gctx = ctx; loadPersona(ctx);
       // the room's and the Honeycomb screen's pictures load while the card is read; either may fail and play on
       const want = (url, set) => loadManifest(url, { timeout: LOAD_WAIT_MS }).then(set, () => {});
       loading = Promise.all([want(ch.manifest, (a) => { art = a; }), want(ch.tools.hc.screens, (a) => { hcArt = a; })]);
@@ -536,6 +607,7 @@ export function createChapterScreen(game) {
         if (e.target.closest?.('button')) return;               // buttons answer their own clicks
         if (wins.open) { wins.tap(); return; }
         if (state === 'card') { leaveCard(ctx); return; }
+        if (state === 'pcard') { pcardClose?.(); return; }      // the whole scene is the card's close target
         if (state === 'room' && !busy) roomTap(ctx, e);
         else if (state === 'monitor') monitorTap(ctx, e);
         else if (state === 'recover' && recovering) recovering.done();     // a tap skips to Otto's line
@@ -591,7 +663,7 @@ export function createChapterScreen(game) {
       box.removeEventListener('pointerdown', onDown); box.removeEventListener('pointermove', onMove);
       document.removeEventListener('pointerdown', onTapCount, true);
       applyCursor(box, null);
-      wins.reset(); setIcons(ctx, false); clearScene(ctx);
+      wins.reset(); setIcons(ctx, false); clearScene(ctx); pcardClose?.(); pcardClose = null;
       ctx.overlay.innerHTML = '';
       toolEl = null; reveal = null; plan = null;
     },
