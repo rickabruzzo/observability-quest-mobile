@@ -9,7 +9,9 @@
   "R4_pc_closeup": "R4_pc_closeup.png",
   "R4_npc_talk_1": "R4_npc_talk_1.png",
   "R4_npc_talk_2": "R4_npc_talk_2.png",
-  "R4_npc_win": "R4_npc_win.png"
+  "R4_npc_win": "R4_npc_win.png",
+  "R4_phone_closeup": "R4_phone_closeup.png",
+  "S4_sprites": "S4_sprites.png"
  },
  "patches": {
   "R4_ops_room": {
@@ -17,6 +19,120 @@
    "y": 59,
    "w": 110,
    "h": 126
+  }
+ },
+ "sprites": {
+  "ship_a_small": {
+   "image": "S4_sprites",
+   "x": 0,
+   "y": 0,
+   "w": 7,
+   "h": 5
+  },
+  "ship_a_mid": {
+   "image": "S4_sprites",
+   "x": 8,
+   "y": 0,
+   "w": 11,
+   "h": 7
+  },
+  "ship_a_big": {
+   "image": "S4_sprites",
+   "x": 20,
+   "y": 0,
+   "w": 19,
+   "h": 9
+  },
+  "ship_b_small": {
+   "image": "S4_sprites",
+   "x": 40,
+   "y": 0,
+   "w": 7,
+   "h": 5
+  },
+  "ship_b_mid": {
+   "image": "S4_sprites",
+   "x": 48,
+   "y": 0,
+   "w": 11,
+   "h": 7
+  },
+  "ship_b_big": {
+   "image": "S4_sprites",
+   "x": 60,
+   "y": 0,
+   "w": 19,
+   "h": 9
+  },
+  "bolt": {
+   "image": "S4_sprites",
+   "x": 80,
+   "y": 0,
+   "w": 5,
+   "h": 1
+  },
+  "missile": {
+   "image": "S4_sprites",
+   "x": 86,
+   "y": 0,
+   "w": 5,
+   "h": 3
+  },
+  "boom_1": {
+   "image": "S4_sprites",
+   "x": 92,
+   "y": 0,
+   "w": 11,
+   "h": 11
+  },
+  "boom_2": {
+   "image": "S4_sprites",
+   "x": 104,
+   "y": 0,
+   "w": 11,
+   "h": 11
+  },
+  "boom_3": {
+   "image": "S4_sprites",
+   "x": 116,
+   "y": 0,
+   "w": 11,
+   "h": 11
+  },
+  "boom_4": {
+   "image": "S4_sprites",
+   "x": 128,
+   "y": 0,
+   "w": 11,
+   "h": 11
+  },
+  "warp_1": {
+   "image": "S4_sprites",
+   "x": 140,
+   "y": 0,
+   "w": 9,
+   "h": 9
+  },
+  "warp_2": {
+   "image": "S4_sprites",
+   "x": 150,
+   "y": 0,
+   "w": 9,
+   "h": 9
+  },
+  "warp_3": {
+   "image": "S4_sprites",
+   "x": 160,
+   "y": 0,
+   "w": 9,
+   "h": 9
+  },
+  "gate": {
+   "image": "S4_sprites",
+   "x": 170,
+   "y": 0,
+   "w": 23,
+   "h": 23
   }
  }
 }

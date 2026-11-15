@@ -44,10 +44,33 @@ _SOURCES = {
 }
 LOOK = 'era'
 
+# Art that is not part of a room's own drop (art brief 04, Rick's play-through of 2026-11-14), the same in both
+# looks because none of it holds a figure:
+#   extra    whole plates, built like a room's own: {name: 640x400 file}
+#   sprites  small pictures on transparency, packed on one sheet a room: {sheet: [{name, file, shrink, outline}]}.
+#            `shrink` 2 with no outline is a sprite drawn by hand at twice its size and taken down exactly;
+#            with an outline it is a painted picture, shrunk and given one clean 1-px outline.
+# Room 2's board without the taped sheet, and the board wiped by hand after the fix, are new names beside the old
+# close-ups: the old ones stay until the game stops using them (Warp brief 14).
+# The four brand marks of the same drop are not built: Rick has not said yes to them.
+FEEDBACK = 'art-drops/2026-11-14-feedback-1114'
+OUTLINE = '#1A1424'
+_PRODUCTS = ('ukulele', 'banjo', 'acoustic', 'bass', 'southpaw')          # the order the shop's page shows them; it stalls on the last
+_BATTLE = ('ship_a_small', 'ship_a_mid', 'ship_a_big', 'ship_b_small', 'ship_b_mid', 'ship_b_big', 'bolt', 'missile',
+           'boom_1', 'boom_2', 'boom_3', 'boom_4', 'warp_1', 'warp_2', 'warp_3', 'gate')
+_EXTRA = {
+    'ch2': {'extra': {'R2_board': f'{FEEDBACK}/R2_wall_closeup.png', 'R2_board_wiped': f'{FEEDBACK}/R2_wall_closeup_fixed.png'}},
+    'ch3': {'sprites': {'S3_products': [{'name': f'product_{n}{tag}', 'file': f'{FEEDBACK}/S3_product_{n}.png', 'shrink': by, 'outline': OUTLINE}
+                                        for tag, by in (('', 2), ('_small', 4)) for n in _PRODUCTS]}},
+    'ch4': {'extra': {'R4_phone_closeup': f'{FEEDBACK}/R4_phone_closeup.png'},
+            'sprites': {'S4_sprites': [{'name': n, 'file': f'{FEEDBACK}/S4_{n}.png', 'shrink': 2} for n in _BATTLE]}},
+}
+
 
 def rooms(look):
     """The chapters of one look: where each one's files are, its plates and its edits."""
-    return {ch: {'src': _SOURCES[look][ch][0], 'exact': _SOURCES[look][ch][1], 'plates': list(plates), 'edits': {n: room for n in edits}}
+    return {ch: {'src': _SOURCES[look][ch][0], 'exact': _SOURCES[look][ch][1], 'plates': list(plates), 'edits': {n: room for n in edits},
+                 **_EXTRA.get(ch, {})}
             for ch, (plates, room, edits) in _FILES.items()}
 
 
@@ -71,10 +94,77 @@ def _save(img, path):
     img.save(path, optimize=True)
 
 
-def build(src, out, name, plates, edits, crops=None, exact=False):
+def _hex(c):
+    c = c.lstrip('#'); return tuple(int(c[i:i + 2], 16) for i in (0, 2, 4))
+
+
+def _beside(mask, diagonal=False):
+    """Where a pixel has a neighbour inside `mask`."""
+    h, w = mask.shape; pad = np.pad(mask, 1); out = np.zeros_like(mask)
+    for dy, dx in [(-1, 0), (1, 0), (0, -1), (0, 1)] + ([(-1, -1), (-1, 1), (1, -1), (1, 1)] if diagonal else []):
+        out |= pad[1 + dy:1 + dy + h, 1 + dx:1 + dx + w]
+    return out
+
+
+def shrink(img, by, outline=None):
+    """A sprite at 1/`by` of its size, hard-edged (RGBA; alpha 0 or 255).
+
+    No `outline`: the sprite was drawn at `by` times its size, so every by×by block must be one colour, and the
+    result is one pixel a block; anything else is refused. With `outline` (a colour): a painted picture. Its own
+    1-px outline is taken off, it is shrunk the house way (nearest, as build_intro.downsample), and every clear
+    pixel that touches it becomes the outline, so the outline is whole and 1 px at the new size. The result is a
+    pixel larger on every side to hold it."""
+    a = np.asarray(img.convert('RGBA')).copy()
+    if ((a[..., 3] > 0) & (a[..., 3] < 255)).any(): raise ValueError('the sprite has soft edges')
+    h, w = a.shape[:2]
+    if h % by or w % by: raise ValueError(f'{w}x{h} does not divide by {by}')
+    if outline is None:
+        blocks = a.reshape(h // by, by, w // by, by, 4)
+        first = blocks[:, :1, :, :1]
+        same = (blocks[..., 3] == first[..., 3]) & ((blocks[..., :3] == first[..., :3]).all(axis=-1) | (first[..., 3] == 0))
+        if not same.all(): raise ValueError(f'not drawn at {by} times its size: {int((~same.all(axis=(1, 3))).sum())} blocks hold more than one colour')
+        out = blocks[:, 0, :, 0].copy()
+    else:
+        edge, solid = _hex(outline), a[..., 3] == 255
+        a[solid & _beside(~solid, diagonal=True) & (a[..., :3] == edge).all(axis=2)] = 0      # the source's own outline
+        small = a[by // 2::by, by // 2::by]
+        out = np.zeros((small.shape[0] + 2, small.shape[1] + 2, 4), np.uint8); out[1:-1, 1:-1] = small
+        solid = out[..., 3] == 255
+        out[~solid & _beside(solid)] = edge + (255,)
+    out[out[..., 3] == 0] = 0                                                                  # a clear pixel carries no colour
+    return Image.fromarray(out, 'RGBA')
+
+
+def pack(sprites, width=256, gap=1):
+    """[(name, picture)] -> (one sheet, {name: (x, y, w, h)}): rows, left to right in the order given, a clear
+    pixel between neighbours."""
+    x = y = row = 0; at = {}
+    for n, im in sprites:
+        if x and x + im.width > width: x, y, row = 0, y + row + gap, 0
+        at[n] = (x, y, im.width, im.height); x += im.width + gap; row = max(row, im.height)
+    sheet = Image.new('RGBA', (max(b[0] + b[2] for b in at.values()), y + row), (0, 0, 0, 0))
+    for n, im in sprites: sheet.paste(im, at[n][:2])
+    return sheet, at
+
+
+def _save_sprites(img, path, colours=255):
+    """A sprite sheet as a palette PNG with one clear entry. Past `colours` colours the opaque pixels are cut to
+    that many (only they vote for the palette); a sheet with fewer is saved exactly."""
+    a = np.asarray(img); solid = a[..., 3] == 255
+    rgb = a[..., :3][solid].reshape(-1, 3)
+    if len(np.unique(rgb, axis=0)) > colours:
+        rgb = np.asarray(quantise(Image.fromarray(rgb.reshape(1, -1, 3).copy(), 'RGB'), colours)).reshape(-1, 3)
+    pal, idx = np.unique(rgb, axis=0, return_inverse=True)
+    out = np.full(solid.shape, len(pal), np.uint8); out[solid] = idx.reshape(-1)
+    im = Image.fromarray(out, 'P'); im.putpalette([int(v) for v in pal.reshape(-1)] + [0, 0, 0])
+    im.save(path, optimize=True, transparency=len(pal))
+
+
+def build(src, out, name, plates, edits, crops=None, exact=False, extra=None, sprites=None):
     """Builds one chapter's room art into `out`; returns (and writes) its manifest. `crops` cuts a named picture
     (and any edit of it) to a 16:10 window of its source, (x0, y0, x1, y1), before it is shrunk. `exact` keeps
-    every pixel an edit changed (see the top of this file)."""
+    every pixel an edit changed (see the top of this file). `extra` and `sprites` are the art from outside the
+    room's own drop (see _EXTRA): plates, and sprite sheets the manifest lists under `sprites`."""
     os.makedirs(out, exist_ok=True)
     crops = crops or {}
     for n, (x0, y0, x1, y1) in crops.items():
@@ -105,6 +195,12 @@ def build(src, out, name, plates, edits, crops=None, exact=False):
     for plate, (x0, y0, x1, y1) in boxes.items(): m['patches'][plate] = {'x': x0, 'y': y0, 'w': x1 - x0, 'h': y1 - y0}
     for n, (img, plate) in snapped.items():
         _save(img.crop(boxes[plate]), os.path.join(out, n + '.png')); m['images'][n] = n + '.png'
+    for n, f in (extra or {}).items():
+        _save(quantise(downsample(Image.open(os.path.join(ROOT, f))), COLOURS), os.path.join(out, n + '.png')); m['images'][n] = n + '.png'
+    for sheet, items in (sprites or {}).items():
+        img, at = pack([(s['name'], shrink(Image.open(os.path.join(ROOT, s['file'])), s['shrink'], s.get('outline'))) for s in items])
+        _save_sprites(img, os.path.join(out, sheet + '.png')); m['images'][sheet] = sheet + '.png'
+        m.setdefault('sprites', {}).update({n: {'image': sheet, 'x': x, 'y': y, 'w': w, 'h': h} for n, (x, y, w, h) in at.items()})
     with open(os.path.join(out, name + '.json'), 'w') as f: json.dump(m, f, indent=1); f.write('\n')
     return m
 
@@ -151,5 +247,5 @@ if __name__ == '__main__':
     for name, r in rooms(look).items():
         src = os.path.join(ROOT, r['src'])
         if not os.path.exists(os.path.join(src, r['plates'][0] + '.png')): print(f'{name}: sources not in this checkout ({r["src"]}); left as built'); continue
-        build(src, os.path.join(ROOT, OUT), name, r['plates'], r['edits'], r.get('crops'), r.get('exact', False))
+        build(src, os.path.join(ROOT, OUT), name, r['plates'], r['edits'], r.get('crops'), r.get('exact', False), r.get('extra'), r.get('sprites'))
     build_cards(os.path.join(ROOT, 'assets/cards'))

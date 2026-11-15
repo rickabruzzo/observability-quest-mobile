@@ -723,6 +723,21 @@ Order placed. Thank you!
 ### ch3.wall.cart
 1 × Southpaw Special / left-handed
 
+### ch3.wall.shop
+TWANG & CO.
+
+### ch3.wall.product.1
+Pocket Uke / $79
+
+### ch3.wall.product.2
+Porch Banjo / $329
+
+### ch3.wall.product.3
+Campfire Six / $449
+
+### ch3.wall.product.4
+Deep End Bass / $599
+
 ### ch3.wall.stat.1
 WAITING: 14 S
 
@@ -955,7 +970,7 @@ The ops room at Nullpoint Games. One wall is space: eight thousand ships, most o
 Eight thousand ships. Some moving. The rest are thinking about it.
 
 ### ch4.wall.chart
-The fleet is in. Most of it. The dots at the edge keep trying the door. Under the map, the Doggy Dashboards health line is flat, green and extremely pleased with itself.
+The fleet is in. Most of it. The ships at the gate keep trying the door. Under the map, the Doggy Dashboards health line is flat, green and extremely pleased with itself.
 
 ### ch4.wall.stat.1
 lag
@@ -1076,6 +1091,12 @@ On the wall of space, the ships that were stuck outside jump in. Chat fills with
 
 ### ch4.old.title
 PAGE EINAR
+
+### ch4.old.phone.name
+EINAR
+
+### ch4.old.phone.line
+ASLEEP
 
 ### ch4.old.intro
 You could wake him. He would answer. He would answer in Icelandic.
