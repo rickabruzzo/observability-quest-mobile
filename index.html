@@ -7,12 +7,20 @@
 <title>Observability Quest</title>
 <meta name="description" content="A Sierra-style adventure through Honeycomb customer stories. Create your hero, click your way through the night shift, claim a prize at the booth.">
 <link rel="icon" href="assets/hc_logomark.png">
-<link rel="stylesheet" href="css/game.css?v=19">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="assets/icons/icon-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="o11y Quest">
+<link rel="stylesheet" href="css/game.css?v=20">
 </head>
 <body data-screen="LOADING">
 <div id="statusbar" aria-live="polite"><span id="sb-title">Observability Quest</span><span id="sb-done">Solved: 0 of 5</span></div>
 <div id="stage">
-  <div class="col" id="col-l"></div>
+  <div class="col" id="col-l">
+    <button type="button" id="btn-sound" class="btn-sierra" aria-label="Sound" aria-pressed="true"><span class="long">Sound</span><span class="short">Snd</span><span class="state">on</span></button>
+  </div>
   <div id="scene-box">
     <canvas id="scene" width="320" height="200" aria-label="Scene"></canvas>
     <div id="overlay"></div>
@@ -22,7 +30,9 @@
 <div id="rotate" role="status" aria-live="polite">
   <div class="phone" aria-hidden="true"></div>
   <div>Turn your phone sideways to play</div>
+  <div class="rotate-hint fs-yes">Or tap here to turn the screen.</div>
+  <div class="rotate-hint fs-no">Screen not turning? Switch off rotation lock.</div>
 </div>
-<script type="module" src="js/game.js?v=30"></script>
+<script type="module" src="js/game.js?v=31"></script>
 </body>
 </html>

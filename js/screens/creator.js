@@ -127,7 +127,7 @@ export function createCreatorScreen(game) {
       }
       ctx.colL.appendChild(tabs); els.tabs = tabs;
       const random = colButton({ id: 'btn-random', long: 'Random', short: 'Roll', onClick: () => update({ ...randomHero(), name: hero.name }, { rerender: true }) });
-      const start = colButton({ id: 'btn-start-game', long: 'Start', short: 'Go', className: 'go', onClick: () => { ctx.hero = hero; ctx.saveHero(hero); game.go('INTRO'); } });
+      const start = colButton({ id: 'btn-start-game', long: 'Start', short: 'Go', className: 'go', onClick: () => { ctx.fullscreen?.(); ctx.hero = hero; ctx.saveHero(hero); game.go('INTRO'); } });
       ctx.colL.appendChild(random); ctx.colR.appendChild(start);
       els.random = random; els.start = start;
       update(hero, { rerender: true });

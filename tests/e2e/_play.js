@@ -1,5 +1,6 @@
 // Shared moves for the scenario e2e tests: get through the intro, pick a scenario, tap things, close windows.
 import assert from 'node:assert/strict';
+import { windowed } from './_server.js';
 import { SCRIPT } from '../../js/script.js';
 import { CH1 } from '../../js/chapters/ch1.js';
 import { personaLine, speakerOf } from '../../js/engine/conversation.js';
@@ -11,6 +12,7 @@ export const shown = (key) => personaLine(SCRIPT[key], speakerOf(SCRIPT[CH1.pers
 /** Title → sheet → Start → Skip; lands on the menu, or straight in the chapter with ?ch=1. */
 export async function openGame(browser, server, { w = 844, h = 390, query = '', reduced = false } = {}) {
   const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1, hasTouch: true, isMobile: true, reducedMotion: reduced ? 'reduce' : 'no-preference' });
+  await windowed(ctx);
   const page = await ctx.newPage();
   const errors = []; page.on('pageerror', (e) => errors.push(e));
   page.errors = errors;

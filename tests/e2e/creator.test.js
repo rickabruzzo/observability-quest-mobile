@@ -1,7 +1,7 @@
 import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
-import { startServer } from './_server.js';
+import { startServer, windowed } from './_server.js';
 
 let server, browser;
 before(async () => { server = await startServer(); browser = await chromium.launch(); });
@@ -9,6 +9,7 @@ after(async () => { await browser?.close(); await server?.close(); });
 
 async function openCreator(opts = {}, init = null) {
   const ctx = await browser.newContext({ viewport: { width: 844, height: 390 }, deviceScaleFactor: 1, hasTouch: true, isMobile: true, ...opts });
+  await windowed(ctx);
   const page = await ctx.newPage();
   page.on('pageerror', (e) => { throw e; });
   if (init) await page.addInitScript(init);
