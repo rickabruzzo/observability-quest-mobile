@@ -202,3 +202,71 @@ Attached: `hero06/tries/pj_front_t2.png` · aspect 9:16
 The image is a pixel-art game character painted in flat colour families: a green hoodie, blue jeans, grey sneakers, with a soft dark outline. In exactly that drawing style, shading and colour families, draw only his day clothes lying in a small, low heap on the floor, seen from the front and a little above, with no person: the green hoodie loosely folded on top of the blue jeans, and the pair of grey sneakers with pale soles beside the heap. The hoodie only in tones of green, the jeans only in tones of blue, the sneakers only in neutral greys. Nothing printed on the hoodie, no logo. Background: one flat solid pure yellow colour everywhere, with no floor, no shadow and no other object. The heap is centred and fills most of the width. No text, no letters, no numbers, no logos.
 ```
 Attached: `hero05/tries/front_t1.png` · aspect 16:9
+
+
+## Added 2026-11-15: walking into and out of the scene's depth
+
+**Rick, 10:52:** "can I get a turn in and turn out for walking within the depth of the scene". These are frames
+for walking straight toward the viewer and straight away into the room. They are the same size and in the same
+colour families as the rest.
+
+| File | What | Neck (x, y) |
+|---|---|---|
+| `H_back.png` | from behind, standing, arms relaxed | 56, 67 |
+| `B_walkF_L.png` | toward us, mid-stride, the viewer's-left foot forward and lower | 55, 70 |
+| `B_walkF_R.png` | the same, mirrored | 56, 70 |
+| `B_walkB_L.png` | away from us, mid-stride, the back foot's sole showing on the viewer's right | 55, 67 |
+| `B_walkB_R.png` | the same, mirrored | 56, 67 |
+
+All are 112×288, with the figure 272 tall.
+
+**The loops:**
+- **Toward:** `B_walkF_L` → `H_front` → `B_walkF_R` → `H_front`.
+- **Away:** `B_walkB_L` → `H_back` → `B_walkB_R` → `H_back`.
+- **Scaling with depth:** the game shrinks the figure as he walks away and grows it as he comes back. The same
+  depth scaling Warp brief 11 does for the side walk.
+
+**Neck points:**
+- The front-walk points are set by hand to the collar row, 70, as for `H_front`. Found automatically, they landed
+  on the top of the hood.
+- The back points sit where the hair meets the hood.
+
+**Mirrored frames:**
+- **Why mirrored:** all six front-walk tries stepped with the same leg, and the figure is symmetrical, so the
+  other step is the mirror. The walk-away frame is mirrored the same way.
+- **What mirroring changes:** his hair parting and the beard's slight asymmetry. At game size I could not see
+  them.
+
+**Picks:**
+- back t2 of 3: t3 painted the sneakers black, outside the grey family.
+- toward t1 of 3: the clearest step.
+- away t1 of 3: the sole shows clearly.
+
+That is 9 more images, 56 in all.
+
+**Not done yet, the head layer from behind:**
+- The **long, afro and mohawk** styles look different from the back, so they need a back-view head each: 3
+  paintings, edits of `H_back`.
+- The **clean, standard and glasses** heads look the same from behind, apart from the glasses' arms over the
+  ears, which are too small to matter.
+
+The walking-toward frames take the front heads as they are.
+
+### Prompts
+#### Back
+```
+The first image is a pixel-art game character, painted in flat colour families on a flat yellow background: green hoodie, blue jeans, orange-tan skin, magenta hair and beard, grey sneakers, a soft dark outline. Draw the same man again in the same drawing style, the same shading, the same outline, at the same scale and realistic proportions, keeping exactly his colour families (every pixel of a part is a tone of that part's one colour, no other hues). Now show him from directly behind, his back to the viewer: standing straight, arms relaxed at his sides, full length. We see the back of his head with his short magenta hair and the back of his neck, the hood of the hoodie lying down flat on his upper back, the back of the hoodie, the back pockets of the jeans and the heels of the grey sneakers. No face is visible. The second image shows him in profile, for reference. Hands empty. Hood down, nothing printed on the hoodie, no glasses. Background: one flat solid pure yellow colour everywhere, with no floor, no shadow and no other object. The figure fills the height of the image with a small margin. No text, no letters, no numbers, no logos.
+```
+Attached: `hero05/tries/front_t1.png`, `hero05/tries/side_t1.png` · aspect 9:16
+
+#### Walking toward (one leg; the other is the mirror)
+```
+The first image is a pixel-art game character, painted in flat colour families on a flat yellow background: green hoodie, blue jeans, orange-tan skin, magenta hair and beard, grey sneakers, a soft dark outline. Draw the same man again in the same drawing style, the same shading, the same outline, at the same scale and realistic proportions, keeping exactly his colour families (every pixel of a part is a tone of that part's one colour, no other hues). Keep his head, face, hair and beard exactly as they are. He is walking straight towards the viewer, facing us, mid-stride: his left leg (on the viewer's right) is stepping forward towards us, that foot placed lower in the picture and slightly bigger, heel down; the other leg is behind, its heel lifted. His arms swing opposite to his legs, the arm on the same side as the forward leg swung back a little and the other arm swung forward. His body faces us squarely. The second image shows him walking in profile, for the stride. Hands empty. Hood down, nothing printed on the hoodie, no glasses. Background: one flat solid pure yellow colour everywhere, with no floor, no shadow and no other object. The figure fills the height of the image with a small margin. No text, no letters, no numbers, no logos.
+```
+Attached: `hero05/tries/front_t1.png`, `hero05/tries/walk_contact_t1.png` · aspect 9:16
+
+#### Walking away (one leg; the other is the mirror)
+```
+The first image is a pixel-art game character seen from behind, painted in flat colour families on a flat yellow background: green hoodie, blue jeans, orange-tan skin, magenta hair and beard, grey sneakers, a soft dark outline. Draw the same man again in the same drawing style, the same shading, the same outline, at the same scale and realistic proportions, keeping exactly his colour families (every pixel of a part is a tone of that part's one colour, no other hues). Show him from directly behind, his back to the viewer, walking straight away from us into the distance, mid-stride: his left leg (on the viewer's left) is stepping forward away from us, so that foot is placed a little higher in the picture and we see the back of its heel touching down; his right leg (on the viewer's right) is behind, nearer to us, its heel lifted high so we see the sole of that sneaker. His arms swing opposite to his legs. No face is visible: only the back of his head with his short magenta hair. The second image shows him walking towards us, for the stride. Hands empty. Hood down, nothing printed on the hoodie, no glasses. Background: one flat solid pure yellow colour everywhere, with no floor, no shadow and no other object. The figure fills the height of the image with a small margin. No text, no letters, no numbers, no logos.
+```
+Attached: `hero06/tries/back_t2.png`, `hero06/tries/walkF_L_t1.png` · aspect 9:16
