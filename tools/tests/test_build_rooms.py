@@ -241,9 +241,10 @@ def test_sprites_share_one_sheet_and_the_manifest_says_where_each_is(tmp_path):
     assert json.load(open(out / 'chX.json')) == m
 
 
-def test_the_feedback_art_is_listed_with_its_sources_and_the_brand_marks_are_not():
+def test_the_feedback_art_is_listed_with_its_sources():
     """Art brief 04: the board without the sheet and the wiped board (room 2), the shop's five products at two
-    sizes (room 3), the phone and the battle's sprites (room 4). The four brand marks wait for Rick's yes."""
+    sizes (room 3), the phone and the battle's sprites (room 4), and Doggy Dashboards' mark for the wall of space
+    (the brand marks: Rick, 2026-11-15, "approved")."""
     drop = 'art-drops/2026-11-14-feedback-1114'
     r2, r3, r4 = br.ROOMS['ch2'], br.ROOMS['ch3'], br.ROOMS['ch4']
     assert r2['extra'] == {'R2_board': f'{drop}/R2_wall_closeup.png', 'R2_board_wiped': f'{drop}/R2_wall_closeup_fixed.png'}
@@ -252,13 +253,12 @@ def test_the_feedback_art_is_listed_with_its_sources_and_the_brand_marks_are_not
     assert [s['name'] for s in products] == [f'product_{n}{size}' for size in ('', '_small') for n in ('ukulele', 'banjo', 'acoustic', 'bass', 'southpaw')]
     assert {s['shrink'] for s in products[:5]} == {2} and {s['shrink'] for s in products[5:]} == {4}
     assert all(s['outline'] == '#1A1424' for s in products)
-    battle = r4['sprites']['S4_sprites']
+    battle, mark = r4['sprites']['S4_sprites'][:-1], r4['sprites']['S4_sprites'][-1]
     assert len(battle) == 16 and all(s['shrink'] == 2 and not s.get('outline') for s in battle)
+    assert mark == {'name': 'mark_doggy_dashboards', 'file': f'{drop}/M_doggy_dashboards.png', 'shrink': 8, 'outline': '#1A1424'}
     assert {s['name'] for s in battle} >= {'ship_a_small', 'ship_b_big', 'bolt', 'missile', 'boom_1', 'boom_4', 'warp_3', 'gate'}
-    every = list(r2['extra'].values()) + list(r4['extra'].values()) + [s['file'] for s in products + battle]
-    for f in every:
-        assert os.path.exists(os.path.join(br.ROOT, f)), f
-        assert '/M_' not in f                                              # no brand mark is built yet
+    every = list(r2['extra'].values()) + list(r4['extra'].values()) + [s['file'] for s in products + battle + [mark]]
+    for f in every: assert os.path.exists(os.path.join(br.ROOT, f)), f
     for ch in ('ch1', 'ch5'): assert not br.ROOMS[ch].get('extra') and not br.ROOMS[ch].get('sprites')
     assert br.rooms('painted')['ch2']['extra'] == r2['extra']             # a figureless plate is the same in both looks
 
@@ -274,10 +274,30 @@ def test_the_built_rooms_hold_the_feedback_art_at_game_size():
     assert {(s['w'], s['h']) for s in big} == {(112, 72)} and {(s['w'], s['h']) for s in small} == {(57, 37)}
     sizes = {'ship_a_small': (7, 5), 'ship_a_mid': (11, 7), 'ship_a_big': (19, 9), 'ship_b_small': (7, 5), 'ship_b_mid': (11, 7),
              'ship_b_big': (19, 9), 'bolt': (5, 1), 'missile': (5, 3), 'boom_1': (11, 11), 'boom_2': (11, 11), 'boom_3': (11, 11),
-             'boom_4': (11, 11), 'warp_1': (9, 9), 'warp_2': (9, 9), 'warp_3': (9, 9), 'gate': (23, 23)}
+             'boom_4': (11, 11), 'warp_1': (9, 9), 'warp_2': (9, 9), 'warp_3': (9, 9), 'gate': (23, 23),
+             'mark_doggy_dashboards': (18, 18)}
     assert {n: (s['w'], s['h']) for n, s in m4['sprites'].items()} == sizes
     for m, sheet in ((m3, 'S3_products'), (m4, 'S4_sprites')):
         im = Image.open(os.path.join(rooms, m['images'][sheet])).convert('RGBA')
         assert set(np.unique(np.asarray(im)[..., 3])) <= {0, 255}, sheet     # hard edges only
         for n, s in m['sprites'].items():
             assert s['image'] == sheet and s['x'] + s['w'] <= im.width and s['y'] + s['h'] <= im.height, n
+
+
+def test_the_brand_marks_are_built_whole_for_the_tool_screens():
+    """The old tools' marks (art brief 04, group 5; Rick: "approved"): original pictures of our invented names,
+    never a version of a real company's logo. A tool's title bar and its button on the workstation are page
+    elements, not the 320x200 canvas, so the marks keep the size they were painted at: 128x128, hard-edged."""
+    assert br.MARKS == {'cave_logs': 'ch1', 'old_artifact': 'ch2', 'pretty_good_metrics': 'ch3', 'doggy_dashboards': 'ch4'}
+    for name in br.MARKS:
+        src = Image.open(os.path.join(br.ROOT, br.FEEDBACK, f'M_{name}.png')).convert('RGBA')
+        path = os.path.join(br.ROOT, 'assets', 'marks', name + '.png')
+        assert os.path.exists(path), path
+        built = Image.open(path)
+        assert built.mode == 'P' and built.size == (128, 128)                       # a palette file: a few KB
+        a, b = np.asarray(src), np.asarray(built.convert('RGBA'))
+        assert set(np.unique(b[..., 3])) == {0, 255}
+        assert np.array_equal(a[..., 3] == 255, b[..., 3] == 255)                   # the painted shape, to the pixel
+        solid = b[..., 3] == 255
+        assert np.abs(a[..., :3].astype(int) - b[..., :3].astype(int))[solid].mean() < 4   # and its colours, within the palette's reach
+        assert os.path.getsize(path) < 12_000

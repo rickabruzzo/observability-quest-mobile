@@ -52,7 +52,9 @@ LOOK = 'era'
 #            with an outline it is a painted picture, shrunk and given one clean 1-px outline.
 # Room 2's board without the taped sheet, and the board wiped by hand after the fix, are new names beside the old
 # close-ups: the old ones stay until the game stops using them (Warp brief 14).
-# The four brand marks of the same drop are not built: Rick has not said yes to them.
+# The four brand marks of the same drop (Rick, 2026-11-15: "approved") are original pictures of our invented
+# names. Three go on page elements (a tool's title bar, its button on the workstation), so they are built whole
+# at the size they were painted (MARKS, assets/marks/); Doggy Dashboards' also goes on room 4's wall, on the canvas.
 FEEDBACK = 'art-drops/2026-11-14-feedback-1114'
 OUTLINE = '#1A1424'
 _PRODUCTS = ('ukulele', 'banjo', 'acoustic', 'bass', 'southpaw')          # the order the shop's page shows them; it stalls on the last
@@ -63,8 +65,11 @@ _EXTRA = {
     'ch3': {'sprites': {'S3_products': [{'name': f'product_{n}{tag}', 'file': f'{FEEDBACK}/S3_product_{n}.png', 'shrink': by, 'outline': OUTLINE}
                                         for tag, by in (('', 2), ('_small', 4)) for n in _PRODUCTS]}},
     'ch4': {'extra': {'R4_phone_closeup': f'{FEEDBACK}/R4_phone_closeup.png'},
-            'sprites': {'S4_sprites': [{'name': n, 'file': f'{FEEDBACK}/S4_{n}.png', 'shrink': 2} for n in _BATTLE]}},
+            'sprites': {'S4_sprites': [{'name': n, 'file': f'{FEEDBACK}/S4_{n}.png', 'shrink': 2} for n in _BATTLE]
+                                      + [{'name': 'mark_doggy_dashboards', 'file': f'{FEEDBACK}/M_doggy_dashboards.png', 'shrink': 8, 'outline': OUTLINE}]}},
 }
+MARKS = {'cave_logs': 'ch1', 'old_artifact': 'ch2', 'pretty_good_metrics': 'ch3', 'doggy_dashboards': 'ch4'}   # mark -> the scenario whose old tool it brands
+MARKS_OUT = 'assets/marks'
 
 
 def rooms(look):
@@ -205,6 +210,14 @@ def build(src, out, name, plates, edits, crops=None, exact=False, extra=None, sp
     return m
 
 
+def build_marks(out=None):
+    """The brand marks as painted, 128x128 and hard-edged, saved as palette files for the page to show."""
+    out = out or os.path.join(ROOT, MARKS_OUT); os.makedirs(out, exist_ok=True)
+    for name in MARKS:
+        _save_sprites(Image.open(os.path.join(ROOT, FEEDBACK, f'M_{name}.png')).convert('RGBA'), os.path.join(out, name + '.png'))
+    return sorted(MARKS)
+
+
 def build_cards(out='assets/cards', cards=None, frames=None):
     """The persona cards' pictures as the art is: the source's own size and colours (Rick, 2026-11-14: the cards
     "look bad since they were de-rezed"; he would rather have the original look than a small palette and a
@@ -249,3 +262,4 @@ if __name__ == '__main__':
         if not os.path.exists(os.path.join(src, r['plates'][0] + '.png')): print(f'{name}: sources not in this checkout ({r["src"]}); left as built'); continue
         build(src, os.path.join(ROOT, OUT), name, r['plates'], r['edits'], r.get('crops'), r.get('exact', False), r.get('extra'), r.get('sprites'))
     build_cards(os.path.join(ROOT, 'assets/cards'))
+    print('marks:', ', '.join(build_marks()))
