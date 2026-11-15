@@ -9,8 +9,8 @@ painted it (`art-drops/2026-11-14-feedback-1114/`), Rick approved it, and it is 
 `assets/rooms/`. **You draw no art and rebuild none**: you place what is built, by the numbers below. All
 positions are on the 320×200 canvas; areas `{ x0, x1, y0, y1 }` are inclusive, as in the chapters' data.
 
-Brief 12 called this "brief 13". The four brand marks for the old tools are not in this brief: Rick has not
-said yes to them.
+Brief 12 called this "brief 13". **Added 2026-11-15: section G, the old tools' brand marks.** Rick approved
+them that morning ("approved"), after this brief was first written.
 
 ## A. What is built, and how a painter reaches it
 
@@ -19,6 +19,8 @@ said yes to them.
 | 2 | `images.R2_board`, `images.R2_board_wiped` | 320×200 plates: the whiteboard with no taped sheet, and the same board after a hand has wiped a band across it and drawn the path |
 | 3 | `sprites.product_ukulele`, `_banjo`, `_acoustic`, `_bass`, `_southpaw` (each 112×72) and the same five with `_small` (57×37) | the shop's products, on one sheet `images.S3_products` |
 | 4 | `images.R4_phone_closeup` | 320×200 plate: a hand holding a phone |
+| 4 | `sprites.mark_doggy_dashboards` 18×18 | Doggy Dashboards' mark for the wall, on the same sheet (section G) |
+| 1–3 | `assets/marks/cave_logs.png`, `old_artifact.png`, `pretty_good_metrics.png` (128×128; not in a manifest) | the old tools' marks, for the page, not the canvas (section G) |
 | 4 | `sprites.ship_a_small` 7×5, `ship_a_mid` 11×7, `ship_a_big` 19×9, `ship_b_small`, `ship_b_mid`, `ship_b_big` (the same sizes), `bolt` 5×1, `missile` 5×3, `boom_1`…`boom_4` 11×11, `warp_1`…`warp_3` 9×9, `gate` 23×23 | the battle, on one sheet `images.S4_sprites`; every ship faces right |
 
 A manifest's new `sprites` map is `{ name: { image, x, y, w, h } }`: the sheet's name in `images` and the
@@ -179,6 +181,34 @@ canvas's), keeping the frame round it. On the plate:
    (`js/screens/chapter.js:92`), which mirrors the mark on his chest. The front view is always drawn
    unflipped; the side view flips as now. Change nothing else about how he is drawn.
 
+## G. The old tools wear their marks
+
+Rick: "The competitor tools should have some sort of branding on their screens… Easy to miss them currently
+on the screens." The marks are original pictures of our invented names (a cave of logs, a cracked amphora, a
+rosette with a gauge, a paw of status lights). They carry no letters: the name beside each is the game's text.
+
+| Scenario | Old tool | Mark |
+|---|---|---|
+| 1 | Cave Logs Inc. | `assets/marks/cave_logs.png` |
+| 2 | Old Artifact | `assets/marks/old_artifact.png` |
+| 3 | Pretty Good Metrics | `assets/marks/pretty_good_metrics.png` |
+| 4 | the phone; Doggy Dashboards is the wall's health line | `sprites.mark_doggy_dashboards`, on the canvas |
+| 5 | Friday's diff | none |
+
+- **Chapter data:** `tools.old.mark` is the file's name without `.png` (`'cave_logs'`), absent where there is
+  none.
+- **The old tool's title bar** (`.tool-title`): the mark to the left of the title's words, 80 % of the bar's
+  height, a gap of a third of its width before the words; the two are centred together.
+- **The workstation's button that opens the old tool** (`.pc-item`): the mark at the left of the button's
+  words, 28 px × the UI scale tall.
+- Both are `<img alt="">` (the name is right beside it), `image-rendering: auto`: they are 128-px pictures
+  shown small, not canvas pixels. Load the mark with the chapter's art so it is there when the screen opens; a
+  mark that fails to load leaves the words alone, with no broken-image box.
+- **Scenario 4, the wall close up:** `art.draw(g, 'mark_doggy_dashboards', 16, 167)`, at the left end of the
+  strip under the map, and the flat green health line starts at x 38 instead of the strip's left edge. Not in
+  the room view (the strip is five rows tall there).
+- Do not recolour, crop or redraw a mark, and do not put one anywhere this section does not name.
+
 ## Tests
 
 Unit:
@@ -204,6 +234,11 @@ Browser (one file at a time):
 - Scenario 4: the map changes from frame to frame; no pixel outside the map's area changes because of the
   battle; the room test "the chat column scrolls beside the SRE and never over her" passes unchanged; the old
   tool shows the plate, the name on its bar, and a ring round the button.
+- The marks: in scenarios 1 to 3 the workstation's old-tool button and the old tool's title bar each hold an
+  image whose file is that scenario's mark and whose natural size is 128×128; in the title bar it is between
+  60 % and 100 % of the bar's height and wholly left of the words, at 844×390 and 667×375. Scenario 4's wall
+  close-up has the mark's own pixels at (16, 167) and no health-line pixel left of x 38; scenario 5 shows no
+  mark and no broken image. A mark that 404s leaves the title's words in place.
 - The verdict at 844×390 and 667×375, and Charity's Claim screen, as item F.1 says.
 - The hero standing at one spot looks the same whichever way he walked there: walk him left to a spot, read
   the canvas inside his box, walk him away and back to it from the left, and the pixels are identical.
@@ -228,7 +263,8 @@ scrolls beside the SRE and never over her" (must pass unchanged).
 `handbacks/<date>-warp-feedback-art.md`: what you built; the three suites' counts; every call you made, the
 battle's choreography above all (how many of each ship, the lanes, the timings); and screenshots at 844×390 of
 the board with three theories circled, the wiped board, the shop on the banjo and on the stuck southpaw, the
-battle while broken and just after the fix, and the phone ringing.
+battle while broken and just after the fix, the phone ringing, and Cave Logs' title bar and workstation
+button with the mark.
 
 Once this is merged, Cloud Claude retires `R2_wall_closeup` and `R2_wall_closeup_fixed`: they stay in the
 manifest until then so the game is whole at every merge. Do not delete them.

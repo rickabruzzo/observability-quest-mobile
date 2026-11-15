@@ -1,6 +1,6 @@
 # Art drop: feedback from Rick's play-through (2026-11-14)
 
-For **Cloud Claude**. From `briefs/art/04-feedback-plates-sprites-and-marks.md`. Branch `art/feedback-1114` from `origin/era-look`. Rick saw and OK'd groups 1–4 one at a time; group 5 is shown with this drop.
+For **Cloud Claude**. From `briefs/art/04-feedback-plates-sprites-and-marks.md`. Branch `art/feedback-1114` from `origin/era-look`. Rick saw and OK'd groups 1–4 one at a time, and group 5 (the brand marks) on 2026-11-15: "approved".
 
 ## 1. Room 2 whiteboard (replaces the era-look ones in `art-drops/2026-11-13-era-look-rooms/`)
 
@@ -50,7 +50,7 @@ Hand-placed pixel by pixel (no generator), so the sizes are exact and the design
 
 No words, digits or lettered icons. The game writes the name and makes it ring. Light-skinned hand, to match the SRE.
 
-## 5. Brand marks (shown to Rick with this drop)
+## 5. Brand marks (Rick, 2026-11-15: "approved")
 
 `M_cave_logs.png`, `M_old_artifact.png`, `M_pretty_good_metrics.png`, `M_doggy_dashboards.png`.
 - **Format:** 128×128, transparent, no partly transparent pixels, the mark inside a 4 px margin. Checked shrunk to 16×16.
