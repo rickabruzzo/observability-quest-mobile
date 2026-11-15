@@ -122,9 +122,9 @@ showSound();
 for (const type of ['touchend', 'click', 'keydown']) document.addEventListener(type, () => ctx.sound.unlock(), { capture: true, passive: true });
 
 // The rotate gate: where full screen exists the tap turns the screen whatever the phone's rotation lock says.
-const fs = detectFullscreen(window);
-document.body.dataset.fs = fs.canFullscreen ? 'yes' : 'no';
-document.getElementById('rotate').addEventListener('click', () => { if (fs.canFullscreen && !fs.standalone) goFullscreen(); });
+const fs = detectFullscreen(window), canTurn = fs.canFullscreen && !fs.ios;       // not on an iPad: see js/engine/fullscreen.js
+document.body.dataset.fs = canTurn ? 'yes' : 'no';
+document.getElementById('rotate').addEventListener('click', () => { if (canTurn && !fs.standalone) goFullscreen(); });
 if (ctx.stats) document.body.dataset.stats = '1';
 if (query.get('swipe') === '1') document.documentElement.dataset.swipe = '1';   // an experiment (brief 13 F): the page can scroll 80 px so Safari's bar may shrink
 

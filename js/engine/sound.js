@@ -16,14 +16,14 @@ export function createSound({
   function read() { try { return storage?.getItem(MUTE_KEY) ?? null; } catch { return null; } }
   function write(v) { try { storage?.setItem(MUTE_KEY, v); } catch { /* storage unavailable: the choice lasts the page */ } }
   function sessionType() { try { return audioSession?.type ?? null; } catch { return null; } }
+  // The playback session is what lets the game be heard on a silenced iPhone, and it also pauses the player's own music.
+  // With the game's sound off there is nothing to hear, so it asks for ambient instead, which leaves their music alone.
+  function askSession() { try { if (audioSession) audioSession.type = muted ? 'ambient' : 'playback'; } catch { /* no session API worth the name */ } }
 
   return {
-    /** Call inside a tap. The first call asks the iPhone for the playback session and makes the one context; every call resumes it. */
+    /** Call inside a tap. The first call asks the iPhone for its audio session (playback, or ambient while muted) and makes the one context; every call resumes it. */
     unlock() {
-      if (!sessionAsked) {
-        sessionAsked = true;
-        try { if (audioSession) audioSession.type = 'playback'; } catch { /* no session API worth the name */ }
-      }
+      if (!sessionAsked) { sessionAsked = true; askSession(); }
       if (!ctx && !dead) {
         try {
           ctx = new AudioContextCtor(); contexts++;
@@ -40,6 +40,7 @@ export function createSound({
     setMuted(on) {
       muted = !!on;
       if (out) { try { out.gain.value = muted ? 0 : 1; } catch { /* silent */ } }
+      if (sessionAsked) askSession();
       write(muted ? '1' : '0');
     },
     suspend() { try { if (ctx?.suspend) Promise.resolve(ctx.suspend()).catch(() => {}); } catch { /* silent */ } },

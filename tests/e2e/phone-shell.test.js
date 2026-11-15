@@ -86,6 +86,23 @@ test('an iPhone (no Fullscreen API) sees the rotation-lock line and nothing is a
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+test('an iPad (the API is there, and so is navigator.standalone): nothing goes full screen by itself', async () => {
+  // iPad Safari takes a tap-driven game's taps for typing in full screen, warns and throws the page out (review of brief 13)
+  for (const [w, h] of [[1024, 768], [390, 844]]) {
+    const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1, hasTouch: true, isMobile: true });
+    await ctx.addInitScript(STUB('resolve'));
+    await ctx.addInitScript(`Object.defineProperty(Navigator.prototype, 'standalone', { get() { return false; }, configurable: true });`);
+    const page = await ctx.newPage(); const errors = []; page.on('pageerror', (e) => errors.push(e));
+    await page.goto(server.baseURL, { waitUntil: 'load' }); await page.waitForFunction(() => window.__oq?.ready === true);
+    assert.equal(await page.evaluate(() => document.body.dataset.fs), 'no');
+    if (w > h) { await page.click('#btn-start'); await page.waitForFunction(() => document.body.dataset.screen === 'CREATOR'); }
+    else { assert.equal(await page.locator('#rotate .fs-no').isVisible(), true); await page.click('#rotate'); }
+    await page.waitForTimeout(50);
+    assert.deepEqual(await fsCalls(page), { fs: 0, lock: 0 });
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  }
+});
 
 test('sound: the first tap unlocks one context, it stays one through the intro, and the Sound button mutes and the choice survives a reload', async () => {
   const { ctx, page } = await open();

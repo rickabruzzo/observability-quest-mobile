@@ -26,6 +26,16 @@ test('unlock asks for the playback audio session, once', () => {
   s.unlock(); assert.equal(session.type, 'playback'); assert.equal(s.info.session, 'playback');
   session.type = 'auto'; s.unlock(); assert.equal(session.type, 'auto', 'set on the first unlock only');
 });
+test('with sound off the game stops claiming the phone\'s audio: the session is ambient while muted, playback again when unmuted', () => {
+  // the playback session pauses the player's own music; a player who turns the game's sound off should get it back
+  const session = { type: 'auto' }; const storage = memStorage(); storage.setItem(MUTE_KEY, '1');
+  const s = createSound({ AudioContextCtor: fakeCtor([]), audioSession: session, storage });
+  s.setMuted(true); assert.equal(session.type, 'auto', 'nothing is asked of the phone before the first tap');
+  s.unlock(); assert.equal(session.type, 'ambient', 'muted from the last visit: never takes the phone\'s audio');
+  s.setMuted(false); assert.equal(session.type, 'playback');
+  s.setMuted(true); assert.equal(session.type, 'ambient');
+  s.unlock(); assert.equal(session.type, 'ambient', 'a later tap does not take it back');
+});
 test('a missing or throwing audioSession is harmless', () => {
   const none = createSound({ AudioContextCtor: fakeCtor([]), audioSession: null, storage: memStorage() });
   none.unlock(); assert.equal(none.info.session, null);

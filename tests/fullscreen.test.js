@@ -9,22 +9,26 @@ test('shouldGoFullscreen: only a touch screen with the API, not already full scr
   assert.equal(shouldGoFullscreen({ ...base, canFullscreen: false }), false, 'an iPhone has no API');
   assert.equal(shouldGoFullscreen({ ...base, fullscreenNow: true }), false);
   assert.equal(shouldGoFullscreen({ ...base, standalone: true }), false, 'a Home Screen app has no bars to hide');
+  assert.equal(shouldGoFullscreen({ ...base, ios: true }), false, 'an iPad has the API, but its full screen takes a game\'s taps for typing and throws the page out');
   assert.equal(shouldGoFullscreen({}), false);
 });
 
 const fakeWin = ({ coarse = true, mode = false, apple, fsEl = null, api = true } = {}) => ({
   matchMedia: (q) => ({ matches: q.includes('pointer') ? coarse : mode }),
-  navigator: { standalone: apple },
+  navigator: apple === undefined ? {} : { standalone: apple },
   document: { fullscreenElement: fsEl, documentElement: api ? { requestFullscreen() {} } : {} },
 });
 test('detectFullscreen reads the media queries, navigator.standalone, fullscreenElement and the API', () => {
-  assert.deepEqual(detectFullscreen(fakeWin()), { coarsePointer: true, standalone: false, fullscreenNow: false, canFullscreen: true });
+  assert.deepEqual(detectFullscreen(fakeWin()), { coarsePointer: true, standalone: false, ios: false, fullscreenNow: false, canFullscreen: true });
   assert.equal(detectFullscreen(fakeWin({ apple: true })).standalone, true);
+  assert.equal(detectFullscreen(fakeWin({ apple: true })).ios, true, 'navigator.standalone is a boolean on an iPhone or iPad and nowhere else');
+  assert.equal(detectFullscreen(fakeWin({ apple: false })).ios, true, 'in a Safari tab it is false, and still there');
+  assert.equal(detectFullscreen(fakeWin({ apple: false })).standalone, false);
   assert.equal(detectFullscreen(fakeWin({ mode: true })).standalone, true);
   assert.equal(detectFullscreen(fakeWin({ fsEl: {} })).fullscreenNow, true);
   assert.equal(detectFullscreen(fakeWin({ api: false })).canFullscreen, false);
   assert.equal(detectFullscreen(fakeWin({ coarse: false })).coarsePointer, false);
-  assert.deepEqual(detectFullscreen({}), { coarsePointer: false, standalone: false, fullscreenNow: false, canFullscreen: false });
+  assert.deepEqual(detectFullscreen({}), { coarsePointer: false, standalone: false, ios: false, fullscreenNow: false, canFullscreen: false });
 });
 
 test('goFullscreen asks for full screen with the navigation UI hidden, then locks landscape', async () => {
