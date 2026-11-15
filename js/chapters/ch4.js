@@ -29,6 +29,8 @@ export const PERSONA = {
   card: 'P4', art: 'assets/cards/P4_card.webp', crop: { image: 'R4_ops_room', x: 209, y: 59, w: 110, h: 69 },
   overlay: { kind: 'phone', x: 424, y: 281, w: 6, h: 7, px: 4 },      // on the 640×400 card: a 6×7 screen of 4-px pixels, on the phone the art paints
   portrait: 'p4', where: 'top-left',
+  // where she stands in front of the chat column: her head and raised hand, then her shoulder and the old monitor's top
+  covers: [{ x: 268, y: 77, w: 18, h: 13 }, { x: 236, y: 90, w: 50, h: 9 }],
   loop: 'speak', frames: { talk: ['R4_npc_talk_1', 'R4_npc_talk_2'], rest: null, idle: [], win: 'R4_npc_win' },
   calls: [1, 2, 3].map((i) => `ch4.npc.call.${i}`),
   ask: 'ch4.npc.ask',

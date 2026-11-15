@@ -9,6 +9,7 @@ import { SCRIPT } from '../../js/script.js';
 import { openGame, pickScenario, ch, run, winOpen, dismiss, tapSpot, toolOpen, promptsShown, prompt, playShortest, inState, pcPick, toPc, solveHc, leavePc, askCto, winLines, deployAndRecover, charitySays, shown, talkToCto, closeCard, pickOption } from './_play.js';
 import { readFileSync } from 'node:fs';
 import { CH1 } from '../../js/chapters/ch1.js';
+import { CHAPTERS } from '../../js/chapters/index.js';
 import { HERO_H } from '../../js/engine/hero.js';
 import { TOP } from '../../js/engine/hero-parts.js';
 
@@ -688,18 +689,47 @@ for (const [w, h] of PHONES) {
   });
 }
 
-test('room 4: nothing the wall paints lands on the persona — her patch holds still while the wall animates and she is not talking', async () => {
+// Review of brief 12: the wall painter was kept out of the persona's whole patch (the box their talk frames move in),
+// which is far bigger than the persona. In room 3 that left a strip of the TV that never took the page's tint, and in
+// room 4 it stopped the chat column and the health line short. The wall is kept out of `persona.covers` only: the
+// few rectangles where the plate's figure really stands in front of the display.
+const sceneRect = (page, r) => page.evaluate((q) => [...document.querySelector('#scene').getContext('2d').getImageData(q.x, q.y, q.w, q.h).data].join(','), r);
+
+test('room 3: the TV\'s page tints as one piece — the strip beside the developer flickers with the rest of it', async () => {
+  const { ctx, page } = await openGame(browser, server, { query: '?ch=3' });
+  await page.click('#class-card'); await dismiss(page);
+  const patch = JSON.parse(readFileSync('assets/rooms/ch3.json', 'utf8')).patches.R3_bullpen;
+  const L = { x: 104, y: 60 }, R = { x: 214, y: 60 };                      // page margin inside her patch, page margin outside it
+  assert.ok(L.x >= patch.x && L.x < patch.x + patch.w && L.y >= patch.y && L.y < patch.y + patch.h && R.x >= patch.x + patch.w);
+  const seen = [];
+  for (let i = 0; i < 28; i++) {
+    seen.push(await page.evaluate(([l, r]) => { const g = document.querySelector('#scene').getContext('2d'); return [l, r].map((q) => [...g.getImageData(q.x, q.y, 1, 1).data].join(',')); }, [L, R]));
+    await page.waitForTimeout(110);
+  }
+  const moved = (k) => seen.map((s) => s[k] !== seen[0][k]);
+  assert.ok(moved(1).some(Boolean), 'the page flickers');
+  assert.deepEqual(moved(0), moved(1), 'the strip inside her patch changes tint exactly when the rest of the page does');
+  assert.deepEqual(page.errors, []);
+  await ctx.close();
+});
+
+test('room 4: the chat column scrolls beside the SRE and never over her — her covers hold still while the wall animates', async () => {
   const { ctx, page } = await openGame(browser, server, { query: '?ch=4' });
   await page.click('#class-card'); await dismiss(page);
   await page.waitForTimeout(400);
   const patch = JSON.parse(readFileSync('assets/rooms/ch4.json', 'utf8')).patches.R4_ops_room;
-  const grab = () => page.evaluate((p) => [...document.querySelector('#scene').getContext('2d').getImageData(p.x, p.y, p.w, p.h).data].join(','), patch);
-  const wallGrab = () => page.evaluate(() => { const d = document.querySelector('#scene').getContext('2d').getImageData(34, 7, 200, 74).data; let h = 0; for (let i = 0; i < d.length; i += 4) h = (h * 31 + d[i]) >>> 0; return h; });   // a hash of the star map, which moves every step
+  const covers = CHAPTERS[4].persona.covers;
+  assert.ok(covers?.length, 'room 4 says where the SRE stands in front of the wall');
+  const beside = { x: 238, y: 62, w: 28, h: 24 };                          // the chat column left of her head: inside her patch, outside her
+  assert.ok(beside.x >= patch.x && beside.y >= patch.y && covers.every((c) => beside.x + beside.w <= c.x || beside.y + beside.h <= c.y));
   assert.equal(await page.evaluate(() => window.__oq.chapter.personaFrame), null, 'at rest: the plate');
-  const a = await grab(), wa = await wallGrab();
-  await page.waitForTimeout(450);
-  const b = await grab(), wb = await wallGrab();
-  assert.notEqual(wa, wb, 'the wall animates');
-  assert.equal(a, b, 'no pixel inside her patch changes');
+  const grab = async () => ({ covers: (await Promise.all(covers.map((c) => sceneRect(page, c)))).join('|'), beside: await sceneRect(page, beside), map: await sceneRect(page, { x: 34, y: 7, w: 200, h: 74 }) });
+  const a = await grab();
+  let b = a;
+  for (let i = 0; i < 8 && (b.beside === a.beside || b.map === a.map); i++) { await page.waitForTimeout(400); b = await grab(); }
+  assert.notEqual(a.map, b.map, 'the star map animates');
+  assert.notEqual(a.beside, b.beside, 'the chat column scrolls beside her');
+  assert.equal(a.covers, b.covers, 'nothing changes where she stands in front of the wall');
+  assert.deepEqual(page.errors, []);
   await ctx.close();
 });

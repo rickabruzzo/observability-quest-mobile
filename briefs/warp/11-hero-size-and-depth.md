@@ -1,9 +1,9 @@
 # Warp brief 11 — the hero's size and depth: scaled by each room, a floor to walk into, legs in bed
 
 Read `briefs/warp/PROTOCOL.md` and `briefs/PROTOCOL.md` first (**the worktree rule changed on 2026-11-14: your
-worktree now lives inside the project folder**). **Do brief 12 first**: it has the housekeeping, and both briefs
-change `js/screens/chapter.js`. Branch `warp/hero-depth` from `origin/era-look` if brief 12 is merged, otherwise
-from `warp/feedback-fixes`, stacked as last time; the pull request's base is `era-look`.
+worktree now lives inside the project folder**). Brief 12 is done and reviewed (`handbacks/2026-11-14-cloud-feedback-review.md`). Branch `warp/hero-depth` from
+`origin/era-look` **after Rick has merged `desktop/feedback-review`**, which carries brief 12 and the review's
+fix; the pull request's base is `era-look`.
 
 ## Why
 
@@ -19,21 +19,22 @@ What is wrong, measured:
 
 - **His build as well as his height.** His head is 40 px of his 136 (3.4 heads tall) and he is 48 px wide. The
   cloud engineer in room 2 is 115 px tall with an 18-px head (6.4 heads) and 30-px shoulders. A figure with
-  twice the head reads as nearer and bigger. This brief fixes his height and where he stands; his build is
-  section A's separate track.
+  twice the head reads as nearer and bigger. This brief fixes his height and where he stands (section A).
 - **One size for five rooms.** Brief 09 gave every room 136 px. The rooms are drawn at different camera
   distances: a standing adult is 115 px in room 2 and 95 px in room 4 on about the same floor line.
 - **One floor line.** He walks along y 192, the nearest line in the picture, in front of everything.
 
 Rick's rule stands: **the room's furniture sets his scale.**
 
-## A. His look is not this brief
+## A. His size is the fix; his look waits
 
-Rick, the same day: "The hero characters just look blocky and odd in contrast to the NPCs." That is being
-settled separately (an art test, `briefs/art/05-hero-painted-test.md`: the hero painted by the hand that painted
-the personas, recoloured by the game). **Do not redraw the figure here.** Keep the 56×144 canvas and the 136-px
-figure at scale 1, and keep everything in this brief independent of how the figure is drawn, so a painted one can
-replace the generated one later without touching the walking or the rooms.
+Rick was shown the hero beside the cloud engineer at 136 px and shrunk to the engineer's 115 px, and said: "The
+hero shrunk looks better." So this brief's job is to make him the right size everywhere. Earlier the same day he
+had also said "the hero characters just look blocky and odd in contrast to the NPCs"; a test of a painted hero
+is written (`briefs/art/05-hero-painted-test.md`) and **on hold** until Rick has seen him at the right size in the
+rooms. **Do not redraw the figure here.** Keep the 56×144 canvas and the 136-px figure at scale 1, and keep
+everything in this brief independent of how the figure is drawn, so a painted one could replace the generated one
+later without touching the walking or the rooms.
 
 ## B. Depth (`js/engine/walk.js`, `js/engine/room.js`, `js/screens/chapter.js`, `js/chapters/chN.js`)
 
@@ -91,6 +92,19 @@ The floors, in words (trace the exact corners from the plates):
 - **The subtitle.** His hair crosses "So you want to be on-call?" both sitting and standing. Keep him at the
   door's scale (a standing adult is about seven eighths of the 132-px door) and move whichever is easier, the
   subtitle or where he stands, so they never overlap.
+
+## D. Two things from the review of brief 12
+
+1. **The verdict portrait is cut in a straight line on its right.** Cropping the picture to 45% of the scene
+   chops the narrator's far shoulder, and Charity's hair, with a vertical edge in the middle of the screen. Keep
+   the crop on the left (it centres the face in the left 45%) but draw the picture through to its own right
+   edge, and let the words' window sit over it. Same for Charity's `<img>`. The tests that say the window is
+   wholly to the portrait's right change to: the window is wholly to the right of the face's 45%, and no
+   portrait pixel ends in a vertical line left of the window.
+2. **`persona.covers` stays.** The review replaced the clip round the persona's whole patch with small
+   rectangles where the plate's figure stands in front of the wall display (`js/chapters/ch3.js`, `ch4.js`;
+   `tests/covers.test.js`, and the room 3 and room 4 tests in `tests/e2e/chapter.test.js`). When you rework
+   `paintRoom` for depth, keep it, and keep those tests passing unchanged.
 
 ## Tests
 

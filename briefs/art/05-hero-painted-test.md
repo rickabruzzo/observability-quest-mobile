@@ -1,5 +1,9 @@
 # Art brief 05 — test: the hero painted by the hand that painted the personas, in colours the game can swap (four figures)
 
+> **On hold (Rick, 2026-11-14, evening).** Shown the hero shrunk to a persona's height, Rick said "the hero
+> shrunk looks better." Warp brief 11 makes him that size in every room. Run this test only if he still reads
+> as blocky beside the personas once that has landed.
+
 Read `briefs/art/PROTOCOL.md` first. For **Art Claude** on Rick's personal account. Rick art directs. Branch
 `art/hero-painted-test` from `origin/era-look`. This is a test, like brief 03: it may be thrown away.
 

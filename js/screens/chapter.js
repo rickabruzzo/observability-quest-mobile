@@ -76,10 +76,13 @@ export function createChapterScreen(game) {
     const g = ctx.ctx2d;
     backdrop(g, room.image);
     const frame = personaNow(ctx), patch = art?.manifest.patches?.[room.image];
-    // the wall display, under the persona: whatever it paints stays out of their patch (brief 12: room 4's chat
-    // bars were painted over the SRE), so the plate's figure shows whether or not a frame is drawn over it
+    // the wall display, under the persona (brief 12: room 4's chat bars were painted over the SRE): whatever it
+    // paints stays out of `persona.covers`, the rectangles where the plate's figure stands in front of the display.
+    // Not out of the whole patch: that is the box the talk frames move in, far bigger than the figure, and keeping
+    // the wall out of it left a strip of room 3's TV that never took the page's tint.
+    const covers = ch.persona.covers;
     g.save();
-    if (patch) { g.beginPath(); g.rect(0, 0, 320, 200); g.rect(patch.x, patch.y, patch.w, patch.h); g.clip('evenodd'); }
+    if (covers?.length) { g.beginPath(); g.rect(0, 0, 320, 200); for (const c of covers) g.rect(c.x, c.y, c.w, c.h); g.clip('evenodd'); }
     painter().room(g, wall(ctx));
     g.restore();
     if (frame && patch && img(frame)) g.drawImage(img(frame), patch.x, patch.y);

@@ -30,6 +30,7 @@ export const PERSONA = {
   name: 'ch3.persona.name', class: 'ch3.persona.class', stats: 'ch3.persona.stats', flavor: 'ch3.persona.flavor',
   card: 'P3', art: 'assets/cards/P3_card.webp', crop: { image: 'R3_bullpen', x: 9, y: 14, w: 126, h: 79 },
   portrait: 'p3', where: 'top-right',
+  covers: [{ x: 101, y: 75, w: 5, h: 8 }],       // her fingertips over the TV's left edge: the page's tint stays off them
   loop: 'speak', frames: { talk: ['R3_npc_talk_1', 'R3_npc_talk_2'], rest: null, idle: [], win: 'R3_npc_win' },
   calls: [1, 2, 3].map((i) => `ch3.npc.call.${i}`),
   ask: 'ch3.npc.ask',
