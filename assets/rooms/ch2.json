@@ -13,7 +13,9 @@
   "R2_npc_look": "R2_npc_look.png",
   "R2_npc_scratch": "R2_npc_scratch.png",
   "R2_npc_mark": "R2_npc_mark.png",
-  "R2_npc_win": "R2_npc_win.png"
+  "R2_npc_win": "R2_npc_win.png",
+  "R2_board": "R2_board.png",
+  "R2_board_wiped": "R2_board_wiped.png"
  },
  "patches": {
   "R2_war_room": {

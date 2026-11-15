@@ -9,7 +9,8 @@
   "R3_pc_closeup": "R3_pc_closeup.png",
   "R3_npc_talk_1": "R3_npc_talk_1.png",
   "R3_npc_talk_2": "R3_npc_talk_2.png",
-  "R3_npc_win": "R3_npc_win.png"
+  "R3_npc_win": "R3_npc_win.png",
+  "S3_products": "S3_products.png"
  },
  "patches": {
   "R3_bullpen": {
@@ -17,6 +18,78 @@
    "y": 14,
    "w": 126,
    "h": 123
+  }
+ },
+ "sprites": {
+  "product_ukulele": {
+   "image": "S3_products",
+   "x": 0,
+   "y": 0,
+   "w": 112,
+   "h": 72
+  },
+  "product_banjo": {
+   "image": "S3_products",
+   "x": 113,
+   "y": 0,
+   "w": 112,
+   "h": 72
+  },
+  "product_acoustic": {
+   "image": "S3_products",
+   "x": 0,
+   "y": 73,
+   "w": 112,
+   "h": 72
+  },
+  "product_bass": {
+   "image": "S3_products",
+   "x": 113,
+   "y": 73,
+   "w": 112,
+   "h": 72
+  },
+  "product_southpaw": {
+   "image": "S3_products",
+   "x": 0,
+   "y": 146,
+   "w": 112,
+   "h": 72
+  },
+  "product_ukulele_small": {
+   "image": "S3_products",
+   "x": 113,
+   "y": 146,
+   "w": 57,
+   "h": 37
+  },
+  "product_banjo_small": {
+   "image": "S3_products",
+   "x": 171,
+   "y": 146,
+   "w": 57,
+   "h": 37
+  },
+  "product_acoustic_small": {
+   "image": "S3_products",
+   "x": 0,
+   "y": 219,
+   "w": 57,
+   "h": 37
+  },
+  "product_bass_small": {
+   "image": "S3_products",
+   "x": 58,
+   "y": 219,
+   "w": 57,
+   "h": 37
+  },
+  "product_southpaw_small": {
+   "image": "S3_products",
+   "x": 116,
+   "y": 219,
+   "w": 57,
+   "h": 37
   }
  }
 }
