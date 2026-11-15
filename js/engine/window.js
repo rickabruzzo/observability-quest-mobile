@@ -77,16 +77,16 @@ export function createWindows(ctx, { onShow } = {}) {
      * `portrait` ({ name, still, frames: { talk1, talk2, blink }, seed }) makes it a conversation window;
      * `maxWidth` (CSS px) keeps it off something in the scene.
      */
-    say(text, { where = 'center', className = '', portrait = null, maxWidth = null } = {}) {
+    say(text, { where = 'center', className = '', portrait = null, maxWidth = null, name = null, maxLines = null } = {}) {
       if (el) close();
       serial++;
       onShow?.(text);
       el = document.createElement('div');
-      el.className = `msg ${where} ${className}${portrait ? ' talk' : ''}`.trim();
+      el.className = `msg ${where} ${className}${portrait ? ' talk' : ''}${name ? ' named' : ''}`.trim();
       el.setAttribute('role', 'dialog'); el.setAttribute('aria-live', 'polite');
       el.innerHTML = portrait
         ? `<div class="msg-portrait"><canvas width="${PORTRAIT_CROP.w}" height="${PORTRAIT_CROP.h}" aria-hidden="true"></canvas></div><div class="msg-text"><div class="msg-name"></div><div class="msg-body"></div></div>`
-        : '<div class="msg-body"></div>';
+        : name ? '<div class="msg-text"><div class="msg-name"></div><div class="msg-body"></div></div>' : '<div class="msg-body"></div>';
       (layer || ctx.overlay).appendChild(el);
       const cs = getComputedStyle(el);
       const pad = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
@@ -94,15 +94,16 @@ export function createWindows(ctx, { onShow } = {}) {
       let avail = el.clientWidth;
       if (maxWidth) avail = Math.min(avail, maxWidth - chrome);
       let side = 0, nameW = 0;
-      if (portrait) {
-        el.querySelector('.msg-name').textContent = portrait.name;
-        side = el.querySelector('.msg-portrait').offsetWidth + (parseFloat(cs.columnGap) || 0);
+      const shownName = portrait ? portrait.name : name;                      // a persona's, or a narrator's over a verdict (brief 12)
+      if (shownName) {
+        el.querySelector('.msg-name').textContent = shownName;
         const ns = getComputedStyle(el.querySelector('.msg-name'));       // the name's width as it is set: its letters and their spacing
-        nameW = Math.ceil(measureFn(parseFloat(ns.fontSize))(portrait.name) + (parseFloat(ns.letterSpacing) || 0) * portrait.name.length);
+        nameW = Math.ceil(measureFn(parseFloat(ns.fontSize))(shownName) + (parseFloat(ns.letterSpacing) || 0) * shownName.length);
       }
+      if (portrait) side = el.querySelector('.msg-portrait').offsetWidth + (parseFloat(cs.columnGap) || 0);
       const width = Math.min(MAX_LINE_PX, avail - pad - 2 - side);           // never wider than the reading measure
-      const maxLines = portrait ? TALK_LINES : linesFor(ctx.fit?.sceneH ?? 370);
-      const pages = paginate(text, measureFn(), width, maxLines);
+      const lines = maxLines ?? (portrait ? TALK_LINES : linesFor(ctx.fit?.sceneH ?? 370));
+      const pages = paginate(text, measureFn(), width, lines);
       const column = Math.min(Math.max(hugWidth(pages, measureFn()), nameW), width);
       el.style.width = `${column + 2 + pad + chrome + side}px`;              // and no wider than its longest line
       msg = createMessage(pages, { instant: ctx.reducedMotion });
