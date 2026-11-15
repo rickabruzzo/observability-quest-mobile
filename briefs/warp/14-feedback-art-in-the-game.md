@@ -57,7 +57,7 @@ board is "circled a bunch with ??? everywhere."
   | 2 | 223, 76, 10, 11 | 235, 60 |
   | 3 | 48, 79, 11, 9 | 58, 64 |
   | 4 | 90, 36, 14, 10 (a second ring round theory 1's box: it is DNS again) | 58, 27 |
-  | 5 | 229, 144, 9, 9 | 240, 130 |
+  | 5 | 229, 144, 9, 9 | 221, 156 (was 240, 130: the arrow ran into it; moved in review, 2026-11-15) |
   | 6 | 107, 81, 11, 11 | 119, 66 |
 
 - The words: a text box at `close.theory = { x0: 262, x1: 304, y0: 128, y1: 186 }`, the same red, centred,
@@ -200,7 +200,8 @@ rosette with a gauge, a paw of status lights). They carry no letters: the name b
 - **The old tool's title bar** (`.tool-title`): the mark to the left of the title's words, 80 % of the bar's
   height, a gap of a third of its width before the words; the two are centred together.
 - **The workstation's button that opens the old tool** (`.pc-item`): the mark at the left of the button's
-  words, 28 px × the UI scale tall.
+  words, a line of the button's words tall (1.1 em). (This said 28 px × the UI scale: on a 360- or 375-px-tall
+  phone that made a third line of words, which spilled out of the button. Changed in review, 2026-11-15.)
 - Both are `<img alt="">` (the name is right beside it), `image-rendering: auto`: they are 128-px pictures
   shown small, not canvas pixels. Load the mark with the chapter's art so it is there when the screen opens; a
   mark that fails to load leaves the words alone, with no broken-image box.
@@ -267,4 +268,5 @@ battle while broken and just after the fix, the phone ringing, and Cave Logs' ti
 button with the mark.
 
 Once this is merged, Cloud Claude retires `R2_wall_closeup` and `R2_wall_closeup_fixed`: they stay in the
-manifest until then so the game is whole at every merge. Do not delete them.
+manifest until then so the game is whole at every merge. Do not delete them. (Retired in the review,
+2026-11-15: `handbacks/2026-11-15-cloud-feedback-art-review.md`.)

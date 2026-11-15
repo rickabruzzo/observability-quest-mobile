@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 import { makeArt } from '../js/screens/chapter.js';
 import { CHAPTERS } from '../js/chapters/index.js';
 import { SCRIPT } from '../js/script.js';
+import { textWidth } from '../js/intro/font5x7.js';
 import { THEORIES, boardMarks, arrow, ringsShown, current } from '../js/chapters/ch2-wall.js';
 import { visit, PRODUCTS, VISIT_MS } from '../js/chapters/ch3-wall.js';
 import { cast, DIMS, gateAt, RECOVER_MS, OURS, THEIRS, STUCK_ONES, DOTS, LINE_FROM, MARK_AT } from '../js/chapters/ch4-wall.js';
@@ -44,9 +45,22 @@ test('every sprite the painters name is in its manifest with the size the brief 
 const m2images = () => Object.keys(JSON.parse(readFileSync('assets/rooms/ch2.json', 'utf8')).images);
 
 // ---- B. room 2: theories on the board ----
-test('room 2: the ring and ??? for each of the six theories, as the brief places them', () => {
+test('room 2: the ring and ??? for each of the six theories, as the brief places them (theory 5\'s ??? moved below its ring in review)', () => {
   assert.deepEqual(THEORIES.map((t) => [t.ring.cx, t.ring.cy, t.ring.rx, t.ring.ry, t.marks.x, t.marks.y]), [
-    [90, 35, 11, 8, 104, 27], [223, 76, 10, 11, 235, 60], [48, 79, 11, 9, 58, 64], [90, 36, 14, 10, 58, 27], [229, 144, 9, 9, 240, 130], [107, 81, 11, 11, 119, 66]]);
+    [90, 35, 11, 8, 104, 27], [223, 76, 10, 11, 235, 60], [48, 79, 11, 9, 58, 64], [90, 36, 14, 10, 58, 27], [229, 144, 9, 9, 221, 156], [107, 81, 11, 11, 119, 66]]);
+});
+// review, 2026-11-15: theory 5's ??? sat where every arrow leaves the words, so the arrow ran against it, then through it
+test('room 2: no arrow runs through or against a ??? that shows — 3 px clear at every tap', () => {
+  const ch = CHAPTERS[2], W = textWidth('???');
+  const along = ([x0, y0], [x1, y1]) => { const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0), 1); return Array.from({ length: n + 1 }, (_, i) => [Math.round(x0 + ((x1 - x0) * i) / n), Math.round(y0 + ((y1 - y0) * i) / n)]); };
+  for (let n = 0; n < 12; n++) {
+    const m = boardMarks(S(ch, 'broken', { nudges: taps(n) }));
+    const ink = [...along(m.arrow.from, m.arrow.to), ...m.arrow.head.flatMap((h) => along(m.arrow.to, h))];
+    m.rings.forEach((t, j) => {
+      const gap = Math.min(...ink.map(([x, y]) => Math.max(t.marks.x - x, x - (t.marks.x + W - 1), t.marks.y - y, y - (t.marks.y + 6), 0)));
+      assert.ok(gap >= 3, `${n} taps: the arrow is ${gap} px from theory ${j + 1}'s ???`);
+    });
+  }
 });
 test('room 2: rings accumulate with the taps and stop at six; the current theory follows nudges.length % 6', () => {
   const ch = CHAPTERS[2];
@@ -253,5 +267,5 @@ test('the old tools wear their marks: cave_logs, old_artifact, pretty_good_metri
   for (const n of [1, 2, 3]) { const b = readFileSync(`assets/marks/${CHAPTERS[n].tools.old.mark}.png`); assert.deepEqual([b.readUInt32BE(16), b.readUInt32BE(20)], [128, 128]); }
   const css = readFileSync('css/game.css', 'utf8');
   assert.match(css, /\.tool-mark \{[^}]*height: 80%[^}]*image-rendering: auto/);
-  assert.match(css, /\.pc-mark \{[^}]*height: calc\(28px \* var\(--ui-scale, 1\)\)[^}]*image-rendering: auto/);
+  assert.match(css, /\.pc-mark \{[^}]*height: 1\.1em[^}]*image-rendering: auto/);      // a line of words tall: 28 px spilled the words out of the button on a short phone (tests/e2e/feedback-art.test.js)
 });

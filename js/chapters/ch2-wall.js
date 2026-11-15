@@ -14,13 +14,13 @@ const DRAW_MS = 1200;                         // the path draws itself in over t
 const ARROW_GAP = 2, HEAD = 5;
 
 /** The six theories' rings on the diagram (centre and radii) and where each one's `???` goes (top-left). Theory 4 is a
- * second ring round theory 1's box: it is DNS again. */
+ * second ring round theory 1's box: it is DNS again. No arrow passes within 3 px of a `???` (tests/feedback-art.test.js). */
 export const THEORIES = [
   { ring: { cx: 90, cy: 35, rx: 11, ry: 8 }, marks: { x: 104, y: 27 } },
   { ring: { cx: 223, cy: 76, rx: 10, ry: 11 }, marks: { x: 235, y: 60 } },
   { ring: { cx: 48, cy: 79, rx: 11, ry: 9 }, marks: { x: 58, y: 64 } },
   { ring: { cx: 90, cy: 36, rx: 14, ry: 10 }, marks: { x: 58, y: 27 } },
-  { ring: { cx: 229, cy: 144, rx: 9, ry: 9 }, marks: { x: 240, y: 130 } },
+  { ring: { cx: 229, cy: 144, rx: 9, ry: 9 }, marks: { x: 221, y: 156 } },     // below its ring: up and to the right is where every arrow leaves the words
   { ring: { cx: 107, cy: 81, rx: 11, ry: 11 }, marks: { x: 119, y: 66 } },
 ];
 

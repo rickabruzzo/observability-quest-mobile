@@ -155,7 +155,9 @@ html[data-swipe="1"] body { min-height: calc(100vh + 80px); }
 .tool.old .tool-title { background: #0A120A; color: #3CC83C; border-bottom: 2px solid #3CC83C; }
 /* the old tool's mark (brief 14 G): a 128-px picture shown small beside the words, 80 % of the bar tall, a gap of a third of its width */
 .tool-mark { height: 80%; width: auto; aspect-ratio: 1; image-rendering: auto; margin-right: calc(max(24px, 0.09 * var(--scene-h)) * 0.8 / 3); flex: none; }
-.pc-mark { height: calc(28px * var(--ui-scale, 1)); width: auto; aspect-ratio: 1; image-rendering: auto; vertical-align: middle; margin-right: 6px; }
+/* on the workstation's button the mark is a line of words tall and takes no height of its own (its margins pull it back inside
+   the line): the grid has no spare height on a short phone, and a taller mark made a third line that spilled out of the button */
+.pc-mark { height: 1.1em; width: auto; aspect-ratio: 1; image-rendering: auto; vertical-align: middle; margin: -0.1em 0.3em -0.1em 0; }
 .tool-prompts { position: absolute; left: 61.5%; right: 8px; top: 11%; bottom: 8px; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
 .tool-prompts[hidden] { display: none; }
 .prompt { min-height: 44px; padding: 2px 10px; background: var(--sheet-white); color: #111; border: 2px solid #111; box-shadow: 3px 3px 0 #555; font-family: var(--font-text); font-size: 20px; line-height: 1.1; text-align: left; cursor: pointer; }

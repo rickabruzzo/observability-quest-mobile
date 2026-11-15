@@ -22,11 +22,12 @@ SRC, OUT = 'scratch/room_gen', 'assets/rooms'
 COLOURS = 192
 MAX_DRIFT = 0.25                    # a talk frame changes one figure; past a quarter of the frame it is another picture
 # Each chapter: the plates (room first) and the edits of the room plate. Rooms 2-5 each have a win frame (the
-# persona once the fix has landed); room 2 also has its whiteboard after the fix, a second close-up plate.
-# Room 5 is the atrium (same file names as the loft it replaced).
+# persona once the fix has landed). Room 2's wall close-ups are not here: the board with a sheet taped to it
+# (R2_wall_closeup, R2_wall_closeup_fixed) was retired on 2026-11-15, and the board the game shows is the
+# feedback drop's (R2_board, R2_board_wiped, in _EXTRA). Room 5 is the atrium (same file names as the loft it replaced).
 _FILES = {
     'ch1': (['R1_exec_floor', 'R1_monitor_closeup', 'R1_pc_closeup'], 'R1_exec_floor', ('R1_cto_talk_1', 'R1_cto_talk_2')),
-    'ch2': (['R2_war_room', 'R2_wall_closeup', 'R2_wall_closeup_fixed', 'R2_pc_closeup'], 'R2_war_room',
+    'ch2': (['R2_war_room', 'R2_pc_closeup'], 'R2_war_room',
             ('R2_npc_talk_1', 'R2_npc_talk_2', 'R2_npc_look', 'R2_npc_scratch', 'R2_npc_mark', 'R2_npc_win')),
     'ch3': (['R3_bullpen', 'R3_wall_closeup', 'R3_pc_closeup'], 'R3_bullpen', ('R3_npc_talk_1', 'R3_npc_talk_2', 'R3_npc_win')),
     'ch4': (['R4_ops_room', 'R4_wall_closeup', 'R4_pc_closeup'], 'R4_ops_room', ('R4_npc_talk_1', 'R4_npc_talk_2', 'R4_npc_win')),
@@ -50,8 +51,8 @@ LOOK = 'era'
 #   sprites  small pictures on transparency, packed on one sheet a room: {sheet: [{name, file, shrink, outline}]}.
 #            `shrink` 2 with no outline is a sprite drawn by hand at twice its size and taken down exactly;
 #            with an outline it is a painted picture, shrunk and given one clean 1-px outline.
-# Room 2's board without the taped sheet, and the board wiped by hand after the fix, are new names beside the old
-# close-ups: the old ones stay until the game stops using them (Warp brief 14).
+# Room 2's board without the taped sheet, and the board wiped by hand after the fix, are the room's wall close-ups
+# (Warp brief 14); the drop's files keep the old close-ups' names, the built ones are R2_board and R2_board_wiped.
 # The four brand marks of the same drop (Rick, 2026-11-15: "approved") are original pictures of our invented
 # names. Three go on page elements (a tool's title bar, its button on the workstation), so they are built whole
 # at the size they were painted (MARKS, assets/marks/); Doggy Dashboards' also goes on room 4's wall, on the canvas.

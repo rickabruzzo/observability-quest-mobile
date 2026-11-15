@@ -195,7 +195,8 @@ for (const [w, h] of PHONES) {
       if (!markName) { assert.deepEqual(btn, []); }
       else {
         assert.equal(btn.length, 1); assert.ok(btn[0].src.endsWith(`assets/marks/${markName}.png`)); assert.deepEqual([btn[0].nw, btn[0].nh], [128, 128]);
-        assert.ok(Math.abs(btn[0].h - 28 * (await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ui-scale')) || 1))) < 1, `button mark ${btn[0].h} px tall`);
+        const line = await page.locator('.pc-item[data-id="old"]').evaluate((b) => parseFloat(getComputedStyle(b).fontSize));
+        assert.ok(Math.abs(btn[0].h - 1.1 * line) < 1, `button mark ${btn[0].h} px tall beside ${line}-px words`);    // a line of words tall: a taller one spilled the words (review, 2026-11-15)
       }
       assert.equal(await page.locator('.pc-item[data-id="old"]').innerText(), SCRIPT[c.pc.menu.find((i) => i.tool === 'old').key]);
       await pcPick(page, 'old'); await toolOpen(page, 'old');
@@ -212,6 +213,20 @@ for (const [w, h] of PHONES) {
         assert.ok(bar.img.h >= bar.barH * 0.6 - 0.5 && bar.img.h <= bar.barH + 0.5, `mark ${bar.img.h} of bar ${bar.barH}`);
         assert.ok(bar.img.right <= bar.img.wordsLeft + 0.5, 'wholly left of the words');
       }
+      await ctx.close();
+    }
+  });
+}
+// the mark must not push a button's words out of the button (review, 2026-11-15): the workstation's grid has no spare
+// height on a 360- or 375-px-tall phone, so a mark taller than a line of words made a third line that had nowhere to go
+for (const [w, h] of [...PHONES, [800, 360]]) {
+  test(`${w}x${h}: every workstation button holds its own words, with the old tool's mark on it or not`, async () => {
+    for (const n of [1, 2, 3, 4, 5]) {
+      const { ctx, page } = await openGame(browser, server, { w, h, query: `?ch=${n}` });
+      await into(n, page); await toPc(n, page);
+      await page.waitForFunction(() => [...document.querySelectorAll('.pc-item img')].every((i) => i.complete));
+      const spill = await page.evaluate(() => [...document.querySelectorAll('.pc-item')].filter((b) => b.scrollHeight > b.clientHeight || b.scrollWidth > b.clientWidth).map((b) => `${b.dataset.id}: ${b.scrollWidth}×${b.scrollHeight} in ${b.clientWidth}×${b.clientHeight}`));
+      assert.deepEqual(spill, [], `scenario ${n}`);
       await ctx.close();
     }
   });
