@@ -200,3 +200,46 @@ for (const n of NS) {
     await ctx.close();
   });
 }
+
+// ---- depth (Warp brief 11) ----
+import { heroHeightAt, insideFloor } from '../../js/engine/room.js';
+
+for (const n of Object.keys(CHAPTERS).map(Number)) {
+  const c = CHAPTERS[n];
+  test(`scenario ${n}: at the persona's stand point his drawn height is the room's anchor within 2 px; at the start he covers neither the persona's patch${n <= 3 ? ' nor the wall display' : ''}`, async () => {
+    const { ctx, page } = await openGame(browser, server, { query: `?ch=${n}` });
+    await page.click('#class-card'); await dismiss(page);
+    const patch = JSON.parse(readFileSync(c.manifest, 'utf8')).patches[c.room.image];
+    const wallRect = c.room.hotspots.find((h) => h.use?.scene === 'wall').rect;
+    const hb0 = await page.evaluate(() => window.__oq.chapter.heroBox);
+    const meets = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+    assert.ok(!meets(hb0, patch), `the start overlaps the persona's patch: ${JSON.stringify([hb0, patch])}`);
+    if (n <= 3) assert.ok(!meets(hb0, wallRect), `the start overlaps the wall display: ${JSON.stringify([hb0, wallRect])}`);
+    assert.ok(insideFloor(c.room, { x: hb0.x + hb0.w / 2, y: hb0.y + hb0.h }), 'his feet start on the floor');
+    const npc = c.room.hotspots.find((h) => h.use?.action === 'persona');
+    await tapSpot(page, npc.id);
+    await page.waitForFunction(() => window.__oq.chapter.walking === false && (document.querySelector('#persona-card') || window.__oq.chapter.window), null, { timeout: 9000 });
+    const hb = await page.evaluate(() => window.__oq.chapter.heroBox), pos = await ch(page);
+    assert.deepEqual([pos.x, pos.y], [npc.stand.x, npc.stand.y]);
+    assert.ok(Math.abs(hb.h - heroHeightAt(c.room, npc.stand.y)) <= 2, `drawn ${hb.h}, anchor says ${heroHeightAt(c.room, npc.stand.y).toFixed(1)}`);
+    assert.equal(hb.y + hb.h, npc.stand.y, 'his feet are on the stand point');
+    await ctx.close();
+  });
+}
+
+test('scenario 5: a tap on the pinball machine walks him up the room, smaller as he goes, to its stand point; its line plays', async () => {
+  const { ctx, page } = await openGame(browser, server, { query: '?ch=5' });
+  await page.click('#class-card'); await dismiss(page);
+  const h0 = await page.evaluate(() => window.__oq.chapter.heroBox);
+  await tapSpot(page, 'pinball');
+  await page.waitForFunction(() => window.__oq.chapter.walking === true);
+  const heights = new Set();
+  for (let i = 0; i < 20 && await page.evaluate(() => window.__oq.chapter.walking); i++) { heights.add(await page.evaluate(() => window.__oq.chapter.heroBox.h)); await page.waitForTimeout(80); }
+  await winOpen(page);
+  assert.equal(await dismiss(page), SCRIPT['ch5.look.pinball']);
+  const pos = await ch(page), hb = await page.evaluate(() => window.__oq.chapter.heroBox);
+  assert.deepEqual([pos.x, pos.y], [238, 134]);
+  assert.ok(hb.h < h0.h - 30, `smaller at the back: ${hb.h} vs ${h0.h}`);
+  assert.ok(heights.size >= 3, `he shrank on the way (${[...heights].join(',')})`);
+  await ctx.close();
+});

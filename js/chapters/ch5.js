@@ -2,25 +2,27 @@
 // js/screens/chapter.js plays it, the wall display is js/chapters/ch5-wall.js. Every word is a script key.
 // Positions are brief 08's, checked against the built 320×200 files; areas { x0, x1, y0, y1 } are inclusive.
 
-import { HERO_W } from '../engine/hero.js';
-import { SCENE_W } from '../engine/room.js';
 import { WALL } from './ch5-wall.js';
 
 export const MANIFEST = 'assets/rooms/ch5.json';
 
 export const ROOM = {
   image: 'R5_loft',
-  floorY: 192,
-  walk: [0, SCENE_W - HERO_W],
-  start: 136,
-  heroScale: 1,
+  // the floor (brief 11): the middle of the atrium from x 115 to x 232 (the coffee table and the couch are not
+  // floor), from the back at y 128 to the front, and a way through to the pinball machine at the back right; two
+  // anchors, 130 px at y 195 (the man on the couch) and 76 px at y 127 (the backglass just over his head), put the
+  // horizon at about y 31. The couch's left arm is a front: he stands behind it at the pinball machine.
+  floor: [[115, 128], [248, 128], [248, 138], [232, 138], [232, 199], [115, 199]],
+  anchors: [{ y: 195, h: 130 }, { y: 127, h: 76 }],
+  fronts: [{ poly: [[232, 118], [251, 118], [251, 162], [232, 162]], baseY: 160 }],
+  start: { x: 164, y: 196 },           // the monitor spans the floor's whole width: nowhere is clear of it
   // the atrium: the "wall" is a big monitor on a stand, the computer a laptop on a coffee table, the persona on the
   // couch; the pinball machine's backglass is Look only, kept clear of his head
   hotspots: [
     { id: 'wall', rect: { x: 115, y: 24, w: 90, h: 104 }, walk: false, look: 'ch5.look.wall', use: { scene: 'wall' } },
-    { id: 'pc', rect: { x: 0, y: 128, w: 118, h: 68 }, standX: 104, look: 'ch5.look.pc', use: { scene: 'pc' } },
-    { id: 'pinball', rect: { x: 250, y: 42, w: 68, h: 40 }, walk: false, look: 'ch5.look.pinball' },
-    { id: 'npc', rect: { x: 232, y: 85, w: 88, h: 113 }, standX: 176, look: 'ch5.look.npc', use: { action: 'persona' } },
+    { id: 'pc', rect: { x: 0, y: 128, w: 118, h: 68 }, stand: { x: 130, y: 186 }, look: 'ch5.look.pc', use: { scene: 'pc' } },
+    { id: 'pinball', rect: { x: 250, y: 42, w: 68, h: 40 }, stand: { x: 238, y: 134 }, look: 'ch5.look.pinball' },
+    { id: 'npc', rect: { x: 232, y: 85, w: 88, h: 113 }, stand: { x: 180, y: 190 }, look: 'ch5.look.npc', use: { action: 'persona' } },
   ],
 };
 

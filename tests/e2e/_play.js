@@ -32,7 +32,7 @@ export async function pickScenario(page, n = 1) {
   await page.click(`.menu-row[data-ch="${n}"]`);
   await page.waitForFunction(() => document.body.dataset.screen === 'CHAPTER' && window.__oq.chapter?.state === 'card');
 }
-export const ch = (page) => page.evaluate(() => { const c = window.__oq.chapter; return { state: c.state, mode: c.mode, x: c.x, walking: c.walking, window: c.window, tool: c.tool, busy: c.busy }; });
+export const ch = (page) => page.evaluate(() => { const c = window.__oq.chapter; return { state: c.state, mode: c.mode, x: c.x, y: c.y, walking: c.walking, window: c.window, tool: c.tool, busy: c.busy }; });
 export const run = (page) => page.evaluate(() => window.__oq.run);
 export const winOpen = (page) => page.waitForFunction(() => !!window.__oq.chapter.window, null, { timeout: 9000 });
 

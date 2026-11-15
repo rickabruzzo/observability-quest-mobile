@@ -229,7 +229,7 @@ test('Cave Logs only, then the CTO: Get Honeycomb → "show me" → the investig
   await pcPick(page, 'vitals');
   assert.equal(await dismiss(page), SCRIPT['ch1.pc.vitals.old']);
   await leavePc(page);
-  assert.equal((await ch(page)).x, 73, 'the hero stands at the PC');
+  assert.deepEqual([(await ch(page)).x, (await ch(page)).y], [101, 188], 'the hero stands at the PC\'s stand point');
   await askCto(page);
   await page.click('#decide-hc');
   assert.equal(await dismiss(page), shown('ch1.decide.hc.show'));
@@ -430,7 +430,7 @@ test('reduced motion: no walking, a still monitor and CTO, instant text, the sam
   await pcPick(page, 'hc'); await solveHc(page); await inState(page, 'pc');
   await deployAndRecover(page); await inState(page, 'pc');
   await leavePc(page);
-  assert.notEqual(x0, 73); assert.equal((await ch(page)).x, 73);
+  assert.notEqual(x0, 101); assert.equal((await ch(page)).x, 101);
   await askCto(page);
   assert.equal((await ch(page)).walking, false);
   await page.click('#decide-hc');
@@ -486,7 +486,7 @@ for (const [w, h] of PHONES) {
     const k = m.scene.w / 320;
     assert.ok(m.box.x + m.box.w <= PATCH.x * k + 0.5, `clear of the CTO: window right ${m.box.x + m.box.w} vs patch ${PATCH.x * k}`);
     // the hero stands at her desk, his head under the top of the scene: the window ends above his shoulders
-    const shoulders = (CH1.room.floorY - HERO_H + TOP + 40) * k;
+    const hb = await page.evaluate(() => window.__oq.chapter.heroBox), shoulders = (hb.y + (TOP + 40) * hb.scale) * k;   // his shoulders, at his depth
     assert.ok(m.box.y + m.box.h <= shoulders + 0.5, `window bottom ${m.box.y + m.box.h} vs the hero's shoulders ${shoulders}`);
     // she keeps talking in the room while her line is up (not reduced motion)
     const frames = new Set();

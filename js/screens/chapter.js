@@ -7,12 +7,12 @@
 
 import { SCRIPT } from '../script.js';
 import { CHAPTERS } from '../chapters/index.js';
-import { drawHero, HERO_H } from '../engine/hero.js';
+import { drawHero, HERO_H, HERO_W } from '../engine/hero.js';
 import { drawHeroSide, SIDE_FOOT_DY } from '../engine/hero-side.js';
 import { planWalk, stepWalk } from '../engine/walk.js';
 import { colButton } from '../engine/ui.js';
 import { drawIcon, applyCursor, MARKER_MS } from '../engine/cursor.js';
-import { hotspotAt, walkTarget } from '../engine/room.js';
+import { hotspotAt, nearestFloorPoint, heroScaleAt, frontsOver } from '../engine/room.js';
 import { createWindows } from '../engine/window.js';
 import { personaLine, speakerOf, talkWindow } from '../engine/conversation.js';
 import { load as loadSprites } from '../anim/sprites.js';
@@ -51,7 +51,7 @@ export function createChapterScreen(game) {
   let ch, room, hero, run, wins, token = null, scen, art = null, hcArt = null, loading = null, recovering = null;
   let persona = null, gctx = null;             // who speaks from the close-up; the game ctx, for the scene's scale
   let state = 'card', mode = 'use', busy = false, pcardClose = null, card = null;
-  let x = 0, pose = 'idle', view = 'front', flip = false, plan = null, elapsed = 0, walkMs = 0, pending = null, marker = null, cursor = null;
+  let x = 0, y = 0, pose = 'idle', view = 'front', flip = false, plan = null, elapsed = 0, walkMs = 0, pending = null, marker = null, cursor = null;   // x, y: his feet's centre
   let tools = {}, introShown = new Set(), toolName = null, toolFrom = null, toolEl = null, reveal = null, portrait = null, portraitCentre = null;
   let wallT = 0, wallAll = 0, nudges = [], talkT = 0, personaQuiet = false, personaTalking = false, won = false, lastDraw = '';
   let sceneEl = null, pcView = 'menu', wallFrame = null, wallWordsCache = null;
@@ -83,10 +83,22 @@ export function createChapterScreen(game) {
     painter().room(g, wall(ctx));
     g.restore();
     if (frame && patch && img(frame)) g.drawImage(img(frame), patch.x, patch.y);
-    const hs = room.heroScale ?? 1, heroY = room.floorY - Math.round(HERO_H * hs);     // feet on the floor line at any scale
-    if (view === 'side') drawHeroSide(g, hero, pose, x, heroY + SIDE_FOOT_DY, hs, { flip });
-    else drawHero(g, hero, pose, x, heroY, hs, { flip });
+    // the hero at his depth: his scale follows his feet's y (brief 11); then whatever he stands behind is redrawn over him
+    const b = heroBox();
+    if (view === 'side') drawHeroSide(g, hero, pose, b.x, b.y + SIDE_FOOT_DY, b.scale, { flip });
+    else drawHero(g, hero, pose, b.x, b.y, b.scale, { flip });
+    const plate = img(room.image);
+    if (plate) for (const f of frontsOver(room, y)) {
+      g.save(); g.beginPath();
+      f.poly.forEach(([px, py], i) => (i ? g.lineTo(px, py) : g.moveTo(px, py)));
+      g.closePath(); g.clip(); g.drawImage(plate, 0, 0); g.restore();
+    }
     if (marker) drawIcon(g, marker.icon, marker.x, marker.y);
+  }
+  /** Where the sprite goes for feet at (x, y): its scale, left edge and top. */
+  function heroBox() {
+    const scale = heroScaleAt(room, y), w = Math.round(HERO_W * scale), h = Math.round(HERO_H * scale);
+    return { x: Math.round(x - w / 2), y: y - h, w, h, scale };
   }
   function paintWall(ctx) {
     const g = ctx.ctx2d, s = wall(ctx);
@@ -276,7 +288,7 @@ export function createChapterScreen(game) {
     state = 'room'; run.phase('room'); busy = false;
     clearScene();
     ctx.overlay.innerHTML = '';
-    if (at !== null) { x = at; pose = 'idle'; view = 'front'; plan = null; }
+    if (at !== null) { x = at.x; y = at.y; pose = 'idle'; view = 'front'; plan = null; }
     mode = 'use'; setIcons(ctx, true);
     paint(ctx);
     if (first) await line(ch.enter);
@@ -285,10 +297,12 @@ export function createChapterScreen(game) {
   function finishWalk() { if (walkMs || plan) run.walk(walkMs); walkMs = 0; }
   function stopWalk() { if (plan) { finishWalk(); plan = null; pose = 'idle'; view = 'front'; } pending = null; }
 
-  function walkTo(ctx, tx) {
+  /** Walks to a floor point (a tap brought onto the floor, or a thing's stand point). Reduced motion: he is simply there. */
+  function walkTo(ctx, to) {
     if (plan) finishWalk();
-    if (ctx.reducedMotion) { if (tx !== x) { flip = tx < x; run.walk(0); } x = tx; pose = 'idle'; view = 'front'; plan = null; return; }
-    plan = planWalk(x, tx); elapsed = 0; walkMs = 0;
+    const target = nearestFloorPoint(room, to);
+    if (ctx.reducedMotion) { if (target.x !== x || target.y !== y) { flip = target.x < x; run.walk(0); } x = target.x; y = target.y; pose = 'idle'; view = 'front'; plan = null; return; }
+    plan = planWalk({ x, y }, target, room); elapsed = 0; walkMs = 0;
     if (plan.duration === 0) { plan = null; return; }
     flip = plan.dir < 0;
   }
@@ -324,7 +338,7 @@ export function createChapterScreen(game) {
     }
     if (spot && spot.walk === false) { stopWalk(); paint(ctx); act(ctx, spot); return; }
     pending = spot;
-    walkTo(ctx, spot ? spot.standX : walkTarget(room, tx));
+    walkTo(ctx, spot ? spot.stand : { x: tx, y: ty });
     if (!plan && pending) { const s = pending; pending = null; act(ctx, s); }
     paint(ctx);
   }
@@ -413,7 +427,7 @@ export function createChapterScreen(game) {
       case 'deploy': if (canDeploy(scen)) deployFix(ctx, pcView === 'deploy' ? 'win' : 'pc'); return;
       case 'leave':
         if (!canLeave(scen)) { line(p.locked); return; }          // never greyed: the line is the joke
-        if (await line(p.leave)) enterRoom(ctx, { at: room.hotspots.find((h) => h.use?.scene === 'pc').standX });
+        if (await line(p.leave)) enterRoom(ctx, { at: room.hotspots.find((h) => h.use?.scene === 'pc').stand });
         return;
       default: line(item.key);
     }
@@ -634,7 +648,7 @@ export function createChapterScreen(game) {
       ch = CHAPTERS[ctx.chapterId] || CHAPTERS[1];
       room = ch.room; hero = ctx.hero;
       token = {};
-      x = room.start; pose = 'idle'; view = 'front'; flip = false; plan = null; elapsed = 0; walkMs = 0; pending = null; marker = null; cursor = null;
+      x = room.start.x; y = room.start.y; pose = 'idle'; view = 'front'; flip = false; plan = null; elapsed = 0; walkMs = 0; pending = null; marker = null; cursor = null;
       mode = 'use'; busy = false; tools = {}; introShown = new Set(); toolName = null; toolFrom = null; toolEl = null; reveal = null; portrait = null; portraitCentre = null; card = null;
       scen = createScenario(); wallT = 0; wallAll = 0; nudges = []; talkT = 0; personaQuiet = false; personaTalking = false; won = false; lastDraw = ''; sceneEl = null; wallFrame = null;
       wallWordsCache = wallWords(ch.wall.text);
@@ -670,7 +684,9 @@ export function createChapterScreen(game) {
       box.addEventListener('pointermove', onMove);
       showCard(ctx);
       window.__oq && (window.__oq.chapter = {
-        get state() { return state; }, get mode() { return mode; }, get x() { return x; }, get walking() { return plan !== null; },
+        get state() { return state; }, get mode() { return mode; }, get x() { return x; }, get y() { return y; }, get walking() { return plan !== null; },
+        /** The sprite's box on the scene and its scale, from his feet's position. */
+        get heroBox() { return heroBox(); },
         get view() { return view; }, get busy() { return busy; }, get pcView() { return pcView; },
         get loaded() { return art !== null; }, get screensLoaded() { return hcArt !== null; },
         get window() { return wins.open ? { id: wins.serial, text: wins.element.dataset.text, pages: wins.pages, page: wins.page } : null; },
@@ -692,7 +708,7 @@ export function createChapterScreen(game) {
       if (plan) {
         elapsed += dt; walkMs += dt;
         const s = stepWalk(plan, elapsed);
-        x = s.x; pose = s.pose; view = s.view; flip = s.flip; dirty = true;
+        x = s.x; y = s.y; pose = s.pose; view = s.view; flip = s.flip; dirty = true;
         if (s.done) { plan = null; finishWalk(); if (pending) { const p = pending; pending = null; act(ctx, p); } }
       } else if (marker) dirty = true;
       if (reveal) { reveal.t += dt; dirty = true; if (reveal.t >= REVEAL_MS) { const d = reveal.done; reveal.t = REVEAL_MS; d(); } }
