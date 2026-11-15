@@ -3,6 +3,7 @@
 // Positions are brief 08's, checked against the built 320×200 files; areas { x0, x1, y0, y1 } are inclusive.
 
 import { WALL } from './ch4-wall.js';
+import { drawText, textWidth } from '../intro/font5x7.js';
 
 export const MANIFEST = 'assets/rooms/ch4.json';
 
@@ -81,11 +82,62 @@ export const PC = {
 
 export const TOOL_PIC = { x: 4, y: 20, w: 188, h: 176 };
 
-/** Page Einar: a phone screen with one contact and a ringing mark. */
-function paintOld(g) {
-  const P = TOOL_PIC;
+export const PHONE = {                   // on R4_phone_closeup (the plate's coordinates are the canvas's), brief 14 E
+  plate: 'R4_phone_closeup',
+  screen: { x0: 63, x1: 132, y0: 35, y1: 180 },
+  nameBar: { x0: 67, x1: 128, y0: 99, y1: 108 },
+  lineBar: { x0: 67, x1: 128, y0: 113, y1: 122 },
+  button: { cx: 97, cy: 160 },
+  ink: '#2B2F36', ring: '#25B03A', blink: '#D6F5DC',
+  ringFrom: 12, ringTo: 20, ringEvery: 600, ringMs: 1200, ringStill: 14,
+};
+
+/** Page Einar: the plate's phone in the tool's picture box, his name and his state on its bars in the 5×7 font, and it
+ * rings: two 1-px rings growing out from the call button and fading in three steps, one starting every 600 ms, the
+ * name's bar blinking pale green in time. Reduced motion: one still ring. Without the plate, the old rectangles. */
+function paintOld(g, { art, t = 0, reduced = false, text = (k) => k } = {}) {
+  const P = TOOL_PIC, plate = art?.image(PHONE.plate);
   g.fillStyle = '#000'; g.fillRect(0, 0, 320, 200);
   g.fillStyle = '#2A3346'; g.fillRect(P.x - 2, P.y - 2, P.w + 4, P.h + 4);
+  if (!plate) { paintOldFallback(g); return; }
+  g.save(); g.beginPath(); g.rect(P.x, P.y, P.w, P.h); g.clip();
+  g.drawImage(plate, P.x, P.y, P.w, P.h, P.x, P.y, P.w, P.h);
+  const on = !reduced && (t % PHONE.ringEvery) < PHONE.ringEvery / 2;
+  if (on) { const b = PHONE.nameBar; g.fillStyle = PHONE.blink; g.fillRect(b.x0, b.y0, b.x1 - b.x0 + 1, b.y1 - b.y0 + 1); }
+  barText(g, text('ch4.old.phone.name'), PHONE.nameBar);
+  barText(g, text('ch4.old.phone.line'), PHONE.lineBar);
+  for (const r of phoneRings(t, reduced)) ring(g, PHONE.button.cx, PHONE.button.cy, r.r, r.alpha);
+  g.restore();
+}
+/** The rings round the call button now: { r, alpha } each. Two of them, 600 ms apart, each growing from 12 to 20 px over
+ * 1200 ms and fading in three steps. Reduced motion: one, at 14, still. */
+export function phoneRings(t, reduced = false) {
+  if (reduced) return [{ r: PHONE.ringStill, alpha: 1 }];
+  const out = [];
+  for (let k = 0; k < 2; k++) {
+    const age = (((t + k * PHONE.ringEvery) % PHONE.ringMs) + PHONE.ringMs) % PHONE.ringMs;
+    const f = age / PHONE.ringMs;
+    out.push({ r: PHONE.ringFrom + (PHONE.ringTo - PHONE.ringFrom) * f, alpha: f < 1 / 3 ? 1 : f < 2 / 3 ? 0.66 : 0.33 });
+  }
+  return out;
+}
+/** Where a word goes, centred in its bar, in the 5×7 font at scale 1: its left and top. */
+export function barTextAt(word, bar) {
+  return { x: Math.round((bar.x0 + bar.x1 + 1 - textWidth(word)) / 2), y: Math.round((bar.y0 + bar.y1 + 1 - 7) / 2) };
+}
+function barText(g, word, bar) { const { x, y } = barTextAt(word, bar); drawText(g, word, x, y, 1, PHONE.ink); }
+function ring(g, cx, cy, r, alpha) {
+  g.save(); g.globalAlpha = alpha; g.fillStyle = PHONE.ring;
+  const n = Math.ceil(2 * Math.PI * r * 1.5), seen = new Set();
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2, x = Math.round(cx + Math.cos(a) * r), y = Math.round(cy + Math.sin(a) * r), k = x * 1000 + y;
+    if (!seen.has(k)) { seen.add(k); g.fillRect(x, y, 1, 1); }
+  }
+  g.restore();
+}
+/** The phone from rectangles, as it was: for a plate that did not load. */
+function paintOldFallback(g) {
+  const P = TOOL_PIC;
   g.fillStyle = '#0A120A'; g.fillRect(P.x, P.y, P.w, P.h);
   const px = P.x + Math.round(P.w / 2) - 34, py = P.y + 14, pw = 68, ph = P.h - 28;        // the phone
   g.fillStyle = '#1A1C22'; g.fillRect(px - 4, py - 6, pw + 8, ph + 12);

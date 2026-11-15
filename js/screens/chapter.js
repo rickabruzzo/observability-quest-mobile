@@ -46,6 +46,29 @@ const inArea = (a, x, y) => x >= a.x0 && x <= a.x1 && y >= a.y0 && y <= a.y1;
 const wallWords = (text) => Object.fromEntries(Object.entries(text || {}).map(([k, v]) => [k, Array.isArray(v) ? v.map(say) : say(v)]));
 
 let cardsManifest = null;                    // assets/cards/cards.json, fetched once: which card has painted frames
+const MARKS = 'assets/marks/';               // the old tools' marks (brief 14 G): 128-px pictures for the page, never the canvas
+
+/**
+ * What a painter may draw from a loaded manifest (brief 14 A): `image(name)` is the loaded picture or undefined;
+ * `draw(g, spriteName, x, y, { flip })` puts that sprite's box from the sheet with its top-left at (x, y), mirrored about
+ * its own centre when `flip`. Nothing loaded, or no such sprite: it draws nothing and does not throw.
+ * @param {{ manifest: object, images: Map<string, CanvasImageSource> } | null} loaded
+ */
+export function makeArt(loaded) {
+  const image = (name) => loaded?.images.get(name);
+  return {
+    image,
+    sprite: (name) => loaded?.manifest?.sprites?.[name] ?? null,
+    draw(g, name, x, y, { flip = false } = {}) {
+      const sp = loaded?.manifest?.sprites?.[name], im = sp && image(sp.image);
+      if (!im) return;
+      try {
+        if (!flip) { g.drawImage(im, sp.x, sp.y, sp.w, sp.h, x, y, sp.w, sp.h); return; }
+        g.save(); g.translate(x + sp.w, y); g.scale(-1, 1); g.drawImage(im, sp.x, sp.y, sp.w, sp.h, 0, 0, sp.w, sp.h); g.restore();
+      } catch { /* a picture that will not draw: nothing */ }
+    },
+  };
+}
 
 export function createChapterScreen(game) {
   let ch, room, hero, run, wins, token = null, scen, art = null, hcArt = null, loading = null, recovering = null;
@@ -54,11 +77,12 @@ export function createChapterScreen(game) {
   let x = 0, y = 0, pose = 'idle', view = 'front', flip = false, plan = null, elapsed = 0, walkMs = 0, pending = null, marker = null, cursor = null;   // x, y: his feet's centre
   let tools = {}, introShown = new Set(), toolName = null, toolFrom = null, toolEl = null, reveal = null, portrait = null, portraitCentre = null;
   let wallT = 0, wallAll = 0, nudges = [], talkT = 0, personaQuiet = false, personaTalking = false, won = false, lastDraw = '';
-  let sceneEl = null, pcView = 'menu', wallFrame = null, wallWordsCache = null;
+  let sceneEl = null, pcView = 'menu', wallFrame = null, wallLayout = null, wallWordsCache = null;
+  let artApi = makeArt(null), toolT = 0, toolFrame = '', mark = null;     // the painters' art; how long the tool screen has been open; the old tool's mark
   let icons = [], back = null, onDown = null, onMove = null, onTapCount = null;
 
   // ---- the wall display's state, shared by the room and the close-up ----
-  const wall = (ctx) => ({ state: wallState(scen), t: wallT, tAll: wallAll, reduced: !!ctx.reducedMotion, nudges, text: wallWordsCache, cfg: ch.wall });
+  const wall = (ctx) => ({ state: wallState(scen), t: wallT, tAll: wallAll, reduced: !!ctx.reducedMotion, nudges, text: wallWordsCache, cfg: ch.wall, art: artApi });
   const painter = () => ch.wall.painter;
 
   // ---- drawing ----
@@ -89,7 +113,7 @@ export function createChapterScreen(game) {
     // the hero at his depth: his scale follows his feet's y (brief 11); then whatever he stands behind is redrawn over him
     const b = heroBox();
     if (view === 'side') drawHeroSide(g, hero, pose, b.x, b.y + SIDE_FOOT_DY, b.scale, { flip });
-    else drawHero(g, hero, pose, b.x, b.y, b.scale, { flip });
+    else drawHero(g, hero, pose, b.x, b.y, b.scale, { flip: false });     // the front view is never mirrored: the Honeycomb mark on his chest stays the right way round (brief 14 F)
     const plate = img(room.image);
     if (plate) for (const f of frontsOver(room, y)) {
       g.save(); g.beginPath();
@@ -111,21 +135,27 @@ export function createChapterScreen(game) {
   }
   function paintTool(ctx, p = 1) {
     const def = ch.tools[toolName];
-    if (def.kind === 'hc') paintHc(ctx.ctx2d, tools.hc.step, p, hcArt, ctx.reducedMotion); else def.paint(ctx.ctx2d);
+    if (def.kind === 'hc') paintHc(ctx.ctx2d, tools.hc.step, p, hcArt, ctx.reducedMotion); else def.paint(ctx.ctx2d, { art: artApi, t: toolT, reduced: !!ctx.reducedMotion, text: say });
   }
   /** The narrator's portrait for a phone on its side (brief 12): on the left, its bottom on the scene's bottom edge,
    * cropped round the figure; the words go in one window on the right. */
   function verdictLayout() {
-    if (!(portrait?.complete && portrait.naturalWidth)) return portraitLayout(640, 428, 320);
+    if (!(portrait?.complete && portrait.naturalWidth)) return fullWidth(portraitLayout(640, 428, 320), 640);
     if (portraitCentre === null) { try { portraitCentre = figureCentre(portrait); } catch { portraitCentre = portrait.naturalWidth / 2; } }
-    return portraitLayout(portrait.naturalWidth, portrait.naturalHeight, portraitCentre);
+    return fullWidth(portraitLayout(portrait.naturalWidth, portrait.naturalHeight, portraitCentre), portrait.naturalWidth);
+  }
+  /** The crop keeps its left edge (the face centred in the left 45 %) but the picture is drawn through to its own right
+   * edge (brief 14 F): no shoulder cut in a straight line. `fullSw`/`fullDw` are the source and drawn widths to that edge. */
+  function fullWidth(L, w) {
+    const fullSw = w - L.sx;
+    return { ...L, fullSw, fullDw: Math.round(fullSw * (L.dh / L.sh)) };
   }
   function paintPortrait(ctx) {
     const g = ctx.ctx2d;
     g.fillStyle = '#000'; g.fillRect(0, 0, 320, 200);
     if (!(portrait?.complete && portrait.naturalWidth)) return;
     const L = verdictLayout();
-    g.drawImage(portrait, L.sx, L.sy, L.sw, L.sh, L.dx, L.dy, L.dw, L.dh);
+    g.drawImage(portrait, L.sx, L.sy, L.fullSw, L.sh, L.dx, L.dy, L.fullDw, L.dh);
   }
   function paint(ctx) {
     if (state === 'tool') paintTool(ctx, reveal ? Math.min(1, reveal.t / REVEAL_MS) : 1);
@@ -173,7 +203,7 @@ export function createChapterScreen(game) {
     if (!cardsManifest) fetch(CARDS_MANIFEST).then((r) => (r.ok ? r.json() : null)).then((m) => { if (m) cardsManifest = m; }).catch(() => {});
   }
   function clearScene() {
-    sceneEl?.remove(); sceneEl = null; toolEl?.remove(); toolEl = null; wallFrame = null;
+    sceneEl?.remove(); sceneEl = null; toolEl?.remove(); toolEl = null; wallFrame = null; wallLayout = null;
     back?.remove(); back = null;
   }
 
@@ -358,9 +388,12 @@ export function createChapterScreen(game) {
   function renderWallText(s, build = false) {
     if (!sceneEl || (state !== 'wall' && state !== 'recover')) return;
     const boxes = painter().text(s);
-    if (build || sceneEl.childElementCount !== boxes.length) {
+    // the boxes are laid out again when one changes its place or its class, not only their number (room 3's header is the
+    // shop's name while a customer browses and the progress bar once they order: brief 14)
+    const layout = boxes.map((b) => `${b.id}|${b.cls ?? ''}|${b.wrap ? 1 : 0}|${b.area.x0},${b.area.x1},${b.area.y0},${b.area.y1}`).join(';');
+    if (build || sceneEl.childElementCount !== boxes.length || layout !== wallLayout) {
       sceneEl.innerHTML = boxes.map((b, i) => `<div class="wall-box ${b.cls ?? ''}${b.wrap ? ' wrap' : ''}" data-box="${i}" data-id="${b.id}" style="${place(b.area)}">${b.lines.map(() => '<span class="fit"></span>').join('')}${b.cursor !== undefined ? '<span class="mon-cursor"></span>' : ''}</div>`).join('');
-      wallFrame = null;
+      wallFrame = null; wallLayout = layout;
     }
     const key = JSON.stringify(boxes) + painter().tone?.(s);
     if (key === wallFrame) return;
@@ -416,7 +449,11 @@ export function createChapterScreen(game) {
     else if (v === 'deploy') items = [deploy];                     // "show me": the one prompt, on the spot
     else if (canDeploy(scen)) items = [...items.slice(0, -1), deploy, items[items.length - 1]];   // before Leave
     grid.innerHTML = items.map((it) => `<button type="button" class="pc-item" data-id="${it.id}">${esc(say(it.key))}</button>`).join('');
-    grid.querySelectorAll('.pc-item').forEach((b) => b.addEventListener('click', () => pcPick(ctx, items.find((it) => it.id === b.dataset.id))));
+    grid.querySelectorAll('.pc-item').forEach((b) => {
+      const it = items.find((i) => i.id === b.dataset.id);
+      if (it.action === 'tool' && ch.tools[it.tool]?.kind === 'old') { const im = markImg('pc-mark'); if (im) b.prepend(im); }   // the old tool wears its mark (brief 14 G)
+      b.addEventListener('click', () => pcPick(ctx, it));
+    });
   }
   async function pcPick(ctx, item) {
     if (state !== 'pc' || wins.open || busy || !item) return;
@@ -435,6 +472,25 @@ export function createChapterScreen(game) {
     }
   }
 
+  // ---- the old tool's mark (brief 14 G): loaded with the chapter's art; one that fails leaves the words alone ----
+  function loadMark() {
+    const name = ch.tools.old?.mark;
+    mark = null;
+    if (!name) return;
+    const me = { src: `${MARKS}${name}.png`, failed: false, img: new Image() };
+    me.img.onerror = () => { me.failed = true; };
+    me.img.src = me.src;
+    mark = me;
+  }
+  /** A fresh `<img alt="">` of the mark for the page, or null when there is none or it failed; one that fails later removes itself. */
+  function markImg(cls) {
+    if (!mark || mark.failed) return null;
+    const im = document.createElement('img');
+    im.className = cls; im.alt = ''; im.decoding = 'async'; im.src = mark.src;
+    im.addEventListener('error', () => { mark.failed = true; im.remove(); });
+    return im;
+  }
+
   // ---- tool screens ----
   async function openTool(ctx, name, from) {
     state = 'tool'; toolName = name; toolFrom = from; busy = false;
@@ -446,8 +502,10 @@ export function createChapterScreen(game) {
     ctx.overlay.innerHTML = '';
     toolEl = document.createElement('div');
     toolEl.className = `tool ${def.kind}`; toolEl.id = `tool-${name}`;
-    toolEl.innerHTML = `<div class="tool-title">${esc(say(def.title))}</div><div class="tool-prompts" hidden></div>`;
+    toolEl.innerHTML = `<div class="tool-title"><span class="tool-title-text">${esc(say(def.title))}</span></div><div class="tool-prompts" hidden></div>`;
+    if (def.kind === 'old') { const im = markImg('tool-mark'); if (im) toolEl.querySelector('.tool-title').prepend(im); }
     ctx.overlay.appendChild(toolEl);
+    toolT = 0; toolFrame = '';
     paint(ctx);
     if (!introShown.has(name) && !tools[name].done) {
       introShown.add(name);
@@ -658,7 +716,8 @@ export function createChapterScreen(game) {
       gctx = ctx; loadPersona();
       // the room's and the Honeycomb screen's pictures load while the card is read; either may fail and play on
       const want = (url, set) => loadManifest(url, { timeout: LOAD_WAIT_MS }).then(set, () => {});
-      loading = Promise.all([want(ch.manifest, (a) => { art = a; }), want(ch.tools.hc.screens, (a) => { hcArt = a; })]);
+      artApi = makeArt(null); toolT = 0; toolFrame = ''; loadMark();
+      loading = Promise.all([want(ch.manifest, (a) => { art = a; artApi = makeArt(a); }), want(ch.tools.hc.screens, (a) => { hcArt = a; })]);
       run = createRunlog({ chapter: ch.id });
       for (const [reason, on] of Object.entries(ctx.holds || {})) if (on) run.hold(reason, true);
       ctx.runlog = run;
@@ -699,6 +758,8 @@ export function createChapterScreen(game) {
         get personaFrame() { return personaNow(ctx); },
         get won() { return won; },
         get verdictLayout() { return state === 'verdict' ? verdictLayout() : null; },
+        get toolT() { return toolT; },
+        get mark() { return mark ? { src: mark.src, failed: mark.failed } : null; },
         hotspot(id) { return room.hotspots.find((h) => h.id === id); },
       });
     },
@@ -718,6 +779,10 @@ export function createChapterScreen(game) {
         if (painter().recovered(wall(ctx)) && (recovering.hold += dt) >= RECOVER_HOLD_MS) recovering.done();
       }
       if (card) { card.t += dt; drawCard(); }
+      if (state === 'tool') {                                      // an old tool may move (room 4's phone rings): redraw on its own clock
+        toolT += dt;
+        if (ch.tools[toolName]?.kind === 'old' && !ctx.reducedMotion) { const k = String(Math.floor(toolT / 100)); if (k !== toolFrame) { toolFrame = k; dirty = true; } }
+      }
       // the wall display and the persona move on their own: redraw when either has a new frame
       if (['room', 'decide', 'ending', 'wall', 'recover', 'pcard'].includes(state)) {
         const key = `${painter().frameKey(wall(ctx))}:${personaNow(ctx)}`;

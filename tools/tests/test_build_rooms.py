@@ -138,7 +138,7 @@ def test_every_room_and_card_in_the_drops_is_listed_with_its_source():
         r = br.ROOMS[ch]
         for n in list(r['plates']) + list(r['edits']):
             assert os.path.exists(os.path.join(br.ROOT, r['src'], n + '.png')), n
-        assert len(r['plates']) == (4 if ch == 'ch2' else 3) and set(r['edits'].values()) == {r['plates'][0]}   # room 2: a second wall close-up
+        assert len(r['plates']) == (2 if ch == 'ch2' else 3) and set(r['edits'].values()) == {r['plates'][0]}   # room 2's wall close-ups are the feedback drop's boards (extra)
     assert sorted(br.CARDS) == ['P1', 'P2', 'P3', 'P4', 'P5']
     for f in br.CARDS.values(): assert os.path.exists(os.path.join(br.ROOT, f)), f
     assert sorted(br.CARD_FRAMES) == ['P1', 'P2', 'P3', 'P5']                        # P4's phone is animated in code
@@ -147,7 +147,7 @@ def test_every_room_and_card_in_the_drops_is_listed_with_its_source():
         for f in fs: assert os.path.exists(os.path.join(br.ROOT, f)), f
     for ch in ('ch2', 'ch3', 'ch4', 'ch5'):                                          # every drop room has a win frame
         r = br.ROOMS[ch]; assert r.get('exact') is True and any(n.endswith('_npc_win') for n in r['edits']), ch
-    assert 'R2_wall_closeup_fixed' in br.ROOMS['ch2']['plates'] and 'crops' not in br.ROOMS['ch5']
+    assert not any('wall_closeup' in n for n in br.ROOMS['ch2']['plates']) and 'crops' not in br.ROOMS['ch5']     # the board with the taped sheet is retired (2026-11-15)
 
 
 # ---- art that is not part of a room's own drop: extra plates and sprite sheets (art brief 04, 2026-11-14) ----
@@ -268,7 +268,8 @@ def test_the_built_rooms_hold_the_feedback_art_at_game_size():
     m2, m3, m4 = (json.load(open(os.path.join(rooms, f'ch{n}.json'))) for n in (2, 3, 4))
     for m, n in ((m2, 'R2_board'), (m2, 'R2_board_wiped'), (m4, 'R4_phone_closeup')):
         assert Image.open(os.path.join(rooms, m['images'][n])).size == (320, 200), n
-    assert 'R2_wall_closeup' in m2['images']                               # the old board stays until the game stops using it
+    for old in ('R2_wall_closeup', 'R2_wall_closeup_fixed'):                # the board with the taped sheet: retired once the game stopped using it
+        assert old not in m2['images'] and not os.path.exists(os.path.join(rooms, old + '.png')), old
     big = [m3['sprites'][f'product_{n}'] for n in ('ukulele', 'banjo', 'acoustic', 'bass', 'southpaw')]
     small = [m3['sprites'][f'product_{n}_small'] for n in ('ukulele', 'banjo', 'acoustic', 'bass', 'southpaw')]
     assert {(s['w'], s['h']) for s in big} == {(112, 72)} and {(s['w'], s['h']) for s in small} == {(57, 37)}

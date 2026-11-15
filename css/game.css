@@ -153,6 +153,11 @@ html[data-swipe="1"] body { min-height: calc(100vh + 80px); }
 .tool { position: absolute; inset: 0; }
 .tool-title { position: absolute; left: 0; right: 0; top: 0; height: 9%; min-height: 24px; display: flex; align-items: center; justify-content: center; background: var(--bar); color: #000; font-size: 22px; line-height: 1; letter-spacing: 1px; }
 .tool.old .tool-title { background: #0A120A; color: #3CC83C; border-bottom: 2px solid #3CC83C; }
+/* the old tool's mark (brief 14 G): a 128-px picture shown small beside the words, 80 % of the bar tall, a gap of a third of its width */
+.tool-mark { height: 80%; width: auto; aspect-ratio: 1; image-rendering: auto; margin-right: calc(max(24px, 0.09 * var(--scene-h)) * 0.8 / 3); flex: none; }
+/* on the workstation's button the mark is a line of words tall and takes no height of its own (its margins pull it back inside
+   the line): the grid has no spare height on a short phone, and a taller mark made a third line that spilled out of the button */
+.pc-mark { height: 1.1em; width: auto; aspect-ratio: 1; image-rendering: auto; vertical-align: middle; margin: -0.1em 0.3em -0.1em 0; }
 .tool-prompts { position: absolute; left: 61.5%; right: 8px; top: 11%; bottom: 8px; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
 .tool-prompts[hidden] { display: none; }
 .prompt { min-height: 44px; padding: 2px 10px; background: var(--sheet-white); color: #111; border: 2px solid #111; box-shadow: 3px 3px 0 #555; font-family: var(--font-text); font-size: 20px; line-height: 1.1; text-align: left; cursor: pointer; }
@@ -203,14 +208,21 @@ html[data-swipe="1"] body { min-height: calc(100vh + 80px); }
 .mon-cursor.off { visibility: hidden; }
 .wall-ui.ok .mon-box { color: #3CE070; }
 .wall-ui.ok .mon-out { color: #3CE070; }
-/* scenario 2's whiteboard: one theory at a time on the sheet taped to the board, in marker ink, centred */
-.wall-box.sheet { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: #2B2F36; font-size: calc(17px * var(--ui-scale, 1)); line-height: 1.1; padding: 2px; box-sizing: border-box; }
-.wall-box.sheet .fit { display: block; white-space: nowrap; transform-origin: 50% 50%; }
+/* scenario 2's whiteboard (brief 14 B): the current theory in red marker in the board's clean corner, the rest of its
+   words wrapping inside the box; after the fix the new theory in dark marker in the wiped band, above and below the path */
+.wall-box.theory { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: #C81E1E; font-size: calc(17px * var(--ui-scale, 1)); line-height: 1.05; padding: 1px; box-sizing: border-box; }
+.wall-box.theory .fit { display: block; white-space: normal; overflow-wrap: normal; }
+.wall-box.band { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: #1E2A5A; font-size: calc(24px * var(--ui-scale, 1)); line-height: 1; padding: 0 2px; box-sizing: border-box; }
+.wall-box.band .fit { display: block; white-space: nowrap; transform-origin: 50% 50%; }
 /* scenario 3's checkout page: dark ink on the pale page */
 .wall-box.page { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: #2B2F36; font-size: calc(15px * var(--ui-scale, 1)); line-height: 1.1; padding: 0 2px; box-sizing: border-box; }
 .wall-box.page.left { align-items: flex-start; text-align: left; }
 .wall-box.page .fit { display: block; white-space: nowrap; transform-origin: 50% 50%; }
 .wall-ui.ok .wall-box.page { color: #1E6B2A; }
+/* the shop's name on the header while a customer browses; the tag beside the picture: the name in ink, the price in the shop's colour */
+.wall-box.page.shop, .wall-ui.ok .wall-box.page.shop { color: #F4E9D0; font-size: calc(17px * var(--ui-scale, 1)); letter-spacing: 1px; }
+.wall-box.page.tag .fit:nth-child(2) { color: #8C3A1C; }
+.wall-ui.ok .wall-box.page.tag .fit:nth-child(2) { color: #1E6B2A; }
 /* scenario 4's chat column: the pilots' lines, newest at the bottom */
 .wall-box.chat { display: flex; flex-direction: column; justify-content: flex-end; color: #C8D0E8; font-size: calc(14px * var(--ui-scale, 1)); line-height: 1.15; padding: 2px 4px; box-sizing: border-box; }
 .wall-box.chat .fit { display: block; white-space: nowrap; transform-origin: 0 50%; }
@@ -257,6 +269,8 @@ html[data-swipe="1"] body { min-height: calc(100vh + 80px); }
 .mr-tick { display: inline-block; width: 0.35em; height: 0.7em; margin-right: 0.35em; border: solid currentColor; border-width: 0 3px 3px 0; transform: rotate(45deg) translateY(-0.12em); vertical-align: middle; }
 
 /* ---- Charity's verdict on Claim: her portrait takes over the scene (above any menu or summary) ---- */
-.charity { position: absolute; inset: 0; z-index: 3; background: #000; }
-.charity-portrait { position: absolute; left: 0; bottom: 0; width: 45%; height: 86%; object-fit: cover; object-position: 50% 0; image-rendering: pixelated; image-rendering: crisp-edges; }   /* head and shoulders on the left, the bottom on the scene's edge (brief 12) */
+.charity { position: absolute; inset: 0; z-index: 3; background: #000; overflow: hidden; }
+/* head and shoulders on the left, the bottom on the scene's edge (brief 12); the picture runs through to its own right edge and
+   the words' window sits over it (brief 14 F). js/screens/charity.js sets `left` so her face is centred in the left 45 % */
+.charity-portrait { position: absolute; left: 0; bottom: 0; width: auto; height: 86%; image-rendering: pixelated; image-rendering: crisp-edges; }
 .charity-head { position: absolute; left: 0; right: 0; top: 0; padding: 2px 8px; background: rgba(0, 0, 0, 0.7); color: var(--honey); font-family: var(--font-text); font-size: 22px; line-height: 1.1; text-align: center; letter-spacing: 1px; }

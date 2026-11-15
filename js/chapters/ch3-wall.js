@@ -1,11 +1,16 @@
-// Scenario 3's wall display: a wall TV showing the store's checkout page. The art draws the browser's title bar;
-// the game draws the page: a progress bar stuck at 13 % with a spinner, the cart (a guitar from rectangles), three
-// small boxes of jokey stats on their own timers, a sales line sliding down — and, fixed, the bar full, the stats
-// kind, the line climbing. The TV's light is the page itself: its pale background shifts between three close tints
-// at irregular intervals (Rick, 2026-11-14: no ring of light round the bezel). Shape: see ch1-wall.js.
+// Scenario 3's wall display: a wall TV showing the store's page (brief 14 C). The art draws the browser's title bar;
+// the game draws the page: a customer's visit, over and over — four products browsed (the pictures are Art Claude's,
+// on the S3_products sheet), the shop's name on the header in its colour, then the left-handed model in the cart
+// and the order that sticks at 13 % with a spinner; three small boxes of jokey stats on their own timers; a sales
+// line sliding down — and, fixed, the southpaw stays, the bar fills, the stats are kind, the line climbs. The TV's
+// light is the page itself: its pale background shifts between three close tints at irregular intervals (Rick,
+// 2026-11-14: no ring of light round the bezel). Shape: see ch1-wall.js.
 
-const INK = '#2B2F36', PALE = '#F4F7FB', BAR = '#A9CBFF', GOOD = '#2E9A3A', BAD = '#C0392B';
+const INK = '#2B2F36', BAR = '#A9CBFF', GOOD = '#2E9A3A', BAD = '#C0392B';
+export const SHOP = '#8C3A1C', SHOP_INK = '#F4E9D0';            // the shop's colour; its name on the header
 const STEP_MS = 100, RECOVER_MS = 1400;
+export const VISIT_MS = 14000, BROWSE_MS = 1100, CART_AT = 4400, STUCK_AT = 5000;
+export const PRODUCTS = ['ukulele', 'banjo', 'acoustic', 'bass'], SOUTHPAW = 'southpaw';
 
 function hash(n) {
   let x = (n | 0) ^ 0x9e3779b9;
@@ -32,24 +37,23 @@ export function pageTint(t, reduced = false) {
   return k;
 }
 const fixed = (s) => s.state === 'fixed';
-/** How full the progress bar is: stuck at 13 %, then filling once fixed. */
-const progress = (s) => (fixed(s) ? (s.reduced ? 1 : Math.min(1, 0.13 + (0.87 * s.t) / RECOVER_MS)) : 0.13);
+
+/**
+ * Where the customer's visit is at this moment (from tAll; one visit is VISIT_MS). Fixed or reduced motion: the order.
+ * @returns {{ phase: 'browse'|'cart'|'stuck'|'order', product: string, progress: number }}
+ *   phase: browsing a product, the bar running to 13 %, stuck at 13 %, or (fixed) the order going through.
+ */
+export function visit(s) {
+  if (fixed(s)) return { phase: 'order', product: SOUTHPAW, progress: s.reduced ? 1 : Math.min(1, 0.13 + (0.87 * s.t) / RECOVER_MS) };
+  if (s.reduced) return { phase: 'stuck', product: SOUTHPAW, progress: 0.13 };
+  const p = ((s.tAll % VISIT_MS) + VISIT_MS) % VISIT_MS;
+  if (p < CART_AT) return { phase: 'browse', product: PRODUCTS[Math.floor(p / BROWSE_MS)], progress: 0 };
+  if (p < STUCK_AT) return { phase: 'cart', product: SOUTHPAW, progress: (0.13 * (p - CART_AT)) / (STUCK_AT - CART_AT) };
+  return { phase: 'stuck', product: SOUTHPAW, progress: 0.13 };
+}
+const browsing = (v) => v.phase === 'browse';
 
 function rect(g, a, colour) { g.fillStyle = colour; g.fillRect(a.x0, a.y0, a.x1 - a.x0 + 1, a.y1 - a.y0 + 1); }
-function frame(g, a, colour) { g.fillStyle = colour; g.fillRect(a.x0, a.y0, a.x1 - a.x0 + 1, 1); g.fillRect(a.x0, a.y1, a.x1 - a.x0 + 1, 1); g.fillRect(a.x0, a.y0, 1, a.y1 - a.y0 + 1); g.fillRect(a.x1, a.y0, 1, a.y1 - a.y0 + 1); }
-
-/** A guitar from rectangles: body, waist, neck, head, strings. Fitted to the area, right-handed. */
-function guitar(g, a, colour, strings = true) {
-  const w = a.x1 - a.x0 + 1, h = a.y1 - a.y0 + 1, cx = a.x0 + Math.round(w * 0.4), cy = a.y0 + Math.round(h * 0.62);
-  const bw = Math.max(6, Math.round(w * 0.34)), bh = Math.max(8, Math.round(h * 0.5));
-  g.fillStyle = colour;
-  g.fillRect(cx - bw / 2, cy - bh / 2, bw, bh);                                           // lower bout
-  g.fillRect(cx - Math.round(bw * 0.38), cy - bh / 2 - Math.round(bh * 0.3), Math.round(bw * 0.76), Math.round(bh * 0.3));   // upper bout
-  const nw = Math.max(2, Math.round(h * 0.08)), nl = Math.round(w * 0.42);
-  g.fillRect(cx, cy - Math.round(nw / 2), nl, nw);                                       // the neck, to the right
-  g.fillRect(cx + nl, cy - nw, Math.max(3, Math.round(w * 0.08)), nw * 2);               // the head
-  if (strings && bh > 14) { g.fillStyle = PALE; for (let i = 0; i < 2; i++) g.fillRect(cx - bw / 2 + 2, cy - 1 + i * 2, bw + nl - 4, 1); }
-}
 
 /** The sales line: samples 0 (top) … 1 (bottom) across `n` columns, sliding down while broken, climbing once fixed. */
 function sales(s, n) {
@@ -72,45 +76,53 @@ function drawLine(g, a, samples, colour, thick) {
 
 export const WALL = {
   image: (s) => s.cfg.image,
-  frameKey: (s) => `${s.state}:${step(s)}:${pageTint(s.tAll, s.reduced)}:${s.nudges.length}:${fixed(s) ? Math.min(RECOVER_MS, Math.floor(s.t / 100) * 100) : 0}`,
+  frameKey: (s) => { const v = visit(s); return `${s.state}:${step(s)}:${pageTint(s.tAll, s.reduced)}:${s.nudges.length}:${v.phase}:${v.product}:${Math.round(v.progress * 100)}:${fixed(s) ? Math.min(RECOVER_MS, Math.floor(s.t / 100) * 100) : 0}`; },
   recovered: (s) => s.reduced || s.t >= RECOVER_MS,
+  /** Where the visit is: what the browser tests read through window.__oq.chapter.wall.frame. */
+  frame: (s) => visit(s),
   hits: (s) => s.cfg.close.small.map((area, box) => ({ area, box })),
-  /** The room: the page's tint, a thin bar in the address bar, the guitar, bars, the line. */
+  /** The room: the page's tint (under the picture), a thin bar in the address bar, the product, bars, the line. */
   room(g, s) {
-    const m = s.cfg.room;
+    const m = s.cfg.room, v = visit(s);
     rect(g, m.screen, TINTS[pageTint(s.tAll, s.reduced)]);
-    const p = m.progress, pw = Math.round((p.x1 - p.x0 + 1) * progress(s));
-    rect(g, { x0: p.x0, y0: p.y0 + 1, x1: p.x0 + Math.max(1, pw) - 1, y1: p.y1 - 1 }, fixed(s) ? GOOD : '#4C8DFF');
-    guitar(g, m.large, INK, false);
+    const p = m.progress;
+    if (browsing(v)) rect(g, { x0: p.x0, y0: p.y0 + 1, x1: p.x1, y1: p.y1 - 1 }, SHOP);                          // the shop's colour while browsing
+    else { const pw = Math.round((p.x1 - p.x0 + 1) * v.progress); rect(g, { x0: p.x0, y0: p.y0 + 1, x1: p.x0 + Math.max(1, pw) - 1, y1: p.y1 - 1 }, fixed(s) ? GOOD : '#4C8DFF'); }
+    s.art?.draw(g, `product_${v.product}_small`, m.picture.x, m.picture.y);
     m.small.forEach((a, i) => { rect(g, { x0: a.x0 + 2, y0: a.y0 + 3, x1: a.x0 + 2 + Math.round((a.x1 - a.x0 - 4) * (0.5 + ((hash(i * 7 + (fixed(s) ? 9 : step(s) >> 4)) % 50) / 100))), y1: a.y1 - 3 }, fixed(s) ? GOOD : (i === 0 ? BAD : INK)); });
     drawLine(g, m.lane, sales(s, m.lane.x1 - m.lane.x0 + 1), fixed(s) ? GOOD : BAD, 1);
   },
-  /** Close up: the page tinted, the bar and its spinner, the cart, the boxes' frames, the sales line; the words are text. */
+  /** Close up: the page tinted, the header (the shop's name, or the bar and its spinner), the product, the boxes' tabs,
+   * the sales line; the words are text. */
   close(g, s) {
-    const m = s.cfg.close;
+    const m = s.cfg.close, v = visit(s);
     rect(g, m.screen, TINTS[pageTint(s.tAll, s.reduced)]);
-    const p = m.progress, pw = Math.round((p.x1 - p.x0 - 1) * progress(s));
-    rect(g, { x0: p.x0 + 1, y0: p.y0 + 1, x1: p.x0 + Math.max(1, pw), y1: p.y1 - 1 }, fixed(s) ? '#7FD88A' : BAR);
-    if (!fixed(s)) {                                                                        // the spinner: a dark pixel going round a tiny ring
+    const p = m.progress;
+    if (browsing(v)) rect(g, { x0: p.x0 + 1, y0: p.y0 + 1, x1: p.x1 - 1, y1: p.y1 - 1 }, SHOP);                   // the header in the shop's colour
+    else { const pw = Math.round((p.x1 - p.x0 - 1) * v.progress); rect(g, { x0: p.x0 + 1, y0: p.y0 + 1, x1: p.x0 + Math.max(1, pw), y1: p.y1 - 1 }, fixed(s) ? '#7FD88A' : BAR); }
+    s.art?.draw(g, `product_${v.product}`, m.picture.x, m.picture.y);
+    for (const a of m.small) rect(g, { x0: a.x0 + 1, x1: a.x0 + 3, y0: a.y0 + 1, y1: a.y1 - 1 }, fixed(s) ? GOOD : BAD);   // a tab down each box's left edge
+    if (v.phase === 'stuck') {                                                                // the spinner: a dark pixel going round a tiny ring
       const k = step(s) % 8, cx = p.x1 - 6, cy = Math.round((p.y0 + p.y1) / 2);
       const ring = [[1, -2], [2, -1], [2, 1], [1, 2], [-1, 2], [-2, 1], [-2, -1], [-1, -2]];
       g.fillStyle = INK; g.fillRect(cx + ring[k][0], cy + ring[k][1], 1, 1); g.fillRect(cx + ring[(k + 1) % 8][0], cy + ring[(k + 1) % 8][1], 1, 1);
     }
-    guitar(g, { x0: m.large.x0 + 8, x1: m.large.x1 - 8, y0: m.large.y0 + 4, y1: m.cart.y0 - 4 }, INK);
     drawLine(g, m.lane, sales(s, Math.floor((m.lane.x1 - m.lane.x0 + 1) / 2)), fixed(s) ? GOOD : BAD, 2);
   },
-  /** The bar's words, the cart's line, one stat a box (each on its own timer; fixed: the kind ones). */
+  /** The header's words (the shop's name while browsing, else the bar's), the tag beside the picture (the product's name
+   * and price, or the cart's line), one stat a box (each on its own timer; fixed: the kind ones). */
   text(s) {
-    const m = s.cfg.close, pool = fixed(s) ? s.text.okPool : s.text.pool, k = s.reduced ? 0 : Math.floor(s.tAll / 2500);
+    const m = s.cfg.close, pool = fixed(s) ? s.text.okPool : s.text.pool, k = s.reduced ? 0 : Math.floor(s.tAll / 2500), v = visit(s);
+    const tagLine = browsing(v) ? s.text.products[PRODUCTS.indexOf(v.product)] : s.text.cart;
+    const i = tagLine.indexOf(' / '), tag = i < 0 ? [tagLine] : [tagLine.slice(0, i), tagLine.slice(i + 3)];
     const boxes = m.small.map((area, i) => {
       const taps = s.nudges.filter((n) => n.box === i).length;
       return { id: `box${i}`, area, lines: [pool[(i * 2 + k + taps) % pool.length]], cls: 'page' };
     });
-    return [
-      { id: 'progress', area: { x0: m.progress.x0 + 4, x1: m.progress.x1 - 12, y0: m.progress.y0, y1: m.progress.y1 }, lines: [fixed(s) ? s.text.progressOk : s.text.progress], cls: 'page left' },
-      ...boxes,
-      { id: 'cart', area: m.cart, lines: [s.text.cart], cls: 'page' },
-    ];
+    const header = browsing(v)
+      ? { id: 'progress', area: { x0: m.progress.x0 + 4, x1: m.progress.x1 - 4, y0: m.progress.y0, y1: m.progress.y1 }, lines: [s.text.shop], cls: 'page shop' }
+      : { id: 'progress', area: { x0: m.progress.x0 + 4, x1: m.progress.x1 - 12, y0: m.progress.y0, y1: m.progress.y1 }, lines: [fixed(s) ? s.text.progressOk : s.text.progress], cls: 'page left' };
+    return [header, ...boxes, { id: 'tag', area: m.tag, lines: tag, cls: 'page tag' }];
   },
   tone: (s) => (fixed(s) ? 'ok' : ''),
 };
