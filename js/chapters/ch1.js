@@ -85,7 +85,7 @@ export const PC = {
  * room → talk_2 at the manifest's patch; she has no rest, idle or win frame (Rick approved her loop). */
 export const PERSONA = {
   name: 'ch1.persona.name', class: 'ch1.persona.class', stats: 'ch1.persona.stats', flavor: 'ch1.persona.flavor',
-  card: 'P1', art: 'assets/cards/P1_card.png', crop: { image: 'R1_exec_floor', x: 192, y: 62, w: 112, h: 70 },
+  card: 'P1', art: 'assets/cards/P1_card.webp', crop: { image: 'R1_exec_floor', x: 192, y: 62, w: 112, h: 70 },
   portrait: 'p1', where: 'top-left',
   loop: 'always', frames: { talk: ['R1_cto_talk_1', 'R1_cto_talk_2'], rest: null, idle: [], win: null },
   calls: [1, 2, 3].map((i) => `ch1.cto.call.${i}`),

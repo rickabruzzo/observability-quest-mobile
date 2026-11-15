@@ -27,7 +27,7 @@ export const ROOM = {
  * now and then, talks only while his own words are on screen, and caps his marker for the win. */
 export const PERSONA = {
   name: 'ch2.persona.name', class: 'ch2.persona.class', stats: 'ch2.persona.stats', flavor: 'ch2.persona.flavor',
-  card: 'P2', art: 'assets/cards/P2_card.png', crop: { image: 'R2_war_room', x: 234, y: 34, w: 76, h: 48 },
+  card: 'P2', art: 'assets/cards/P2_card.webp', crop: { image: 'R2_war_room', x: 234, y: 34, w: 76, h: 48 },
   portrait: 'p2', where: 'top-left',
   loop: 'speak', frames: { talk: ['R2_npc_talk_1', 'R2_npc_talk_2'], rest: 'R2_npc_look', idle: ['R2_npc_scratch', 'R2_npc_mark'], win: 'R2_npc_win' },
   calls: [1, 2, 3].map((i) => `ch2.npc.call.${i}`),

@@ -4,6 +4,7 @@
 
 # working files
 scratch/
+.worktrees/
 _to_delete/
 .DS_Store
 __pycache__/

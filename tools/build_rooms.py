@@ -12,7 +12,7 @@ dropped the faint lower half of a figure that had turned, leaving him cut off at
 """
 import json, os, sys
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter
 
 if __package__ in (None, ''): sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from tools.build_intro import downsample, quantise, snap_to_plate
@@ -63,7 +63,7 @@ CARD_FRAMES = {'P1': [f'art-drops/2026-11-12-card-ch1/P1_card_sparkle_{i}.png' f
                'P2': [f'art-drops/2026-11-13-card-ch2/P2_card_fx_{i}.png' for i in (1, 2, 3)],
                'P3': [f'art-drops/2026-11-12-room-ch3/P3_card_fx_{i}.png' for i in (1, 2, 3)],
                'P5': [f'art-drops/2026-11-12-room-ch5/P5_card_fx_{i}.png' for i in (1, 2, 3)]}
-CARD_SIZE, CARD_COLOURS = (128, 80), 64
+CARD_QUALITY = 92          # WebP quality for a persona card: visually the source, about 70 KB at 640×400
 
 
 def _save(img, path):
@@ -110,33 +110,37 @@ def build(src, out, name, plates, edits, crops=None, exact=False):
 
 
 def build_cards(out='assets/cards', cards=None, frames=None):
-    """The persona cards' pictures at the card window's size. Averaged down (they are one figure seen small, and a
-    nearest-neighbour fifth loses the face), then cut to a VGA-sized palette.
+    """The persona cards' pictures as the art is: the source's own size and colours (Rick, 2026-11-14: the cards
+    "look bad since they were de-rezed"; he would rather have the original look than a small palette and a
+    downscale). A card is saved as a WebP at CARD_QUALITY: a tenth of the PNG's weight with nothing to see.
 
-    A card's extra frames (`frames`: card name -> source paths) share that palette with it: the card and its
-    frames are cut to colours together, and a frame keeps the card's own pixel wherever its source is the same,
-    so swapping them moves only what was painted to move."""
+    A card's extra frames (`frames`: card name -> source paths) are overlays the game draws over the card: the
+    card's size, see-through wherever the frame's source is the card's source (the mask is kept exactly), and the
+    source's picture where it differs, at the card's quality."""
     os.makedirs(out, exist_ok=True)
     full = lambda paths: {k: [os.path.join(ROOT, p) for p in v] if isinstance(v, list) else os.path.join(ROOT, v) for k, v in paths.items()}
     cards = cards if cards is not None else full(CARDS)
     frames = frames if frames is not None else (full(CARD_FRAMES) if cards == full(CARDS) else {})
-    m = {'size': list(CARD_SIZE), 'cards': {}, 'frames': {}}
-    w, h = CARD_SIZE
+    m = {'size': None, 'cards': {}, 'frames': {}}
     for name, path in cards.items():
-        src = [Image.open(p).convert('RGB') for p in [path] + list(frames.get(name, []))]
-        for s in src[1:]:
-            if s.size != src[0].size: raise ValueError(f'{name}: a frame is {s.size}, the card {src[0].size}')
-        strip = Image.new('RGB', (w, h * len(src)))
-        for i, s in enumerate(src): strip.paste(s.resize(CARD_SIZE, Image.BOX), (0, h * i))
-        strip = quantise(strip, CARD_COLOURS)
-        card = strip.crop((0, 0, w, h))
-        _save(card, os.path.join(out, name + '_card.png')); m['cards'][name] = name + '_card.png'
-        for i, s in enumerate(src[1:], 1):
-            same = np.asarray(Image.fromarray(((np.asarray(s) != np.asarray(src[0])).any(axis=2) * 255).astype(np.uint8)).resize(CARD_SIZE, Image.BOX)) == 0
-            f = np.asarray(strip.crop((0, h * i, w, h * (i + 1)))).copy()
-            f[same] = np.asarray(card)[same]
-            fn = os.path.basename(list(frames[name])[i - 1])
-            _save(Image.fromarray(f, 'RGB'), os.path.join(out, fn)); m['frames'].setdefault(name, []).append(fn)
+        card = Image.open(path).convert('RGB')
+        if m['size'] is None: m['size'] = list(card.size)
+        elif list(card.size) != m['size']: raise ValueError(f'{name}: the card is {card.size}, the others {tuple(m["size"])}')
+        card.save(os.path.join(out, name + '_card.webp'), 'WEBP', quality=CARD_QUALITY, method=6); m['cards'][name] = name + '_card.webp'
+        base = np.asarray(card)
+        for fp in frames.get(name, []):
+            f = Image.open(fp).convert('RGB')
+            if f.size != card.size: raise ValueError(f'{name}: a frame is {f.size}, the card {card.size}')
+            px = np.asarray(f)
+            changed = (px != base).any(axis=2)
+            # the picture is kept a few pixels beyond the mask, so the codec's colour smoothing at the mask's edge
+            # mixes in the frame's own neighbours and not the black of the see-through part
+            near = np.asarray(Image.fromarray((changed * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(9))) > 0
+            over = np.zeros(px.shape[:2] + (4,), np.uint8)
+            over[near, :3] = px[near]; over[changed, 3] = 255
+            fn = os.path.splitext(os.path.basename(fp))[0] + '.webp'
+            Image.fromarray(over, 'RGBA').save(os.path.join(out, fn), 'WEBP', quality=CARD_QUALITY, alpha_quality=100, method=6)
+            m['frames'].setdefault(name, []).append(fn)
     with open(os.path.join(out, 'cards.json'), 'w') as f: json.dump(m, f, indent=1); f.write('\n')
     return m
 

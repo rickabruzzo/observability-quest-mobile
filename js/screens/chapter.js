@@ -193,7 +193,7 @@ export function createChapterScreen(game) {
       const frames = (cardsManifest?.frames?.[p.card] || []).map((f) => { const im = new Image(); im.src = dir + f; return im; });
       base.onload = () => {
         const c = document.createElement('canvas'); c.width = base.naturalWidth; c.height = base.naturalHeight;
-        artBox.replaceChildren(c);
+        artBox.replaceChildren(c); artBox.classList.add('painted');       // the art at its own size: scaled smoothly, not as big pixels
         card = { canvas: c, base, frames, files: cardsManifest?.frames?.[p.card] || [], overlay: p.overlay ?? null, t: 0, key: null, reduced: !!ctx.reducedMotion };
         drawCard();
       };
@@ -227,10 +227,9 @@ export function createChapterScreen(game) {
     g.drawImage(card.base, 0, 0);
     const i = card.files.indexOf(file);
     if (i >= 0 && card.frames[i].complete && card.frames[i].naturalWidth) g.drawImage(card.frames[i], 0, 0);
-    if (rows) {                                                     // a phone's screen with urgent notifications scrolling up it
-      const o = card.overlay;
-      g.fillStyle = '#DFF4FF'; g.fillRect(o.x, o.y, o.w, o.h);
-      for (const r of rows) { g.fillStyle = '#E04040'; g.fillRect(o.x, o.y + r.y, 1, 1); g.fillStyle = '#1A1C22'; g.fillRect(o.x + 1, o.y + r.y, Math.min(r.w, o.w - 1), 1); }
+    if (rows) {                                                     // urgent notifications scrolling up the phone the card paints
+      const o = card.overlay, s = o.px ?? 1;                        // one phone pixel is `px` card pixels (the card is the art's size)
+      for (const r of rows) { g.fillStyle = '#E04040'; g.fillRect(o.x, o.y + r.y * s, s, s); g.fillStyle = '#1A1C22'; g.fillRect(o.x + s, o.y + r.y * s, Math.min(r.w, o.w - 1) * s, s); }
     }
   }
   /** The card is dismissed: into the room once its pictures are in (they started loading when the card opened). */

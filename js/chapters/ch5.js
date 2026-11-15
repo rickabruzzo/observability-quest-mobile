@@ -27,7 +27,7 @@ export const ROOM = {
 /** The Build & Release Engineer, on the couch with his laptop, one finger over the rollback key. */
 export const PERSONA = {
   name: 'ch5.persona.name', class: 'ch5.persona.class', stats: 'ch5.persona.stats', flavor: 'ch5.persona.flavor',
-  card: 'P5', art: 'assets/cards/P5_card.png', crop: { image: 'R5_loft', x: 204, y: 69, w: 116, h: 72 },
+  card: 'P5', art: 'assets/cards/P5_card.webp', crop: { image: 'R5_loft', x: 204, y: 69, w: 116, h: 72 },
   portrait: 'p5', where: 'top-left',
   loop: 'speak', frames: { talk: ['R5_npc_talk_1', 'R5_npc_talk_2'], rest: null, idle: [], win: 'R5_npc_win' },
   calls: [1, 2, 3].map((i) => `ch5.npc.call.${i}`),

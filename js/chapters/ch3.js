@@ -28,7 +28,7 @@ export const ROOM = {
 /** The Frontend Developer, at her standing desk on the left (so the conversation window sits top right). */
 export const PERSONA = {
   name: 'ch3.persona.name', class: 'ch3.persona.class', stats: 'ch3.persona.stats', flavor: 'ch3.persona.flavor',
-  card: 'P3', art: 'assets/cards/P3_card.png', crop: { image: 'R3_bullpen', x: 9, y: 14, w: 126, h: 79 },
+  card: 'P3', art: 'assets/cards/P3_card.webp', crop: { image: 'R3_bullpen', x: 9, y: 14, w: 126, h: 79 },
   portrait: 'p3', where: 'top-right',
   loop: 'speak', frames: { talk: ['R3_npc_talk_1', 'R3_npc_talk_2'], rest: null, idle: [], win: 'R3_npc_win' },
   calls: [1, 2, 3].map((i) => `ch3.npc.call.${i}`),

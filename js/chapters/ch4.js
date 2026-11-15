@@ -26,8 +26,8 @@ export const ROOM = {
  * whose screen the game fills with notifications scrolling up (x 84–89, y 56–61 on the 128×80 card). */
 export const PERSONA = {
   name: 'ch4.persona.name', class: 'ch4.persona.class', stats: 'ch4.persona.stats', flavor: 'ch4.persona.flavor',
-  card: 'P4', art: 'assets/cards/P4_card.png', crop: { image: 'R4_ops_room', x: 209, y: 59, w: 110, h: 69 },
-  overlay: { kind: 'phone', x: 84, y: 56, w: 6, h: 6 },
+  card: 'P4', art: 'assets/cards/P4_card.webp', crop: { image: 'R4_ops_room', x: 209, y: 59, w: 110, h: 69 },
+  overlay: { kind: 'phone', x: 424, y: 281, w: 6, h: 7, px: 4 },      // on the 640×400 card: a 6×7 screen of 4-px pixels, on the phone the art paints
   portrait: 'p4', where: 'top-left',
   loop: 'speak', frames: { talk: ['R4_npc_talk_1', 'R4_npc_talk_2'], rest: null, idle: [], win: 'R4_npc_win' },
   calls: [1, 2, 3].map((i) => `ch4.npc.call.${i}`),

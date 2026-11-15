@@ -6,14 +6,19 @@ in Rick's terminal. You take a brief from `briefs/warp/`, build it on your own b
 
 ## Rules
 
-1. **Your own worktree and branch, per brief.** Never change which branch is checked out in the main folder
-   (`~/Documents/Observability Quest Mobile`), and never commit there. The brief names your branch:
+1. **Your own worktree and branch, per brief, inside the project folder.** Never change which branch is checked
+   out in the main folder (`~/Documents/Observability Quest Mobile`), and never commit there. The brief names
+   your branch and the branch to start from:
    ```
    cd ~/Documents/"Observability Quest Mobile"
    git fetch origin
-   git worktree add ../oqm-warp-<topic> -b warp/<topic> origin/sci-adventure
-   cd ../oqm-warp-<topic>
+   git worktree add .worktrees/warp-<topic> -b warp/<topic> origin/<the branch the brief names>
+   cd .worktrees/warp-<topic>
    ```
+   **Nothing you create goes outside the project folder** (Rick, 2026-11-14: the old `../oqm-warp-<topic>`
+   folders filled his Documents). `.worktrees/` is git-ignored. Working files (screenshots, notes, experiments)
+   go in `scratch/`, also git-ignored; anything meant to be kept goes where the repo already keeps that kind of
+   file (`handbacks/`, `tests/`, `tools/`, `js/`), never in a new top-level folder.
    Commit as Claude by naming the identity on each commit:
    `git -c user.name=Claude -c user.email=noreply@anthropic.com commit -m "..."`. Do not run
    `git config user.name` or `git config user.email`: a worktree shares its config file with the main folder, so
@@ -41,6 +46,10 @@ in Rick's terminal. You take a brief from `briefs/warp/`, build it on your own b
    `gh pr create --base sci-adventure --title "<brief title>" --body "Hand-back: handbacks/<file>. <three lines>"`
    If `gh` is not available, tell Rick: "ready: `warp/<topic>`".
 4. Review comments arrive on the pull request. Fix on the same branch with new commits and push.
-5. After Rick merges, remove your worktree: `git worktree remove ../oqm-warp-<topic>`.
+5. After Rick merges, remove your worktree the same day: `git worktree remove .worktrees/warp-<topic>`. Before
+   you start any brief, run `git worktree list` and remove every worktree of yours whose branch is merged
+   (`git branch -r --merged origin/era-look` lists them), then `git worktree prune`. If a worktree holds a file
+   worth keeping, move it into the main folder's `scratch/` first; `git worktree remove` refuses if there is
+   uncommitted work, and you never pass `--force`.
 
 The old flow (hand-back in `scratch/`, Rick pulling a bundle) is retired.

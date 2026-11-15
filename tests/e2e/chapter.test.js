@@ -612,14 +612,14 @@ for (const [w, h] of PHONES) {
     assert.ok(Math.abs(m.card.h / m.scene.h - 0.94) < 0.02 && Math.abs(m.card.w / m.card.h - 5 / 7) < 0.02, JSON.stringify(m.card));
     assert.ok(m.card.x >= 0 && m.card.y >= 0 && m.card.x + m.card.w <= m.scene.w + 0.5 && m.card.y + m.card.h <= m.scene.h + 0.5);
     assert.equal(m.pic.tag, 'CANVAS');                                               // the card art, drawn so its frames can move (brief 08)
-    assert.equal(m.pic.w, 128); assert.equal(m.pic.h, 80);
+    assert.equal(m.pic.w, 640); assert.equal(m.pic.h, 400);                         // the art's own size (Rick, 2026-11-14)
     await ctx.close();
   });
 }
 
 test('the card falls back to the persona cropped from the room plate when the card art is missing', async () => {
   const { ctx, page } = await openGame(browser, server, { query: '?ch=1' });
-  await page.route('**/assets/cards/P1_card.png', (r) => r.abort());
+  await page.route('**/assets/cards/P1_card.webp', (r) => r.abort());
   await into(page);
   await tapSpot(page, 'cto');
   await page.waitForSelector('#persona-card .art canvas', { timeout: 9000 });

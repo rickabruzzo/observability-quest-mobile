@@ -13,13 +13,15 @@ that is not in your pull request does not exist for it.**
   try, every PSD and your generation scripts live there.
 - You may use the project's `.env` for the Gemini key. You never print it, copy it or commit it. No other
   Claude reads it.
-- **Deliver from your own worktree**, so the main folder's checked-out branch never changes:
+- **Deliver from your own worktree, inside the project folder**, so the main folder's checked-out branch never
+  changes and nothing lands in Rick's Documents:
   ```
   cd ~/Documents/"Observability Quest Mobile"
   git fetch origin
-  git worktree add ../oqm-art-<topic> -b art/<topic> origin/sci-adventure
-  cd ../oqm-art-<topic>
+  git worktree add .worktrees/art-<topic> -b art/<topic> origin/<the branch the brief names>
+  cd .worktrees/art-<topic>
   ```
+  `.worktrees/` is git-ignored. Nothing you create goes outside the project folder.
   Run no other git command in the main folder. Commit as Claude by naming the identity on each commit:
   `git -c user.name=Claude -c user.email=noreply@anthropic.com commit -m "..."`. Do not run
   `git config user.name` or `git config user.email`: a worktree shares its config file with the main folder, so
@@ -73,7 +75,8 @@ gh pr create --base sci-adventure --title "Art drop: <topic>" --body "See art-dr
 ```
 
 If `gh` is not available, tell Rick: "ready: `art/<topic>`". Then remove the worktree after Rick merges:
-`git worktree remove ../oqm-art-<topic>`.
+`git worktree remove .worktrees/art-<topic>`. If an old `../oqm-art-<topic>` folder is still beside the project, remove
+it the same way (`git worktree list` shows them).
 
 A redo is a new commit on the same branch while the pull request is open, or a new dated drop after it is
 merged. Never edit a file under `assets/`: Cloud Claude builds those from your drop.

@@ -266,8 +266,9 @@ and `briefs/art/02-persona-cards.md`. Each drop carries its own provenance, trie
 
 All the art for rooms 2–5 and all five cards was reviewed and approved by Rick on 2026-11-13 (index:
 `handbacks/2026-11-13-art-rooms-and-cards.md`). Built to game size by `tools/build_rooms.py`: rooms 320×200; the
-figure frames of a room cut to one shared patch, keeping every pixel the art changed; cards 128×80, 64 colours, a
-card's animation frames cut to colours together with it.
+figure frames of a room cut to one shared patch, keeping every pixel the art changed; cards as delivered, 640×400 in
+full colour (WebP), a card's animation frames as overlays of what changed (Rick, 2026-11-14; before that 128×80 in
+64 colours).
 
 **On the `era-look` fork** the rooms are built from `art-drops/2026-11-13-era-look-rooms/` (`tools/build_rooms.py`, `LOOK =
 'era'`; `painted` rebuilds the approved look), and the personas' conversation portraits by
