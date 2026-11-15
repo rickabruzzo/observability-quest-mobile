@@ -293,47 +293,91 @@ function composed(cfg, pose, outfit = 'hoodie') {
   return v;
 }
 
+// ---- the hero drawn smaller than his sprite (every room scales him by depth) ----
+// A smaller sprite keeps whole rows and columns of the sprite, evenly spaced, so every pixel is one the sprite has
+// and the figure stays crisp. Plain nearest neighbour does that too, but it takes whichever lines fall under the
+// destination's centres, and his eyes are two columns wide on one row: at 0.86 they came out as slits, at 0.73 one
+// eye lost its pupil, at 0.65 both did (Rick, 2026-11-14: "the game model now looks like crap"). Here the even
+// spacing is slid along each axis to the offset that keeps the most detail: the lines with the most colour changes,
+// and above all a white and a pupil for each eye.
+
+/** Which of `n` source lines `m` destination lines take, evenly spaced, slid by `phase` (0..1) of a destination line. */
+export function evenLines(n, m, phase = 0.5) {
+  const k = n / m, out = new Array(m);
+  for (let d = 0; d < m; d++) out[d] = Math.min(n - 1, Math.floor((d + phase) * k));
+  return out;
+}
+const PHASES = Array.from({ length: 20 }, (_, i) => i / 20);
+/** The evenly spaced lines that keep the most: `score(lines)` judges a choice; ties go to the middle offset. */
+function bestLines(n, m, score, ok = () => true) {
+  let best = null, top = -Infinity;
+  for (const phase of PHASES) {
+    const lines = evenLines(n, m, phase);
+    if (!ok(lines)) continue;
+    const v = score(lines) - Math.abs(phase - 0.5) * 1e-3;
+    if (v > top) { top = v; best = lines; }
+  }
+  return best ?? evenLines(n, m);
+}
+const lumAt = (px, i) => 0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2];
+/** What a sprite's lines are worth keeping for: colour changes along each row and column, and where the eyes are. */
+function detail(px) {
+  const rows = new Float64Array(HERO_H), cols = new Float64Array(HERO_W);
+  const same = (i, j) => px[i] === px[j] && px[i + 1] === px[j + 1] && px[i + 2] === px[j + 2] && px[i + 3] === px[j + 3];
+  for (let y = 0; y < HERO_H; y++) for (let x = 0; x < HERO_W; x++) {
+    const i = (y * HERO_W + x) * 4;
+    if (x + 1 < HERO_W && !same(i, i + 4)) rows[y]++;
+    if (y + 1 < HERO_H && !same(i, i + HERO_W * 4)) cols[x]++;
+  }
+  // the eyes: the rows that hold the eye's white; on them, whites no more than a pupil apart are one eye
+  const eyeRows = [];
+  for (let y = 0; y < HERO_H; y++) for (let x = 0; x < HERO_W; x++) if (isEyeWhite(px, (y * HERO_W + x) * 4)) { eyeRows.push(y); break; }
+  const eyes = [];
+  for (let x = 0; x < HERO_W; x++) {
+    if (!eyeRows.some((y) => isEyeWhite(px, (y * HERO_W + x) * 4))) continue;
+    const e = eyes.at(-1);
+    if (e && x - e.hi <= 3) e.hi = x; else eyes.push({ lo: x, hi: x });
+  }
+  return { rows, cols, eyeRows, eyes };
+}
+const isEyeWhite = (px, i) => px[i + 3] && px[i] === EYE_WHITE[0] && px[i + 1] === EYE_WHITE[1] && px[i + 2] === EYE_WHITE[2];
+/** How well the chosen rows and columns keep the eyes: each needs a white and a pupil; white on both sides of the pupil is better still. */
+function eyesKept(px, d, ys, xs) {
+  let v = 0;
+  const rows = d.eyeRows.filter((y) => ys.includes(y));
+  for (const e of d.eyes) {
+    const cols = xs.filter((x, i) => x >= e.lo && x <= e.hi && x !== xs[i - 1]);
+    let white = false, pupil = false, framed = false;
+    for (const y of rows) {
+      const seen = cols.map((x) => { const i = (y * HERO_W + x) * 4; return isEyeWhite(px, i) ? 'w' : lumAt(px, i) < 70 ? 'p' : '-'; }).join('');
+      white ||= seen.includes('w'); pupil ||= seen.includes('p'); framed ||= /w.*p.*w/.test(seen);
+    }
+    v += (white && pupil ? 1e4 : white || pupil ? 1e3 : 0) + (framed ? 2e3 : 0);
+  }
+  return v;
+}
+const detailCache = new WeakMap();
+function detailOf(px) { let d = detailCache.get(px); if (!d) { d = detail(px); detailCache.set(px, d); } return d; }
+
 /**
  * A composed sprite at `scale`: { w, h, data } with w = round(HERO_W × scale), h = round(HERO_H × scale), RGBA.
- *
- * Smaller than the sprite (he is drawn by depth in every room), each pixel is the average of the sprite pixels
- * it covers, weighted by how much of each it covers, and is his if at least half of what it covers is. Nearest
- * neighbour drops whole rows and columns, and his eyes are two columns wide: at 0.73 one eye lost its pupil and
- * the other its white (Rick, 2026-11-14: "the game model now looks like crap"). At the sprite's size or larger
- * every pixel is the sprite's own, repeated. `flip` mirrors about the sprite's centre.
+ * At the sprite's size or larger every pixel is the sprite's own, repeated. Smaller, it is whole rows and columns
+ * of the sprite, evenly spaced, at the offset that keeps the most detail (above): the soles on the last row, a
+ * white and a pupil in each eye wherever the size leaves room for both. `flip` mirrors about the sprite's centre.
  */
 export function scaleSprite(px, scale = 1, flip = false) {
   const w = Math.round(HERO_W * scale), h = Math.round(HERO_H * scale), data = new Uint8ClampedArray(w * h * 4);
-  const at = (sx, sy) => (sy * HERO_W + (flip ? HERO_W - 1 - sx : sx)) * 4;
-  if (w >= HERO_W && h >= HERO_H) {
-    for (let dr = 0; dr < h; dr++) {
-      const sy = Math.min(HERO_H - 1, Math.floor((dr + 0.5) / scale));
-      for (let dc = 0; dc < w; dc++) {
-        const i = at(Math.min(HERO_W - 1, Math.floor((dc + 0.5) / scale)), sy), o = (dr * w + dc) * 4;
-        data[o] = px[i]; data[o + 1] = px[i + 1]; data[o + 2] = px[i + 2]; data[o + 3] = px[i + 3];
-      }
-    }
-    return { w, h, data };
+  let ys, xs;
+  if (w >= HERO_W && h >= HERO_H) { ys = evenLines(HERO_H, h); xs = evenLines(HERO_W, w); }
+  else {
+    const d = detailOf(px), sum = (score) => (lines) => { let v = 0, last = -1; for (const l of lines) if (l !== last) { v += score[l]; last = l; } return v; };
+    const rowScore = sum(d.rows), colScore = sum(d.cols);
+    ys = bestLines(HERO_H, h, (lines) => rowScore(lines) + (d.eyeRows.some((y) => lines.includes(y)) ? 1e4 : 0), (lines) => lines[h - 1] === HERO_H - 1);
+    xs = bestLines(HERO_W, w, (lines) => colScore(lines) + eyesKept(px, d, ys, lines));
   }
-  const kx = HERO_W / w, ky = HERO_H / h;                 // sprite pixels under one destination pixel: the sprite is tiled exactly
-  for (let dr = 0; dr < h; dr++) {
-    const y0 = dr * ky, y1 = Math.min(HERO_H, (dr + 1) * ky);
-    for (let dc = 0; dc < w; dc++) {
-      const x0 = dc * kx, x1 = Math.min(HERO_W, (dc + 1) * kx);
-      let r = 0, g = 0, b = 0, his = 0;
-      for (let sy = Math.floor(y0); sy < y1; sy++) {
-        const wy = Math.min(y1, sy + 1) - Math.max(y0, sy);
-        for (let sx = Math.floor(x0); sx < x1; sx++) {
-          const i = at(sx, sy);
-          if (!px[i + 3]) continue;
-          const k = wy * (Math.min(x1, sx + 1) - Math.max(x0, sx));
-          r += px[i] * k; g += px[i + 1] * k; b += px[i + 2] * k; his += k;
-        }
-      }
-      if (his * 2 < (x1 - x0) * (y1 - y0)) continue;       // mostly empty: not his
-      const o = (dr * w + dc) * 4;
-      data[o] = Math.round(r / his); data[o + 1] = Math.round(g / his); data[o + 2] = Math.round(b / his); data[o + 3] = 255;
-    }
+  for (let dr = 0; dr < h; dr++) for (let dc = 0; dc < w; dc++) {
+    const sx = xs[flip ? w - 1 - dc : dc], i = (ys[dr] * HERO_W + sx) * 4, o = (dr * w + dc) * 4;
+    data[o] = px[i]; data[o + 1] = px[i + 1]; data[o + 2] = px[i + 2]; data[o + 3] = px[i + 3];
   }
   return { w, h, data };
 }

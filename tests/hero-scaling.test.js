@@ -1,45 +1,59 @@
 // The hero drawn smaller than his sprite (he is scaled by depth in every room since brief 11). Rick, 2026-11-14:
-// "the game model now looks like crap, it's gotten worse since the last time." Nearest-neighbour scaling drops
-// whole rows and columns of a 56×144 sprite, and his eyes are two columns wide: at 0.73 one eye lost its pupil and
-// the other its white. A smaller hero is the average of the sprite pixels each destination pixel covers.
+// "the game model now looks like crap, it's gotten worse since the last time." Nearest-neighbour scaling takes
+// whichever rows and columns fall under the destination's centres, and his eyes are four columns by two rows: at
+// 0.86 they came out as slits, at 0.73 one eye lost its pupil, at 0.65 both did. A smaller hero is still whole rows
+// and columns of the sprite, evenly spaced, so he stays crisp; the spacing is slid to keep the most detail, and
+// above all a white and a pupil in each eye.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { composeHero, scaleSprite, drawHero, HERO_W, HERO_H } from '../js/engine/hero.js';
+import { composeHero, scaleSprite, evenLines, drawHero, HERO_W, HERO_H, EYE_WHITE, OUTLINE_C } from '../js/engine/hero.js';
 import { PRESETS, EYES } from '../js/engine/hero-parts.js';
 
-const ROOM_SCALES = [0.95, 0.91, 0.86, 0.81, 0.77, 0.73, 0.57, 0.51];     // what the five rooms draw him at, front to back
-const lum = (d, i) => 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+const ROOM_SCALES = [0.95, 0.91, 0.86, 0.84, 0.81, 0.77, 0.73, 0.69, 0.65, 0.61, 0.57, 0.51];   // what the five rooms draw him at, front to back
+const is = (d, i, c) => d[i + 3] === 255 && d[i] === c[0] && d[i + 1] === c[1] && d[i + 2] === c[2];
 
 /** The rows of the sprite his eyes are on: where both eyes' first column is the eye's white. */
 function eyeRows(px) {
   const rows = [];
-  for (let y = 0; y < 60; y++) if ([EYES[0], EYES[1]].every((x) => px[(y * HERO_W + x) * 4 + 3] && lum(px, (y * HERO_W + x) * 4) > 230)) rows.push(y);
+  for (let y = 0; y < 60; y++) if (EYES.every((x) => is(px, (y * HERO_W + x) * 4, EYE_WHITE))) rows.push(y);
   return rows;
 }
-/** Mean brightness of the sprite rectangle x0..x0+3 × rows, read back from a scaled copy: each scaled pixel counts by how much of the rectangle it covers. */
-function meanOver(s, x0, rows) {
-  const kx = HERO_W / s.w, ky = HERO_H / s.h, y0 = rows[0], y1 = rows.at(-1) + 1;
-  let sum = 0, area = 0;
+/** How many white and how many pupil pixels the scaled sprite has where the sprite's eye (4 px wide from x0, on `rows`) lands. */
+function eyeIn(s, x0, rows) {
+  const kx = HERO_W / s.w, ky = HERO_H / s.h;
+  let white = 0, pupil = 0;
   for (let y = 0; y < s.h; y++) for (let x = 0; x < s.w; x++) {
-    const ox = Math.min((x + 1) * kx, x0 + 4) - Math.max(x * kx, x0), oy = Math.min((y + 1) * ky, y1) - Math.max(y * ky, y0);
-    if (ox > 0 && oy > 0) { sum += lum(s.data, (y * s.w + x) * 4) * ox * oy; area += ox * oy; }
+    if (Math.min((x + 1) * kx, x0 + 5) - Math.max(x * kx, x0 - 1) <= 0 || Math.min((y + 1) * ky, rows.at(-1) + 2) - Math.max(y * ky, rows[0] - 1) <= 0) continue;
+    const i = (y * s.w + x) * 4;
+    if (is(s.data, i, EYE_WHITE)) white++; else if (is(s.data, i, OUTLINE_C)) pupil++;
   }
-  return sum / area;
+  return { white, pupil };
 }
 
-test('drawn smaller, each eye keeps its share of white and pupil at every size a room uses', () => {
-  const px = composeHero(PRESETS.masc, 'idle'), rows = eyeRows(px);
-  assert.ok(rows.length >= 1, 'the sprite has eyes');
-  const full = { w: HERO_W, h: HERO_H, data: px };
-  const want = [meanOver(full, EYES[0], rows), meanOver(full, EYES[1], rows)];
-  assert.ok(want[0] > 90 && want[0] < 180, `an eye is part white, part pupil: ${want[0]}`);
+for (const [name, cfg] of Object.entries(PRESETS)) {
+  test(`${name}, drawn smaller: each eye keeps a white and a pupil at every size a room uses`, () => {
+    const px = composeHero(cfg, 'idle'), rows = eyeRows(px);
+    assert.ok(rows.length >= 1, 'the sprite has eyes');
+    for (const scale of ROOM_SCALES) {
+      const s = scaleSprite(px, scale);
+      for (const [i, side] of [[0, 'left'], [1, 'right']]) {
+        const e = eyeIn(s, EYES[i], rows);
+        assert.ok(e.white >= 1 && e.pupil >= 1, `${scale}: the ${side} eye has ${e.white} white and ${e.pupil} pupil pixels`);
+      }
+    }
+  });
+}
+
+test('a smaller hero is crisp: every pixel is a pixel of the sprite, in rows and columns evenly spaced', () => {
+  const px = composeHero(PRESETS.masc, 'idle');
+  const colours = new Set(); for (let i = 0; i < px.length; i += 4) colours.add(px[i + 3] ? `${px[i]},${px[i + 1]},${px[i + 2]}` : 'clear');
   for (const scale of ROOM_SCALES) {
     const s = scaleSprite(px, scale);
-    for (const [i, name] of [[0, 'left'], [1, 'right']]) {
-      const got = meanOver(s, EYES[i], rows);
-      assert.ok(Math.abs(got - want[i]) < 40, `${scale}: the ${name} eye reads ${Math.round(got)}, the sprite's is ${Math.round(want[i])} (a lost pupil reads white, a lost white reads dark)`);
-    }
+    for (let i = 0; i < s.data.length; i += 4) assert.ok(colours.has(s.data[i + 3] ? `${s.data[i]},${s.data[i + 1]},${s.data[i + 2]}` : 'clear'), `${scale}: a colour the sprite does not have`);
   }
+  const lines = evenLines(144, 105, 0.3);
+  assert.equal(lines.length, 105);
+  for (let i = 1; i < lines.length; i++) assert.ok(lines[i] - lines[i - 1] >= 1 && lines[i] - lines[i - 1] <= 2, 'never a line twice, never two skipped');
 });
 
 test('a smaller sprite is round(W×s) by round(H×s), stands on its last row, and has no see-through edge', () => {
