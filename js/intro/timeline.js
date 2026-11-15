@@ -16,7 +16,9 @@ export const SHOTS = [
   { id: 'message', ms: 5000, image: 'B_nightstand', lcd: 'marquee', text: CTO },
   { id: 'misery', ms: 2000, image: 'C_misery' },
   { id: 'wide', ms: 1400, image: 'A_room_dark', title: 'dim' },                       // back to the wide dark room, steady in the pager's glow…
-  { id: 'bedroom', ms: 15000, image: 'D_bedroom_vga', hero: true, clickAt: 0, heroScale: 0.85 },   // …click: the light is on, and this is the room.
+  { id: 'bedroom', ms: 15000, image: 'D_bedroom_vga', hero: true, clickAt: 0, heroScale: 0.85, standY: 196, sitY: 143 },   // …click: the light is on, and this is the room.
+  // standY: his feet when he stands, at the front of the room, so his head clears the subtitle on the wall; sitY: the blanket line
+  // he sits in (10 px into the bed, his hips under the blanket the game draws), for the same reason (brief 11).
   // heroScale: the 136-px hero would overtop his own 132-px door, so the bedroom draws him at 0.85 (brief 09).
 ];
 export const TOTAL_MS = SHOTS.reduce((n, s) => n + s.ms, 0);

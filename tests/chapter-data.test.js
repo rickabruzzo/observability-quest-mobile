@@ -5,7 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { CHAPTERS } from '../js/chapters/index.js';
-import { checkRoom, MIN_HIT } from '../js/engine/room.js';
+import { checkRoom, MIN_HIT, insideFloor, heroHeightAt } from '../js/engine/room.js';
 import { SCRIPT } from '../js/script.js';
 import { HERO_W } from '../js/engine/hero.js';
 import { AVAILABLE, SCENARIOS } from '../js/menu.js';
@@ -23,9 +23,10 @@ for (const n of ids) {
   test(`scenario ${n}: the room passes checkRoom against the real script; every target is MIN_HIT or bigger`, () => {
     assert.equal(ch.id, n);
     assert.deepEqual(checkRoom(ch.room, SCRIPT), []);
-    assert.deepEqual(ch.room.walk, [0, 320 - HERO_W]); assert.equal(ch.room.floorY, 192);
+    assert.ok(ch.room.floor.length >= 4 && ch.room.anchors.length >= 1, 'a floor and a scale anchor (brief 11)');
     for (const h of ch.room.hotspots) assert.ok(h.rect.w >= MIN_HIT && h.rect.h >= MIN_HIT, `${h.id} ${h.rect.w}x${h.rect.h}`);
-    for (const h of ch.room.hotspots) if (h.walk !== false) assert.ok(h.standX + HERO_W <= 320, h.id);
+    for (const h of ch.room.hotspots) if (h.walk !== false) assert.ok(insideFloor(ch.room, h.stand) && h.stand.x >= 0 && h.stand.x < 320, h.id);
+    assert.ok(insideFloor(ch.room, ch.room.start));
   });
   test(`scenario ${n}: every script key its data names exists`, () => {
     const missing = [...new Set(keysIn(ch))].filter((k) => !SCRIPT[k]);
@@ -63,22 +64,21 @@ for (const n of ids) {
   });
 }
 
-test('brief 09\'s stand points for the 56-px hero', () => {
-  const at = (n, id) => CHAPTERS[n].room.hotspots.find((h) => h.id === id).standX;
-  const PC = { 1: 73, 2: 82, 3: 248, 4: 81, 5: 104 }, NPC = { 2: 184, 3: 116, 4: 148, 5: 176 }, START = { 1: 128, 2: 156, 3: 132, 4: 136, 5: 136 };
-  for (const n of ids) { assert.equal(at(n, 'pc'), PC[n], `pc ${n}`); assert.equal(CHAPTERS[n].room.start, START[n], `start ${n}`); }
-  for (const n of ids.filter((n) => n > 1)) assert.equal(at(n, 'npc'), NPC[n], `npc ${n}`);
-  assert.equal(at(1, 'cto'), 148);
+test('brief 11\'s anchors: his height on each room\'s measured line', () => {
+  const H = { 1: [182, 108], 2: [170, 115], 3: [180, 119], 4: [172, 95], 5: [195, 130] };
+  for (const n of ids) { const [y, h] = H[n]; assert.ok(Math.abs(heroHeightAt(CHAPTERS[n].room, y) - h) < 0.01, `room ${n}: ${heroHeightAt(CHAPTERS[n].room, y)} at y ${y}`); }
+  assert.ok(Math.abs(heroHeightAt(CHAPTERS[5].room, 127) - 76) < 0.01, 'room 5\'s second anchor');
+  for (const n of ids) assert.ok(heroHeightAt(CHAPTERS[n].room, 199) < 145, `room ${n}: not a giant at the very front`);
 });
 
 test('scenario 3 is mirrored and has the sign and the guitar; scenario 5 the pinball machine; scenario 4 the manager\'s line', () => {
   const r3 = CHAPTERS[3].room, by = Object.fromEntries(r3.hotspots.map((h) => [h.id, h]));
   assert.ok(by.pc.rect.x > 160 && by.npc.rect.x < 100);
-  assert.equal(by.sign.walk, false); assert.equal(by.sign.look, 'ch3.look.sign'); assert.ok(!by.sign.use);
-  assert.equal(by.guitar.walk, false); assert.equal(by.guitar.look, 'ch3.look.guitar'); assert.equal(by.guitar.use, 'ch3.use.guitar');
+  assert.deepEqual(by.sign.stand, { x: 278, y: 190 }); assert.equal(by.sign.look, 'ch3.look.sign'); assert.ok(!by.sign.use);
+  assert.deepEqual(by.guitar.stand, { x: 200, y: 172 }); assert.equal(by.guitar.look, 'ch3.look.guitar'); assert.equal(by.guitar.use, 'ch3.use.guitar');
   assert.equal(CHAPTERS[3].persona.where, 'top-right');
   const by5 = Object.fromEntries(CHAPTERS[5].room.hotspots.map((h) => [h.id, h]));
-  assert.equal(by5.pinball.walk, false); assert.equal(by5.pinball.look, 'ch5.look.pinball');
+  assert.deepEqual(by5.pinball.stand, { x: 238, y: 134 }); assert.equal(by5.pinball.look, 'ch5.look.pinball');   // he walks up to the machine (brief 11)
   assert.deepEqual(CHAPTERS[4].win, ['ch4.win', 'ch4.hero.line', 'ch4.manager.line']);
 });
 

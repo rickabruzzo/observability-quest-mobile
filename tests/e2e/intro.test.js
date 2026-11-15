@@ -273,3 +273,34 @@ test('when the dark shot is the same room, the title is already on its wall, dim
     await ctx.close();
   }
 });
+
+// ---- the bedroom (Warp brief 11): legs in bed, the subtitle clear ----
+test('the hero\'s box never meets the subtitle\'s box, sitting or standing; sitting, painted pixels lie below the blanket line', async () => {
+  const { ctx, page } = await openIntro();
+  await running(page);
+  for (let i = 0; i < 8; i++) { await page.waitForTimeout(300); await tapScene(page); }
+  await page.waitForFunction(() => window.__oq.intro.id === 'bedroom' && window.__oq.intro.hero?.box && document.querySelector('.intro-title'));
+  const boxes = async () => page.evaluate(() => {
+    const sc = document.querySelector('#scene').getBoundingClientRect(), k = sc.width / 320, t = document.querySelector('.intro-title').getBoundingClientRect();
+    const b = window.__oq.intro.hero.box;
+    return { hero: { x: b.x * k, y: b.y * k, w: b.w * k, h: b.h * k }, sub: { x: t.left - sc.left, y: t.top - sc.top, w: t.width, h: t.height }, pose: b.pose, sitY: window.__oq.intro.hero.sitY, line: window.__oq.intro.hero.blanketLine };
+  });
+  const meets = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+  const sit = await boxes();
+  assert.equal(sit.pose, 'situp');
+  assert.ok(!meets(sit.hero, sit.sub), `sitting: ${JSON.stringify(sit)}`);
+  // below the plate's blanket line, inside his sprite's columns, the canvas no longer shows the plate: his hips and the blanket over them
+  const changed = await page.evaluate(async ([line, sitY]) => {
+    const m = window.__oq.intro.manifest, g = document.querySelector('#scene').getContext('2d');
+    const img = new Image(); img.src = 'assets/intro/' + m.images.D_bedroom_vga; await img.decode();
+    const c = document.createElement('canvas'); c.width = 320; c.height = 200; const p = c.getContext('2d'); p.drawImage(img, 0, 0, 320, 200);
+    let n = 0;
+    for (let y = line + 1; y <= sitY; y++) for (let x = m.bed.x; x < m.bed.x + 48; x++) { const a = g.getImageData(x, y, 1, 1).data, b = p.getImageData(x, y, 1, 1).data; if (a[0] !== b[0] || a[1] !== b[1] || a[2] !== b[2]) n++; }
+    return n;
+  }, [sit.line, sit.sitY]);
+  assert.ok(changed > 100, `painted pixels below the blanket line: ${changed}`);
+  await page.waitForFunction(() => window.__oq.intro.hero?.pose === 'idle', null, { timeout: 8000 });
+  const stand = await boxes();
+  assert.ok(!meets(stand.hero, stand.sub), `standing: ${JSON.stringify(stand)}`);
+  await ctx.close();
+});
