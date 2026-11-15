@@ -24,7 +24,9 @@ body { font-family: var(--font-text); font-size: 20px; line-height: 1.1; -webkit
 button { font: inherit; }
 
 /* ---- status bar ---- */
-#statusbar { position: fixed; left: 0; top: 0; width: 100%; height: var(--status-h); background: var(--bar); color: #000; font-size: 20px; line-height: var(--status-h); display: flex; justify-content: space-between; padding: 0 10px; white-space: nowrap; overflow: hidden; }
+/* the bar is the Sierra bar: 20 px on every screen, its text clear of the notch on whichever side the phone is turned to */
+#statusbar { position: fixed; left: 0; top: 0; width: 100%; height: var(--status-h); background: var(--bar); color: #000; font-size: 20px; line-height: var(--status-h); display: flex; justify-content: space-between; gap: 8px; padding: 0 max(10px, env(safe-area-inset-right)) 0 max(10px, env(safe-area-inset-left)); white-space: nowrap; overflow: hidden; }
+body[data-stats="1"] #sb-title { font-size: 16px; }     /* ?stats=1: the sound readout is long; 16 px is the floor for read text */
 
 /* ---- stage: [thumb column] [scene] [thumb column] ---- */
 #stage { position: fixed; left: 0; top: var(--status-h); width: 100%; height: calc(100% - var(--status-h)); display: grid; grid-template-columns: var(--col-w) var(--scene-w) 1fr; }
@@ -45,10 +47,21 @@ body[data-cols="narrow"] .btn-sierra .long, body:not([data-cols="narrow"]) .btn-
 .btn-sierra:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #555; }
 .btn-sierra.go { font-weight: bold; }
 .btn-sierra[disabled] { opacity: 0.5; cursor: default; }
+/* the Sound button lives at the top of the left column on every screen (the ring switch no longer silences the game) */
+#btn-sound { margin-bottom: auto; margin-top: 12px; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+#btn-sound .state { font-family: var(--font-text); font-size: 18px; line-height: 1; }
+#btn-sound[aria-pressed="true"] { color: #111; border-color: #111; }
+#btn-sound[aria-pressed="false"] .state { color: var(--sheet-red); }
+body[data-cols="narrow"] #btn-sound .state { font-size: 16px; }
 
 /* ---- rotate gate (portrait phones only; the form screens are exempt) ---- */
 #rotate { display: none; position: fixed; inset: 0; z-index: 10; background: var(--black); color: var(--body); flex-direction: column; align-items: center; justify-content: center; gap: 18px; text-align: center; padding: 24px; font-size: 24px; }
 #rotate .phone { width: 36px; height: 64px; border: 4px solid var(--honey); border-radius: 4px; transform: rotate(0deg); animation: oq-rotate 2.4s ease-in-out infinite; }
+#rotate .rotate-hint { display: none; font-size: 18px; color: var(--dim); }
+body[data-fs="yes"] #rotate .fs-yes, body[data-fs="no"] #rotate .fs-no { display: block; }
+/* ?swipe=1 (an experiment): the document is 80 px taller than the viewport so Safari's bar can shrink on a swipe; the stage stays fixed */
+html[data-swipe="1"], html[data-swipe="1"] body { overflow: visible; height: auto; }
+html[data-swipe="1"] body { min-height: calc(100vh + 80px); }
 @keyframes oq-rotate { 0%, 30% { transform: rotate(0deg); } 60%, 100% { transform: rotate(-90deg); } }
 @media (orientation: portrait) and (max-width: 700px) {
   body:not([data-screen="CLAIM"]):not([data-screen="COMPLETE"]) #rotate { display: flex; }

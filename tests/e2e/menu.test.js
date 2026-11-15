@@ -3,7 +3,7 @@
 import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
-import { startServer } from './_server.js';
+import { startServer, windowed } from './_server.js';
 import { SCRIPT } from '../../js/script.js';
 import { openGame, throughIntro, pickScenario, run, dismiss, playShortest, charitySays } from './_play.js';
 
@@ -83,6 +83,7 @@ test('solving scenario 1 ticks it, with no number; the status bar counts it; the
 
 test('an old-format oq.done (scenario → score) is read: 100 is a clean solve, and the game carries on', async () => {
   const ctx = await browser.newContext({ viewport: { width: 844, height: 390 }, hasTouch: true, isMobile: true });
+  await windowed(ctx);
   const page = await ctx.newPage();
   const errors = []; page.on('pageerror', (e) => errors.push(e));
   await page.addInitScript(() => { if (!sessionStorage.getItem('oq.seeded')) { sessionStorage.setItem('oq.done', '{"1":100}'); sessionStorage.setItem('oq.seeded', '1'); } });

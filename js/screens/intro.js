@@ -234,7 +234,7 @@ export function createIntroScreen(game) {
     enter(ctx) {
       const mine = ++token;
       assets = null; out = false; done = false; cut(0);
-      sfx = createSfx(); sfx.unlock();                 // we are inside the Start tap: the one moment a phone lets sound begin
+      sfx = createSfx({ sound: ctx.sound }); sfx.unlock();   // we are inside the Start tap: the one moment a phone lets sound begin
       sounds = [];
       skip = colButton({ id: 'btn-skip', long: 'Skip', short: 'Skip', onClick: finish });
       ctx.colR.appendChild(skip);

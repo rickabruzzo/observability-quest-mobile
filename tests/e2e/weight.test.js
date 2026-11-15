@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, statSync } from 'node:fs';
 import { dirname, join, normalize } from 'node:path';
 import { chromium } from 'playwright';
-import { startServer } from './_server.js';
+import { startServer, windowed } from './_server.js';
 
 const BUDGET = 600 * 1024;
 const FONTS = ['assets/fonts/vt323-latin-400-normal.woff2', 'assets/fonts/gloryquest/gloryquest.otf'];
@@ -36,6 +36,7 @@ after(async () => { await browser?.close(); await server?.close(); });
 test('game reaches ready with only those files reachable', async () => {
   const allowed = new Set(FILES.map((f) => '/' + f.replace(/\\/g, '/')));
   const ctx = await browser.newContext({ viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true });
+  await windowed(ctx);
   const page = await ctx.newPage();
   const blocked = [];
   await page.route('**/*', (route) => {
@@ -64,6 +65,7 @@ test('intro assets total under 400 KB', () => {
 
 test('nothing under assets/intro is requested until the sheet opens', async () => {
   const ctx = await browser.newContext({ viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true });
+  await windowed(ctx);
   const page = await ctx.newPage();
   const seen = [];
   page.on('request', (r) => { const p = new URL(r.url()).pathname; if (p.startsWith('/assets/intro/')) seen.push(p); });

@@ -17,7 +17,7 @@ export function createTitleScreen(game) {
           <h1>OBSERVABILITY<br>QUEST</h1>
           <p>Honeycomb presents a night on call</p>
         </div>`;
-      startBtn = colButton({ id: 'btn-start', long: 'Start', short: 'Go', className: 'go', onClick: () => game.go('CREATOR') });
+      startBtn = colButton({ id: 'btn-start', long: 'Start', short: 'Go', className: 'go', onClick: () => { ctx.fullscreen?.(); game.go('CREATOR'); } });   // full screen where the phone allows it, inside the tap
       ctx.colR.appendChild(startBtn);
     },
     exit(ctx) {
