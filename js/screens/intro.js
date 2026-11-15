@@ -14,6 +14,7 @@ const BASE = 'assets/intro/';
 const LOAD_TIMEOUT_MS = 6000;
 const DIM = 0.16;                    // how much of the title shows on the unlit wall
 const TAP_GUARD_MS = 250;            // a tap this soon after a cut is the tail of the last tap
+const BED_RIGHT = 112;                // the bed's right edge in the bedroom plate: left of it, below the blanket line, is bed
 const STAND_DX = 30;                 // standing spot when the manifest has none: just right of the bed's left edge
 const WALK_AT = HERO_STEPS.find((s) => s.walkTo).at;
 const REDUCED_BEDROOM_MS = 2500;
@@ -75,28 +76,6 @@ function shade(hex, f) {
 }
 
 const SHOE = '#2E2E36';
-
-/** The blanket's colours as the plate has them: its lit top, its base, its shade (with fallbacks if the canvas is blocked). */
-function blanketColours(g) {
-  const at = (x, y, fb) => { try { const d = g.getImageData(x, y, 1, 1).data; return d[3] ? `rgb(${d[0]},${d[1]},${d[2]})` : fb; } catch { return fb; } };
-  return { light: at(70, 142, '#7FA6E8'), base: at(60, 152, '#4A72CC'), shade: at(30, 188, '#2E4A9E') };
-}
-
-/** The blanket over his hips and rising over his legs toward the foot of the bed (left). bx: his sprite's left edge, w its width;
- * lineY the plate's blanket line, sitY the line he sits in. */
-export function drawBlanket(g, bx, w, lineY, sitY, c) {
-  const hipL = bx + 4, hipR = bx + w - 4, foot = Math.max(2, bx - 62), knee = bx - 26;
-  const poly = [[hipR, lineY], [hipR, sitY + 6], [hipL + 6, sitY + 10], [knee, sitY + 12], [foot, sitY + 6], [foot, lineY + 4], [knee, lineY - 5], [hipL, lineY - 1]];
-  g.fillStyle = c.base; g.beginPath(); poly.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.closePath(); g.fill();
-  g.fillStyle = c.light;                                                                // the ridge's lit top
-  line(g, [hipL, lineY - 1], [knee, lineY - 5]); line(g, [knee, lineY - 5], [foot, lineY + 4]);
-  g.fillStyle = c.shade;                                                                // the fold under it
-  line(g, [hipL + 6, sitY + 10], [knee, sitY + 12]); line(g, [knee, sitY + 12], [foot, sitY + 6]);
-}
-function line(g, [x0, y0], [x1, y1]) {
-  const n = Math.max(1, Math.abs(x1 - x0), Math.abs(y1 - y0));
-  for (let i = 0; i <= n; i++) g.fillRect(Math.round(x0 + ((x1 - x0) * i) / n), Math.round(y0 + ((y1 - y0) * i) / n), 1, 1);
-}
 
 /** Day clothes on the floor, in the hero's own colours: jeans, the Honeycomb hoodie in a heap, a pair of shoes.
  * (x, y) = left, floor row; k scales the heap (the shapes were sized for a 28-px hero: a hero at heroScale wants 2 × heroScale). */
@@ -216,16 +195,17 @@ export function createIntroScreen(game) {
     }
     if (!h.visible) return;
     if (h.pose === 'situp') {
-      // in the bed (brief 11): he sits sitY, below the plate's blanket line, and the game draws the blanket over his hips
-      // and rising over his legs toward the foot of the bed, in the blanket's own colours read from the plate
-      const px = composeHero(cfg, 'situp', 'pj'), sitY = shotData.sitY ?? m.bed.y;
+      // in the bed (brief 11, and its review): he sits in front of the pillow (sitX) at sitY, a little below the plate's
+      // blanket line, and the bed's own blanket covers his hips: the plate is drawn again over him from that line down,
+      // across the bed. Nothing is drawn for the blanket; it is the painting's.
+      const px = composeHero(cfg, 'situp', 'pj'), sitY = shotData.sitY ?? m.bed.y, sitX = shotData.sitX ?? m.bed.x;
       const top = sitY - Math.round((lastOpaqueRow(px) + 1) * hs);
-      const blanket = blanketColours(g);
-      drawHero(g, cfg, 'situp', m.bed.x, top, hs, { outfit: 'pj' });
-      drawBlanket(g, m.bed.x, Math.round(HERO_W * hs), m.bed.y, sitY, blanket);
-      heroState.x = m.bed.x;
+      drawHero(g, cfg, 'situp', sitX, top, hs, { outfit: 'pj' });
+      const bed = assets.images.get(plate), by = m.bed.y + 1;
+      if (bed) g.drawImage(bed, 0, by, BED_RIGHT, 200 - by, 0, by, BED_RIGHT, 200 - by);
+      heroState.x = sitX;
       const first = Math.round(firstOpaqueRow(px) * hs);
-      heroState.box = { x: m.bed.x, y: top + first, w: Math.round(HERO_W * hs), h: sitY - top - first, pose: 'situp' };   // the figure's own box: hair to the blanket
+      heroState.box = { x: sitX, y: top + first, w: Math.round(HERO_W * hs), h: m.bed.y - top - first + 1, pose: 'situp' };   // the figure's own box: hair to the blanket line
       heroState.blanketLine = m.bed.y; heroState.sitY = sitY;
       return;
     }

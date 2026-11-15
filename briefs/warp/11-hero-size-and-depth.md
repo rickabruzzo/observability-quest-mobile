@@ -1,5 +1,11 @@
 # Warp brief 11 — the hero's size and depth: scaled by each room, a floor to walk into, legs in bed
 
+> **Built and reviewed, 2026-11-14** (`handbacks/2026-11-14-warp-hero-depth.md`,
+> `handbacks/2026-11-14-cloud-hero-depth-review.md`). Warp built it from this brief as it stood before the review
+> of brief 12, stacked on `warp/feedback-fixes`, so section D's first item (the verdict portrait's right edge) is
+> **not** in the build and moves to the next Warp brief. Section D's second item holds: the review's
+> `persona.covers` merged cleanly with the depth work. The review also reseated him in the bed (section C).
+
 Read `briefs/warp/PROTOCOL.md` and `briefs/PROTOCOL.md` first (**the worktree rule changed on 2026-11-14: your
 worktree now lives inside the project folder**). Brief 12 is done and reviewed (`handbacks/2026-11-14-cloud-feedback-review.md`). Branch `warp/hero-depth` from
 `origin/era-look` **after Rick has merged `desktop/feedback-review`**, which carries brief 12 and the review's
