@@ -47,7 +47,7 @@ Picks: front t1, side t1, long stride t1, passing (second round) t1. 3 + 3 + 3 +
 ## Rick's reaction
 
 - **Front tries in room 2 beside the engineer** (painted, and recoloured to a default look): "1 it is."
-- **The side and walk frames** are delivered for his review in the game. He has not reacted to them yet.
+- **All four figures** (the sheet in swap colours, front and side recoloured in room 2, and the two walk frames as a gif): "better. approved" (2026-11-14, 23:01).
 
 ## Prompts, exactly
 
