@@ -263,6 +263,7 @@ and `briefs/art/02-persona-cards.md`. Each drop carries its own provenance, trie
 | `art-drops/2026-11-13-era-look-test/` | **Era-look fork.** `R2_era_test`: the approved room 2 with the engineer redrawn as a simple figure and a hero added | From `briefs/art/03-era-look-test.md`, the brief's prompt unchanged; no game screenshot attached. Try 2 of 2 kept: Rick, "getting close enough" (try 1 "looks like a cartoon more than a game"). Reference only, not built into the game. |
 | `art-drops/2026-11-13-era-look-rooms/` | **Era-look fork.** Rooms 1–5: every plate with its persona redrawn in the test's style, all talk, idle and win frames, and all ten close-ups plus `R2_wall_closeup_fixed` repainted | The rooms are the approved ones with only the person pasted back; the close-ups' screen areas are pixel-identical to the painted build. Hardware stays modern. Rick approved the rooms after the engineer's glasses were restored, and the close-ups the same evening. Known and left: room 1's CTO about 15% small; stray pixels on room 3's glasses. |
 | `art-drops/2026-11-13-era-look-portraits/` | **Era-look fork.** `P1`–`P5_portrait` with `_blink`, `_talk1`, `_talk2` (640×428); `hero_model_sheet` (1584×672) | Portraits: the painted room plate attached for the likeness and `assets/portrait_graham.png` for the style; only the eyes or mouth pasted back in the frames. The model sheet is a style reference for the hero generator, not a game asset. Approved by Rick. |
+| `art-drops/2026-11-14-hero-painted-test/` | **Era-look fork, a test.** The hero painted: `H_front`, `H_side`, `H_walk_pass` (112×288), `H_walk_contact` (148×288), the figure 272 px tall on flat yellow `#FAD73C` | From `briefs/art/05-hero-painted-test.md`. Edits only: the front figure from the approved profile hero of `R2_era_test` with the cloud engineer attached for the level of detail, the other three from the chosen front figure. Each part is painted in one colour family (hoodie green, jeans blue, skin orange-tan, hair and beard magenta, shoes grey) so the game can repaint it. Nothing on the chest: the Honeycomb mark is added from the official file. Prompts, tries and picks in the drop's `HANDBACK.md`. Approved by Rick, 2026-11-14 ("better. approved"). Not in the game yet. |
 
 All the art for rooms 2–5 and all five cards was reviewed and approved by Rick on 2026-11-13 (index:
 `handbacks/2026-11-13-art-rooms-and-cards.md`). Built to game size by `tools/build_rooms.py`: rooms 320×200; the
@@ -274,3 +275,9 @@ full colour (WebP), a card's animation frames as overlays of what changed (Rick,
 'era'`; `painted` rebuilds the approved look), and the personas' conversation portraits by
 `tools/build_persona_portraits.py` into `assets/portrait_p1..p5.png` and `assets/anim/portrait_p*_{blink,talk1,talk2}`,
 the narrators' format, each portrait and its frames cut to one 256-colour palette. The cards are the same in both looks.
+
+**The painted hero (a test, not in the game yet).** `tools/build_hero_painted.py` draws nothing: it sorts the pixels of
+`art-drops/2026-11-14-hero-painted-test/` into hoodie, jeans, skin, hair, grey and outline by colour family, cuts each
+figure to the game's size (136 px tall on 56×144; the long stride 74 wide), and repaints each part in a creator colour,
+keeping the painting's shading. `python3 tools/build_hero_painted.py <out.png>` makes the review picture: three looks
+beside the cloud engineer in room 2.
