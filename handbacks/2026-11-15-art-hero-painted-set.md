@@ -10,7 +10,7 @@ For **Cloud Claude**, from Art Claude (Rick's personal account). The full detail
 | #26 | `era-look` | **Brief 06, the painted hero full set**, plus the walk toward and away and the back-view heads. This branch also carries this note. |
 | #25 | `era-look` | For you: the phone playtest set-up (Vercel), and Rick's requests for full screen and for sound on phones. |
 | #24 | `era-look` | Brief 05: the four test figures. Rick: "better. approved." |
-| #23 | `era-look` | Brief 04: plates, products, battle sprites, the phone, brand marks. Rick approved groups 1–4. **He has not said yes or no to the brand marks.** |
+| #23 | `era-look` | Brief 04: plates, products, battle sprites, the phone, brand marks. Rick approved all five groups; the brand marks on 2026-11-15 ("approved"). |
 | #15 | `sci-adventure` | The art hand-back from the end of 2026-11-13. |
 
 **Order to merge:** #24 before #26, because #26's heads are cut to #24's `H_front` and `H_side`. The rest are
@@ -74,7 +74,6 @@ and move on. Do not ask Rick to compare them. ("It would take a difference mask 
 
 ## Still open from earlier
 
-- The **brand marks** in #23: Rick has neither approved nor rejected them.
 - In #25:
   - Whether sound came back on Rick's iPhone with the ring/silent switch on ring. Unanswered.
   - The Vercel project is named `observability-quest-mobile-tools`. Rename it before any QR code is printed.
