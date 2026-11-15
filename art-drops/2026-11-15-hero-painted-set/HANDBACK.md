@@ -106,7 +106,7 @@ The styles were made from the chosen clean face, not from the bearded one.
 | long, side | 3 | t3 | Keeps the hood visible under the hair, so the body layer stays true. t1 was cut straight by the paste box. |
 | afro, front | 3 | t1 | Round and even, and matches the side's size. |
 | afro, side | 3 | t1 | Same size and texture as the front. |
-| mohawk, front | 3 | t1 | The buzzed sides are a pale hair tone, so they recolour with the hair. In t2 and t3 they are grey, which would stay grey for every player. |
+| mohawk, front | 3 | t1 | The buzzed sides are a pale pink. Most of it sorts as skin (a shaved scalp), so it follows the player's skin colour. In t2 and t3 they are grey, which would stay grey for every player. |
 | mohawk, side | 3 | t1 | Same reason. |
 | glasses, front | 3 | t1 | Darkest, cleanest frame, the eyes clear. |
 | glasses, side | 3 | t1 | Same. |
@@ -127,7 +127,11 @@ That is 47 images in all.
 2. **The walk does not bob.** Like brief 05, every walk frame is scaled to 272 px tall, so the head height is
    the same in all four. If the step looks flat, lower down and contact 2–3 px and raise up 1–2 px at game size.
 3. **Colour families to watch when sorting:**
-   - The mohawk's buzzed sides are a pale magenta. They must sort as hair; with the brief 05 hue split they do.
+   - **The mohawk's buzzed sides sort mostly as skin, not hair.** With the brief 05 hue split, about 60 % of the
+     changed pixels are skin and 40 % hair, on the front and back heads alike. They read as a shaved scalp in the
+     player's skin colour, with hair-coloured stubble at the strip's edge. If Rick wants the sides in the hair
+     colour, push those pixels into the hair family in the build. (Corrected 2026-11-15; the first version of this
+     hand-back said they sort as hair.)
    - The glasses' frames are dark neutral. They become outline, which is right.
    - Long hair over the hoodie leaves a few green and blue pixels in its changed area (rows of edge
      anti-aliasing): 124 green and 12 blue on the front. They belong to the body's colours and should sort that
@@ -206,7 +210,8 @@ Attached: `hero05/tries/front_t1.png` · aspect 16:9
 
 ## Added 2026-11-15: walking into and out of the scene's depth
 
-**Rick, 10:52:** "can I get a turn in and turn out for walking within the depth of the scene". These are frames
+**Rick, 10:52:** "can I get a turn in and turn out for walking within the depth of the scene". **On seeing the two
+loops, 11:02: "approved."** These are frames
 for walking straight toward the viewer and straight away into the room. They are the same size and in the same
 colour families as the rest.
 
@@ -244,13 +249,18 @@ All are 112×288, with the figure 272 tall.
 
 That is 9 more images, 56 in all.
 
-**Not done yet, the head layer from behind:**
-- The **long, afro and mohawk** styles look different from the back, so they need a back-view head each: 3
-  paintings, edits of `H_back`.
-- The **clean, standard and glasses** heads look the same from behind, apart from the glasses' arms over the
-  ears, which are too small to matter.
+**The head layer from behind, added after Rick's approval:**
 
-The walking-toward frames take the front heads as they are.
+| File | Rows changed against `H_back` | Pick |
+|---|---|---|
+| `HD_long_back.png` | 17–144 | t2 of 3: the hood shows under the hair, as in the side pick |
+| `HD_fro_back.png` | 2–68 | t1 of 3: the same size as the front and side afro |
+| `HD_mohawk_back.png` | 11–81 | t1 of 3: the pale buzz, as on the front and side |
+
+- **No back head is needed for clean, standard or glasses.** They use `H_back`'s own short hair.
+- **Glasses from behind:** the arms over the ears are too small to show.
+- **The beard doesn't show from behind**, so `H_back` serves both the bearded and the clean looks.
+- **Images:** 9 more for these heads, 65 for brief 06 in all.
 
 ### Prompts
 #### Back
@@ -270,3 +280,16 @@ Attached: `hero05/tries/front_t1.png`, `hero05/tries/walk_contact_t1.png` · asp
 The first image is a pixel-art game character seen from behind, painted in flat colour families on a flat yellow background: green hoodie, blue jeans, orange-tan skin, magenta hair and beard, grey sneakers, a soft dark outline. Draw the same man again in the same drawing style, the same shading, the same outline, at the same scale and realistic proportions, keeping exactly his colour families (every pixel of a part is a tone of that part's one colour, no other hues). Show him from directly behind, his back to the viewer, walking straight away from us into the distance, mid-stride: his left leg (on the viewer's left) is stepping forward away from us, so that foot is placed a little higher in the picture and we see the back of its heel touching down; his right leg (on the viewer's right) is behind, nearer to us, its heel lifted high so we see the sole of that sneaker. His arms swing opposite to his legs. No face is visible: only the back of his head with his short magenta hair. The second image shows him walking towards us, for the stride. Hands empty. Hood down, nothing printed on the hoodie, no glasses. Background: one flat solid pure yellow colour everywhere, with no floor, no shadow and no other object. The figure fills the height of the image with a small margin. No text, no letters, no numbers, no logos.
 ```
 Attached: `hero06/tries/back_t2.png`, `hero06/tries/walkF_L_t1.png` · aspect 9:16
+#### Back heads (long, afro, mohawk)
+```
+Edit this picture. It is a pixel-art game character seen from behind, painted in flat colour families on a flat yellow background. Change only his hair, as seen from behind: long straight hair hanging down his back from the back of his head, past his shoulders to below his shoulder blades, lying over the hood of the hoodie. Paint the hair in the same magenta colour family as his current hair (a few tones of magenta, light to shadow, nothing else), with the same soft dark outline and shading style. Keep everything else exactly the same: the same pose, the same size and position in the frame, the same ears and neck, the same hoodie and hood, jeans, shoes and flat yellow background, pixel for pixel. No face is visible. No text, no letters, no logos.
+```
+Attached: `hero06/tries/back_t2.png` · aspect 9:16
+```
+Edit this picture. It is a pixel-art game character seen from behind, painted in flat colour families on a flat yellow background. Change only his hair, as seen from behind: a full, round afro of tight curls, standing out evenly around his whole head, about twice the size of his head's outline. Paint the hair in the same magenta colour family as his current hair (a few tones of magenta, light to shadow, nothing else), with the same soft dark outline and shading style. Keep everything else exactly the same: the same pose, the same size and position in the frame, the same ears and neck, the same hoodie and hood, jeans, shoes and flat yellow background, pixel for pixel. No face is visible. No text, no letters, no logos.
+```
+Attached: `hero06/tries/back_t2.png` · aspect 9:16
+```
+Edit this picture. It is a pixel-art game character seen from behind, painted in flat colour families on a flat yellow background. Change only his hair, as seen from behind: a mohawk: the sides and back of his head buzzed very short, in a pale tone of the same magenta, and a short, textured strip of hair running up the middle of the back of his head and over the top, standing up a few centimetres. Paint the hair in the same magenta colour family as his current hair (a few tones of magenta, light to shadow, nothing else), with the same soft dark outline and shading style. Keep everything else exactly the same: the same pose, the same size and position in the frame, the same ears and neck, the same hoodie and hood, jeans, shoes and flat yellow background, pixel for pixel. No face is visible. No text, no letters, no logos.
+```
+Attached: `hero06/tries/back_t2.png` · aspect 9:16
