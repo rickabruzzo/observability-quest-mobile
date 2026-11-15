@@ -38,7 +38,8 @@ export const PERSONA = {
   options: { wrong: { id: 'wrong', key: 'ch3.decide.wrong', jab: 'ch3.decide.wrong.jab' }, hc: { key: 'ch3.decide.hc', show: 'ch3.decide.hc.show' } },
 };
 
-/** The wall TV showing the checkout page; the game draws the page and the TV's glow (ch3-wall.js). */
+/** The wall TV showing the store's page; the game draws the page over the art (ch3-wall.js, brief 14 C): a customer's
+ * visit over and over, four products browsed in colour, then the left-handed guitar and the order that sticks. */
 export const WALL_DISPLAY = {
   image: 'R3_wall_closeup',
   chart: 'ch3.wall.chart',
@@ -47,12 +48,14 @@ export const WALL_DISPLAY = {
     pool: Array.from({ length: 5 }, (_, i) => `ch3.wall.stat.${i + 1}`),
     okPool: Array.from({ length: 3 }, (_, i) => `ch3.wall.ok.${i + 1}`),
     progress: 'ch3.wall.progress', progressOk: 'ch3.wall.progress.ok', cart: 'ch3.wall.cart',
+    shop: 'ch3.wall.shop', products: Array.from({ length: 4 }, (_, i) => `ch3.wall.product.${i + 1}`),
   },
   room: {
     bezel: { x0: 97, x1: 223, y0: 26, y1: 100 },
     screen: { x0: 102, x1: 217, y0: 34, y1: 94 },
     progress: { x0: 120, x1: 209, y0: 36, y1: 40 },
     large: { x0: 111, x1: 171, y0: 46, y1: 80 },
+    picture: { x: 113, y: 45 },                        // the small product sprite (57×37)
     small: [{ x0: 176, x1: 208, y0: 46, y1: 55 }, { x0: 176, x1: 208, y0: 58, y1: 67 }, { x0: 176, x1: 208, y0: 71, y1: 80 }],
     lane: { x0: 111, x1: 208, y0: 84, y1: 90 },
   },
@@ -60,7 +63,8 @@ export const WALL_DISPLAY = {
     screen: { x0: 31, x1: 287, y0: 22, y1: 171 },
     progress: { x0: 54, x1: 265, y0: 39, y1: 51 },
     large: { x0: 54, x1: 183, y0: 60, y1: 137 },
-    cart: { x0: 54, x1: 183, y0: 122, y1: 137 },
+    picture: { x: 62, y: 63 },                         // the product sprite (112×72), inside `large`
+    tag: { x0: 126, x1: 181, y0: 97, y1: 135 },        // the corner every product leaves empty: its name and price, or the cart line
     small: [{ x0: 192, x1: 265, y0: 60, y1: 80 }, { x0: 192, x1: 265, y0: 88, y1: 109 }, { x0: 192, x1: 265, y0: 117, y1: 137 }],
     lane: { x0: 54, x1: 265, y0: 147, y1: 160 },
   },
@@ -120,7 +124,7 @@ export const CH3 = {
   pc: PC,
   tools: {
     old: {
-      kind: 'old', title: 'ch3.old.title', intro: 'ch3.old.intro', exit: 'ch3.old.exit', close: 'ch3.old.close',
+      kind: 'old', title: 'ch3.old.title', intro: 'ch3.old.intro', exit: 'ch3.old.exit', close: 'ch3.old.close', mark: 'pretty_good_metrics',
       steps: [{ prompts: [1, 2, 3].map((i) => ({ key: `ch3.old.prompt.${i}`, jab: `ch3.old.jab.${i}` })) }],
       paint: paintOld,
     },

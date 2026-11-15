@@ -672,13 +672,18 @@ for (const [w, h] of PHONES) {
       const L = window.__oq.chapter.verdictLayout, sc = document.querySelector('#scene').getBoundingClientRect(), el = document.querySelector('.msg.verdict');
       const r = el.getBoundingClientRect(), g = document.querySelector('#scene').getContext('2d');
       const lit = (x, y, w, h) => { const d = g.getImageData(x, y, w, h).data; let n = 0; for (let i = 0; i < d.length; i += 4) if (d[i] + d[i + 1] + d[i + 2] > 60) n++; return n / (d.length / 4); };   // the share of a region that is picture, not black
-      return { L, scene: { x: sc.left, y: sc.top, w: sc.width, h: sc.height }, win: { x: r.left, y: r.top, w: r.width, h: r.height }, name: el.querySelector('.msg-name')?.textContent ?? null, text: el.dataset.text, pages: window.__oq.chapter.window.pages, litLow: lit(0, 150, 144, 50), litHigh: lit(0, 0, 144, 20), litRight: lit(160, 150, 160, 50) };
+      const k0 = sc.width / 320, winLeft = Math.floor((r.left - sc.left) / k0);
+      const columns = []; for (let x = 144; x < Math.min(winLeft, L.dx + L.fullDw); x++) columns.push(lit(x, 150, 1, 50));   // between the face's 45 % and the window
+      return { L, scene: { x: sc.left, y: sc.top, w: sc.width, h: sc.height }, win: { x: r.left, y: r.top, w: r.width, h: r.height }, name: el.querySelector('.msg-name')?.textContent ?? null, text: el.dataset.text, pages: window.__oq.chapter.window.pages, litLow: lit(0, 150, 144, 50), litHigh: lit(0, 0, 144, 20), columns, pastEdge: L.dx + L.fullDw < 320 ? lit(L.dx + L.fullDw, 150, 320 - L.dx - L.fullDw, 50) : 0 };
     });
     const k = m.scene.w / 320;
     assert.equal(m.L.dx, 0); assert.equal(m.L.dy + m.L.dh, 200, 'the portrait\'s bottom is the scene\'s bottom edge');
-    assert.ok(m.L.dw >= 140 && m.L.dw <= 160, 'about 45 % wide, the left half');
-    assert.ok(m.litLow > 0.3 && m.litHigh < 0.05 && m.litRight < 0.05, `the picture is where the layout says: ${JSON.stringify([m.litLow, m.litHigh, m.litRight])}`);
-    assert.ok(m.win.x >= m.scene.x + m.L.dw * k - 0.5, `the window is wholly right of the portrait: ${m.win.x} vs ${m.scene.x + m.L.dw * k}`);
+    assert.ok(m.L.dw >= 140 && m.L.dw <= 160, 'the face is centred in the left 45 %');
+    assert.ok(m.L.fullDw > m.L.dw, 'the picture is drawn through to its own right edge (brief 14 F)');
+    assert.ok(m.litLow > 0.3 && m.litHigh < 0.05, `the picture is where the layout says: ${JSON.stringify([m.litLow, m.litHigh])}`);
+    assert.ok(m.columns.length > 0 && m.columns.every((c) => c > 0.3), `no portrait pixel ends in a vertical line left of the window: ${JSON.stringify(m.columns.map((c) => c.toFixed(2)))}`);
+    assert.ok(m.pastEdge < 0.05, 'and nothing past its own right edge');
+    assert.ok(m.win.x >= m.scene.x + m.L.dw * k - 0.5, `the window is wholly right of the face's 45 %: ${m.win.x} vs ${m.scene.x + m.L.dw * k}`);
     assert.ok(m.win.x + m.win.w <= m.scene.x + m.scene.w + 0.5 && m.win.y >= m.scene.y - 0.5 && m.win.y + m.win.h <= m.scene.y + m.scene.h + 0.5, 'inside the scene');
     assert.ok(Math.abs((m.win.y + m.win.h / 2) - (m.scene.y + m.scene.h / 2)) < 6, 'vertically centred');
     assert.equal(m.name, 'CHRISTINE YEN'); assert.ok(!m.text.startsWith('CHRISTINE YEN'), 'the name is off the front of the line');
