@@ -281,3 +281,7 @@ the narrators' format, each portrait and its frames cut to one 256-colour palett
 figure to the game's size (136 px tall on 56×144; the long stride 74 wide), and repaints each part in a creator colour,
 keeping the painting's shading. `python3 tools/build_hero_painted.py <out.png>` makes the review picture: three looks
 beside the cloud engineer in room 2.
+
+**The Home Screen icons** (`assets/icons/icon-180.png`, `icon-192.png`, `icon-512.png`) are not generated and not drawn:
+`tools/build_icons.py` takes the four hexagons of the official `assets/hc_logomark.png` as the file has them (the small
+dark 'h' left out, as on the hoodie), enlarges them by a whole number and centres them on black.

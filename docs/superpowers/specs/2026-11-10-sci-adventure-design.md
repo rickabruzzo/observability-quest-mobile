@@ -265,7 +265,7 @@ The **coda** (after Charity) is unchanged in intent: the hero walks out into daw
 - **FM synthesis via an OPL3 emulator** running in the browser (there are small JS/WebAssembly OPL3 cores; the builder picks one with a permissive licence and verifies it in Safari). Instruments are OPL patches (brass, strings, bells, organ, bass, drums) — the actual AdLib timbre of the era.
 - **Original compositions** as note data, as in v0.1 but written for FM voices: a title theme (~45 s loop), a short motif per chapter (8–16 bars, ambient, low volume under play), a win sting, a wrong-move sting, the Charity verdict fanfare, and the sunrise coda cue. No existing melody is quoted.
 - **Effects**: footsteps (soft click per step), window open/close, prompt select, pager buzz, "glitch" burst, Canvas typing ticks, finding stamp.
-- First tap on the title unlocks audio; mute toggle persists; `visibilitychange` suspends.
+- First tap on the title unlocks audio; mute toggle persists; `visibilitychange` suspends. On phones: one audio context for the whole game, the `playback` audio session so an iPhone's silent switch does not mute it, and the Sound button always on screen (see Rick's first play on a phone).
 - Rick approves each cue by ear; the composition data lives in its own files so it can be revised without touching the game.
 
 ## Art
@@ -307,6 +307,18 @@ All five scenarios played. "Overall it's doing ok." What changes, and where it i
 - **The persona cards** are the art as delivered (above).
 - **The menus** are placeholders and get a designed pass.
 - **Housekeeping:** Warp's and Art Claude's worktrees live inside the project folder (`.worktrees/`, git-ignored), not beside it.
+
+### Rick's first play on a phone (2026-11-14)
+
+On his iPhone, from a Vercel preview: "It would be nice if the game took up the entire screen, also if it could force full screen instead of showing the browser", and "I hear sound in the browser desktop but not the mobile." What a phone allows was checked the same night, and the design follows it (Warp brief 13):
+
+- **Full screen is the phone's to give.** A page cannot hide the browser on an iPhone (no Fullscreen API there; iPad only), so at the booth, where the game opens from a QR code in a browser tab, an iPhone keeps its bars. On Android the Start tap goes full screen and locks landscape. Added to a Home Screen the game opens with no bars on both (a web app manifest; on iOS the `black-translucent` status bar style is what fills the screen): that is for testers and booth demo phones, and the game never asks a player to install it.
+- **The rotate gate helps a locked phone.** Where the phone allows it a tap on the gate turns the screen; on an iPhone the gate says to switch off rotation lock.
+- **The Sierra status bar stays**, 20 px, on every screen; it pads for the notch.
+- **Sound plays on a silenced iPhone, and the player can turn it off.** An iPhone's ring switch on silent mutes Web Audio, which is the likely reason Rick heard nothing. The game asks for the `playback` audio session (Safari 16.4 and later), uses one audio context for the whole game, unlocked by the first tap, and shows a **Sound** button at the top of the left column on every screen (the mute toggle this spec already called for). Cost, accepted: `playback` pauses the player's own music.
+- **The deploy serves only the game**: `index.html`, the manifest, `css/`, `js/`, `assets/`. Briefs, hand-backs and art drops are not served from the game's address.
+- **The Home Screen icon** is the official Honeycomb hexagons on black, enlarged by a whole number from `assets/hc_logomark.png` (`tools/build_icons.py`); its name there is "o11y Quest".
+- One experiment rides along behind `?swipe=1`: letting the page scroll so Safari can shrink its own bar. Unverified; Rick's phone decides.
 
 ## Technical approach
 

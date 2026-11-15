@@ -32,6 +32,16 @@ game itself is static files and needs nothing else. Ordered roughly by when you'
     (Domains → "Redirect to") so attribution lands in one place.
   - Production branch: `main`. Every push to `main` deploys production; every other branch gets a
     preview URL (`<project>-<hash>-<team>.vercel.app`), which is how we test on phones.
+- **As set up on 2026-11-14** (Art Claude, for phone play-tests): the project is `observability-quest-mobile-tools`
+  on the Hobby plan, root `./`, output `.`, no build or install command. Three things are still open:
+  - **Rename it before anything is printed.** The name is the production URL; this doc's choice is
+    `observability-quest` (Settings → General → Project Name).
+  - **Previews ask for a Vercel login** (Vercel Authentication, standard protection). A tester without an
+    account needs a shareable link from the deployment's page, or the protection switched off for previews.
+  - **Production is still `main`**, the v0.1 game. `era-look` gets its own preview URL on each push.
+- **The deploy serves only the game.** `.vercelignore` allows `index.html`, `manifest.webmanifest`, `css/`, `js/`
+  and `assets/`; briefs, hand-backs, docs and art drops are not served from the game's address (Warp brief 13).
+  The repository itself is public on GitHub, so those files are still readable there.
 - **HTTPS** is automatic on Vercel for any of the above.
 - **Preview deployments** on every branch/PR are automatic — that's how we'll test on phones
   before anything is live.

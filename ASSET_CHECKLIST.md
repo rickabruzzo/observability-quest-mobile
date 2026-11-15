@@ -28,6 +28,7 @@ composition says otherwise), then resize.
 ## Logos (already have, no export needed)
 - [x] `hc_logo_white.png` — 163×48 (from badge; may be re-exported from brand source at 2× if a crisp version exists)
 - [x] `hc_logomark.png` — 48×48
+- [x] `icons/icon-180.png`, `icon-192.png`, `icon-512.png` — the Home Screen icons: the hexagons of `hc_logomark.png` on black, enlarged ×3, ×3 and ×8 by `tools/build_icons.py` (not drawn; a larger official export replaces `hc_logomark.png` and the tool is run again)
 
 ## Also for ASSET_PROMPTS.md
 - [ ] Copy the **full** prompt text out of Firefly for each image above (the UI truncates it).
