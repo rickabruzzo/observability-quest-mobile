@@ -1,5 +1,8 @@
 # Art brief 06 — the painted hero, the full set: one body, the head as a layer
 
+> **Go (Rick, 2026-11-14, 23:20): "lets do it and see how it goes."** The list below stands as written: four
+> hair styles, beard or none, glasses or none, one build. Start at step 1 of the order.
+
 Read `briefs/art/PROTOCOL.md` first. For **Art Claude** on Rick's personal account. Rick art directs; his
 direction beats this brief. Branch `art/hero-painted-set` from `origin/era-look`.
 
@@ -17,10 +20,11 @@ direction beats this brief. Branch `art/hero-painted-set` from `origin/era-look`
 - **Rick chose the head as a separate layer** (2026-11-14, 23:02): one body set, and the head painted on its own
   for hair, beard and glasses, so shapes do not multiply by every frame.
 
-## Rick decides the list before you start
+## The list (confirmed by Rick, 2026-11-14)
 
 Colours cost nothing: skin, hair, hoodie and jeans colours all carry over from today's creator. Shapes cost
-paintings. This is the list this brief is written for. **Rick: cut or add, then tell Art Claude to go.**
+paintings. This is the list this brief is written for, and Rick has said go on it as it stands. He may still
+cut or add as the paintings come in: his word beats the table.
 
 | The creator today | In the painted set | Cost |
 |---|---|---|
@@ -30,7 +34,8 @@ paintings. This is the list this brief is written for. **Rick: cut or add, then 
 | Body: three builds | **one** build | a second build would be a second body set: every frame in part A again |
 
 That is 12 head paintings and 5 body paintings. Dropping two of today's three builds is the one thing here that
-takes a choice away from the player and not only a shape: Rick's call.
+takes a choice away from the player and not only a shape. Rick has accepted that for now ("see how it goes"); a
+second build, if he wants one later, is its own brief.
 
 ## How the layers work, so the paintings line up
 
