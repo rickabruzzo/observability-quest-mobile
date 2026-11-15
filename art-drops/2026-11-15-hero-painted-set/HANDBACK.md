@@ -71,8 +71,8 @@ the last row is the approved body.
 | clean side | `HD_clean_side.png` | 16 | **70** |
 | long front | `HD_long_front.png` | 16 | **105** |
 | long side | `HD_long_side.png` | 16 | **128** |
-| fro front | `HD_fro_front.png` | 1 | **71** |
-| fro side | `HD_fro_side.png` | 5 | **74** |
+| fro front | `HD_fro_front.png` | 3 | **71** |
+| fro side | `HD_fro_side.png` | 4 | **78** |
 | mohawk front | `HD_mohawk_front.png` | 8 | **71** |
 | mohawk side | `HD_mohawk_side.png` | 15 | **70** |
 | glasses front | `HD_glasses_front.png` | 22 | **71** |
@@ -104,8 +104,8 @@ The styles were made from the chosen clean face, not from the bearded one.
 | clean face, side | 3 | t1 | **Rick: "concur."** The same jaw and nose line; t2 and t3 pushed the chin forward. |
 | long, front | 3 | t2 | Cleanest fall over the shoulders. |
 | long, side | 3 | t3 | Keeps the hood visible under the hair, so the body layer stays true. t1 was cut straight by the paste box. |
-| afro, front | 3 | t1 | Round and even, and matches the side's size. |
-| afro, side | 3 | t1 | Same size and texture as the front. |
+| afro, front | 3 + 2 | second round, t1 | **Redone at Rick's size** (see the back heads): 67 px wide at 112×288. |
+| afro, side | 3 + 2 | second round, t1 | **Redone at Rick's size**: 61 px wide. |
 | mohawk, front | 3 | t1 | The buzzed sides are a pale pink. Most of it sorts as skin (a shaved scalp), so it follows the player's skin colour. In t2 and t3 they are grey, which would stay grey for every player. |
 | mohawk, side | 3 | t1 | Same reason. |
 | glasses, front | 3 | t1 | Darkest, cleanest frame, the eyes clear. |
@@ -116,7 +116,7 @@ The styles were made from the chosen clean face, not from the bearded one.
 | pyjamas, sitting | 3 | t1 | No blanket line; t2 and t3 drew one. |
 | clothes heap | 3 | t3 | Clearest fold, sneakers beside the heap. |
 
-That is 47 images in all.
+That is 47 images in this first round.
 
 ## Known weak spots, for Rick and for the build
 
@@ -253,14 +253,14 @@ That is 9 more images, 56 in all.
 
 | File | Rows changed against `H_back` | Pick |
 |---|---|---|
-| `HD_long_back.png` | 17–144 | t2 of 3: the hood shows under the hair, as in the side pick |
-| `HD_fro_back.png` | 2–68 | t1 of 3: the same size as the front and side afro |
-| `HD_mohawk_back.png` | 11–81 | t1 of 3: the pale buzz, as on the front and side |
+| `HD_long_back.png` | 17–128 | **Rick: t1.** On t2 the hair ran through the hood ("a hallucination, hair can't go through a hoodie like that"). |
+| `HD_fro_back.png` | 4–64 | **Rick: t2,** "the best size overall". 66 px wide. The front and side were then redone to match. |
+| `HD_mohawk_back.png` | 11–81 | **Rick: t1,** "will do". |
 
 - **No back head is needed for clean, standard or glasses.** They use `H_back`'s own short hair.
 - **Glasses from behind:** the arms over the ears are too small to show.
 - **The beard doesn't show from behind**, so `H_back` serves both the bearded and the clean looks.
-- **Images:** 9 more for these heads, 65 for brief 06 in all.
+- **Images:** 9 more for these heads, then 4 to redo the front and side afro at the back's size. 69 for brief 06 in all.
 
 ### Prompts
 #### Back
@@ -293,3 +293,8 @@ Attached: `hero06/tries/back_t2.png` · aspect 9:16
 Edit this picture. It is a pixel-art game character seen from behind, painted in flat colour families on a flat yellow background. Change only his hair, as seen from behind: a mohawk: the sides and back of his head buzzed very short, in a pale tone of the same magenta, and a short, textured strip of hair running up the middle of the back of his head and over the top, standing up a few centimetres. Paint the hair in the same magenta colour family as his current hair (a few tones of magenta, light to shadow, nothing else), with the same soft dark outline and shading style. Keep everything else exactly the same: the same pose, the same size and position in the frame, the same ears and neck, the same hoodie and hood, jeans, shoes and flat yellow background, pixel for pixel. No face is visible. No text, no letters, no logos.
 ```
 Attached: `hero06/tries/back_t2.png` · aspect 9:16
+#### Afro, front and side, second round (at the back head's size)
+```
+Edit this picture. It is a pixel-art game character painted in flat colour families on a flat yellow background. Change only his hair: a full, round afro of tight curls, standing out evenly around his whole head, a compact afro, only a little larger than his head: it stands out about a third of a head's width beyond his head on each side and above, no bigger. The second image shows the same afro from behind, at exactly the size wanted; match its size and curl texture. Paint the hair in the same magenta colour family as his current hair (a few tones of magenta, light to shadow, nothing else), with the same soft dark outline and shading style. Keep everything else exactly the same: the same pose, the same size and position in the frame, the same face, eyes, nose, mouth, ears and neck, clean-shaven, the same hoodie, jeans, shoes and flat yellow background, pixel for pixel. No text, no letters, no logos.
+```
+Attached: the chosen clean face, then `hero06/tries/fro_back_t2.png` · aspect 9:16 (the side used the same words)
