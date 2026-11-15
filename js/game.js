@@ -25,6 +25,7 @@ const ctx = {
   colR: document.getElementById('col-r'),
   hero: null,
   reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
+  stats: new URLSearchParams(location.search).get('stats') === '1',   // ?stats=1: the play-test stopwatch table after a scenario (brief 12)
   fit: null,
   chapterId: 1,          // the scenario the CHAPTER screen plays; the menu sets it
   claimed: false,        // the prize: nothing claims it yet (the claim flow is a later brief)

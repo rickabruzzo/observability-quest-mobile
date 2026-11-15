@@ -10,6 +10,7 @@ import { SCRIPT } from '../../js/script.js';
 import { CHAPTERS } from '../../js/chapters/index.js';
 import { readFileSync } from 'node:fs';
 import { personaLine, speakerOf, talkWindow } from '../../js/engine/conversation.js';
+import { narratorLine } from '../../js/engine/verdict.js';
 import { openGame, ch, run, winOpen, dismiss, tapSpot, toolOpen, promptsShown, prompt, inState, pcPick, closeCard, pickOption } from './_play.js';
 
 let server, browser;
@@ -52,8 +53,8 @@ async function winLines(n, page) {
   const c = CHAPTERS[n];
   for (const k of c.win) assert.equal(await dismiss(page), shown(n, k));
   assert.equal((await ch(page)).state, 'verdict');
-  assert.equal(await dismiss(page), SCRIPT[c.verdict.key]);
-  await page.waitForSelector('#summary');
+  assert.equal(await dismiss(page), narratorLine(SCRIPT[c.verdict.key]).text);   // the narrator's name is above the words (brief 12)
+  await page.waitForSelector('#btn-claim');
 }
 
 for (const n of NS) {

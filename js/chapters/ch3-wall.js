@@ -1,11 +1,11 @@
 // Scenario 3's wall display: a wall TV showing the store's checkout page. The art draws the browser's title bar;
 // the game draws the page: a progress bar stuck at 13 % with a spinner, the cart (a guitar from rectangles), three
 // small boxes of jokey stats on their own timers, a sales line sliding down — and, fixed, the bar full, the stats
-// kind, the line climbing. The TV's glow is the game's too (Rick): a dithered halo round the bezel that flickers
-// between white and a bluish white, with the pale page tinted by the same flicker. Shape: see ch1-wall.js.
+// kind, the line climbing. The TV's light is the page itself: its pale background shifts between three close tints
+// at irregular intervals (Rick, 2026-11-14: no ring of light round the bezel). Shape: see ch1-wall.js.
 
 const INK = '#2B2F36', PALE = '#F4F7FB', BAR = '#A9CBFF', GOOD = '#2E9A3A', BAD = '#C0392B';
-const STEP_MS = 100, RECOVER_MS = 1400, GLOW = 8;
+const STEP_MS = 100, RECOVER_MS = 1400;
 
 function hash(n) {
   let x = (n | 0) ^ 0x9e3779b9;
@@ -14,17 +14,26 @@ function hash(n) {
   return (x ^ (x >>> 16)) >>> 0;
 }
 const step = (s) => (s.reduced ? 0 : Math.floor(s.tAll / STEP_MS));
+
+/** The page's three tints: the white it is painted, a cooler white, a slightly dimmer one. Laid over the screen. */
+export const TINTS = ['rgba(255,255,255,0)', 'rgba(196,214,255,0.22)', 'rgba(20,30,50,0.10)'];
+/** The tint holds between this long and this long before it shifts. */
+export const TINT_MS = [200, 600];
+/** Which tint shows at `t` ms: a schedule of irregular holds, no two the same in a row. Reduced motion: the first. */
+export function pageTint(t, reduced = false) {
+  if (reduced) return 0;
+  let at = 0, k = 0;
+  for (let n = 0; n < 200000; n++) {
+    const hold = TINT_MS[0] + (hash(n * 5 + 3) % (TINT_MS[1] - TINT_MS[0] + 1));
+    if (t < at + hold) return k;
+    at += hold;
+    k = (k + 1 + (hash(n * 9 + 1) % 2)) % 3;                                  // the next tint is one of the other two
+  }
+  return k;
+}
 const fixed = (s) => s.state === 'fixed';
 /** How full the progress bar is: stuck at 13 %, then filling once fixed. */
 const progress = (s) => (fixed(s) ? (s.reduced ? 1 : Math.min(1, 0.13 + (0.87 * s.t) / RECOVER_MS)) : 0.13);
-/** The TV's brightness this step: an irregular flicker between pure white and a slightly darker, bluer white. */
-function flicker(s) {
-  if (s.reduced) return 0.6;
-  const k = step(s), h = hash(k * 31 + 7);
-  return (h % 3 === 0 ? 0.55 : 1) - ((h >>> 8) % 100) / 500;                // 0.35–1
-}
-/** The halo's light: translucent, bluer when dimmer, so the brick shows through lit rather than painted white. */
-const glowColour = (f) => (f > 0.8 ? `rgba(255,255,255,${(0.25 + 0.3 * f).toFixed(2)})` : `rgba(214,228,255,${(0.22 + 0.3 * f).toFixed(2)})`);
 
 function rect(g, a, colour) { g.fillStyle = colour; g.fillRect(a.x0, a.y0, a.x1 - a.x0 + 1, a.y1 - a.y0 + 1); }
 function frame(g, a, colour) { g.fillStyle = colour; g.fillRect(a.x0, a.y0, a.x1 - a.x0 + 1, 1); g.fillRect(a.x0, a.y1, a.x1 - a.x0 + 1, 1); g.fillRect(a.x0, a.y0, 1, a.y1 - a.y0 + 1); g.fillRect(a.x1, a.y0, 1, a.y1 - a.y0 + 1); }
@@ -60,32 +69,16 @@ function drawLine(g, a, samples, colour, thick) {
     g.fillRect(Math.round(a.x0 + i * stepX), Math.min(y, prev), Math.max(1, Math.round(stepX)), Math.max(thick, Math.abs(y - prev) + 1));
   });
 }
-/** The halo round the bezel: pixels outside it, within GLOW px, lit by a dither that thins with distance. */
-function halo(g, bezel, f, k) {
-  const colour = glowColour(f);
-  g.fillStyle = colour;
-  for (let y = bezel.y0 - GLOW; y <= bezel.y1 + GLOW; y++) {
-    for (let x = bezel.x0 - GLOW; x <= bezel.x1 + GLOW; x++) {
-      const dx = x < bezel.x0 ? bezel.x0 - x : x > bezel.x1 ? x - bezel.x1 : 0;
-      const dy = y < bezel.y0 ? bezel.y0 - y : y > bezel.y1 ? y - bezel.y1 : 0;
-      const d = Math.max(dx, dy);
-      if (d === 0) continue;
-      const lit = (1 - d / (GLOW + 1)) ** 2 * (0.3 + 0.5 * f);                             // the share of pixels lit at this distance, thinning fast
-      if ((hash(x * 131 + y * 17 + (k & 3)) % 1000) / 1000 < lit) g.fillRect(x, y, 1, 1);
-    }
-  }
-}
 
 export const WALL = {
   image: (s) => s.cfg.image,
-  frameKey: (s) => `${s.state}:${step(s)}:${s.nudges.length}:${fixed(s) ? Math.min(RECOVER_MS, Math.floor(s.t / 100) * 100) : 0}`,
+  frameKey: (s) => `${s.state}:${step(s)}:${pageTint(s.tAll, s.reduced)}:${s.nudges.length}:${fixed(s) ? Math.min(RECOVER_MS, Math.floor(s.t / 100) * 100) : 0}`,
   recovered: (s) => s.reduced || s.t >= RECOVER_MS,
   hits: (s) => s.cfg.close.small.map((area, box) => ({ area, box })),
-  /** The room: the TV's glow (under everything), the page tinted, a thin bar in the address bar, the guitar, bars, the line. */
+  /** The room: the page's tint, a thin bar in the address bar, the guitar, bars, the line. */
   room(g, s) {
-    const m = s.cfg.room, f = flicker(s);
-    if (!(s.reduced && f === 0)) halo(g, m.bezel, s.reduced ? 0.35 : f, step(s));
-    g.fillStyle = `rgba(255,255,255,${(0.04 + f * 0.1).toFixed(3)})`; g.fillRect(m.screen.x0, m.screen.y0, m.screen.x1 - m.screen.x0 + 1, m.screen.y1 - m.screen.y0 + 1);
+    const m = s.cfg.room;
+    rect(g, m.screen, TINTS[pageTint(s.tAll, s.reduced)]);
     const p = m.progress, pw = Math.round((p.x1 - p.x0 + 1) * progress(s));
     rect(g, { x0: p.x0, y0: p.y0 + 1, x1: p.x0 + Math.max(1, pw) - 1, y1: p.y1 - 1 }, fixed(s) ? GOOD : '#4C8DFF');
     guitar(g, m.large, INK, false);
@@ -94,8 +87,8 @@ export const WALL = {
   },
   /** Close up: the page tinted, the bar and its spinner, the cart, the boxes' frames, the sales line; the words are text. */
   close(g, s) {
-    const m = s.cfg.close, f = flicker(s);
-    g.fillStyle = `rgba(255,255,255,${(0.03 + f * 0.08).toFixed(3)})`; g.fillRect(m.screen.x0, m.screen.y0, m.screen.x1 - m.screen.x0 + 1, m.screen.y1 - m.screen.y0 + 1);
+    const m = s.cfg.close;
+    rect(g, m.screen, TINTS[pageTint(s.tAll, s.reduced)]);
     const p = m.progress, pw = Math.round((p.x1 - p.x0 - 1) * progress(s));
     rect(g, { x0: p.x0 + 1, y0: p.y0 + 1, x1: p.x0 + Math.max(1, pw), y1: p.y1 - 1 }, fixed(s) ? '#7FD88A' : BAR);
     if (!fixed(s)) {                                                                        // the spinner: a dark pixel going round a tiny ring

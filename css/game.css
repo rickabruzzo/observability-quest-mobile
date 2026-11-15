@@ -110,6 +110,9 @@ body[data-cols="narrow"] .btn-sierra .long, body:not([data-cols="narrow"]) .btn-
    the side away from them (brief 10) */
 .msg.top-left { left: 10px; top: 6px; transform: none; }
 .msg.top-right { left: auto; right: 10px; top: 6px; transform: none; }
+/* the verdict's window: on the right of the narrator's portrait, vertically centred (brief 12) */
+.msg.right { left: auto; right: 8px; top: 50%; transform: translateY(-50%); }
+.msg.named .msg-name { font-size: 20px; line-height: 1; color: var(--sheet-blue); margin-bottom: 2px; letter-spacing: 1px; }
 .msg.talk { display: flex; align-items: flex-start; column-gap: 10px; }
 .msg.talk .msg-portrait { flex: none; width: 4.4em; height: 4.4em; border: 2px solid #111; background: #000; box-sizing: content-box; }
 .msg.talk .msg-portrait canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; image-rendering: crisp-edges; }
@@ -157,7 +160,12 @@ body[data-cols="narrow"] .btn-sierra .long, body:not([data-cols="narrow"]) .btn-
 .menu-row[disabled] { color: #888; border-color: #999; box-shadow: none; cursor: default; }
 .menu-row[disabled] .mr-name, .menu-row[disabled] .mr-mark { color: #888; }
 
-/* ---- timing summary ---- */
+/* ---- after the verdict: the prompt and its two buttons, centred; the timing summary only with ?stats=1 (brief 12) ---- */
+.after { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 0 12%; }
+.after-prompt { margin: 0; text-align: center; font-size: 22px; line-height: 1.15; color: var(--body, #DCE4F0); }
+.after .sum-btns { width: 100%; max-width: 440px; }
+
+/* ---- timing summary (play-tests) ---- */
 .summary { position: absolute; left: 8px; right: 8px; top: 6px; bottom: 6px; display: flex; flex-direction: column; background: var(--sheet-white); color: #111; border-top: 6px solid #000; border-bottom: 6px solid #000; padding: 4px 12px 8px; font-size: 18px; line-height: 1.05; }
 .summary h2 { margin: 0 0 4px; font-family: var(--font-text); font-size: 24px; font-weight: normal; color: var(--sheet-blue); text-align: center; }
 .sum-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0 12px; }
@@ -237,5 +245,5 @@ body[data-cols="narrow"] .btn-sierra .long, body:not([data-cols="narrow"]) .btn-
 
 /* ---- Charity's verdict on Claim: her portrait takes over the scene (above any menu or summary) ---- */
 .charity { position: absolute; inset: 0; z-index: 3; background: #000; }
-.charity-portrait { position: absolute; left: 16.875%; top: 1%; width: 65.9375%; height: 66%; object-fit: cover; image-rendering: pixelated; image-rendering: crisp-edges; }
+.charity-portrait { position: absolute; left: 0; bottom: 0; width: 45%; height: 86%; object-fit: cover; object-position: 50% 0; image-rendering: pixelated; image-rendering: crisp-edges; }   /* head and shoulders on the left, the bottom on the scene's edge (brief 12) */
 .charity-head { position: absolute; left: 0; right: 0; top: 0; padding: 2px 8px; background: rgba(0, 0, 0, 0.7); color: var(--honey); font-family: var(--font-text); font-size: 22px; line-height: 1.1; text-align: center; letter-spacing: 1px; }

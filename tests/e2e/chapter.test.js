@@ -31,8 +31,8 @@ const seen = (page) => page.evaluate(() => [...window.__seen].join('\n'));
 const picPixels = (page) => page.evaluate((P) => [...document.querySelector('#scene').getContext('2d').getImageData(P.x, P.y, P.w, P.h).data].join(','), PIC);
 
 for (const [w, h] of PHONES) {
-  test(`${w}x${h}: the shortest path (PC → Honeycomb → deploy → recovery → leave → CTO → Get Honeycomb) wins, Solved ticks up, no score anywhere`, async () => {
-    const { ctx, page } = await openGame(browser, server, { w, h });
+  test(`${w}x${h}: the shortest path (PC → Honeycomb → deploy → recovery → leave → CTO → Get Honeycomb) wins, Solved ticks up, no score anywhere; the stopwatch table with ?stats=1`, async () => {
+    const { ctx, page } = await openGame(browser, server, { w, h, query: '?stats=1' });
     await watchText(page);
     assert.equal(await page.locator('#sb-done').innerText(), 'Solved: 0 of 5');
     await pickScenario(page);
@@ -66,8 +66,8 @@ test('the room\'s and the Honeycomb screen\'s pictures are loaded before the cla
   await ctx.close();
 });
 
-test('Copy results prints one JSON line to the console, with missteps and no score', async () => {
-  const { ctx, page } = await openGame(browser, server, { query: '?ch=1' });
+test('Copy results (with ?stats=1) prints one JSON line to the console, with missteps and no score', async () => {
+  const { ctx, page } = await openGame(browser, server, { query: '?ch=1&stats=1' });
   const lines = []; page.on('console', (m) => lines.push(m.text()));
   await playShortest(page);
   await page.click('#btn-copy');
@@ -638,5 +638,68 @@ test('reduced motion: the card just appears, and Escape closes it', async () => 
   await page.waitForFunction(() => !document.querySelector('#persona-card'));
   await winOpen(page);
   assert.equal(await dismiss(page), shown('ch1.cto.call.1'));
+  await ctx.close();
+});
+
+// ---- Rick's play-through of 2026-11-14 (Warp brief 12) ----
+test('after the verdict the player sees the prompt and two buttons only; no table, no Copy, until ?stats=1', async () => {
+  const { ctx, page } = await openGame(browser, server, { query: '?ch=1' });
+  await playShortest(page);
+  assert.equal(await page.locator('#summary').count(), 0);
+  assert.equal(await page.locator('#btn-copy').count(), 0);
+  assert.equal(await page.locator('#after .after-prompt').innerText(), SCRIPT['after.prompt']);
+  assert.ok(await page.locator('#btn-claim').isVisible() && await page.locator('#btn-more').isVisible());
+  assert.doesNotMatch(await page.locator('#after').innerText(), /Missteps|Taps|Walking/);
+  const box = await page.locator('#after .sum-btns').boundingBox(), sc = await page.locator('#scene').boundingBox();
+  assert.ok(Math.abs((box.x + box.width / 2) - (sc.x + sc.width / 2)) < 4, 'centred');
+  assert.ok((await run(page)).done, 'the stopwatch still ran');
+  await page.click('#btn-more');
+  await page.waitForFunction(() => document.body.dataset.screen === 'MENU');
+  await ctx.close();
+});
+
+for (const [w, h] of PHONES) {
+  test(`${w}x${h}: the verdict is laid out for a phone on its side — the portrait on the left with its bottom on the scene's edge, the words in one window on its right with the narrator's name above them`, async () => {
+    const { ctx, page } = await openGame(browser, server, { w, h, query: '?ch=1' });
+    await into(page); await toPc(page); await pcPick(page, 'hc'); await solveHc(page); await inState(page, 'pc');
+    await deployAndRecover(page); await inState(page, 'pc'); await leavePc(page); await askCto(page); await page.click('#decide-hc');
+    assert.equal(await dismiss(page), SCRIPT['ch1.win']);
+    assert.equal(await dismiss(page), shown('ch1.hero.line'));
+    await winOpen(page);
+    assert.equal((await ch(page)).state, 'verdict');
+    const m = await page.evaluate(() => {
+      const L = window.__oq.chapter.verdictLayout, sc = document.querySelector('#scene').getBoundingClientRect(), el = document.querySelector('.msg.verdict');
+      const r = el.getBoundingClientRect(), g = document.querySelector('#scene').getContext('2d');
+      const lit = (x, y, w, h) => { const d = g.getImageData(x, y, w, h).data; let n = 0; for (let i = 0; i < d.length; i += 4) if (d[i] + d[i + 1] + d[i + 2] > 60) n++; return n / (d.length / 4); };   // the share of a region that is picture, not black
+      return { L, scene: { x: sc.left, y: sc.top, w: sc.width, h: sc.height }, win: { x: r.left, y: r.top, w: r.width, h: r.height }, name: el.querySelector('.msg-name')?.textContent ?? null, text: el.dataset.text, pages: window.__oq.chapter.window.pages, litLow: lit(0, 150, 144, 50), litHigh: lit(0, 0, 144, 20), litRight: lit(160, 150, 160, 50) };
+    });
+    const k = m.scene.w / 320;
+    assert.equal(m.L.dx, 0); assert.equal(m.L.dy + m.L.dh, 200, 'the portrait\'s bottom is the scene\'s bottom edge');
+    assert.ok(m.L.dw >= 140 && m.L.dw <= 160, 'about 45 % wide, the left half');
+    assert.ok(m.litLow > 0.3 && m.litHigh < 0.05 && m.litRight < 0.05, `the picture is where the layout says: ${JSON.stringify([m.litLow, m.litHigh, m.litRight])}`);
+    assert.ok(m.win.x >= m.scene.x + m.L.dw * k - 0.5, `the window is wholly right of the portrait: ${m.win.x} vs ${m.scene.x + m.L.dw * k}`);
+    assert.ok(m.win.x + m.win.w <= m.scene.x + m.scene.w + 0.5 && m.win.y >= m.scene.y - 0.5 && m.win.y + m.win.h <= m.scene.y + m.scene.h + 0.5, 'inside the scene');
+    assert.ok(Math.abs((m.win.y + m.win.h / 2) - (m.scene.y + m.scene.h / 2)) < 6, 'vertically centred');
+    assert.equal(m.name, 'CHRISTINE YEN'); assert.ok(!m.text.startsWith('CHRISTINE YEN'), 'the name is off the front of the line');
+    assert.equal(m.text, SCRIPT['ch1.verdict'].replace(/^CHRISTINE YEN:\s*/, ''));
+    if (w === 844) assert.equal(m.pages, 1, 'one page at 844×390');
+    await dismiss(page); await page.waitForSelector('#btn-claim');
+    await ctx.close();
+  });
+}
+
+test('room 4: nothing the wall paints lands on the persona — her patch holds still while the wall animates and she is not talking', async () => {
+  const { ctx, page } = await openGame(browser, server, { query: '?ch=4' });
+  await page.click('#class-card'); await dismiss(page);
+  await page.waitForTimeout(400);
+  const patch = JSON.parse(readFileSync('assets/rooms/ch4.json', 'utf8')).patches.R4_ops_room;
+  const grab = () => page.evaluate((p) => [...document.querySelector('#scene').getContext('2d').getImageData(p.x, p.y, p.w, p.h).data].join(','), patch);
+  const wallGrab = () => page.evaluate(() => { const d = document.querySelector('#scene').getContext('2d').getImageData(34, 7, 200, 74).data; let h = 0; for (let i = 0; i < d.length; i += 4) h = (h * 31 + d[i]) >>> 0; return h; });   // a hash of the star map, which moves every step
+  assert.equal(await page.evaluate(() => window.__oq.chapter.personaFrame), null, 'at rest: the plate');
+  const a = await grab(), wa = await wallGrab();
+  await page.waitForTimeout(450);
+  const b = await grab(), wb = await wallGrab();
+  assert.notEqual(wa, wb, 'the wall animates');
+  assert.equal(a, b, 'no pixel inside her patch changes');
   await ctx.close();
 });

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { SCRIPT } from '../../js/script.js';
 import { CH1 } from '../../js/chapters/ch1.js';
 import { personaLine, speakerOf } from '../../js/engine/conversation.js';
+import { narratorLine } from '../../js/engine/verdict.js';
 
 /** What the window shows for a script key: the persona's lines lose their `CTO:` prefix (the name is on the window). */
 export const shown = (key) => personaLine(SCRIPT[key], speakerOf(SCRIPT[CH1.persona.name])).text;
@@ -133,8 +134,8 @@ export async function winLines(page) {
   assert.equal(await dismiss(page), SCRIPT['ch1.win']);
   assert.equal(await dismiss(page), shown('ch1.hero.line'));
   assert.equal((await ch(page)).state, 'verdict');
-  assert.equal(await dismiss(page), SCRIPT['ch1.verdict']);
-  await page.waitForSelector('#summary');
+  assert.equal(await dismiss(page), narratorLine(SCRIPT['ch1.verdict']).text);   // the narrator's name is above the words (brief 12)
+  await page.waitForSelector('#btn-claim');
 }
 
 /** The shortest path: card → PC → Honeycomb (direct, or one nudge first) → deploy → recovery → leave → CTO → [Get Honeycomb] → summary. */

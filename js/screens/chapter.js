@@ -1,6 +1,6 @@
 // A scenario, start to finish: title card → room (tap to walk, tap to act, Look / Use / Help) → close-ups (the
 // lent computer with its menu, the wall display) → tool screens (the old tool, the Honeycomb screen) → the
-// persona's card and decision → win → verdict → the timing summary. Every scenario's words, places, pictures
+// persona's card and decision → win → verdict → the way on (the timing summary with ?stats=1). Every scenario's words, places, pictures
 // and wall-display painter are data (js/chapters/chN.js, through js/chapters/index.js); the rules are the pure
 // engine modules (scenario, persona, prompts, room); this module is the DOM, the canvas and the clock. It names
 // no scenario: tests/chapter-data.test.js greps it.
@@ -21,6 +21,7 @@ import { createRunlog, summaryLines, formatMs, PHASES, PHASE_LABELS, COUNT_LABEL
 import { createScenario, notePrompt, noteFound, noteDeployed, wallState, canLeave, canDeploy, statusLine, personaUse, decide, missteps, firstTalk } from '../engine/scenario.js';
 import { parseStats, cardPicture, personaOptions, OPTION_KEYS, personaFrame, cardFrameAt, phoneRows } from '../engine/persona.js';
 import { paintHc } from '../engine/screens.js';
+import { narratorLine, portraitLayout, figureCentre } from '../engine/verdict.js';
 import { playCharity } from './charity.js';
 import { loadManifest } from '../engine/images.js';
 import { recordDone, solvedCount } from '../menu.js';
@@ -51,7 +52,7 @@ export function createChapterScreen(game) {
   let persona = null, gctx = null;             // who speaks from the close-up; the game ctx, for the scene's scale
   let state = 'card', mode = 'use', busy = false, pcardClose = null, card = null;
   let x = 0, pose = 'idle', view = 'front', flip = false, plan = null, elapsed = 0, walkMs = 0, pending = null, marker = null, cursor = null;
-  let tools = {}, introShown = new Set(), toolName = null, toolFrom = null, toolEl = null, reveal = null, portrait = null;
+  let tools = {}, introShown = new Set(), toolName = null, toolFrom = null, toolEl = null, reveal = null, portrait = null, portraitCentre = null;
   let wallT = 0, wallAll = 0, nudges = [], talkT = 0, personaQuiet = false, personaTalking = false, won = false, lastDraw = '';
   let sceneEl = null, pcView = 'menu', wallFrame = null, wallWordsCache = null;
   let icons = [], back = null, onDown = null, onMove = null, onTapCount = null;
@@ -74,8 +75,13 @@ export function createChapterScreen(game) {
   function paintRoom(ctx) {
     const g = ctx.ctx2d;
     backdrop(g, room.image);
-    painter().room(g, wall(ctx));                                   // the wall display, under the persona's frame
     const frame = personaNow(ctx), patch = art?.manifest.patches?.[room.image];
+    // the wall display, under the persona: whatever it paints stays out of their patch (brief 12: room 4's chat
+    // bars were painted over the SRE), so the plate's figure shows whether or not a frame is drawn over it
+    g.save();
+    if (patch) { g.beginPath(); g.rect(0, 0, 320, 200); g.rect(patch.x, patch.y, patch.w, patch.h); g.clip('evenodd'); }
+    painter().room(g, wall(ctx));
+    g.restore();
     if (frame && patch && img(frame)) g.drawImage(img(frame), patch.x, patch.y);
     const hs = room.heroScale ?? 1, heroY = room.floorY - Math.round(HERO_H * hs);     // feet on the floor line at any scale
     if (view === 'side') drawHeroSide(g, hero, pose, x, heroY + SIDE_FOOT_DY, hs, { flip });
@@ -92,11 +98,19 @@ export function createChapterScreen(game) {
     const def = ch.tools[toolName];
     if (def.kind === 'hc') paintHc(ctx.ctx2d, tools.hc.step, p, hcArt, ctx.reducedMotion); else def.paint(ctx.ctx2d);
   }
+  /** The narrator's portrait for a phone on its side (brief 12): on the left, its bottom on the scene's bottom edge,
+   * cropped round the figure; the words go in one window on the right. */
+  function verdictLayout() {
+    if (!(portrait?.complete && portrait.naturalWidth)) return portraitLayout(640, 428, 320);
+    if (portraitCentre === null) { try { portraitCentre = figureCentre(portrait); } catch { portraitCentre = portrait.naturalWidth / 2; } }
+    return portraitLayout(portrait.naturalWidth, portrait.naturalHeight, portraitCentre);
+  }
   function paintPortrait(ctx) {
     const g = ctx.ctx2d;
     g.fillStyle = '#000'; g.fillRect(0, 0, 320, 200);
-    // 640x428 cropped to 16:10 and fitted above the verdict window, which takes the bottom third
-    if (portrait?.complete && portrait.naturalWidth) g.drawImage(portrait, 0, 14, 640, 400, 54, 2, 211, 132);
+    if (!(portrait?.complete && portrait.naturalWidth)) return;
+    const L = verdictLayout();
+    g.drawImage(portrait, L.sx, L.sy, L.sw, L.sh, L.dx, L.dy, L.dw, L.dh);
   }
   function paint(ctx) {
     if (state === 'tool') paintTool(ctx, reveal ? Math.min(1, reveal.t / REVEAL_MS) : 1);
@@ -547,15 +561,31 @@ export function createChapterScreen(game) {
     ctx.saveDone(done); ctx.setSolved(solvedCount(done));
     for (const k of ch.win) if (!(await line(k))) return;
     state = 'verdict'; paint(ctx);
-    if (!(await line(ch.verdict.key, { where: 'bottom', className: 'verdict' }))) return;
+    // the narrator's name comes off the front of the line and goes above the words, in the window on the right
+    const { name, text } = narratorLine(say(ch.verdict.key)), t = live(), L = verdictLayout();
+    await wins.say(text, { where: 'right', className: 'verdict', name, maxWidth: Math.floor((320 - L.textX) * (gctx?.fit?.scale ?? 1)) - 8, maxLines: 12 });
+    if (t !== live()) return;
     run.end(steps);
     showSummary(ctx);
   }
 
+  /** After the verdict: the prompt and its two buttons. The stopwatch's table is for play-tests only (`?stats=1`). */
   function showSummary(ctx) {
     state = 'summary';
     const s = run.snapshot();
     const g = ctx.ctx2d; g.fillStyle = '#000'; g.fillRect(0, 0, 320, 200);
+    if (!ctx.stats) {
+      ctx.overlay.innerHTML = `
+      <div class="after" id="after" role="dialog">
+        <p class="after-prompt">${esc(say('after.prompt'))}</p>
+        <div class="sum-btns">
+          <button type="button" class="prompt" id="btn-claim">${esc(say('after.claim'))}</button>
+          <button type="button" class="prompt" id="btn-more">${esc(say('after.more'))}</button>
+        </div>
+      </div>`;
+      wireAfter(ctx);
+      return;
+    }
     const rows = (pairs) => pairs.map(([k, v]) => `<div class="sum-row"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('');
     const phases = PHASES.map((p) => [PHASE_LABELS[p], formatMs(s.phases[p])]);
     const counts = COUNT_LABELS.map(([k, label]) => [label, k === 'walkMs' ? formatMs(s.counts[k]) : String(s.counts[k])]);
@@ -571,6 +601,10 @@ export function createChapterScreen(game) {
           <button type="button" class="prompt" id="btn-copy">${esc(say('ui.copy'))}</button>
         </div>
       </div>`;
+    wireAfter(ctx);
+    ctx.overlay.querySelector('#btn-copy').addEventListener('click', (e) => copyResults(e.currentTarget));
+  }
+  function wireAfter(ctx) {
     const t = live();
     ctx.overlay.querySelector('#btn-more').addEventListener('click', () => game.go('MENU'));
     ctx.overlay.querySelector('#btn-claim').addEventListener('click', async () => {
@@ -578,7 +612,6 @@ export function createChapterScreen(game) {
       if (ctx.overlay.querySelector('#charity')) return;
       if (await playCharity(ctx, wins, say('claim.soon'), () => t === live())) game.go('MENU');
     });
-    ctx.overlay.querySelector('#btn-copy').addEventListener('click', (e) => copyResults(e.currentTarget));
   }
 
   function copyResults(btn) {
@@ -601,7 +634,7 @@ export function createChapterScreen(game) {
       room = ch.room; hero = ctx.hero;
       token = {};
       x = room.start; pose = 'idle'; view = 'front'; flip = false; plan = null; elapsed = 0; walkMs = 0; pending = null; marker = null; cursor = null;
-      mode = 'use'; busy = false; tools = {}; introShown = new Set(); toolName = null; toolFrom = null; toolEl = null; reveal = null; portrait = null; card = null;
+      mode = 'use'; busy = false; tools = {}; introShown = new Set(); toolName = null; toolFrom = null; toolEl = null; reveal = null; portrait = null; portraitCentre = null; card = null;
       scen = createScenario(); wallT = 0; wallAll = 0; nudges = []; talkT = 0; personaQuiet = false; personaTalking = false; won = false; lastDraw = ''; sceneEl = null; wallFrame = null;
       wallWordsCache = wallWords(ch.wall.text);
       art = null; hcArt = null; recovering = null;
@@ -646,6 +679,7 @@ export function createChapterScreen(game) {
         get wall() { const s = wall(ctx); return { state: s.state, tone: painter().tone?.(s) === 'ok' ? 'green' : 'red', frame: painter().frame?.(s) ?? null, image: painter().image(s), text: painter().text(s) }; },
         get personaFrame() { return personaNow(ctx); },
         get won() { return won; },
+        get verdictLayout() { return state === 'verdict' ? verdictLayout() : null; },
         hotspot(id) { return room.hotspots.find((h) => h.id === id); },
       });
     },
