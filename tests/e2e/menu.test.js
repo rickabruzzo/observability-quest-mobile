@@ -135,9 +135,14 @@ test('Claim: Charity\'s portrait, her header, the clean line, the count line, th
     const sc = document.querySelector('#scene').getBoundingClientRect(), p = document.querySelector('.charity-portrait').getBoundingClientRect(), m = document.querySelector('#charity .msg').getBoundingClientRect();
     return { sc: { x: sc.left, y: sc.top, w: sc.width, h: sc.height }, p: { x: p.left, y: p.top, w: p.width, h: p.height }, m: { x: m.left, y: m.top, w: m.width, h: m.height } };
   });
-  assert.ok(Math.abs(lay.p.x - lay.sc.x) < 1 && Math.abs((lay.p.y + lay.p.h) - (lay.sc.y + lay.sc.h)) < 1, `the portrait sits on the scene's left and bottom edges: ${JSON.stringify(lay)}`);
-  assert.ok(Math.abs(lay.p.w / lay.sc.w - 0.45) < 0.02, 'about 45 % wide');
-  assert.ok(lay.m.x >= lay.p.x + lay.p.w - 0.5 && lay.m.x + lay.m.w <= lay.sc.x + lay.sc.w + 0.5 && lay.m.y >= lay.sc.y && lay.m.y + lay.m.h <= lay.sc.y + lay.sc.h + 0.5, `the window is wholly right of her, inside the scene: ${JSON.stringify(lay)}`);
+  // brief 14 F: the picture keeps its left crop (her face centred in the left 45 %) but runs through to its own right edge, at its
+  // own proportions; the window sits over it, wholly right of the face's 45 %
+  assert.ok(lay.p.x <= lay.sc.x + 0.5 && Math.abs((lay.p.y + lay.p.h) - (lay.sc.y + lay.sc.h)) < 1, `the portrait's crop starts at or left of the scene's edge and its bottom is the scene's: ${JSON.stringify(lay)}`);
+  assert.ok(Math.abs(lay.p.w / lay.p.h - 640 / 428) < 0.02, 'at its own proportions, not squeezed into 45 %');
+  assert.ok(lay.p.x + lay.p.w > lay.sc.x + lay.sc.w * 0.45 + 1, 'the picture runs past the 45 % line');
+  assert.ok(lay.m.x >= lay.sc.x + lay.sc.w * 0.45 - 0.5 && lay.m.x + lay.m.w <= lay.sc.x + lay.sc.w + 0.5 && lay.m.y >= lay.sc.y && lay.m.y + lay.m.h <= lay.sc.y + lay.sc.h + 0.5, `the window is wholly right of her face's 45 %, inside the scene: ${JSON.stringify(lay)}`);
+  const clipped = await page.evaluate(() => getComputedStyle(document.querySelector('#charity')).overflow);
+  assert.equal(clipped, 'hidden', 'the layer clips her at the scene\'s edge');
   const a = await charitySays(page);
   assert.equal(a.head, SCRIPT['final.header']);
   assert.deepEqual(a.lines, [SCRIPT['final.clean'], SCRIPT['final.count.one'], 'The prize desk opens in a later build. For now, back to the menu.']);

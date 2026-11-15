@@ -131,7 +131,7 @@ export const CH1 = {
   pc: PC,
   tools: {
     old: {
-      kind: 'old', title: 'ch1.old.title', intro: 'ch1.old.intro', exit: 'ch1.old.exit', close: 'ch1.old.close',
+      kind: 'old', title: 'ch1.old.title', intro: 'ch1.old.intro', exit: 'ch1.old.exit', close: 'ch1.old.close', mark: 'cave_logs',
       steps: [{ prompts: [1, 2, 3].map((i) => ({ key: `ch1.old.prompt.${i}`, jab: `ch1.old.jab.${i}` })) }],
       paint: paintOld,
     },

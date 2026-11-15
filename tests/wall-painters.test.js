@@ -40,15 +40,19 @@ for (const n of Object.keys(CHAPTERS).map(Number)) {
   });
 }
 
-test('scenario 2: the sheet carries one theory at a time, in marker ink; after the fix the close-up is the painted board and the room gets the path', () => {
+test('scenario 2: the theories go on the board itself in red marker; after the fix the close-up is the wiped board and the room gets the path', () => {
   const ch = CHAPTERS[2], P = ch.wall.painter;
-  const sheet = P.text(S(ch, 'broken'));
-  assert.equal(sheet.length, 1); assert.deepEqual(sheet[0].area, { x0: 49, x1: 107, y0: 32, y1: 100 }); assert.equal(sheet[0].cls, 'sheet');
-  assert.deepEqual(sheet[0].lines, ['THEORY 1', "IT'S DNS"]);
+  const words = P.text(S(ch, 'broken'));
+  assert.equal(words.length, 1); assert.deepEqual(words[0].area, { x0: 262, x1: 304, y0: 128, y1: 186 }); assert.equal(words[0].cls, 'theory'); assert.equal(words[0].wrap, true);
+  assert.deepEqual(words[0].lines, ['THEORY 1', "IT'S DNS"]);
   assert.deepEqual(P.text(S(ch, 'broken', { nudges: [{ step: 1, box: 0 }, { step: 2, box: 0 }] }))[0].lines, ['THEORY 3', 'COSMIC RAYS']);
   assert.deepEqual(P.text(S(ch, 'found'))[0].lines, ['THEORY 1', "IT'S DNS"], 'found changes nothing on a whiteboard');
-  assert.deepEqual(P.text(S(ch, 'fixed'))[0].lines, ['THEORY 7', 'NODE 17']);
-  assert.equal(P.image(S(ch, 'broken')), 'R2_wall_closeup'); assert.equal(P.image(S(ch, 'fixed')), 'R2_wall_closeup_fixed');
+  const band = P.text(S(ch, 'fixed'));
+  assert.deepEqual(band.map((b) => [b.id, b.area, b.lines, b.cls]), [
+    ['band1', { x0: 84, x1: 236, y0: 80, y1: 97 }, ['THEORY 7'], 'band'], ['band2', { x0: 84, x1: 236, y0: 116, y1: 133 }, ['NODE 17'], 'band']]);
+  assert.equal(P.image(S(ch, 'broken')), 'R2_board'); assert.equal(P.image(S(ch, 'fixed')), 'R2_board_wiped');
+  assert.deepEqual(P.hits(S(ch, 'broken')), [{ area: { x0: 13, x1: 307, y0: 25, y1: 191 }, box: 0 }], 'the whole board is the tap target');
+  assert.equal(ch.wall.close.sheet, undefined, 'the sheet is gone');
   assert.deepEqual(ch.wall.path, [[126, 75], [144, 75], [169, 73], [187, 78], [206, 73], [233, 71]]);
   const g = rec(); P.room(g, S(ch, 'fixed', { t: 9999 }));
   assert.ok(g.calls.some(([k]) => k === 'fillRect'), 'the path is drawn in the room once fixed');
@@ -58,6 +62,10 @@ test('scenario 2: the sheet carries one theory at a time, in marker ink; after t
   assert.ok(g3.calls.filter(([k]) => k === 'fillRect').length < g.calls.filter(([k]) => k === 'fillRect').length, 'the path draws itself in over time');
   const g4 = rec(); P.room(g4, S(ch, 'fixed', { t: 0, reduced: true }));
   assert.equal(g4.calls.filter(([k]) => k === 'fillRect').length, g.calls.filter(([k]) => k === 'fillRect').length, 'reduced motion: the whole line at once');
+  const g5 = rec(); P.close(g5, S(ch, 'fixed', { t: 9999 }));
+  assert.equal(g5.calls.filter(([k]) => k === 'fillRect').length, 0, 'fixed: the plate does the wiping; no rings, no marks');
+  const g6 = rec(); P.close(g6, S(ch, 'broken'));
+  assert.ok(g6.calls.filter(([k]) => k === 'fillRect').length > 40, 'broken: a ring, question marks and an arrow in marker');
 });
 
 test('scenario 1: Otto\'s vitals painter keeps its three boxes, the output line and the heartbeat', () => {

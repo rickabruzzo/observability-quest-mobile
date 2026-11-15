@@ -36,10 +36,12 @@ export const PERSONA = {
   options: { wrong: { id: 'wrong', key: 'ch2.decide.wrong', jab: 'ch2.decide.wrong.jab' }, hc: { key: 'ch2.decide.hc', show: 'ch2.decide.hc.show' } },
 };
 
-/** The whiteboard: the sheet taped to it carries one theory at a time; the fix paints the path (art) and the room gets it drawn. */
+/** The whiteboard (brief 14 B): the board itself, no sheet. Before the fix the theories go on the board in red marker,
+ * one ring and its question marks per theory, the words in the clean corner; the fix is a plate with a hand's wipe and
+ * the path drawn in, and the new theory is written in the wiped band. In the room the path draws itself once fixed. */
 export const WALL_DISPLAY = {
-  image: 'R2_wall_closeup',
-  fixedImage: 'R2_wall_closeup_fixed',
+  image: 'R2_board',
+  fixedImage: 'R2_board_wiped',
   chart: 'ch2.wall.chart',
   painter: WALL,
   text: {
@@ -48,7 +50,10 @@ export const WALL_DISPLAY = {
   },
   room: { area: { x0: 115, x1: 307, y0: 28, y1: 115 } },
   close: {
-    sheet: { x0: 49, x1: 107, y0: 32, y1: 100 },
+    board: { x0: 13, x1: 307, y0: 25, y1: 191 },         // the whole board is the tap target: a tap steps to the next theory
+    theory: { x0: 262, x1: 304, y0: 128, y1: 186 },      // the one clean corner: the current theory's words
+    band: [{ x0: 84, x1: 236, y0: 80, y1: 97 }, { x0: 84, x1: 236, y0: 116, y1: 133 }],   // the wiped band, above and below the path
+    arrowFrom: [261, 136],
     screen: { x0: 13, x1: 307, y0: 25, y1: 191 },       // a tap outside the board goes back to the room
   },
   // the path for those two credit unions, in the room, under his frame: it stops at his patch's left edge
@@ -109,7 +114,7 @@ export const CH2 = {
   pc: PC,
   tools: {
     old: {
-      kind: 'old', title: 'ch2.old.title', intro: 'ch2.old.intro', exit: 'ch2.old.exit', close: 'ch2.old.close',
+      kind: 'old', title: 'ch2.old.title', intro: 'ch2.old.intro', exit: 'ch2.old.exit', close: 'ch2.old.close', mark: 'old_artifact',
       steps: [{ prompts: [1, 2, 3].map((i) => ({ key: `ch2.old.prompt.${i}`, jab: `ch2.old.jab.${i}` })) }],
       paint: paintOld,
     },

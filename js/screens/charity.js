@@ -21,7 +21,14 @@ export async function playCharity(ctx, wins, soon, alive = () => true) {
   layer.innerHTML = `<img class="charity-portrait" alt="Charity Majors" src="${PORTRAIT}"><div class="charity-head"></div>`;
   layer.querySelector('.charity-head').textContent = SCRIPT[v.header];
   const img = layer.querySelector('.charity-portrait');
-  const centre = () => { try { img.style.objectPosition = `${((figureCentre(img) / img.naturalWidth) * 100).toFixed(1)}% 0`; } catch { /* a blocked canvas: the middle */ } };
+  // the crop keeps its left edge (her face centred in the left 45 %) but the picture runs through to its own right edge
+  // (brief 14 F): the layer clips it at the scene's edge and the words' window sits over it
+  const centre = () => {
+    let cx = img.naturalWidth / 2;
+    try { cx = figureCentre(img); } catch { /* a blocked canvas: the middle */ }
+    const L = portraitLayout(img.naturalWidth, img.naturalHeight, cx);
+    img.style.left = `${(-(L.sx * (L.dh / L.sh)) / 320) * 100}%`;            // the crop's left edge, as a share of the scene's width
+  };
   if (img.complete && img.naturalWidth) centre(); else img.addEventListener('load', centre, { once: true });
   ctx.overlay.appendChild(layer);
   wins.setLayer(layer);
