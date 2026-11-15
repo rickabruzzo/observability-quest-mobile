@@ -1,4 +1,5 @@
 import json, os
+import numpy as np
 from PIL import Image
 from tools import build_rooms as br
 
@@ -34,14 +35,27 @@ def test_an_edit_that_is_another_picture_is_refused(tmp_path):
     else: raise AssertionError('no error')
 
 
-def test_cards_come_out_at_the_card_window_size_in_few_colours(tmp_path):
-    src = tmp_path / 'c.png'
-    im = Image.new('RGB', (640, 400), (20, 30, 60)); im.paste((200, 60, 60), (100, 100, 300, 300)); im.save(src)
+def _painting(size=(640, 400)):
+    """A picture with more colours than any palette holds: a smooth two-way gradient with a flat block on it."""
+    w, h = size
+    im = Image.new('RGB', size)
+    im.putdata([(x * 255 // (w - 1), y * 255 // (h - 1), (x + y) % 256) for y in range(h) for x in range(w)])
+    im.paste((200, 60, 60), (100, 100, 300, 300))
+    return im
+
+
+def test_cards_keep_the_arts_own_size_and_colours(tmp_path):
+    """Rick, 2026-11-14: the cards "look bad since they were de-rezed"; he would rather have the original look.
+    A card is its source at the source's size, not cut to a palette and not shrunk."""
+    src = tmp_path / 'c.png'; im = _painting(); im.save(src)
     m = br.build_cards(str(tmp_path / 'out'), {'P9': str(src)})
-    assert m == {'size': [128, 80], 'cards': {'P9': 'P9_card.png'}, 'frames': {}}
-    out = Image.open(tmp_path / 'out' / 'P9_card.png')
-    assert out.size == (128, 80) and len(out.convert('RGB').getcolors(1 << 16)) <= 64
-    assert out.convert('RGB').getpixel((40, 40)) == (200, 60, 60)
+    assert m == {'size': [640, 400], 'cards': {'P9': 'P9_card.webp'}, 'frames': {}}
+    out = Image.open(tmp_path / 'out' / 'P9_card.webp').convert('RGB')
+    assert out.size == (640, 400)
+    assert len(out.getcolors(1 << 24)) > 5000                                        # no palette
+    diff = np.abs(np.asarray(out).astype(int) - np.asarray(im).astype(int))
+    assert diff.mean() < 2.0, diff.mean()                                            # the same picture
+    assert max(abs(a - b) for a, b in zip(out.getpixel((200, 200)), (200, 60, 60))) <= 4
     assert json.load(open(tmp_path / 'out' / 'cards.json')) == m
 
 
@@ -65,7 +79,7 @@ def test_a_cards_frames_are_named_after_their_sources(tmp_path):
     base = Image.new('RGB', (640, 400), (20, 30, 60)); base.save(tmp_path / 'c.png')
     f = base.copy(); f.paste((255, 230, 120), (400, 50, 450, 100)); f.save(tmp_path / 'Q7_card_fx_2.png')
     m = br.build_cards(str(tmp_path / 'out'), {'Q7': str(tmp_path / 'c.png')}, {'Q7': [str(tmp_path / 'Q7_card_fx_2.png')]})
-    assert m['frames'] == {'Q7': ['Q7_card_fx_2.png']} and os.path.exists(tmp_path / 'out' / 'Q7_card_fx_2.png')
+    assert m['frames'] == {'Q7': ['Q7_card_fx_2.webp']} and os.path.exists(tmp_path / 'out' / 'Q7_card_fx_2.webp')
 
 
 def test_a_plate_can_be_cut_to_a_tighter_window_before_it_is_shrunk(tmp_path):
@@ -82,21 +96,23 @@ def test_a_plate_can_be_cut_to_a_tighter_window_before_it_is_shrunk(tmp_path):
     else: raise AssertionError('no error')
 
 
-def test_a_cards_extra_frames_change_only_where_their_source_does(tmp_path):
-    base = Image.new('RGB', (640, 400), (20, 30, 60)); base.paste((200, 60, 60), (100, 100, 300, 300)); base.save(tmp_path / 'c.png')
+def test_a_cards_extra_frames_are_overlays_painted_only_where_their_source_changed(tmp_path):
+    """A frame is drawn over the card, so it is the card's size and see-through wherever its source is the card's;
+    where the source differs it holds the source's picture."""
+    base = _painting(); base.save(tmp_path / 'c.png')
     f1 = base.copy(); f1.paste((255, 230, 120), (400, 50, 450, 100)); f1.save(tmp_path / 'P9_card_sparkle_1.png')
     f2 = base.copy(); f2.paste((255, 255, 255), (420, 60, 440, 80)); f2.save(tmp_path / 'P9_card_sparkle_2.png')
     out = tmp_path / 'out'
     m = br.build_cards(str(out), {'P9': str(tmp_path / 'c.png')}, {'P9': [str(tmp_path / 'P9_card_sparkle_1.png'), str(tmp_path / 'P9_card_sparkle_2.png')]})
-    assert m['frames'] == {'P9': ['P9_card_sparkle_1.png', 'P9_card_sparkle_2.png']}
-    card = Image.open(out / 'P9_card.png').convert('RGB')
-    for i, (box, colour) in enumerate([((80, 10, 90, 20), (255, 230, 120)), ((84, 12, 88, 16), (255, 255, 255))], 1):
-        f = Image.open(out / f'P9_card_sparkle_{i}.png').convert('RGB')
-        assert f.size == (128, 80) and len(f.getcolors(1 << 16)) <= 64
-        assert f.getpixel((box[0] + 1, box[1] + 1)) == colour
-        for x in range(128):
-            for y in range(80):
-                if not (box[0] <= x < box[2] and box[1] <= y < box[3]): assert f.getpixel((x, y)) == card.getpixel((x, y)), (i, x, y)
+    assert m['frames'] == {'P9': ['P9_card_sparkle_1.webp', 'P9_card_sparkle_2.webp']}
+    for i, (box, colour) in enumerate([((400, 50, 450, 100), (255, 230, 120)), ((420, 60, 440, 80), (255, 255, 255))], 1):
+        f = Image.open(out / f'P9_card_sparkle_{i}.webp')
+        assert f.mode == 'RGBA' and f.size == (640, 400)
+        a = np.asarray(f)
+        inside = np.zeros((400, 640), bool); inside[box[1]:box[3], box[0]:box[2]] = True
+        assert (a[..., 3][inside] == 255).all() and (a[..., 3][~inside] == 0).all(), i
+        err = np.abs(a[..., :3][inside].astype(int) - colour)                             # the source's picture, at the card's quality:
+        assert err.mean() <= 3 and np.median(err) <= 2, (i, err.mean())                    # no dark fringe from the see-through part
     assert json.load(open(out / 'cards.json')) == m
 
 

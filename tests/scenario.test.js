@@ -63,7 +63,7 @@ test('[Get Honeycomb]: deployed → win; found → deploy on the spot; not found
   assert.deepEqual(decide(s, 'hc'), { outcome: 'win' });
 });
 
-test('[Sign the contract]: a jab once, then greyed; the choice always comes back', () => {
+test('[Renew Cave Logs] (the wrong advice): a jab once, then greyed; the choice always comes back', () => {
   const s = createScenario(); notePrompt(s, 'hc');
   assert.deepEqual(decide(s, 'wrong'), { outcome: 'jab' });
   assert.equal(s.wrong, true);

@@ -1,18 +1,18 @@
 // A scenario, start to finish: title card → room (tap to walk, tap to act, Look / Use / Help) → close-ups (the
 // lent computer with its menu, the wall display) → tool screens (the old tool, the Honeycomb screen) → the
-// persona's card and decision → win → verdict → the timing summary. Every scenario's words, places, pictures
+// persona's card and decision → win → verdict → the way on (the timing summary with ?stats=1). Every scenario's words, places, pictures
 // and wall-display painter are data (js/chapters/chN.js, through js/chapters/index.js); the rules are the pure
 // engine modules (scenario, persona, prompts, room); this module is the DOM, the canvas and the clock. It names
 // no scenario: tests/chapter-data.test.js greps it.
 
 import { SCRIPT } from '../script.js';
 import { CHAPTERS } from '../chapters/index.js';
-import { drawHero, HERO_H } from '../engine/hero.js';
+import { drawHero, HERO_H, HERO_W } from '../engine/hero.js';
 import { drawHeroSide, SIDE_FOOT_DY } from '../engine/hero-side.js';
 import { planWalk, stepWalk } from '../engine/walk.js';
 import { colButton } from '../engine/ui.js';
 import { drawIcon, applyCursor, MARKER_MS } from '../engine/cursor.js';
-import { hotspotAt, walkTarget } from '../engine/room.js';
+import { hotspotAt, nearestFloorPoint, heroScaleAt, frontsOver } from '../engine/room.js';
 import { createWindows } from '../engine/window.js';
 import { personaLine, speakerOf, talkWindow } from '../engine/conversation.js';
 import { load as loadSprites } from '../anim/sprites.js';
@@ -21,6 +21,7 @@ import { createRunlog, summaryLines, formatMs, PHASES, PHASE_LABELS, COUNT_LABEL
 import { createScenario, notePrompt, noteFound, noteDeployed, wallState, canLeave, canDeploy, statusLine, personaUse, decide, missteps, firstTalk } from '../engine/scenario.js';
 import { parseStats, cardPicture, personaOptions, OPTION_KEYS, personaFrame, cardFrameAt, phoneRows } from '../engine/persona.js';
 import { paintHc } from '../engine/screens.js';
+import { narratorLine, portraitLayout, figureCentre } from '../engine/verdict.js';
 import { playCharity } from './charity.js';
 import { loadManifest } from '../engine/images.js';
 import { recordDone, solvedCount } from '../menu.js';
@@ -50,8 +51,8 @@ export function createChapterScreen(game) {
   let ch, room, hero, run, wins, token = null, scen, art = null, hcArt = null, loading = null, recovering = null;
   let persona = null, gctx = null;             // who speaks from the close-up; the game ctx, for the scene's scale
   let state = 'card', mode = 'use', busy = false, pcardClose = null, card = null;
-  let x = 0, pose = 'idle', view = 'front', flip = false, plan = null, elapsed = 0, walkMs = 0, pending = null, marker = null, cursor = null;
-  let tools = {}, introShown = new Set(), toolName = null, toolFrom = null, toolEl = null, reveal = null, portrait = null;
+  let x = 0, y = 0, pose = 'idle', view = 'front', flip = false, plan = null, elapsed = 0, walkMs = 0, pending = null, marker = null, cursor = null;   // x, y: his feet's centre
+  let tools = {}, introShown = new Set(), toolName = null, toolFrom = null, toolEl = null, reveal = null, portrait = null, portraitCentre = null;
   let wallT = 0, wallAll = 0, nudges = [], talkT = 0, personaQuiet = false, personaTalking = false, won = false, lastDraw = '';
   let sceneEl = null, pcView = 'menu', wallFrame = null, wallWordsCache = null;
   let icons = [], back = null, onDown = null, onMove = null, onTapCount = null;
@@ -74,13 +75,33 @@ export function createChapterScreen(game) {
   function paintRoom(ctx) {
     const g = ctx.ctx2d;
     backdrop(g, room.image);
-    painter().room(g, wall(ctx));                                   // the wall display, under the persona's frame
     const frame = personaNow(ctx), patch = art?.manifest.patches?.[room.image];
+    // the wall display, under the persona (brief 12: room 4's chat bars were painted over the SRE): whatever it
+    // paints stays out of `persona.covers`, the rectangles where the plate's figure stands in front of the display.
+    // Not out of the whole patch: that is the box the talk frames move in, far bigger than the figure, and keeping
+    // the wall out of it left a strip of room 3's TV that never took the page's tint.
+    const covers = ch.persona.covers;
+    g.save();
+    if (covers?.length) { g.beginPath(); g.rect(0, 0, 320, 200); for (const c of covers) g.rect(c.x, c.y, c.w, c.h); g.clip('evenodd'); }
+    painter().room(g, wall(ctx));
+    g.restore();
     if (frame && patch && img(frame)) g.drawImage(img(frame), patch.x, patch.y);
-    const hs = room.heroScale ?? 1, heroY = room.floorY - Math.round(HERO_H * hs);     // feet on the floor line at any scale
-    if (view === 'side') drawHeroSide(g, hero, pose, x, heroY + SIDE_FOOT_DY, hs, { flip });
-    else drawHero(g, hero, pose, x, heroY, hs, { flip });
+    // the hero at his depth: his scale follows his feet's y (brief 11); then whatever he stands behind is redrawn over him
+    const b = heroBox();
+    if (view === 'side') drawHeroSide(g, hero, pose, b.x, b.y + SIDE_FOOT_DY, b.scale, { flip });
+    else drawHero(g, hero, pose, b.x, b.y, b.scale, { flip });
+    const plate = img(room.image);
+    if (plate) for (const f of frontsOver(room, y)) {
+      g.save(); g.beginPath();
+      f.poly.forEach(([px, py], i) => (i ? g.lineTo(px, py) : g.moveTo(px, py)));
+      g.closePath(); g.clip(); g.drawImage(plate, 0, 0); g.restore();
+    }
     if (marker) drawIcon(g, marker.icon, marker.x, marker.y);
+  }
+  /** Where the sprite goes for feet at (x, y): its scale, left edge and top. */
+  function heroBox() {
+    const scale = heroScaleAt(room, y), w = Math.round(HERO_W * scale), h = Math.round(HERO_H * scale);
+    return { x: Math.round(x - w / 2), y: y - h, w, h, scale };
   }
   function paintWall(ctx) {
     const g = ctx.ctx2d, s = wall(ctx);
@@ -92,11 +113,19 @@ export function createChapterScreen(game) {
     const def = ch.tools[toolName];
     if (def.kind === 'hc') paintHc(ctx.ctx2d, tools.hc.step, p, hcArt, ctx.reducedMotion); else def.paint(ctx.ctx2d);
   }
+  /** The narrator's portrait for a phone on its side (brief 12): on the left, its bottom on the scene's bottom edge,
+   * cropped round the figure; the words go in one window on the right. */
+  function verdictLayout() {
+    if (!(portrait?.complete && portrait.naturalWidth)) return portraitLayout(640, 428, 320);
+    if (portraitCentre === null) { try { portraitCentre = figureCentre(portrait); } catch { portraitCentre = portrait.naturalWidth / 2; } }
+    return portraitLayout(portrait.naturalWidth, portrait.naturalHeight, portraitCentre);
+  }
   function paintPortrait(ctx) {
     const g = ctx.ctx2d;
     g.fillStyle = '#000'; g.fillRect(0, 0, 320, 200);
-    // 640x428 cropped to 16:10 and fitted above the verdict window, which takes the bottom third
-    if (portrait?.complete && portrait.naturalWidth) g.drawImage(portrait, 0, 14, 640, 400, 54, 2, 211, 132);
+    if (!(portrait?.complete && portrait.naturalWidth)) return;
+    const L = verdictLayout();
+    g.drawImage(portrait, L.sx, L.sy, L.sw, L.sh, L.dx, L.dy, L.dw, L.dh);
   }
   function paint(ctx) {
     if (state === 'tool') paintTool(ctx, reveal ? Math.min(1, reveal.t / REVEAL_MS) : 1);
@@ -193,7 +222,7 @@ export function createChapterScreen(game) {
       const frames = (cardsManifest?.frames?.[p.card] || []).map((f) => { const im = new Image(); im.src = dir + f; return im; });
       base.onload = () => {
         const c = document.createElement('canvas'); c.width = base.naturalWidth; c.height = base.naturalHeight;
-        artBox.replaceChildren(c);
+        artBox.replaceChildren(c); artBox.classList.add('painted');       // the art at its own size: scaled smoothly, not as big pixels
         card = { canvas: c, base, frames, files: cardsManifest?.frames?.[p.card] || [], overlay: p.overlay ?? null, t: 0, key: null, reduced: !!ctx.reducedMotion };
         drawCard();
       };
@@ -227,10 +256,9 @@ export function createChapterScreen(game) {
     g.drawImage(card.base, 0, 0);
     const i = card.files.indexOf(file);
     if (i >= 0 && card.frames[i].complete && card.frames[i].naturalWidth) g.drawImage(card.frames[i], 0, 0);
-    if (rows) {                                                     // a phone's screen with urgent notifications scrolling up it
-      const o = card.overlay;
-      g.fillStyle = '#DFF4FF'; g.fillRect(o.x, o.y, o.w, o.h);
-      for (const r of rows) { g.fillStyle = '#E04040'; g.fillRect(o.x, o.y + r.y, 1, 1); g.fillStyle = '#1A1C22'; g.fillRect(o.x + 1, o.y + r.y, Math.min(r.w, o.w - 1), 1); }
+    if (rows) {                                                     // urgent notifications scrolling up the phone the card paints
+      const o = card.overlay, s = o.px ?? 1;                        // one phone pixel is `px` card pixels (the card is the art's size)
+      for (const r of rows) { g.fillStyle = '#E04040'; g.fillRect(o.x, o.y + r.y * s, s, s); g.fillStyle = '#1A1C22'; g.fillRect(o.x + s, o.y + r.y * s, Math.min(r.w, o.w - 1) * s, s); }
     }
   }
   /** The card is dismissed: into the room once its pictures are in (they started loading when the card opened). */
@@ -262,7 +290,7 @@ export function createChapterScreen(game) {
     state = 'room'; run.phase('room'); busy = false;
     clearScene();
     ctx.overlay.innerHTML = '';
-    if (at !== null) { x = at; pose = 'idle'; view = 'front'; plan = null; }
+    if (at !== null) { x = at.x; y = at.y; pose = 'idle'; view = 'front'; plan = null; }
     mode = 'use'; setIcons(ctx, true);
     paint(ctx);
     if (first) await line(ch.enter);
@@ -271,10 +299,12 @@ export function createChapterScreen(game) {
   function finishWalk() { if (walkMs || plan) run.walk(walkMs); walkMs = 0; }
   function stopWalk() { if (plan) { finishWalk(); plan = null; pose = 'idle'; view = 'front'; } pending = null; }
 
-  function walkTo(ctx, tx) {
+  /** Walks to a floor point (a tap brought onto the floor, or a thing's stand point). Reduced motion: he is simply there. */
+  function walkTo(ctx, to) {
     if (plan) finishWalk();
-    if (ctx.reducedMotion) { if (tx !== x) { flip = tx < x; run.walk(0); } x = tx; pose = 'idle'; view = 'front'; plan = null; return; }
-    plan = planWalk(x, tx); elapsed = 0; walkMs = 0;
+    const target = nearestFloorPoint(room, to);
+    if (ctx.reducedMotion) { if (target.x !== x || target.y !== y) { flip = target.x < x; run.walk(0); } x = target.x; y = target.y; pose = 'idle'; view = 'front'; plan = null; return; }
+    plan = planWalk({ x, y }, target, room); elapsed = 0; walkMs = 0;
     if (plan.duration === 0) { plan = null; return; }
     flip = plan.dir < 0;
   }
@@ -310,7 +340,7 @@ export function createChapterScreen(game) {
     }
     if (spot && spot.walk === false) { stopWalk(); paint(ctx); act(ctx, spot); return; }
     pending = spot;
-    walkTo(ctx, spot ? spot.standX : walkTarget(room, tx));
+    walkTo(ctx, spot ? spot.stand : { x: tx, y: ty });
     if (!plan && pending) { const s = pending; pending = null; act(ctx, s); }
     paint(ctx);
   }
@@ -399,7 +429,7 @@ export function createChapterScreen(game) {
       case 'deploy': if (canDeploy(scen)) deployFix(ctx, pcView === 'deploy' ? 'win' : 'pc'); return;
       case 'leave':
         if (!canLeave(scen)) { line(p.locked); return; }          // never greyed: the line is the joke
-        if (await line(p.leave)) enterRoom(ctx, { at: room.hotspots.find((h) => h.use?.scene === 'pc').standX });
+        if (await line(p.leave)) enterRoom(ctx, { at: room.hotspots.find((h) => h.use?.scene === 'pc').stand });
         return;
       default: line(item.key);
     }
@@ -548,15 +578,31 @@ export function createChapterScreen(game) {
     ctx.saveDone(done); ctx.setSolved(solvedCount(done));
     for (const k of ch.win) if (!(await line(k))) return;
     state = 'verdict'; paint(ctx);
-    if (!(await line(ch.verdict.key, { where: 'bottom', className: 'verdict' }))) return;
+    // the narrator's name comes off the front of the line and goes above the words, in the window on the right
+    const { name, text } = narratorLine(say(ch.verdict.key)), t = live(), L = verdictLayout();
+    await wins.say(text, { where: 'right', className: 'verdict', name, maxWidth: Math.floor((320 - L.textX) * (gctx?.fit?.scale ?? 1)) - 8, maxLines: 12 });
+    if (t !== live()) return;
     run.end(steps);
     showSummary(ctx);
   }
 
+  /** After the verdict: the prompt and its two buttons. The stopwatch's table is for play-tests only (`?stats=1`). */
   function showSummary(ctx) {
     state = 'summary';
     const s = run.snapshot();
     const g = ctx.ctx2d; g.fillStyle = '#000'; g.fillRect(0, 0, 320, 200);
+    if (!ctx.stats) {
+      ctx.overlay.innerHTML = `
+      <div class="after" id="after" role="dialog">
+        <p class="after-prompt">${esc(say('after.prompt'))}</p>
+        <div class="sum-btns">
+          <button type="button" class="prompt" id="btn-claim">${esc(say('after.claim'))}</button>
+          <button type="button" class="prompt" id="btn-more">${esc(say('after.more'))}</button>
+        </div>
+      </div>`;
+      wireAfter(ctx);
+      return;
+    }
     const rows = (pairs) => pairs.map(([k, v]) => `<div class="sum-row"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('');
     const phases = PHASES.map((p) => [PHASE_LABELS[p], formatMs(s.phases[p])]);
     const counts = COUNT_LABELS.map(([k, label]) => [label, k === 'walkMs' ? formatMs(s.counts[k]) : String(s.counts[k])]);
@@ -572,6 +618,10 @@ export function createChapterScreen(game) {
           <button type="button" class="prompt" id="btn-copy">${esc(say('ui.copy'))}</button>
         </div>
       </div>`;
+    wireAfter(ctx);
+    ctx.overlay.querySelector('#btn-copy').addEventListener('click', (e) => copyResults(e.currentTarget));
+  }
+  function wireAfter(ctx) {
     const t = live();
     ctx.overlay.querySelector('#btn-more').addEventListener('click', () => game.go('MENU'));
     ctx.overlay.querySelector('#btn-claim').addEventListener('click', async () => {
@@ -579,7 +629,6 @@ export function createChapterScreen(game) {
       if (ctx.overlay.querySelector('#charity')) return;
       if (await playCharity(ctx, wins, say('claim.soon'), () => t === live())) game.go('MENU');
     });
-    ctx.overlay.querySelector('#btn-copy').addEventListener('click', (e) => copyResults(e.currentTarget));
   }
 
   function copyResults(btn) {
@@ -601,8 +650,8 @@ export function createChapterScreen(game) {
       ch = CHAPTERS[ctx.chapterId] || CHAPTERS[1];
       room = ch.room; hero = ctx.hero;
       token = {};
-      x = room.start; pose = 'idle'; view = 'front'; flip = false; plan = null; elapsed = 0; walkMs = 0; pending = null; marker = null; cursor = null;
-      mode = 'use'; busy = false; tools = {}; introShown = new Set(); toolName = null; toolFrom = null; toolEl = null; reveal = null; portrait = null; card = null;
+      x = room.start.x; y = room.start.y; pose = 'idle'; view = 'front'; flip = false; plan = null; elapsed = 0; walkMs = 0; pending = null; marker = null; cursor = null;
+      mode = 'use'; busy = false; tools = {}; introShown = new Set(); toolName = null; toolFrom = null; toolEl = null; reveal = null; portrait = null; portraitCentre = null; card = null;
       scen = createScenario(); wallT = 0; wallAll = 0; nudges = []; talkT = 0; personaQuiet = false; personaTalking = false; won = false; lastDraw = ''; sceneEl = null; wallFrame = null;
       wallWordsCache = wallWords(ch.wall.text);
       art = null; hcArt = null; recovering = null;
@@ -637,7 +686,9 @@ export function createChapterScreen(game) {
       box.addEventListener('pointermove', onMove);
       showCard(ctx);
       window.__oq && (window.__oq.chapter = {
-        get state() { return state; }, get mode() { return mode; }, get x() { return x; }, get walking() { return plan !== null; },
+        get state() { return state; }, get mode() { return mode; }, get x() { return x; }, get y() { return y; }, get walking() { return plan !== null; },
+        /** The sprite's box on the scene and its scale, from his feet's position. */
+        get heroBox() { return heroBox(); },
         get view() { return view; }, get busy() { return busy; }, get pcView() { return pcView; },
         get loaded() { return art !== null; }, get screensLoaded() { return hcArt !== null; },
         get window() { return wins.open ? { id: wins.serial, text: wins.element.dataset.text, pages: wins.pages, page: wins.page } : null; },
@@ -647,6 +698,7 @@ export function createChapterScreen(game) {
         get wall() { const s = wall(ctx); return { state: s.state, tone: painter().tone?.(s) === 'ok' ? 'green' : 'red', frame: painter().frame?.(s) ?? null, image: painter().image(s), text: painter().text(s) }; },
         get personaFrame() { return personaNow(ctx); },
         get won() { return won; },
+        get verdictLayout() { return state === 'verdict' ? verdictLayout() : null; },
         hotspot(id) { return room.hotspots.find((h) => h.id === id); },
       });
     },
@@ -658,7 +710,7 @@ export function createChapterScreen(game) {
       if (plan) {
         elapsed += dt; walkMs += dt;
         const s = stepWalk(plan, elapsed);
-        x = s.x; pose = s.pose; view = s.view; flip = s.flip; dirty = true;
+        x = s.x; y = s.y; pose = s.pose; view = s.view; flip = s.flip; dirty = true;
         if (s.done) { plan = null; finishWalk(); if (pending) { const p = pending; pending = null; act(ctx, p); } }
       } else if (marker) dirty = true;
       if (reveal) { reveal.t += dt; dirty = true; if (reveal.t >= REVEAL_MS) { const d = reveal.done; reveal.t = REVEAL_MS; d(); } }

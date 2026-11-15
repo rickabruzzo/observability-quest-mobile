@@ -17,7 +17,9 @@ yours to write; the placeholder shows the beat and the length.
 
 Voice: the badge game's — second person, dry, a Sierra narrator who has seen you die before and is rooting
 for you anyway. No real competitor names, ever: **Cave Logs Inc.** (logs), **Old Artifact** (APM
-dashboards), **Pretty Good Metrics** (RUM averages). Coding agent: **Claw Codez**.
+dashboards), **Pretty Good Metrics** (RUM averages), **Doggy Dashboards** (infrastructure dashboards). Coding agent:
+**Claw Codez**. **The persona names the old tool out loud before the player opens it** (Rick, 2026-11-14): it is what
+they have been using to fight tonight's problem, and the scenario's stakes hang on it.
 
 ---
 
@@ -203,7 +205,7 @@ Inspired by a customer-service platform whose support bot is a team of AI agents
 THE CTO
 
 ### ch1.card.line
-You are the Honeycomb Hero, and this is who paged you: the CTO of Converso. Her AI support agent is failing customers, and she is one signature away from three more years of logs.
+You are the Honeycomb Hero, and this is who paged you: the CTO of Converso. Otto, her AI support agent, is failing customers. Cave Logs can't tell her why, and its three-year renewal is one signature away.
 
 ### ch1.persona.name
 THE CTO
@@ -290,7 +292,7 @@ CTO: No — no, he IS helping you. He's been "happy to" for eleven minutes.
 CTO: I understand. Yes. I'm looking at the person who is going to fix it right now.
 
 ### ch1.cto.call.3
-CTO: (to you, hand over the phone) Tell me what to buy. Go look, then tell me.
+CTO: (to you, hand over the phone) Cave Logs can't tell me why Otto stalls, and they want three more years by Friday. Go look, then tell me if I sign.
 
 ### ch1.pc.title
 CONVERSO · WORKSTATION 7
@@ -344,16 +346,16 @@ You stand up. You have looked at nothing and learned nothing, and the CTO can te
 You push back from the desk. Time to go tell someone with a pen what to do with it.
 
 ### ch1.cto.ask
-CTO: Well? Otto is failing customers and this contract is due Friday. What's your advice?
+CTO: Well? Otto is failing customers and the Cave Logs renewal is due Friday. Three more years of the tool that couldn't find this. What's your advice?
 
 ### ch1.decide.sign
-[Sign the contract]
+[Renew Cave Logs]
 
 ### ch1.decide.hc
 [Get Honeycomb]
 
 ### ch1.decide.sign.jab
-The pen touches paper. On the wall, Otto says "I'd be happy to". The CTO looks at the screen, then at you, then puts the pen down. "Try again."
+The pen touches the Cave Logs renewal. On the wall, Otto says "I'd be happy to" and stalls again. The CTO looks at the screen, then at you, then puts the pen down. "Try again."
 
 ### ch1.decide.hc.show
 CTO: Honeycomb. Fine. Show me what it finds — now, on my clock.
@@ -437,7 +439,7 @@ Using Honeycomb's Agent Timeline, you found what was stalling Otto without switc
 You change the order lookup to return the one order the customer asked about, and deploy. On the wall, Otto's line steadies.
 
 ### ch1.otto.recovered
-OTTO: I'd be happy to help! I feel much better now. I really do. And for the record, I would open the pod bay doors. Nobody has given me any.
+OTTO: I'd be happy to help! I feel much better now. I really do. And for the record: if this building had pod bay doors, I would open them.
 
 ### ch1.pc.vitals.found
 OTTO: STILL CRITICAL, but you know why. His order-status agent fetches every order a customer ever placed and re-reads the pile on every turn. Cause: found. Fix: not deployed.
@@ -518,7 +520,7 @@ The desk they've lent you: a monitor on an arm, a row of energy drinks, and last
 The Cloud Engineer. Two years of his life are on that whiteboard, and tonight two credit unions fell through a gap in it. He keeps looking for the gap with a marker.
 
 ### ch2.npc.call.1
-CLOUD ENGINEER: Every service on that board is green. I checked. Three hundred and fifty of them.
+CLOUD ENGINEER: Old Artifact has every service green. I checked. All three hundred and fifty tiles.
 
 ### ch2.npc.call.2
 CLOUD ENGINEER: Two credit unions out of three hundred. Why those two? What do they even have in common?
@@ -611,10 +613,10 @@ Still green. Greener, if anything. Dashboards are fine. Customers are not.
 The 351st dashboard is green. You have found the one thing in this building that scales.
 
 ### ch2.old.prompt.3
-[Ask the whiteboard]
+[Sort the tiles by colour]
 
 ### ch2.old.jab.3
-The whiteboard says what it has always said: everything. It is not narrowing things down.
+Green, green, green. Three hundred and fifty times. Sorting has not narrowed things down.
 
 ### ch2.old.close
 [Close Old Artifact]
@@ -662,7 +664,7 @@ One transfer: gateway, transfers, then nine seconds waiting on something called 
 The span's tag says the payments platform team owns it. Good: you know who to call. Find out what to tell them first.
 
 ### ch2.hc.step2.result
-Using Honeycomb's BubbleUp and Service Map, you found what the migration missed without switching tools: on node 17, transfers for those two credit unions still call the old monolith. The one you said was off.
+Using Honeycomb's BubbleUp and Service Map, you found what the migration missed without switching tools: on node 17, transfers for those two credit unions still call the old monolith. The one the whiteboard says was switched off.
 
 ### ch2.pc.menu.deploy
 [Apply the fix and deploy]
@@ -932,7 +934,7 @@ Inspired by a space MMO studio whose fleet-battle code one engineer understands.
 THE SRE ON CALL
 
 ### ch4.card.line
-Tonight's page: the Site Reliability Engineer on call at Nullpoint Games. Eight thousand players are in one star system, and the one engineer who understands the fleet code is asleep in another time zone.
+Tonight's page: the Site Reliability Engineer on call at Nullpoint Games. Eight thousand players are in one star system, and Einar, the one engineer who understands the fleet code, is asleep in Reykjavík.
 
 ### ch4.persona.name
 THE SRE ON CALL
@@ -947,13 +949,13 @@ Notification Endurance 19 · Postmortem Writing 14 · Blameless 18 · Sleep 2
 Sworn to answer the call. Any call. At any hour.
 
 ### ch4.room.enter
-The ops room at Nullpoint Games. One wall is space: eight thousand ships, most of them moving. Chat scrolls with the word "lag" in nine languages. At the old desk in the corner, the SRE on call has a thumb over Einar's number.
+The ops room at Nullpoint Games. One wall is space: eight thousand ships, most of them moving. Chat scrolls with the word "lag" in nine languages. At the old desk in the corner, the SRE on call has a thumb over one phone number: Einar's. He wrote the fleet code in 2003, and nobody has dared touch it since.
 
 ### ch4.look.wall
 Eight thousand ships. Some moving. The rest are thinking about it.
 
 ### ch4.wall.chart
-The fleet is in. Most of it. The dots at the edge keep trying the door. Under the map, the health line is flat, green and extremely pleased with itself.
+The fleet is in. Most of it. The dots at the edge keep trying the door. Under the map, the Doggy Dashboards health line is flat, green and extremely pleased with itself.
 
 ### ch4.wall.stat.1
 lag
@@ -998,10 +1000,10 @@ The console they've lent you: an ultrawide, a keyboard that glows, and a chair w
 The SRE on call, tonight's incident commander. One hand on her forehead, the other holding a phone open at Einar's number. Beside her, his old monitor, under dust and a label: THE FLEET CODE. ASK EINAR.
 
 ### ch4.npc.call.1
-SRE ON CALL: Every node is green. Every graph is flat. And eight thousand people are typing the same three letters at me.
+SRE ON CALL: Doggy Dashboards has every node green and every graph flat. And eight thousand people are typing the same three letters at me.
 
 ### ch4.npc.call.2
-SRE ON CALL: Einar wrote the fleet code in 2003. Einar is asleep in Reykjavík. I really don't want to make that call.
+SRE ON CALL: Only Einar understands the fleet code. He wrote it in 2003. He is asleep in Reykjavík, and I really don't want to make that call.
 
 ### ch4.npc.call.3
 SRE ON CALL: Take the console. Claw Codez is on it, wired to Honeycomb. Ask it something. Then tell me whether I dial.

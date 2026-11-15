@@ -88,9 +88,11 @@ test('on arrival the hero holds the side-on stance for a beat, then turns to fac
   assert.ok(SETTLE_MS >= 150 && SETTLE_MS <= 400);
   const right = planWalk(0, 300, { speed: 300 }), left = planWalk(300, 0, { speed: 300 });
   for (const t of [1000, 1000 + SETTLE_MS - 1]) {
-    assert.deepEqual(stepWalk(right, t), { x: 300, pose: 'stand', view: 'side', done: false, flip: false });
-    assert.deepEqual(stepWalk(left, t), { x: 0, pose: 'stand', view: 'side', done: false, flip: true });   // still facing the way they walked
+    const pick = ({ x, pose, view, done, flip }) => ({ x, pose, view, done, flip });
+    assert.deepEqual(pick(stepWalk(right, t)), { x: 300, pose: 'stand', view: 'side', done: false, flip: false });
+    assert.deepEqual(pick(stepWalk(left, t)), { x: 0, pose: 'stand', view: 'side', done: false, flip: true });   // still facing the way they walked
   }
-  assert.deepEqual(stepWalk(right, 1000 + SETTLE_MS), { x: 300, pose: 'idle', view: 'front', done: true, flip: false });
+  const e = stepWalk(right, 1000 + SETTLE_MS);
+  assert.deepEqual({ x: e.x, pose: e.pose, view: e.view, done: e.done, flip: e.flip }, { x: 300, pose: 'idle', view: 'front', done: true, flip: false });
   assert.equal(stepWalk(planWalk(50, 50), 0).done, true);            // a walk to where they already are does not settle
 });

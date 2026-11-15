@@ -6,23 +6,24 @@
 // Positions are the art hand-back's measurements on the 320x200 scene (assets/rooms/, built by
 // tools/build_rooms.py); areas are { x0, x1, y0, y1 } inclusive.
 
-import { HERO_W } from '../engine/hero.js';
-import { SCENE_W } from '../engine/room.js';
 import { WALL } from './ch1-wall.js';
 
 export const MANIFEST = 'assets/rooms/ch1.json';
 
 export const ROOM = {
   image: 'R1_exec_floor',
-  floorY: 192,                         // the hero's feet
-  walk: [0, SCENE_W - HERO_W],         // the hero's left edge
-  start: 128,                          // between the cube and the CTO's desk (the 56-px hero's left edge: brief 09)
-  heroScale: 1,
+  // the floor (brief 11): the aisle between the cubicle (to x 135) and the CTO's desk (from x 205), from the back
+  // wall at y 135 to the front, plus the strip across the front below y 186; his scale is 108 px with his feet on
+  // y 182 (the office chair's back reaches his waist), zero at the horizon y 40
+  floor: [[136, 135], [204, 135], [204, 186], [319, 186], [319, 199], [0, 199], [0, 186], [136, 186]],
+  horizonY: 40, anchors: [{ y: 182, h: 108 }],
+  fronts: [],
+  start: { x: 70, y: 194 },            // in front of the cubicle: covers neither the monitor nor the CTO
   // listed in drawing order: where two overlap the later one wins, so the monitor beats the PC at its corner.
   // Stand points are for the 56-px hero (brief 09, item 8): the same centres as before, the CTO's re-measured.
   hotspots: [
-    { id: 'pc', rect: { x: 0, y: 75, w: 135, h: 111 }, standX: 73, look: 'ch1.look.pc', use: { scene: 'pc' } },
-    { id: 'cto', rect: { x: 206, y: 82, w: 100, h: 102 }, standX: 148, look: 'ch1.look.cto', use: { action: 'persona' } },
+    { id: 'pc', rect: { x: 0, y: 75, w: 135, h: 111 }, stand: { x: 101, y: 188 }, look: 'ch1.look.pc', use: { scene: 'pc' } },
+    { id: 'cto', rect: { x: 206, y: 82, w: 100, h: 102 }, stand: { x: 176, y: 186 }, look: 'ch1.look.cto', use: { action: 'persona' } },
     { id: 'monitor', rect: { x: 114, y: 26, w: 92, h: 50 }, walk: false, look: 'ch1.look.monitor', use: { scene: 'wall' } },
   ],
 };
@@ -85,7 +86,7 @@ export const PC = {
  * room → talk_2 at the manifest's patch; she has no rest, idle or win frame (Rick approved her loop). */
 export const PERSONA = {
   name: 'ch1.persona.name', class: 'ch1.persona.class', stats: 'ch1.persona.stats', flavor: 'ch1.persona.flavor',
-  card: 'P1', art: 'assets/cards/P1_card.png', crop: { image: 'R1_exec_floor', x: 192, y: 62, w: 112, h: 70 },
+  card: 'P1', art: 'assets/cards/P1_card.webp', crop: { image: 'R1_exec_floor', x: 192, y: 62, w: 112, h: 70 },
   portrait: 'p1', where: 'top-left',
   loop: 'always', frames: { talk: ['R1_cto_talk_1', 'R1_cto_talk_2'], rest: null, idle: [], win: null },
   calls: [1, 2, 3].map((i) => `ch1.cto.call.${i}`),

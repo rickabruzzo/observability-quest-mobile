@@ -2,34 +2,36 @@
 // js/screens/chapter.js plays it, the wall display is js/chapters/ch3-wall.js. Every word is a script key.
 // Positions are brief 08's, checked against the built 320×200 files; areas { x0, x1, y0, y1 } are inclusive.
 
-import { HERO_W } from '../engine/hero.js';
-import { SCENE_W } from '../engine/room.js';
 import { WALL } from './ch3-wall.js';
 
 export const MANIFEST = 'assets/rooms/ch3.json';
 
 export const ROOM = {
   image: 'R3_bullpen',
-  floorY: 192,
-  walk: [0, SCENE_W - HERO_W],
-  start: 132,
-  heroScale: 1,
+  // the floor (brief 11): between the standing desk (to x 100) and the laptop desk (from x 215), from y 135 to the
+  // front, less the guitar stand (x 188–208, base y 158), plus the strip across the front below y 186; 119 px with
+  // his feet on y 180 (the standing desk's top at his waist), horizon y 40
+  floor: [[101, 135], [187, 135], [187, 160], [214, 160], [214, 186], [319, 186], [319, 199], [0, 199], [0, 186], [101, 186]],
+  horizonY: 40, anchors: [{ y: 180, h: 119 }],
+  fronts: [],
+  start: { x: 246, y: 196 },           // in front of the laptop desk: covers neither the TV nor the developer
   // mirrored: the computer is on the right, the persona on the left. The guitar leans inside the pc's rectangle,
   // so it is listed after it (the later, smaller target wins). The sign's hit area is padded to the minimum.
   hotspots: [
     { id: 'wall', rect: { x: 100, y: 30, w: 120, h: 65 }, walk: false, look: 'ch3.look.wall', use: { scene: 'wall' } },
-    { id: 'pc', rect: { x: 190, y: 78, w: 130, h: 108 }, standX: 248, look: 'ch3.look.pc', use: { scene: 'pc' } },
-    { id: 'guitar', rect: { x: 187, y: 84, w: 42, h: 72 }, walk: false, look: 'ch3.look.guitar', use: 'ch3.use.guitar' },
-    { id: 'sign', rect: { x: 263, y: 46, w: 32, h: 28 }, walk: false, look: 'ch3.look.sign' },
-    { id: 'npc', rect: { x: 8, y: 45, w: 94, h: 141 }, standX: 116, look: 'ch3.look.npc', use: { action: 'persona' } },
+    { id: 'pc', rect: { x: 190, y: 78, w: 130, h: 108 }, stand: { x: 262, y: 190 }, look: 'ch3.look.pc', use: { scene: 'pc' } },
+    { id: 'guitar', rect: { x: 187, y: 84, w: 42, h: 72 }, stand: { x: 200, y: 172 }, look: 'ch3.look.guitar', use: 'ch3.use.guitar' },
+    { id: 'sign', rect: { x: 263, y: 46, w: 32, h: 28 }, stand: { x: 278, y: 190 }, look: 'ch3.look.sign' },
+    { id: 'npc', rect: { x: 8, y: 45, w: 94, h: 141 }, stand: { x: 158, y: 182 }, look: 'ch3.look.npc', use: { action: 'persona' } },
   ],
 };
 
 /** The Frontend Developer, at her standing desk on the left (so the conversation window sits top right). */
 export const PERSONA = {
   name: 'ch3.persona.name', class: 'ch3.persona.class', stats: 'ch3.persona.stats', flavor: 'ch3.persona.flavor',
-  card: 'P3', art: 'assets/cards/P3_card.png', crop: { image: 'R3_bullpen', x: 9, y: 14, w: 126, h: 79 },
+  card: 'P3', art: 'assets/cards/P3_card.webp', crop: { image: 'R3_bullpen', x: 9, y: 14, w: 126, h: 79 },
   portrait: 'p3', where: 'top-right',
+  covers: [{ x: 101, y: 75, w: 5, h: 8 }],       // her fingertips over the TV's left edge: the page's tint stays off them
   loop: 'speak', frames: { talk: ['R3_npc_talk_1', 'R3_npc_talk_2'], rest: null, idle: [], win: 'R3_npc_win' },
   calls: [1, 2, 3].map((i) => `ch3.npc.call.${i}`),
   ask: 'ch3.npc.ask',

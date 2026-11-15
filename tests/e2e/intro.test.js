@@ -273,3 +273,38 @@ test('when the dark shot is the same room, the title is already on its wall, dim
     await ctx.close();
   }
 });
+
+// ---- the bedroom (Warp brief 11): legs in bed, the subtitle clear ----
+test('the hero\'s box never meets the subtitle\'s box, sitting or standing; sitting, he is in front of the pillow and the bed\'s own blanket covers his hips', async () => {
+  const { ctx, page } = await openIntro();
+  await running(page);
+  for (let i = 0; i < 8; i++) { await page.waitForTimeout(300); await tapScene(page); }
+  await page.waitForFunction(() => window.__oq.intro.id === 'bedroom' && window.__oq.intro.hero?.box && document.querySelector('.intro-title'));
+  const boxes = async () => page.evaluate(() => {
+    const sc = document.querySelector('#scene').getBoundingClientRect(), k = sc.width / 320, t = document.querySelector('.intro-title').getBoundingClientRect();
+    const b = window.__oq.intro.hero.box;
+    return { raw: b, hero: { x: b.x * k, y: b.y * k, w: b.w * k, h: b.h * k }, sub: { x: t.left - sc.left, y: t.top - sc.top, w: t.width, h: t.height }, pose: b.pose, sitY: window.__oq.intro.hero.sitY, line: window.__oq.intro.hero.blanketLine };
+  });
+  const meets = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+  const sit = await boxes();
+  assert.equal(sit.pose, 'situp');
+  assert.ok(!meets(sit.hero, sit.sub), `sitting: ${JSON.stringify(sit)}`);
+  // Review of brief 11: he sat at the bed's edge, half over the nightstand, under a flat blue shape. He sits in front
+  // of the pillow (x 50–97 in the plate) and the plate's own blanket covers him from its top edge down: above the
+  // blanket line his torso is painted, below it the canvas is the plate again.
+  const centre = sit.raw.x + sit.raw.w / 2;
+  assert.ok(centre >= 62 && centre <= 85, `he sits in front of the pillow: his centre is x ${centre}`);
+  const painted = await page.evaluate(async ([line, box]) => {
+    const m = window.__oq.intro.manifest, g = document.querySelector('#scene').getContext('2d');
+    const img = new Image(); img.src = 'assets/intro/' + m.images.D_bedroom_vga; await img.decode();
+    const c = document.createElement('canvas'); c.width = 320; c.height = 200; const p = c.getContext('2d'); p.drawImage(img, 0, 0, 320, 200);
+    const count = (y0, y1) => { let n = 0; for (let y = y0; y <= y1; y++) for (let x = box.x; x < box.x + box.w; x++) { const a = g.getImageData(x, y, 1, 1).data, b = p.getImageData(x, y, 1, 1).data; if (a[0] !== b[0] || a[1] !== b[1] || a[2] !== b[2]) n++; } return n; };
+    return { above: count(box.y, line), below: count(line + 1, 170) };
+  }, [sit.line, sit.raw]);
+  assert.ok(painted.above > 300, `his head and chest are painted above the blanket line: ${painted.above}`);
+  assert.equal(painted.below, 0, 'below the blanket line the bed is the plate\'s own: no hips, no drawn shape');
+  await page.waitForFunction(() => window.__oq.intro.hero?.pose === 'idle', null, { timeout: 8000 });
+  const stand = await boxes();
+  assert.ok(!meets(stand.hero, stand.sub), `standing: ${JSON.stringify(stand)}`);
+  await ctx.close();
+});

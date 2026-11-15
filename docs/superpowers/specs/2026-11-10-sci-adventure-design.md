@@ -138,7 +138,7 @@ The **old tool** hotspot is the same mechanic with only wrong prompts, so it's a
 The first time the player talks to the persona (Use on them), **their card pops up**: a fantasy trading card. On it, the persona in a **silly fantasy outfit for their class, in an action pose** (CTO: Archmage of the Budget; Cloud Engineer: Druid of the Monolith, at a circle of standing stones; Frontend Developer: Bard of the Browser; SRE on call: Knight Watch, a sentry with a spyglass and a smartphone, because the pager is the Honeycomb Hero's; Release Engineer: Rogue of the Friday Deploy), their name, their class, their four silly stats and a line of flavor. While the card is open its picture moves a little (Rick, 2026-11-13): four cards loop three painted frames of their magic, and Knight Watch's phone scrolls notifications drawn by the game. Closing the card starts their dialogue. The card opens by itself **only the first time**; after that, every conversation with the persona ends in a short option list that includes **[Show me your card again]**.
 
 - The frame is the game's own, drawn in CSS: it is *a* trading card, not a copy of any real card game's frame, symbols or wording.
-- The picture is generated art in the house VGA style, 16:10 (128×80 game px, delivered 640×400), of the same fictional person as in the room (art brief 02). Until a card's art exists, the card shows a crop of the persona from the room plate.
+- The picture is generated art in the house VGA style, 16:10, of the same fictional person as in the room (art brief 02). It is shown as delivered, 640×400 in full colour (Rick, 2026-11-14: the 128×80, 64-colour build "looks bad"; he would rather have the original look). Until a card's art exists, the card shows a crop of the persona from the room plate.
 - Portrait card, 5:7, 94% of the scene's height, centred over the dimmed room; all text is real text in VT323 and stays inside the card on a 667×375 phone.
 
 Company names and all copy are placeholders until the script lands; the *shape* below is what the design commits to.
@@ -292,6 +292,21 @@ What those games do, and what the fork does:
 - Left as is: room 1's CTO reads about 15% small beside the new hero; the hero, at 136 px, stands in front of the lower part of the wall display in rooms 1 and 3 when he is at the persona.
 
 Both looks use the same file names. `tools/build_rooms.py` builds either (`LOOK`), so going back to the painted look is a rebuild, not a rewrite. How the fork ends is Rick's call.
+
+### Rick's play-through of the fork (2026-11-14)
+
+All five scenarios played. "Overall it's doing ok." What changes, and where it is written down:
+
+- **The hero is too big and too blocky.** "He looks 7 ft tall"; and "the hero characters just look blocky and odd in contrast to the NPCs." Two causes, measured: his head is 3.4 heads into his height where a persona's is 6.4, so he reads as nearer and bigger; and every room was given one size, though the rooms are drawn at different distances. **The furniture sets his scale, per room, and he gets smaller as he walks deeper into it**: a floor to walk on instead of a line, a scale that follows his feet, furniture that covers him when he is behind it (Warp brief 11). Shown him shrunk to a persona's height, Rick said "the hero shrunk looks better", so size comes first. His look is a separate test, on hold until he has been seen at the right size: the hero painted by the hand that painted the personas, in colour families the game repaints to the player's choices (art brief 05). The character creator's colours survive that for free; its shapes (hair styles, beards, glasses, body types) cost a painting each and will be a shorter list if the test is kept.
+- **The stopwatch is a play-test tool.** The table of timings after a scenario came from brief 02 and was never for players: it shows only with `?stats=1` (Warp brief 12).
+- **The verdict is laid out for a phone on its side**: the narrator's portrait on the left with its bottom on the screen's edge, the words in one window beside it (Warp brief 12).
+- **The old tools are named and branded.** Each persona names the tool they have been fighting with before the player opens it, and scenario 1 says plainly that the contract on the CTO's desk is the renewal of the tool that cannot find the problem (script). Each tool gets a mark on its screen: an original mark that illustrates our invented name, never a version of a real company's logo (art brief 04). A fourth parody, **Doggy Dashboards** (infrastructure dashboards), is what scenario 4's SRE is staring at.
+- **Scenario 2:** the taped sheet of theories goes. Theories are scrawled on the whiteboard itself, circles and question marks; after the fix a band of it has been wiped by hand and the path drawn fresh (art brief 04, then Warp).
+- **Scenario 3:** no halo round the TV; the page's white shifts tint like a flickering monitor (Warp brief 12). The shop's page gets colour and painted instruments that cycle through before it stalls on the left-handed guitar (art brief 04, then Warp).
+- **Scenario 4:** Einar is introduced before anyone talks about paging him (script). The wall's animation stays behind the SRE (Warp brief 12): a room's data lists the few rectangles where its persona stands in front of the wall display (`persona.covers`), and the wall never paints there. The battle gets ships, fire and explosions, and the phone a painted close-up (art brief 04, then Warp).
+- **The persona cards** are the art as delivered (above).
+- **The menus** are placeholders and get a designed pass.
+- **Housekeeping:** Warp's and Art Claude's worktrees live inside the project folder (`.worktrees/`, git-ignored), not beside it.
 
 ## Technical approach
 

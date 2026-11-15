@@ -128,6 +128,15 @@ test('Claim: Charity\'s portrait, her header, the clean line, the count line, th
   await page.click('#btn-claim');
   const portrait = await page.locator('.charity-portrait').evaluate((img) => new Promise((ok) => (img.complete ? ok(img.naturalWidth) : img.addEventListener('load', () => ok(img.naturalWidth)))));
   assert.equal(portrait, 640);
+  // laid out for a phone on its side (brief 12): her portrait on the left with its bottom on the scene's edge, the window wholly to its right
+  await page.waitForSelector('#charity .msg');
+  const lay = await page.evaluate(() => {
+    const sc = document.querySelector('#scene').getBoundingClientRect(), p = document.querySelector('.charity-portrait').getBoundingClientRect(), m = document.querySelector('#charity .msg').getBoundingClientRect();
+    return { sc: { x: sc.left, y: sc.top, w: sc.width, h: sc.height }, p: { x: p.left, y: p.top, w: p.width, h: p.height }, m: { x: m.left, y: m.top, w: m.width, h: m.height } };
+  });
+  assert.ok(Math.abs(lay.p.x - lay.sc.x) < 1 && Math.abs((lay.p.y + lay.p.h) - (lay.sc.y + lay.sc.h)) < 1, `the portrait sits on the scene's left and bottom edges: ${JSON.stringify(lay)}`);
+  assert.ok(Math.abs(lay.p.w / lay.sc.w - 0.45) < 0.02, 'about 45 % wide');
+  assert.ok(lay.m.x >= lay.p.x + lay.p.w - 0.5 && lay.m.x + lay.m.w <= lay.sc.x + lay.sc.w + 0.5 && lay.m.y >= lay.sc.y && lay.m.y + lay.m.h <= lay.sc.y + lay.sc.h + 0.5, `the window is wholly right of her, inside the scene: ${JSON.stringify(lay)}`);
   const a = await charitySays(page);
   assert.equal(a.head, SCRIPT['final.header']);
   assert.deepEqual(a.lines, [SCRIPT['final.clean'], SCRIPT['final.count.one'], 'The prize desk opens in a later build. For now, back to the menu.']);

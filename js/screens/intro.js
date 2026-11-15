@@ -7,13 +7,14 @@ import { lcdScale, marqueeScale, marqueeX, drawLcd, lcdPages, drawLcdPage } from
 import { createSfx } from '../intro/sfx.js';
 import { blit, composeHero, drawHero, HERO_W, HERO_H } from '../engine/hero.js';
 import { drawHeroSide, SIDE_FOOT_DY } from '../engine/hero-side.js';
-import { HOODIE, JEANS, HC_MARK, HC_MARK_PIXELS, OUTLINE } from '../engine/hero-parts.js';
+import { HOODIE, JEANS, HC_MARK, HC_MARK_PIXELS, OUTLINE, TOP } from '../engine/hero-parts.js';
 import { colButton } from '../engine/ui.js';
 
 const BASE = 'assets/intro/';
 const LOAD_TIMEOUT_MS = 6000;
 const DIM = 0.16;                    // how much of the title shows on the unlit wall
 const TAP_GUARD_MS = 250;            // a tap this soon after a cut is the tail of the last tap
+const BED_RIGHT = 112;                // the bed's right edge in the bedroom plate: left of it, below the blanket line, is bed
 const STAND_DX = 30;                 // standing spot when the manifest has none: just right of the bed's left edge
 const WALK_AT = HERO_STEPS.find((s) => s.walkTo).at;
 const REDUCED_BEDROOM_MS = 2500;
@@ -56,6 +57,10 @@ export function preloadIntro() {
 function lastOpaqueRow(px) {
   for (let y = HERO_H - 1; y >= 0; y--) for (let x = 0; x < HERO_W; x++) if (px[(y * HERO_W + x) * 4 + 3]) return y;
   return HERO_H - 1;
+}
+function firstOpaqueRow(px) {
+  for (let y = 0; y < HERO_H; y++) for (let x = 0; x < HERO_W; x++) if (px[(y * HERO_W + x) * 4 + 3]) return y;
+  return 0;
 }
 
 /** The sprite's silhouette in one colour (the flash into day clothes), at the hero's scale. */
@@ -155,19 +160,21 @@ export function createIntroScreen(game) {
 
   function paintHero(ctx, m) {
     const g = ctx.ctx2d, cfg = ctx.hero;
-    const hs = SHOTS[shot].heroScale ?? 1;                        // the bedroom draws the hero smaller than his sprite
-    const standX = Number.isFinite(m.stand?.x) ? m.stand.x : m.bed.x + STAND_DX, standY = m.floorY - Math.round(HERO_H * hs);
+    const shotData = SHOTS[shot], hs = shotData.heroScale ?? 1;   // the bedroom draws the hero smaller than his sprite
+    const floorY = shotData.standY ?? m.floorY;                     // where his feet stand: the front of the room (brief 11)
+    const standX = Number.isFinite(m.stand?.x) ? m.stand.x : m.bed.x + STAND_DX, standY = floorY - Math.round(HERO_H * hs);
+    const box = (bx, by, pose = 'idle') => ({ x: bx, y: by + Math.round(TOP * hs), w: Math.round(HERO_W * hs), h: Math.round((HERO_H - TOP) * hs), pose });   // the figure's own box: hair to soles
     if (ctx.reducedMotion) {
       const bareRoom = assets.images.get('D_laptop_gone');      // the hero already has their item
       if (bareRoom) g.drawImage(bareRoom, 0, 0, 320, 200);
       showTitle(ctx, m, true);
       drawHero(g, cfg, 'idle', standX, standY, hs);
-      heroState = { pose: 'idle', view: 'front', outfit: 'hoodie', x: standX, visible: true, pile: false, holding: true, doorOpen: false };
+      heroState = { pose: 'idle', view: 'front', outfit: 'hoodie', x: standX, visible: true, pile: false, holding: true, doorOpen: false, box: box(standX, standY) };
       if (t >= REDUCED_BEDROOM_MS) finish();
       return;
     }
     const h = heroAt(t);
-    const e = h.walking ? exitAt(exitPlan({ standX, doorX: m.door.x, floorY: m.floorY, doorY: Number.isFinite(m.door.y) ? m.door.y : m.floorY, heroScale: hs }), t - WALK_AT) : null;
+    const e = h.walking ? exitAt(exitPlan({ standX, doorX: m.door.x, floorY, doorY: Number.isFinite(m.door.y) ? m.door.y : m.floorY, heroScale: hs }), t - WALK_AT) : null;
     const pile = h.outfit === 'pj' && !!m.clothes;         // on the floor until the change puts them on the hero
     // The room is painted with a laptop on the dresser, and again without it: taking it is a cut between the two.
     // Sierra inventory style — it is simply the hero's now; nothing is drawn in their hand.
@@ -177,20 +184,29 @@ export function createIntroScreen(game) {
     if (e?.doorOpen) { openDoor(g, m); plate = assets.images.get('D_door_open') ? 'D_door_open' : plate; }
     showTitle(ctx, m, h.titled);
     if (pile) drawClothes(g, cfg, m.clothes.x, m.clothes.y, 2 * hs);
-    heroState = { pose: h.pose, view: 'front', outfit: h.outfit, x: standX, visible: h.visible, pile, holding: h.holding, doorOpen: !!e?.doorOpen, plate };
+    heroState = { pose: h.pose, view: 'front', outfit: h.outfit, x: standX, visible: h.visible, pile, holding: h.holding, doorOpen: !!e?.doorOpen, plate, box: box(standX, standY) };
     sound('title', h.titled); sound('rustle', h.stirring); sound('step', h.standing); sound('pickup', h.outfit === 'hoodie');
     sound('take', h.holding); sound('door', !!e?.doorOpen); sound('shut', !!e && !e.visible && !e.doorOpen);
     if (e) {
       if (e.visible) drawHeroSide(g, cfg, e.pose, e.x, e.y - Math.round(HERO_H * hs) + SIDE_FOOT_DY, hs, { flip: e.flip });   // the way out is side on throughout
-      Object.assign(heroState, { pose: e.pose, view: e.view, outfit: 'hoodie', x: e.x, visible: e.visible });
+      Object.assign(heroState, { pose: e.pose, view: e.view, outfit: 'hoodie', x: e.x, visible: e.visible, box: box(e.x, e.y - Math.round(HERO_H * hs), e.pose) });
       if (e.done) finish();
       return;
     }
     if (!h.visible) return;
     if (h.pose === 'situp') {
-      const px = composeHero(cfg, 'situp', 'pj');
-      drawHero(g, cfg, 'situp', m.bed.x, m.bed.y - Math.round((lastOpaqueRow(px) + 1) * hs), hs, { outfit: 'pj' });   // bed.y is the blanket line
-      heroState.x = m.bed.x;
+      // in the bed (brief 11, and its review): he sits in front of the pillow (sitX) at sitY, a little below the plate's
+      // blanket line, and the bed's own blanket covers his hips: the plate is drawn again over him from that line down,
+      // across the bed. Nothing is drawn for the blanket; it is the painting's.
+      const px = composeHero(cfg, 'situp', 'pj'), sitY = shotData.sitY ?? m.bed.y, sitX = shotData.sitX ?? m.bed.x;
+      const top = sitY - Math.round((lastOpaqueRow(px) + 1) * hs);
+      drawHero(g, cfg, 'situp', sitX, top, hs, { outfit: 'pj' });
+      const bed = assets.images.get(plate), by = m.bed.y + 1;
+      if (bed) g.drawImage(bed, 0, by, BED_RIGHT, 200 - by, 0, by, BED_RIGHT, 200 - by);
+      heroState.x = sitX;
+      const first = Math.round(firstOpaqueRow(px) * hs);
+      heroState.box = { x: sitX, y: top + first, w: Math.round(HERO_W * hs), h: m.bed.y - top - first + 1, pose: 'situp' };   // the figure's own box: hair to the blanket line
+      heroState.blanketLine = m.bed.y; heroState.sitY = sitY;
       return;
     }
     if (h.flash) drawSilhouette(g, composeHero(cfg, 'idle', h.outfit), standX, standY, [255, 255, 255], hs);

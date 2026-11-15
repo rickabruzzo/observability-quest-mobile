@@ -22,9 +22,9 @@ test('four stats split at the dot, each a name and a number, for all five chapte
 
 test('the picture is the card art when it exists, else the persona cropped from the room plate', () => {
   const p = CH1.persona;
-  assert.equal(p.art, 'assets/cards/P1_card.png');
+  assert.equal(p.art, 'assets/cards/P1_card.webp');
   assert.deepEqual(p.crop, { image: 'R1_exec_floor', x: 192, y: 62, w: 112, h: 70 });
-  assert.deepEqual(cardPicture(p, true), { kind: 'art', src: 'assets/cards/P1_card.png' });
+  assert.deepEqual(cardPicture(p, true), { kind: 'art', src: 'assets/cards/P1_card.webp' });
   assert.deepEqual(cardPicture(p, false), { kind: 'crop', ...p.crop });
   assert.deepEqual(cardPicture({ crop: p.crop }, true), { kind: 'crop', ...p.crop });   // no art named: the crop
 });

@@ -1,9 +1,10 @@
-// Charity's verdict on Claim (spec: No score): her portrait takes over the scene, her header on top, then her
-// mood line and the count line in windows below, then the "prize desk opens later" line. The rules are
+// Charity's verdict on Claim (spec: No score): her portrait on the left with its bottom on the scene's edge, her
+// header across the top, her mood line, the count line and the "prize desk opens later" line in one window on the
+// right (brief 12). The rules are
 // js/engine/verdict.js; the claim form and the sunrise coda come in a later brief.
 
 import { SCRIPT } from '../script.js';
-import { charityVerdict, fillN } from '../engine/verdict.js';
+import { charityVerdict, fillN, figureCentre, portraitLayout } from '../engine/verdict.js';
 
 export const PORTRAIT = 'assets/portrait_charity.png';
 
@@ -19,11 +20,17 @@ export async function playCharity(ctx, wins, soon, alive = () => true) {
   layer.className = 'charity'; layer.id = 'charity';
   layer.innerHTML = `<img class="charity-portrait" alt="Charity Majors" src="${PORTRAIT}"><div class="charity-head"></div>`;
   layer.querySelector('.charity-head').textContent = SCRIPT[v.header];
+  const img = layer.querySelector('.charity-portrait');
+  const centre = () => { try { img.style.objectPosition = `${((figureCentre(img) / img.naturalWidth) * 100).toFixed(1)}% 0`; } catch { /* a blocked canvas: the middle */ } };
+  if (img.complete && img.naturalWidth) centre(); else img.addEventListener('load', centre, { once: true });
   ctx.overlay.appendChild(layer);
   wins.setLayer(layer);
+  // the words: one window on the right of the portrait, vertically centred, as long a line as fits there
+  const scale = ctx.fit?.scale ?? 1, textX = portraitLayout(640, 428, 320).textX;
+  const place = { where: 'right', maxWidth: Math.floor((320 - textX) * scale) - 8, maxLines: 12 };
   try {
     for (const text of [SCRIPT[v.mood], fillN(SCRIPT[v.count], v.n), soon]) {
-      await wins.say(text, { where: 'bottom' });
+      await wins.say(text, place);
       if (!alive()) return false;
     }
     return true;

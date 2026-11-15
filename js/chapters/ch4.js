@@ -2,23 +2,24 @@
 // js/screens/chapter.js plays it, the wall display is js/chapters/ch4-wall.js. Every word is a script key.
 // Positions are brief 08's, checked against the built 320×200 files; areas { x0, x1, y0, y1 } are inclusive.
 
-import { HERO_W } from '../engine/hero.js';
-import { SCENE_W } from '../engine/room.js';
 import { WALL } from './ch4-wall.js';
 
 export const MANIFEST = 'assets/rooms/ch4.json';
 
 export const ROOM = {
   image: 'R4_ops_room',
-  floorY: 192,
-  walk: [0, SCENE_W - HERO_W],
-  start: 136,
-  heroScale: 1,
+  // the floor (brief 11): between the curved console (to x 135) and the old desk (from x 205), from y 140 to the
+  // front, plus the strip across the front below y 186; 95 px with his feet on y 172 (the SRE's own height on her
+  // line), horizon y 40. The wall of space spans the whole back wall: nowhere on the floor is clear of it.
+  floor: [[136, 140], [204, 140], [204, 186], [319, 186], [319, 199], [0, 199], [0, 186], [136, 186]],
+  horizonY: 40, anchors: [{ y: 172, h: 95 }],
+  fronts: [],
+  start: { x: 164, y: 194 },
   // the wall of space is first: where the computer and the persona overlap it, the smaller targets win
   hotspots: [
     { id: 'wall', rect: { x: 30, y: 2, w: 260, h: 100 }, walk: false, look: 'ch4.look.wall', use: { scene: 'wall' } },
-    { id: 'pc', rect: { x: 10, y: 88, w: 126, h: 98 }, standX: 81, look: 'ch4.look.pc', use: { scene: 'pc' } },
-    { id: 'npc', rect: { x: 205, y: 78, w: 98, h: 107 }, standX: 148, look: 'ch4.look.npc', use: { action: 'persona' } },
+    { id: 'pc', rect: { x: 10, y: 88, w: 126, h: 98 }, stand: { x: 109, y: 190 }, look: 'ch4.look.pc', use: { scene: 'pc' } },
+    { id: 'npc', rect: { x: 205, y: 78, w: 98, h: 107 }, stand: { x: 176, y: 186 }, look: 'ch4.look.npc', use: { action: 'persona' } },
   ],
 };
 
@@ -26,9 +27,11 @@ export const ROOM = {
  * whose screen the game fills with notifications scrolling up (x 84–89, y 56–61 on the 128×80 card). */
 export const PERSONA = {
   name: 'ch4.persona.name', class: 'ch4.persona.class', stats: 'ch4.persona.stats', flavor: 'ch4.persona.flavor',
-  card: 'P4', art: 'assets/cards/P4_card.png', crop: { image: 'R4_ops_room', x: 209, y: 59, w: 110, h: 69 },
-  overlay: { kind: 'phone', x: 84, y: 56, w: 6, h: 6 },
+  card: 'P4', art: 'assets/cards/P4_card.webp', crop: { image: 'R4_ops_room', x: 209, y: 59, w: 110, h: 69 },
+  overlay: { kind: 'phone', x: 424, y: 281, w: 6, h: 7, px: 4 },      // on the 640×400 card: a 6×7 screen of 4-px pixels, on the phone the art paints
   portrait: 'p4', where: 'top-left',
+  // where she stands in front of the chat column: her head and raised hand, then her shoulder and the old monitor's top
+  covers: [{ x: 268, y: 77, w: 18, h: 13 }, { x: 236, y: 90, w: 50, h: 9 }],
   loop: 'speak', frames: { talk: ['R4_npc_talk_1', 'R4_npc_talk_2'], rest: null, idle: [], win: 'R4_npc_win' },
   calls: [1, 2, 3].map((i) => `ch4.npc.call.${i}`),
   ask: 'ch4.npc.ask',

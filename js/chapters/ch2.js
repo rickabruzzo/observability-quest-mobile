@@ -3,23 +3,24 @@
 // is a script key. Positions are brief 08's, checked against the built 320×200 files; areas { x0, x1, y0, y1 }
 // are inclusive.
 
-import { HERO_W } from '../engine/hero.js';
-import { SCENE_W } from '../engine/room.js';
 import { WALL } from './ch2-wall.js';
 
 export const MANIFEST = 'assets/rooms/ch2.json';
 
 export const ROOM = {
   image: 'R2_war_room',
-  floorY: 192,
-  walk: [0, SCENE_W - HERO_W],
-  start: 156,
-  heroScale: 1,
+  // the floor (brief 11): the open middle from x 135 to x 260 (the engineer stands at 268–300), from the whiteboard
+  // wall at y 138 to the front, plus the strip across the front below y 186; 115 px with his feet on y 170 (the
+  // engineer's own height on his own line), horizon y 40
+  floor: [[135, 138], [260, 138], [260, 186], [319, 186], [319, 199], [0, 199], [0, 186], [135, 186]],
+  horizonY: 40, anchors: [{ y: 170, h: 115 }],
+  fronts: [],
+  start: { x: 80, y: 194 },            // in front of the cubicle: covers neither the board nor the engineer
   // drawing order: where two overlap the later one wins, so the persona beats the whiteboard where he stands at it
   hotspots: [
     { id: 'wall', rect: { x: 113, y: 26, w: 197, h: 92 }, walk: false, look: 'ch2.look.wall', use: { scene: 'wall' } },
-    { id: 'pc', rect: { x: 0, y: 76, w: 136, h: 112 }, standX: 82, look: 'ch2.look.pc', use: { scene: 'pc' } },
-    { id: 'npc', rect: { x: 255, y: 52, w: 48, h: 120 }, standX: 184, look: 'ch2.look.npc', use: { action: 'persona' } },
+    { id: 'pc', rect: { x: 0, y: 76, w: 136, h: 112 }, stand: { x: 110, y: 188 }, look: 'ch2.look.pc', use: { scene: 'pc' } },
+    { id: 'npc', rect: { x: 255, y: 52, w: 48, h: 120 }, stand: { x: 206, y: 180 }, look: 'ch2.look.npc', use: { action: 'persona' } },
   ],
 };
 
@@ -27,7 +28,7 @@ export const ROOM = {
  * now and then, talks only while his own words are on screen, and caps his marker for the win. */
 export const PERSONA = {
   name: 'ch2.persona.name', class: 'ch2.persona.class', stats: 'ch2.persona.stats', flavor: 'ch2.persona.flavor',
-  card: 'P2', art: 'assets/cards/P2_card.png', crop: { image: 'R2_war_room', x: 234, y: 34, w: 76, h: 48 },
+  card: 'P2', art: 'assets/cards/P2_card.webp', crop: { image: 'R2_war_room', x: 234, y: 34, w: 76, h: 48 },
   portrait: 'p2', where: 'top-left',
   loop: 'speak', frames: { talk: ['R2_npc_talk_1', 'R2_npc_talk_2'], rest: 'R2_npc_look', idle: ['R2_npc_scratch', 'R2_npc_mark'], win: 'R2_npc_win' },
   calls: [1, 2, 3].map((i) => `ch2.npc.call.${i}`),
