@@ -308,6 +308,18 @@ All five scenarios played. "Overall it's doing ok." What changes, and where it i
 - **The menus** are placeholders and get a designed pass.
 - **Housekeeping:** Warp's and Art Claude's worktrees live inside the project folder (`.worktrees/`, git-ignored), not beside it.
 
+### The painted hero (2026-11-15)
+
+The hero is no longer drawn by code. Rick on the last attempt in code: "Lets not have you make another bad attempt at a character model." Art Claude painted him in the personas' hand (art briefs 05 and 06, approved), and the paintings are cut to game size as parts the game recolours (`tools/build_hero_painted.py`, `assets/hero/`; Warp brief 15 puts them in the game). This replaces what **Character creation** above says about how he is built:
+
+- **One body, the head as a layer.** Thirteen bodies without heads (standing front, side and back; a four-picture side walk; walking toward us and away, two pictures each; pyjamas standing and sitting up in bed), and a head for each hair style in each view. A body and a head each carry the neck's position; head goes over body.
+- **The creator's list** (Rick: "lets do it and see how it goes"): hair standard, long, afro or mohawk; a short beard or none; glasses or none; **one build**. Skin, hair, hoodie and jeans colours are unchanged. A hero saved with a style or beard that is gone loads as the nearest one that exists. A second build would be a second body set: its own brief, if Rick wants it.
+- **Colours by lookup.** Every painted pixel is a part (hoodie, jeans, skin, hair, grey, outline) and one of 32 tones of it; the build writes a ramp for every colour the creator offers, so the game does no colour maths and what the build's pictures show is what the game shows. Pyjamas are the same pale blue on everyone.
+- **The beard and the glasses are overlays**, cut as the difference between two paintings of the same head, and trimmed to the beard and the frames themselves so they sit right on every hair style.
+- **Walking in depth.** Toward the viewer and away have their own pictures (Rick, 2026-11-15: "can I get a turn in and turn out for walking within the depth of the scene"; "approved"). A leg of a walk that goes more up or down the screen than across uses them; the rest is the side walk, mirrored when heading left.
+- **The paintings do not bob** (each was scaled to one height), so the game lowers the whole figure a pixel or two on the frames that carry his weight. One side-walk picture, the one after the long stride, came out close to the stride itself (Art Claude's hand-back); it is used as it is and may get a hand edit later.
+- **The Honeycomb mark** is still the official file's table, put on the chest of the three hoodie bodies that face us, never mirrored and never painted.
+
 ### Rick's first play on a phone (2026-11-14)
 
 On his iPhone, from a Vercel preview: "It would be nice if the game took up the entire screen, also if it could force full screen instead of showing the browser", and "I hear sound in the browser desktop but not the mobile." What a phone allows was checked the same night, and the design follows it (Warp brief 13):
