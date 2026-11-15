@@ -1,7 +1,7 @@
 import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
-import { startServer } from './_server.js';
+import { startServer, windowed } from './_server.js';
 import { HERO_W } from '../../js/engine/hero.js';
 
 let server, browser;
@@ -10,6 +10,7 @@ after(async () => { await browser?.close(); await server?.close(); });
 
 async function openPreview(opts = {}) {
   const ctx = await browser.newContext({ viewport: { width: 844, height: 390 }, deviceScaleFactor: 1, hasTouch: true, isMobile: true, ...opts });
+  await windowed(ctx);
   const page = await ctx.newPage();
   page.on('pageerror', (e) => { throw e; });
   await page.goto(server.baseURL + '?preview=1', { waitUntil: 'load' });

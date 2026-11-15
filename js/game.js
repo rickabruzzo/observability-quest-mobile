@@ -1,6 +1,8 @@
 // Observability Quest v2 — shell: stage fitting, rotate gate, screen state machine, frame loop.
 
 import { fitStage, applyStage, isPortrait } from './engine/stage.js';
+import { createSound } from './engine/sound.js';
+import { shouldGoFullscreen, detectFullscreen, goFullscreen } from './engine/fullscreen.js';
 import { createTitleScreen } from './screens/title.js';
 import { createCreatorScreen } from './screens/creator.js';
 import { createPreviewScreen } from './screens/preview.js';
@@ -13,6 +15,8 @@ import { SCRIPT } from './script.js';
 
 export const ADVANCE_GUARD_MS = 350;
 const HERO_KEY = 'oq.hero';
+const STATS_EVERY_MS = 500;      // how often the ?stats=1 sound readout refreshes
+const query = new URLSearchParams(location.search);
 
 const canvas = document.getElementById('scene');
 const ctx2d = canvas.getContext('2d');
@@ -25,7 +29,10 @@ const ctx = {
   colR: document.getElementById('col-r'),
   hero: null,
   reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
-  stats: new URLSearchParams(location.search).get('stats') === '1',   // ?stats=1: the play-test stopwatch table after a scenario (brief 12)
+  stats: query.get('stats') === '1',   // ?stats=1: the play-test stopwatch table after a scenario (brief 12) and the sound readout in the bar (brief 13)
+  sound: createSound(),               // the game's one audio context (brief 13 E); unlocked by the first tap anywhere
+  /** Full screen and landscape where the phone allows it, never on a desktop. Call inside a tap; never wait for it. */
+  fullscreen() { if (shouldGoFullscreen(detectFullscreen(window))) goFullscreen(); },
   fit: null,
   chapterId: 1,          // the scenario the CHAPTER screen plays; the menu sets it
   claimed: false,        // the prize: nothing claims it yet (the claim flow is a later brief)
@@ -49,7 +56,7 @@ game.screens.MENU = createMenuScreen(game);
 game.screens.CHAPTER = createChapterScreen(game);
 
 let current = null, currentName = 'LOADING', lastGo = -Infinity, transitions = 0;
-let paused = false, lastT = 0;
+let paused = false, lastT = 0, statsAt = 0;
 
 function go(name) {
   const now = performance.now();
@@ -90,12 +97,45 @@ function frame(t) {
   const dt = lastT ? Math.min(100, t - lastT) : 0;
   lastT = t;
   if (!paused) current?.tick?.(dt, ctx);
+  if (ctx.stats && t - statsAt >= STATS_EVERY_MS) { statsAt = t; showStats(); }
   requestAnimationFrame(frame);
 }
 
+/** ?stats=1: the bar's title says what this phone's audio is doing, so one photo tells us. */
+function showStats() {
+  const { state, session, sampleRate } = ctx.sound.info;
+  document.getElementById('sb-title').textContent = `Observability Quest · sound: ${state} · ${session ?? 'no session API'} · ${sampleRate ?? 'no context'}`;
+}
+
+/** The Sound button in the shell: the ring switch no longer silences the game, so the player needs a way to. */
+const soundBtn = document.getElementById('btn-sound');
+function showSound() {
+  const on = !ctx.sound.muted;
+  soundBtn.setAttribute('aria-pressed', String(on));
+  soundBtn.setAttribute('aria-label', `Sound ${on ? 'on' : 'off'}`);
+  soundBtn.querySelector('.state').textContent = on ? 'on' : 'off';
+}
+soundBtn.addEventListener('click', () => { ctx.sound.setMuted(!ctx.sound.muted); showSound(); });
+showSound();
+
+// The first tap anywhere unlocks sound; any later tap brings it back after a phone call or a trip to another app.
+for (const type of ['touchend', 'click', 'keydown']) document.addEventListener(type, () => ctx.sound.unlock(), { capture: true, passive: true });
+
+// The rotate gate: where full screen exists the tap turns the screen whatever the phone's rotation lock says.
+const fs = detectFullscreen(window), canTurn = fs.canFullscreen && !fs.ios;       // not on an iPad: see js/engine/fullscreen.js
+document.body.dataset.fs = canTurn ? 'yes' : 'no';
+document.getElementById('rotate').addEventListener('click', () => { if (canTurn && !fs.standalone) goFullscreen(); });
+if (ctx.stats) document.body.dataset.stats = '1';
+if (query.get('swipe') === '1') document.documentElement.dataset.swipe = '1';   // an experiment (brief 13 F): the page can scroll 80 px so Safari's bar may shrink
+
 window.addEventListener('resize', resize);
 window.addEventListener('orientationchange', resize);
-document.addEventListener('visibilitychange', () => hold('hidden', document.visibilityState === 'hidden'));
+window.visualViewport?.addEventListener('resize', resize);
+document.addEventListener('visibilitychange', () => {
+  const hidden = document.visibilityState === 'hidden';
+  hold('hidden', hidden);
+  if (hidden) ctx.sound.suspend(); else ctx.sound.resume();
+});
 resize();
 ctx.hero = ctx.loadHero();
 go('TITLE');
@@ -109,6 +149,7 @@ window.__oq = {
   get paused() { return paused; },
   get transitions() { return transitions; },
   get run() { return ctx.runlog?.snapshot() ?? null; },
+  get sound() { return ctx.sound; },
   go,
   ctx,
   game,

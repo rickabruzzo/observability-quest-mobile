@@ -1,4 +1,4 @@
-// Placeholder sound for the intro: a pager beep and a lamp click from WebAudio, no files.
+// Placeholder sound for the intro: a pager beep and a lamp click from WebAudio, no files. The context is the game's one (brief 13 E).
 // Sound is decoration — every path here is silent rather than broken when audio is unavailable or blocked.
 
 // Each action's sound, as a few synth parts: { type: 'square' | 'triangle' | 'noise', hz, to (slide target), at, ms, gain }.
@@ -13,38 +13,39 @@ export const SOUNDS = {
   shut: [{ type: 'triangle', hz: 90, to: 50, at: 0, ms: 140, gain: 0.1 }, { type: 'noise', at: 0, ms: 40, gain: 0.06 }],
 };
 
-export function createSfx({ AudioContextCtor = globalThis.AudioContext || globalThis.webkitAudioContext, muted = () => false } = {}) {
-  let ctx = null, dead = !AudioContextCtor;
+export function createSfx({ sound, muted = () => false } = {}) {
+  // `sound` is the game's one audio context (js/engine/sound.js); its `out` is the master gain every voice connects to.
   function audio() {
-    if (dead || muted()) return null;
+    if (!sound || muted()) return null;
     try {
-      if (!ctx) ctx = new AudioContextCtor();
-      if (ctx.state === 'suspended' && ctx.resume) Promise.resolve(ctx.resume()).catch(() => {});
-      return ctx;
-    } catch { dead = true; return null; }
+      let a = sound.context();
+      if (!a) { sound.unlock(); a = sound.context(); }       // a play before any unlock still has a context (it resumes on the next tap)
+      return a && sound.out ? a : null;
+    } catch { return null; }
   }
+  const dest = () => sound.out;
   function tone(a, hz, at, ms, gain) {
     const o = a.createOscillator(), g = a.createGain();
     o.type = 'square'; o.frequency.value = hz; g.gain.value = gain;
-    o.connect(g); g.connect(a.destination);
+    o.connect(g); g.connect(dest());
     o.start(a.currentTime + at); o.stop(a.currentTime + at + ms / 1000);
   }
   function noise(a, at, ms, gain) {
     const n = Math.max(1, Math.floor(a.sampleRate * (ms / 1000))), buf = a.createBuffer(1, n, a.sampleRate), d = buf.getChannelData(0);
     for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
     const src = a.createBufferSource(), g = a.createGain();
-    src.buffer = buf; g.gain.value = gain; src.connect(g); g.connect(a.destination); src.start(a.currentTime + at);
+    src.buffer = buf; g.gain.value = gain; src.connect(g); g.connect(dest()); src.start(a.currentTime + at);
   }
   function voice(a, p) {
     if (p.type === 'noise') return noise(a, p.at / 1000, p.ms, p.gain);
     const o = a.createOscillator(), g = a.createGain(), t0 = a.currentTime + p.at / 1000;
     o.type = p.type; o.frequency.value = p.hz; g.gain.value = p.gain;
     if (p.to && o.frequency.linearRampToValueAtTime) { o.frequency.setValueAtTime?.(p.hz, t0); o.frequency.linearRampToValueAtTime(p.to, t0 + p.ms / 1000); }
-    o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0 + p.ms / 1000);
+    o.connect(g); g.connect(dest()); o.start(t0); o.stop(t0 + p.ms / 1000);
   }
   return {
     /** Call inside a tap: phones only let sound start from one. */
-    unlock() { audio(); },
+    unlock() { try { sound?.unlock(); } catch { /* silent */ } },
     play(name) {
       const parts = SOUNDS[name]; if (!parts) return;
       const a = audio(); if (!a) return;
@@ -60,9 +61,10 @@ export function createSfx({ AudioContextCtor = globalThis.AudioContext || global
         const n = Math.max(1, Math.floor(a.sampleRate * 0.02)), buf = a.createBuffer(1, n, a.sampleRate), d = buf.getChannelData(0);
         for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
         const src = a.createBufferSource(), g = a.createGain();
-        src.buffer = buf; g.gain.value = 0.08; src.connect(g); g.connect(a.destination); src.start();
+        src.buffer = buf; g.gain.value = 0.08; src.connect(g); g.connect(dest()); src.start();
       } catch { /* silent */ }
     },
-    close() { try { if (ctx && ctx.close) Promise.resolve(ctx.close()).catch(() => {}); } catch { /* silent */ } ctx = null; },
+    /** Nothing to close: the context is the game's and outlives the intro. */
+    close() {},
   };
 }
