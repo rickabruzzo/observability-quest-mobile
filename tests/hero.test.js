@@ -65,15 +65,8 @@ test('drawHero flips about the sprite\'s centre', () => {
   assert.ok(same(painted(c), mirrored));
 });
 
-test('a fractional scale is nearest neighbour: round(W×s) by round(H×s) px, crisp, the feet on the last row', () => {
-  const px = composeHero(PRESETS.masc, 'idle');
-  const c = fakeCtx(); drawHero(c, PRESETS.masc, 'idle', 0, 0, 0.85);
-  const got = painted(c);
-  assert.ok(same(got, expected(px, 0, 0, 0.85)));
-  const xs = [...got.keys()].map((k) => +k.split(',')[0]), ys = [...got.keys()].map((k) => +k.split(',')[1]);
-  assert.ok(Math.max(...xs) < Math.round(HERO_W * 0.85) && Math.max(...ys) === Math.round(HERO_H * 0.85) - 1, `${Math.max(...xs)},${Math.max(...ys)}`);
-  assert.ok(c.calls.every(([x, y, w, h]) => Number.isInteger(x) && Number.isInteger(y) && Number.isInteger(w) && h === 1), 'whole pixels only');
-});
+// A hero drawn smaller than his sprite is no longer nearest neighbour (it dropped rows and columns and mangled his
+// face once every room scaled him): tests/hero-scaling.test.js has the rule, the size, the feet and the whole pixels.
 
 test('drawHero merges runs: far fewer rects than opaque pixels', () => {
   const px = composeHero(PRESETS.masc, 'idle');

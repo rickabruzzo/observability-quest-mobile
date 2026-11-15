@@ -294,27 +294,72 @@ function composed(cfg, pose, outfit = 'hoodie') {
 }
 
 /**
- * Paints a composed sprite at (x, y), `scale` scene px per sprite px, nearest neighbour: the sprite covers
- * round(HERO_W × scale) by round(HERO_H × scale) px, each destination pixel taking the sprite pixel under its
- * centre, so a fractional scale (a room's heroScale) stays crisp. Runs of one colour go as one fillRect.
- * flip mirrors about the sprite's centre.
+ * A composed sprite at `scale`: { w, h, data } with w = round(HERO_W × scale), h = round(HERO_H × scale), RGBA.
+ *
+ * Smaller than the sprite (he is drawn by depth in every room), each pixel is the average of the sprite pixels
+ * it covers, weighted by how much of each it covers, and is his if at least half of what it covers is. Nearest
+ * neighbour drops whole rows and columns, and his eyes are two columns wide: at 0.73 one eye lost its pupil and
+ * the other its white (Rick, 2026-11-14: "the game model now looks like crap"). At the sprite's size or larger
+ * every pixel is the sprite's own, repeated. `flip` mirrors about the sprite's centre.
  */
-export function blit(ctx, px, x, y, scale = 1, flip = false) {
-  const dw = Math.round(HERO_W * scale), dh = Math.round(HERO_H * scale);
-  for (let dr = 0; dr < dh; dr++) {
-    const sr = Math.min(HERO_H - 1, Math.floor((dr + 0.5) / scale));
-    let run = null, from = 0;
-    for (let dc = 0; dc <= dw; dc++) {
-      let col = null;
-      if (dc < dw) {
-        const sc = Math.min(HERO_W - 1, Math.floor((dc + 0.5) / scale));
-        const i = (sr * HERO_W + (flip ? HERO_W - 1 - sc : sc)) * 4;
-        if (px[i + 3]) col = `rgb(${px[i]},${px[i + 1]},${px[i + 2]})`;
+export function scaleSprite(px, scale = 1, flip = false) {
+  const w = Math.round(HERO_W * scale), h = Math.round(HERO_H * scale), data = new Uint8ClampedArray(w * h * 4);
+  const at = (sx, sy) => (sy * HERO_W + (flip ? HERO_W - 1 - sx : sx)) * 4;
+  if (w >= HERO_W && h >= HERO_H) {
+    for (let dr = 0; dr < h; dr++) {
+      const sy = Math.min(HERO_H - 1, Math.floor((dr + 0.5) / scale));
+      for (let dc = 0; dc < w; dc++) {
+        const i = at(Math.min(HERO_W - 1, Math.floor((dc + 0.5) / scale)), sy), o = (dr * w + dc) * 4;
+        data[o] = px[i]; data[o + 1] = px[i + 1]; data[o + 2] = px[i + 2]; data[o + 3] = px[i + 3];
       }
+    }
+    return { w, h, data };
+  }
+  const kx = HERO_W / w, ky = HERO_H / h;                 // sprite pixels under one destination pixel: the sprite is tiled exactly
+  for (let dr = 0; dr < h; dr++) {
+    const y0 = dr * ky, y1 = Math.min(HERO_H, (dr + 1) * ky);
+    for (let dc = 0; dc < w; dc++) {
+      const x0 = dc * kx, x1 = Math.min(HERO_W, (dc + 1) * kx);
+      let r = 0, g = 0, b = 0, his = 0;
+      for (let sy = Math.floor(y0); sy < y1; sy++) {
+        const wy = Math.min(y1, sy + 1) - Math.max(y0, sy);
+        for (let sx = Math.floor(x0); sx < x1; sx++) {
+          const i = at(sx, sy);
+          if (!px[i + 3]) continue;
+          const k = wy * (Math.min(x1, sx + 1) - Math.max(x0, sx));
+          r += px[i] * k; g += px[i + 1] * k; b += px[i + 2] * k; his += k;
+        }
+      }
+      if (his * 2 < (x1 - x0) * (y1 - y0)) continue;       // mostly empty: not his
+      const o = (dr * w + dc) * 4;
+      data[o] = Math.round(r / his); data[o + 1] = Math.round(g / his); data[o + 2] = Math.round(b / his); data[o + 3] = 255;
+    }
+  }
+  return { w, h, data };
+}
+
+/** Paints a composed sprite at (x, y) at `scale` (see scaleSprite), in whole pixels: runs of one colour go as one fillRect. */
+export function blit(ctx, px, x, y, scale = 1, flip = false) {
+  const { w, h, data } = scaled(px, scale, flip);
+  for (let dr = 0; dr < h; dr++) {
+    let run = null, from = 0;
+    for (let dc = 0; dc <= w; dc++) {
+      let col = null;
+      if (dc < w) { const i = (dr * w + dc) * 4; if (data[i + 3]) col = `rgb(${data[i]},${data[i + 1]},${data[i + 2]})`; }
       if (run !== null && run !== col) { ctx.fillStyle = run; ctx.fillRect(x + from, y + dr, dc - from, 1); run = null; }
       if (col !== null && run === null) { run = col; from = dc; }
     }
   }
+}
+// A walk through a room draws the same sprite at a handful of sizes: keep the scaled copies (per sprite, by size and flip).
+const scaledCache = new WeakMap();
+function scaled(px, scale, flip) {
+  let m = scaledCache.get(px);
+  if (!m) { m = new Map(); scaledCache.set(px, m); }
+  const key = `${Math.round(HERO_W * scale)}x${Math.round(HERO_H * scale)}${flip ? 'f' : ''}`;
+  let v = m.get(key);
+  if (!v) { v = scaleSprite(px, scale, flip); m.set(key, v); if (m.size > 48) m.delete(m.keys().next().value); }
+  return v;
 }
 
 /** Paints the hero at (x, y) with `scale` px per sprite pixel; flip mirrors about the sprite's centre. */
