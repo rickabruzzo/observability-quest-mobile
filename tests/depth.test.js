@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { insideFloor, nearestFloorPoint, heroScaleAt, heroHeightAt, frontsOver, planPath, checkRoom } from '../js/engine/room.js';
-import { planWalk, stepWalk, WALK_SPEED, STRIDE_PX, SETTLE_MS } from '../js/engine/walk.js';
+import { planWalk, stepWalk, WALK_SPEED, ADVANCE, SETTLE_MS } from '../js/engine/walk.js';
 import { HERO_H } from '../js/engine/hero.js';
 
 // a T-shaped floor: an aisle from the back wall to the front, and a strip across the front
@@ -93,16 +93,16 @@ test('a walk follows the path; its speed in scene px follows his scale, so the s
 test('stepping: position along the path, the frame from ground covered in his own pixels, side on then a settle, done at the end', () => {
   const p = planWalk({ x: 150, y: 190 }, { x: 170, y: 140 }, ROOM);
   const a = stepWalk(p, 0), mid = stepWalk(p, p.duration / 2), end = stepWalk(p, p.duration + SETTLE_MS);
-  assert.deepEqual([a.x, a.y, a.view, a.pose], [150, 190, 'side', 'w1']);
-  assert.ok(mid.x > 150 && mid.x < 170 && mid.y < 190 && mid.y > 140 && /^w[1-8]$/.test(mid.pose));
+  assert.deepEqual([a.x, a.y, a.view, a.pose], [150, 190, 'back', 'away_l']);          // further up than across: he walks away from us (brief 15)
+  assert.ok(mid.x > 150 && mid.x < 170 && mid.y < 190 && mid.y > 140 && /^(away_[lr]|back)$/.test(mid.pose));
   assert.ok(mid.scale > 0 && mid.scale < 1);
   assert.deepEqual([end.x, end.y, end.view, end.pose, end.done], [170, 140, 'front', 'idle', true]);
-  assert.equal(stepWalk(p, p.duration + 10).pose, 'stand');
-  // one full cycle of eight frames per STRIDE_PX of ground in the hero's own pixels: along the front, at scale s, every STRIDE_PX*s scene px
+  assert.equal(stepWalk(p, p.duration + 10).pose, 'back', 'arrived after walking away: his back, held for a beat');
+  // one step of four frames per 4 × ADVANCE of ground in the hero's own pixels: along the front, at scale s, every 4 × ADVANCE × s scene px
   const s = heroScaleAt(ROOM, 190), flat = planWalk({ x: 0, y: 190 }, { x: 300, y: 190 }, ROOM);
   const at = (px) => stepWalk(flat, (px / 300) * flat.duration).pose;
-  assert.equal(at(0), 'w1'); assert.equal(at(STRIDE_PX * s), 'w1', 'the cycle starts over after one scaled stride');
-  assert.notEqual(at((STRIDE_PX * s) / 2), 'w1');
+  assert.equal(at(0), 'walk_contact'); assert.equal(at(ADVANCE * 4 * s), 'walk_contact', 'the step starts over after one scaled step');
+  assert.notEqual(at((ADVANCE * 4 * s) / 2), 'walk_contact');
   assert.equal(stepWalk(planWalk({ x: 100, y: 190 }, { x: 20, y: 190 }, ROOM), 10).flip, true, 'walking left is mirrored');
 });
 

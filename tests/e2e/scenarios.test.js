@@ -202,7 +202,12 @@ for (const n of NS) {
 }
 
 // ---- depth (Warp brief 11) ----
-import { heroHeightAt, insideFloor } from '../../js/engine/room.js';
+import { heroHeightAt, heroScaleAt, insideFloor } from '../../js/engine/room.js';
+import { setHeroSheet, composeFigure, HERO_W } from '../../js/engine/hero.js';
+import { DEFAULT_HERO } from '../../js/engine/hero-parts.js';
+{ const png = readFileSync('assets/hero/hero.png');   // the sheet's size is in the PNG's header
+  setHeroSheet(JSON.parse(readFileSync('assets/hero/hero.json', 'utf8')), new Uint8Array(readFileSync('tests/fixtures/hero-painted/sheet.codes')), png.readUInt32BE(16), png.readUInt32BE(20)); }
+const FRONT_H = composeFigure(DEFAULT_HERO, 'front').h;      // the painted figure's own height, 136 rows on the 144-row canvas (brief 15 C)
 
 for (const n of Object.keys(CHAPTERS).map(Number)) {
   const c = CHAPTERS[n];
@@ -221,7 +226,7 @@ for (const n of Object.keys(CHAPTERS).map(Number)) {
     await page.waitForFunction(() => window.__oq.chapter.walking === false && (document.querySelector('#persona-card') || window.__oq.chapter.window), null, { timeout: 9000 });
     const hb = await page.evaluate(() => window.__oq.chapter.heroBox), pos = await ch(page);
     assert.deepEqual([pos.x, pos.y], [npc.stand.x, npc.stand.y]);
-    assert.ok(Math.abs(hb.h - heroHeightAt(c.room, npc.stand.y)) <= 2, `drawn ${hb.h}, anchor says ${heroHeightAt(c.room, npc.stand.y).toFixed(1)}`);
+    assert.ok(Math.abs(hb.h - FRONT_H * heroScaleAt(c.room, npc.stand.y)) <= 1, `drawn ${hb.h}, the painted figure at this depth is ${(FRONT_H * heroScaleAt(c.room, npc.stand.y)).toFixed(1)} (the anchor's ${heroHeightAt(c.room, npc.stand.y).toFixed(1)} is for the 144-row canvas)`);
     assert.equal(hb.y + hb.h, npc.stand.y, 'his feet are on the stand point');
     await ctx.close();
   });

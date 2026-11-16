@@ -10,6 +10,7 @@ import { createIntroScreen } from './screens/intro.js';
 import { createMenuScreen } from './screens/menu.js';
 import { createChapterScreen } from './screens/chapter.js';
 import { sanitizeHero } from './creator-state.js';
+import { loadHero, heroReady } from './engine/hero.js';
 import { parseDone, serializeDone, afterIntro, solvedCount, DONE_KEY } from './menu.js';
 import { SCRIPT } from './script.js';
 
@@ -28,6 +29,8 @@ const ctx = {
   colL: document.getElementById('col-l'),
   colR: document.getElementById('col-r'),
   hero: null,
+  heroLoading: loadHero(),     // the painted hero's sheet and manifest (brief 15): started at boot, awaited by the creator; a failure draws no hero
+  get heroReady() { return heroReady(); },
   reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
   stats: query.get('stats') === '1',   // ?stats=1: the play-test stopwatch table after a scenario (brief 12) and the sound readout in the bar (brief 13)
   sound: createSound(),               // the game's one audio context (brief 13 E); unlocked by the first tap anywhere
@@ -145,6 +148,7 @@ window.__oq = {
   get ready() { return true; },
   get state() { return currentName; },
   get hero() { return ctx.hero; },
+  get heroReady() { return heroReady(); },
   get fit() { return ctx.fit; },
   get paused() { return paused; },
   get transitions() { return transitions; },

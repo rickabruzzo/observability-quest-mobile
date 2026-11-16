@@ -1,24 +1,22 @@
 // Character creation — a Quest-for-Glory-style sheet (spec: Character creation › Sheet language).
 
-import { drawHero, drawHeroCrop, HEAD_CROP, HERO_W, HERO_H } from '../engine/hero.js';
+import { drawPreview, drawHeadThumb, PREVIEW, THUMB } from '../engine/hero.js';
 import { OPTIONS, SKIN, HAIR, HOODIE, JEANS } from '../engine/hero-parts.js';
-import { FACE_ROWS, KIT_ROWS, LABELS, BODY_LABELS, pick, randomHero, cleanName, displayName, sanitizeHero } from '../creator-state.js';
+import { FACE_ROWS, KIT_ROWS, LABELS, pick, randomHero, cleanName, displayName, sanitizeHero } from '../creator-state.js';
 import { colButton } from '../engine/ui.js';
 import { preloadIntro } from './intro.js';
 
 const SWATCH = { skin: (v) => SKIN[v], hair: (v) => HAIR[v], hoodie: (v) => HOODIE[v], jeans: (v) => JEANS[v] };
-const THUMB = { style: HEAD_CROP, beard: HEAD_CROP, glasses: HEAD_CROP };
+const THUMBED = new Set(['style', 'beard', 'glasses']);         // a thumbnail previews the choice on the current hero
 
 export function createCreatorScreen(game) {
   let hero, page = 'face', els = {}, heroCtx = null, nameSheet = null;
 
   function thumb(key, value) {
-    const crop = THUMB[key];
     const c = document.createElement('canvas');
-    c.width = crop.w; c.height = crop.h;                          // the 56-px head is already thumbnail size: 1 sprite px per canvas px
+    c.width = THUMB.w; c.height = THUMB.h;                        // the painted head is already thumbnail size: 1 figure px per canvas px
     c.setAttribute('aria-hidden', 'true');
-    // a thumbnail previews the choice on the current hero
-    drawHeroCrop(c.getContext('2d'), pick(hero, key, value), crop, 1);
+    drawHeadThumb(c.getContext('2d'), pick(hero, key, value));   // nothing drawn until the sheet is in: update() redraws them then
     return c;
   }
 
@@ -26,8 +24,7 @@ export function createCreatorScreen(game) {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'opt'; b.dataset.key = key; b.dataset.value = String(value);
     b.setAttribute('aria-pressed', String(hero[key] === value));
-    if (key === 'body') { b.classList.add('wide'); b.textContent = BODY_LABELS[value]; b.setAttribute('aria-label', `${BODY_LABELS[value]} body`); }
-    else if (SWATCH[key]) { const s = document.createElement('span'); s.className = 'sw'; s.style.background = SWATCH[key](value); b.appendChild(s); b.setAttribute('aria-label', `${LABELS[key]} ${value}`); }
+    if (SWATCH[key]) { const s = document.createElement('span'); s.className = 'sw'; s.style.background = SWATCH[key](value); b.appendChild(s); b.setAttribute('aria-label', `${LABELS[key]} ${value}`); }
     else { b.appendChild(thumb(key, value)); b.setAttribute('aria-label', `${LABELS[key]} ${value}`); }
     b.addEventListener('click', () => update(pick(hero, key, b.dataset.value)));
     return b;
@@ -58,8 +55,8 @@ export function createCreatorScreen(game) {
   }
 
   function renderHero() {
-    heroCtx.clearRect(0, 0, HERO_W, HERO_H);
-    drawHero(heroCtx, hero, 'idle', 0, 0, 1);
+    heroCtx.clearRect(0, 0, PREVIEW.w, PREVIEW.h);
+    drawPreview(heroCtx, hero);
   }
 
   function renderName() {
@@ -70,15 +67,14 @@ export function createCreatorScreen(game) {
   }
 
   function update(next, { rerender = false } = {}) {
-    const bodyChanged = next.body !== hero?.body;
     hero = next;
-    if (rerender || bodyChanged) renderRows();
+    if (rerender) renderRows();
     else {
       // thumbnails depend on the hero, so redraw them; pressed state follows the config
       for (const b of els.rows.querySelectorAll('.opt')) {
         const { key, value } = b.dataset;
         b.setAttribute('aria-pressed', String(String(hero[key]) === value));
-        if (THUMB[key]) { b.replaceChildren(thumb(key, OPTIONS[key].find((v) => String(v) === value))); }
+        if (THUMBED.has(key)) { b.replaceChildren(thumb(key, OPTIONS[key].find((v) => String(v) === value))); }
       }
     }
     renderHero(); renderName();
@@ -108,7 +104,7 @@ export function createCreatorScreen(game) {
       ctx.overlay.innerHTML = `
         <div class="sheet">
           <div class="frame"><div class="jewel l" aria-hidden="true"></div><div class="jewel r" aria-hidden="true"></div>
-            <div class="frame-inner"><canvas id="hero-view" width="${HERO_W}" height="${HERO_H}" aria-label="Your hero"></canvas></div></div>
+            <div class="frame-inner"><canvas id="hero-view" width="${PREVIEW.w}" height="${PREVIEW.h}" aria-label="Your hero"></canvas></div></div>
           <div class="sheet-rows"></div>
         </div>`;
       els = { rows: ctx.overlay.querySelector('.sheet-rows'), nameBtn: null };
@@ -131,6 +127,9 @@ export function createCreatorScreen(game) {
       ctx.colL.appendChild(random); ctx.colR.appendChild(start);
       els.random = random; els.start = start;
       update(hero, { rerender: true });
+      // the painted hero's sheet loads from boot (js/game.js); if it is not in yet the sheet draws once it is (brief 15 G)
+      const mine = heroCtx;
+      if (!ctx.heroReady) ctx.heroLoading?.then(() => { if (heroCtx === mine && els.rows) update(hero); });
       window.__oq && (window.__oq.creator = { get hero() { return hero; }, get page() { return page; } });
     },
     exit(ctx) {

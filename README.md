@@ -30,7 +30,7 @@ the v0.1 portrait animations.
 ```
 npm test               # unit tests: hero renderer vs Python fixtures, stage math, walk, creator state, fonts, shared v0.1 modules
 npm run e2e            # Playwright: landscape shell + rotate gate, character sheet, intro cutscene, scenario menu, scenario 1 end to end, preview walk, weight budgets
-python3 -m pytest tools/tests -q   # asset tooling + the reference hero generator (regenerate fixtures: python3 tools/hero_gen.py --fixtures tests/fixtures/hero)
+python3 -m pytest tools/tests -q   # asset tooling, including the painted hero's build (rebuild the sheet and its fixtures: python3 tools/build_hero_painted.py)
 ```
 
 `npm run e2e` needs Playwright: `npm i -D playwright && npx playwright install chromium`
@@ -101,16 +101,15 @@ tools/                build_anim.py (frames → patches), optimize_png.py, rende
 v2 (`sci-adventure`) adds the point-and-click engine on top:
 
 ```
-js/engine/hero-parts.js   sprite data copied verbatim from tools/hero_gen.py (options, colours, bodies,
-                          the front view's WALK offsets, the profile's SIDE_LEG / SIDE_BOB angles)
-js/engine/hero.js         the front view: composeHero / drawHero, 28×72 RGBA. Also exports the canvas
-                          (Grid), the colour ramps and the mask helpers that the profile view reuses
-js/engine/hero-side.js    the profile view: composeHeroSide / drawHeroSide, facing right, mirrored by
-                          flip to walk left. SIDE_POSES = stand + w1..w8; SIDE_FOOT_DY is the one row
-                          its feet sit higher than the front view's
-js/engine/walk.js         planWalk / stepWalk: position, pose and which view to draw. Walking is the
-                          profile (frame from distance travelled, one cycle per STRIDE_PX), standing
-                          still is the front view
+js/engine/hero-parts.js   the creator's options and colours, the default hero, how an older saved hero maps on
+js/engine/hero.js         the painted hero: Art Claude's figures as a sheet of codes (assets/hero/hero.png) and a
+                          manifest (hero.json). composeFigure stacks a body, a head and the beard or glasses anchor
+                          on anchor and looks every colour up; scaleFigure draws him smaller by keeping whole rows
+                          and columns; placeHero / drawHero stand him on his feet. No pixel of him is drawn by code
+js/engine/png-codes.js    reads the sheet's codes from the PNG's own bytes, so no browser's canvas can alter them
+js/engine/walk.js         planWalk / stepWalk: position, body and view. Three walks (side, toward, away), the
+                          frame from the ground covered (one every ADVANCE of his own pixels); standing still
+                          is the front view
 js/engine/stage.js        320×200 logical canvas, scaling and the landscape/rotate gate
 js/engine/ui.js           the control-bar buttons
 js/engine/cursor.js       Sierra's walk/hand cursors, and the tap marker phones get instead
@@ -131,15 +130,14 @@ js/engine/images.js       loads a room manifest and its pictures once
 js/menu.js                the menu's rules: rows, oq.done best scores, ?ch=N
 js/script.js              GENERATED from script/script.md by `python3 tools/build_script.py` — never edit
 js/intro/                 timeline.js (shots, the hero's script, the way out of the bedroom), pager, sfx, font5x7
-tools/hero_gen.py         the normative renderer: hero() is the front view, hero_side() the profile.
-                          --fixtures / --side-fixtures write the goldens the JS ports are proved against
+tools/build_hero_painted.py   the hero's asset build: sorts each painting's pixels into parts, cuts them to game
+                          size, lifts the head off every body, and writes assets/hero/ and the fixtures
 ```
 
-Both ports are pixel-exact against Python: `tests/hero.test.js` and `tests/hero-side.test.js` compare
-every fixture byte for byte. Regenerate with `python3 tools/hero_gen.py --fixtures tests/fixtures/hero`
-and `--side-fixtures tests/fixtures/hero-side`. Every joint in the profile rounds half up
-(`floor(v + 0.5)`, `hero_gen._r` / `_r`), because Python's `round()` is banker's and JavaScript's
-`Math.round` is not — the two would otherwise put a limb on different pixels.
+The game composes the hero exactly as the build does: `tests/hero.test.js` compares ten figures in
+`tests/fixtures/hero-painted/` byte for byte, and `tests/png-codes.test.js` holds the sheet the game reads equal
+to the codes the build wrote. Rebuild both with `python3 tools/build_hero_painted.py`. The paintings are in
+`art-drops/`; the hero's look comes from them, and the build only sorts, shrinks and recolours what was painted.
 
 ## Common edits
 

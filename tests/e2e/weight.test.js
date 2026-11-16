@@ -21,7 +21,8 @@ function moduleGraph(entry) {
   return [...seen];
 }
 
-const FILES = ['index.html', 'css/game.css', ...moduleGraph('js/game.js'), ...FONTS];
+const HERO = ['assets/hero/hero.json', 'assets/hero/hero.png'];      // the painted hero's sheet, fetched at boot (brief 15)
+const FILES = ['index.html', 'css/game.css', ...moduleGraph('js/game.js'), ...FONTS, ...HERO];
 
 test('title files total under 600 KB', () => {
   const sizes = FILES.map((f) => [f, statSync(f).size]);

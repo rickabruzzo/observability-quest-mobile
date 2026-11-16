@@ -24,6 +24,10 @@ his chest, from the official file's table (`js/engine/hc-mark.js`), as it does t
 `code − 1` is `part × 32 + tone`, where `part` indexes `parts` (`hoodie, jeans, skin, hair, grey, outline`) and
 `tone` is 0–31. Code 255 (`erase`) appears only in the beard: it clears the pixel under it. Read the sheet once
 into a `Uint8Array` of codes (draw it to a canvas, take every fourth byte).
+  (Changed in review, 2026-11-16: reading a canvas back is not exact in every browser. Brave, Firefox in a
+  private window and Safari in places alter what a page reads from a canvas, to guard against fingerprinting,
+  and one wrong code is a pixel of the wrong tone or part. The game now reads the codes from the PNG's own bytes,
+  `js/engine/png-codes.js`, and uses the canvas only in a browser without `DecompressionStream`.)
 
 **The manifest:**
 
@@ -117,7 +121,8 @@ it goes"). Colours are untouched.
 - **A hero saved before this** must still load: `style: 'shoulder'` becomes `'long'`, `beard: 'long'` becomes
   `'short'`, and `body` is ignored.
 - The big preview is the `front` figure, centred on its anchor in a canvas 56 wide and 148 tall (the afro
-  stands six rows above short hair), his soles on the last row.
+  stands six rows above short hair), his soles on the last row. (Since 2026-11-16 the afro is cut to 78 % of its
+  painted size and stands three rows above short hair; the canvas keeps its size.)
 - A thumbnail for hair, beard or glasses is the `front` figure with that choice, cropped to 40×44 from
   `(ax − 20, ay − 36)`.
 
@@ -140,7 +145,7 @@ comparisons to the Python hero and `tests/fixtures/hero/`, `tests/fixtures/hero-
 (`SKIN`, `HAIR`, `HOODIE`, `JEANS`: the creator's swatches read them, and a Python test holds the ramps to
 them) and the scaling.
 
-Cloud Claude retires `tools/hero_gen.py` and its tests after your merge.
+Cloud Claude retires `tools/hero_gen.py` and its tests after your merge. (Retired in the review, 2026-11-16.)
 
 If the sheet or the manifest fails to load, the game still runs: no hero is drawn, everything else works.
 Load them before the creator opens; the title does not wait for them.

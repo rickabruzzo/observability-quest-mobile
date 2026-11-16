@@ -101,7 +101,7 @@ def test_each_hair_style_on_the_standing_body_is_its_painting():
     """A head painting is the whole standing figure with only the head changed, so the standing body with that
     head layer must give the painting back (all but a few pixels of edge blending beside long hair)."""
     bodies, heads = hp.bodies(), hp.heads()
-    for style in ('long', 'fro', 'mohawk'):
+    for style in ('long', 'mohawk'):                                              # the afro is cut smaller than its painting: its own test, below
         for view in ('front', 'side', 'back'):
             want = hp.full(f'{SET}/HD_{style}_{view}.png')
             got = _on(want[0].shape, hp.ANCHOR, [bodies[view], heads[style][view]])
@@ -109,6 +109,43 @@ def test_each_hair_style_on_the_standing_body_is_its_painting():
             differ = ((got[0] != want[0]) & ~streak).sum()
             assert differ <= 12 and streak.sum() <= 12, (style, view, int(differ), int(streak.sum()))
             assert ((got[0] > 0) != (want[0] > 0)).sum() <= 4, (style, view)      # and the silhouette is the painting's
+
+
+def _extent(mask):
+    ys, xs = np.nonzero(mask)
+    return int(xs.max() - xs.min() + 1), int(ys.max() - ys.min() + 1)
+
+
+def test_the_afro_is_its_paintings_hair_made_smaller_round_an_untouched_face():
+    """Rick, 2026-11-16: "Those afros are way too large. Shrink those if possible." The painted hair is taken down
+    to HAIR_SCALE of its size about the middle of his skull; nothing is drawn. The face, the neck and everything
+    below are the painting's, pixel for pixel; the hair never leaves his skull bare; and it keeps an outline."""
+    bodies, heads, k = hp.bodies(), hp.heads(), hp.HAIR_SCALE['fro']
+    assert 0.7 <= k <= 0.9
+    for view in ('front', 'side', 'back'):
+        want = hp.full(f'{SET}/HD_fro_{view}.png')
+        got = _on(want[0].shape, hp.ANCHOR, [bodies[view], heads['fro'][view]])
+        was, now = want[0] == P('hair'), got[0] == P('hair')
+        (w0, h0), (w1, h1) = _extent(was), _extent(now)
+        assert abs(w1 - k * w0) <= 1.5 and k * h0 - 1.5 <= h1 < h0, (view, (w0, h0), (w1, h1))     # smaller, by about k
+        assert now.sum() < 0.8 * was.sum(), (view, int(was.sum()), int(now.sum()))
+        # hair only where the painting had hair, its outline or nothing: never over his face or his clothes
+        assert not (now & np.isin(want[0], (P('skin'), P('grey'), P('hoodie'), P('jeans')))).any(), view
+        # the face is the painting's own: every skin and grey pixel, as light as it was painted
+        face = np.isin(want[0], (P('skin'), P('grey')))
+        assert np.array_equal(got[0][face], want[0][face]) and np.allclose(got[1][face], want[1][face]), view
+        # his skull is never bare: wherever the approved head is, what the painting had there is still something
+        # (the approved head is bearded; in profile its chin reaches three pixels past this clean-shaven one's)
+        assert (got[0][hp._base_mask(view) & (want[0] > 0)] > 0).all(), view
+        # the hair keeps an outline all the way round: no hair pixel touches the background
+        assert not (now & hp._near(got[0] == 0, diagonal=False)).any(), view
+        # from the collar down nothing has changed (all but the few edge pixels every head painting differs by)
+        low = np.s_[hp.NECK[view] + 3:]
+        assert (got[0][low] != want[0][low]).sum() <= 12, view
+
+
+def test_no_other_hair_style_is_scaled():
+    assert set(hp.HAIR_SCALE) == {'fro'}
 
 
 def test_the_glasses_are_the_frames_of_the_glasses_painting_and_nothing_else():
@@ -259,6 +296,24 @@ def test_the_ramps_cover_every_colour_the_creator_offers():
     pj = hp.lut(look, outfit='pj')
     assert tuple(pj[1 + 17]) == (0xA9, 0xC4, 0xEC, 255) and tuple(pj[1 + 32 + 17]) == (0xA9, 0xC4, 0xEC, 255)
     assert np.array_equal(pj[1 + 64:], lut[1 + 64:])                                           # skin, hair, grey and outline are his own
+
+
+def test_the_outline_is_never_lighter_than_it_was_painted():
+    """An outline pixel takes the mean lightness of what its block of the painting held, so one on the figure's edge
+    can come out a little lighter than the outline usually is. The ramp used to lift such a pixel toward white, as
+    it does a highlight on cloth, and it showed as a pale speck on his outline (review, 2026-11-16). An outline has
+    no highlights: lighter than usual is the outline colour scaled up, which is still dark."""
+    r = hp.ramps()['outline']
+    base = [int(hp.OUTLINE[i:i + 2], 16) for i in (1, 3, 5)]
+    tones = [[int(r[t * 6 + j:t * 6 + j + 2], 16) for j in (0, 2, 4)] for t in range(hp.TONES)]
+    for t, rgb in enumerate(tones):
+        ratio = min(max(hp.TONE_0 + hp.TONE_STEP * t, 0.6), 1.6)
+        assert rgb == [min(255, round(v * ratio)) for v in base], (t, rgb)
+    assert tones[hp.TONE_OF_1] == base and max(max(c) for c in tones) < 64                  # the lightest was 146
+    # and a figure painted from the codes has no pale pixel in its outline
+    b = hp.bodies()['front']; codes = hp.coded(b); parts, _ = hp.decode(codes)
+    px = np.asarray(hp.paint(codes, {'hoodie': 'ink', 'jeans': 'indigo', 'skin': 0, 'hair': 'black'}))
+    assert px[parts == P('outline')][:, :3].max() < 64
 
 
 def test_the_built_sheet_and_manifest_are_what_the_game_needs():
