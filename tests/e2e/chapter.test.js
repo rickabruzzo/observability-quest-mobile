@@ -10,8 +10,7 @@ import { openGame, pickScenario, ch, run, winOpen, dismiss, tapSpot, toolOpen, p
 import { readFileSync } from 'node:fs';
 import { CH1 } from '../../js/chapters/ch1.js';
 import { CHAPTERS } from '../../js/chapters/index.js';
-import { HERO_H } from '../../js/engine/hero.js';
-import { TOP } from '../../js/engine/hero-parts.js';
+
 
 let server, browser;
 before(async () => { server = await startServer(); browser = await chromium.launch(); });
@@ -487,7 +486,7 @@ for (const [w, h] of PHONES) {
     const k = m.scene.w / 320;
     assert.ok(m.box.x + m.box.w <= PATCH.x * k + 0.5, `clear of the CTO: window right ${m.box.x + m.box.w} vs patch ${PATCH.x * k}`);
     // the hero stands at her desk, his head under the top of the scene: the window ends above his shoulders
-    const hb = await page.evaluate(() => window.__oq.chapter.heroBox), shoulders = (hb.y + (TOP + 40) * hb.scale) * k;   // his shoulders, at his depth
+    const hb = await page.evaluate(() => window.__oq.chapter.heroBox), shoulders = (hb.y + hb.ay + 6 * hb.scale) * k;   // his shoulders: just under the painted figure's anchor (the neck), at his depth
     assert.ok(m.box.y + m.box.h <= shoulders + 0.5, `window bottom ${m.box.y + m.box.h} vs the hero's shoulders ${shoulders}`);
     // she keeps talking in the room while her line is up (not reduced motion)
     const frames = new Set();

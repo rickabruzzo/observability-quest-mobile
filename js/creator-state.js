@@ -1,25 +1,18 @@
 // Character-creation state: pure functions over a hero config (see js/engine/hero-parts.js).
 
-import { OPTIONS, PRESETS } from './engine/hero-parts.js';
+import { OPTIONS, DEFAULT_HERO, MIGRATE } from './engine/hero-parts.js';
 
 export const NAME_MAX = 16;
 export const DEFAULT_NAME = 'the Engineer';
-export const FACE_ROWS = ['body', 'skin', 'hair', 'style', 'beard'];
+export const FACE_ROWS = ['skin', 'hair', 'style', 'beard'];
 export const KIT_ROWS = ['hoodie', 'jeans', 'glasses'];
 export const LABELS = {
-  body: 'Body', skin: 'Skin', hair: 'Hair col.', style: 'Hair', beard: 'Beard',
+  skin: 'Skin', hair: 'Hair col.', style: 'Hair', beard: 'Beard',
   hoodie: 'Hoodie', jeans: 'Jeans', glasses: 'Glasses',
 };
-export const BODY_LABELS = { masc: 'Masc', fem: 'Fem', nb: 'Enby' };
 
 export function defaultHero() {
-  return { ...PRESETS.masc, name: '' };
-}
-
-/** A preset replaces the whole appearance and keeps the name. */
-export function applyPreset(hero, body) {
-  if (!PRESETS[body]) return hero;
-  return { ...PRESETS[body], name: hero.name ?? '' };
+  return { ...DEFAULT_HERO, name: '' };
 }
 
 function coerce(key, value) {
@@ -31,7 +24,6 @@ function coerce(key, value) {
 
 /** Sets one option; unknown key or value returns the same object. */
 export function pick(hero, key, value) {
-  if (key === 'body') return applyPreset(hero, value);
   const v = coerce(key, value);
   if (v === undefined) return hero;
   return { ...hero, [key]: v };
@@ -51,7 +43,8 @@ export function cleanName(s) {
   return [...stripped].slice(0, NAME_MAX).join('').trim();
 }
 
-/** Accepts an object or a JSON string; anything unusable becomes the default. */
+/** Accepts an object or a JSON string; anything unusable becomes the default. A hero saved before the painted hero
+ * still loads (brief 15 E): a `shoulder` style is `long`, a `long` beard is `short`, and `body` is ignored. */
 export function sanitizeHero(input) {
   let obj = input;
   if (typeof input === 'string') { try { obj = JSON.parse(input); } catch { obj = null; } }
@@ -59,7 +52,8 @@ export function sanitizeHero(input) {
   const base = defaultHero();
   const out = {};
   for (const key of Object.keys(OPTIONS)) {
-    const v = coerce(key, obj[key]);
+    const raw = MIGRATE[key]?.[obj[key]] ?? obj[key];
+    const v = coerce(key, raw);
     out[key] = v === undefined ? base[key] : v;
   }
   out.name = cleanName(obj.name);

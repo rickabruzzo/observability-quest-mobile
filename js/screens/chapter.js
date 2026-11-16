@@ -7,8 +7,7 @@
 
 import { SCRIPT } from '../script.js';
 import { CHAPTERS } from '../chapters/index.js';
-import { drawHero, HERO_H, HERO_W } from '../engine/hero.js';
-import { drawHeroSide, SIDE_FOOT_DY } from '../engine/hero-side.js';
+import { drawHero, placeHero, HERO_H, HERO_W } from '../engine/hero.js';
 import { planWalk, stepWalk } from '../engine/walk.js';
 import { colButton } from '../engine/ui.js';
 import { drawIcon, applyCursor, MARKER_MS } from '../engine/cursor.js';
@@ -51,7 +50,7 @@ export function createChapterScreen(game) {
   let ch, room, hero, run, wins, token = null, scen, art = null, hcArt = null, loading = null, recovering = null;
   let persona = null, gctx = null;             // who speaks from the close-up; the game ctx, for the scene's scale
   let state = 'card', mode = 'use', busy = false, pcardClose = null, card = null;
-  let x = 0, y = 0, pose = 'idle', view = 'front', flip = false, plan = null, elapsed = 0, walkMs = 0, pending = null, marker = null, cursor = null;   // x, y: his feet's centre
+  let x = 0, y = 0, pose = 'idle', view = 'front', flip = false, bob = 0, plan = null, elapsed = 0, walkMs = 0, pending = null, marker = null, cursor = null;   // x, y: his feet's centre; bob: the walk frame's dy
   let tools = {}, introShown = new Set(), toolName = null, toolFrom = null, toolEl = null, reveal = null, portrait = null, portraitCentre = null;
   let wallT = 0, wallAll = 0, nudges = [], talkT = 0, personaQuiet = false, personaTalking = false, won = false, lastDraw = '';
   let sceneEl = null, pcView = 'menu', wallFrame = null, wallWordsCache = null;
@@ -86,10 +85,10 @@ export function createChapterScreen(game) {
     painter().room(g, wall(ctx));
     g.restore();
     if (frame && patch && img(frame)) g.drawImage(img(frame), patch.x, patch.y);
-    // the hero at his depth: his scale follows his feet's y (brief 11); then whatever he stands behind is redrawn over him
-    const b = heroBox();
-    if (view === 'side') drawHeroSide(g, hero, pose, b.x, b.y + SIDE_FOOT_DY, b.scale, { flip });
-    else drawHero(g, hero, pose, b.x, b.y, b.scale, { flip });
+    // the hero at his depth: his scale follows his feet's y (brief 11); the painted figure stands with its anchor's column on
+    // x and its soles above y (brief 15); side bodies mirror to walk left, the front and back never do; then whatever he
+    // stands behind is redrawn over him
+    drawHero(g, hero, pose, x, y, heroScaleAt(room, y), { flip, dy: bob });
     const plate = img(room.image);
     if (plate) for (const f of frontsOver(room, y)) {
       g.save(); g.beginPath();
@@ -98,10 +97,13 @@ export function createChapterScreen(game) {
     }
     if (marker) drawIcon(g, marker.icon, marker.x, marker.y);
   }
-  /** Where the sprite goes for feet at (x, y): its scale, left edge and top. */
+  /** The box of what is actually drawn for feet at (x, y) (brief 15 D): its scale, left edge, top, size and anchor; without
+   * the sheet, the nominal box the rooms scale by. */
   function heroBox() {
-    const scale = heroScaleAt(room, y), w = Math.round(HERO_W * scale), h = Math.round(HERO_H * scale);
-    return { x: Math.round(x - w / 2), y: y - h, w, h, scale };
+    const scale = heroScaleAt(room, y), p = placeHero(hero, pose, x, y, scale, { flip, dy: bob });
+    if (p) return { x: p.x, y: p.y, w: p.w, h: p.h, ax: p.ax, ay: p.ay, scale: p.scale, body: p.fig.body };
+    const w = Math.round(HERO_W * scale), h = Math.round(HERO_H * scale);
+    return { x: Math.round(x - w / 2), y: y - h, w, h, ax: Math.round(w / 2), ay: 0, scale, body: null };
   }
   function paintWall(ctx) {
     const g = ctx.ctx2d, s = wall(ctx);
@@ -290,20 +292,20 @@ export function createChapterScreen(game) {
     state = 'room'; run.phase('room'); busy = false;
     clearScene();
     ctx.overlay.innerHTML = '';
-    if (at !== null) { x = at.x; y = at.y; pose = 'idle'; view = 'front'; plan = null; }
+    if (at !== null) { x = at.x; y = at.y; pose = 'idle'; view = 'front'; bob = 0; plan = null; }
     mode = 'use'; setIcons(ctx, true);
     paint(ctx);
     if (first) await line(ch.enter);
   }
 
   function finishWalk() { if (walkMs || plan) run.walk(walkMs); walkMs = 0; }
-  function stopWalk() { if (plan) { finishWalk(); plan = null; pose = 'idle'; view = 'front'; } pending = null; }
+  function stopWalk() { if (plan) { finishWalk(); plan = null; pose = 'idle'; view = 'front'; bob = 0; } pending = null; }
 
   /** Walks to a floor point (a tap brought onto the floor, or a thing's stand point). Reduced motion: he is simply there. */
   function walkTo(ctx, to) {
     if (plan) finishWalk();
     const target = nearestFloorPoint(room, to);
-    if (ctx.reducedMotion) { if (target.x !== x || target.y !== y) { flip = target.x < x; run.walk(0); } x = target.x; y = target.y; pose = 'idle'; view = 'front'; plan = null; return; }
+    if (ctx.reducedMotion) { if (target.x !== x || target.y !== y) { flip = target.x < x; run.walk(0); } x = target.x; y = target.y; pose = 'idle'; view = 'front'; bob = 0; plan = null; return; }
     plan = planWalk({ x, y }, target, room); elapsed = 0; walkMs = 0;
     if (plan.duration === 0) { plan = null; return; }
     flip = plan.dir < 0;
@@ -650,7 +652,7 @@ export function createChapterScreen(game) {
       ch = CHAPTERS[ctx.chapterId] || CHAPTERS[1];
       room = ch.room; hero = ctx.hero;
       token = {};
-      x = room.start.x; y = room.start.y; pose = 'idle'; view = 'front'; flip = false; plan = null; elapsed = 0; walkMs = 0; pending = null; marker = null; cursor = null;
+      x = room.start.x; y = room.start.y; pose = 'idle'; view = 'front'; flip = false; bob = 0; plan = null; elapsed = 0; walkMs = 0; pending = null; marker = null; cursor = null;
       mode = 'use'; busy = false; tools = {}; introShown = new Set(); toolName = null; toolFrom = null; toolEl = null; reveal = null; portrait = null; portraitCentre = null; card = null;
       scen = createScenario(); wallT = 0; wallAll = 0; nudges = []; talkT = 0; personaQuiet = false; personaTalking = false; won = false; lastDraw = ''; sceneEl = null; wallFrame = null;
       wallWordsCache = wallWords(ch.wall.text);
@@ -689,7 +691,7 @@ export function createChapterScreen(game) {
         get state() { return state; }, get mode() { return mode; }, get x() { return x; }, get y() { return y; }, get walking() { return plan !== null; },
         /** The sprite's box on the scene and its scale, from his feet's position. */
         get heroBox() { return heroBox(); },
-        get view() { return view; }, get busy() { return busy; }, get pcView() { return pcView; },
+        get view() { return view; }, get pose() { return pose; }, get flip() { return flip; }, get busy() { return busy; }, get pcView() { return pcView; },
         get loaded() { return art !== null; }, get screensLoaded() { return hcArt !== null; },
         get window() { return wins.open ? { id: wins.serial, text: wins.element.dataset.text, pages: wins.pages, page: wins.page } : null; },
         get tool() { const t = tools[toolName]; return t && state === 'tool' ? { name: toolName, from: toolFrom, step: t.step, done: t.done, wrong: t.wrong, prompts: promptsOf(t) } : null; },
@@ -710,7 +712,7 @@ export function createChapterScreen(game) {
       if (plan) {
         elapsed += dt; walkMs += dt;
         const s = stepWalk(plan, elapsed);
-        x = s.x; y = s.y; pose = s.pose; view = s.view; flip = s.flip; dirty = true;
+        x = s.x; y = s.y; pose = s.pose; view = s.view; flip = s.flip; bob = s.dy ?? 0; dirty = true;
         if (s.done) { plan = null; finishWalk(); if (pending) { const p = pending; pending = null; act(ctx, p); } }
       } else if (marker) dirty = true;
       if (reveal) { reveal.t += dt; dirty = true; if (reveal.t >= REVEAL_MS) { const d = reveal.done; reveal.t = REVEAL_MS; d(); } }

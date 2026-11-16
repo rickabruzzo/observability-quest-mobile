@@ -130,7 +130,7 @@ test('the bedroom shot shows the title and walks the hero out', async () => {
   await page.waitForFunction(() => window.__oq.intro.hero?.visible && window.__oq.intro.hero.pose === 'situp');
   // day clothes lie on the floor in the hero's own colours until the change, then they are on the hero
   const m = await page.evaluate(() => window.__oq.intro.manifest);
-  const pileBox = { x: m.clothes.x, y: m.clothes.y - 10, w: 20, h: 10 };
+  const pileBox = { x: m.clothes.x + 30, y: m.clothes.y - 18, w: 24, h: 16 };          // the painted heap (35×23 at 0.85) sits centred 43 px right of the manifest's x, its bottom on its y
   const grab = (r) => page.evaluate((r) => [...document.getElementById('scene').getContext('2d').getImageData(r.x, r.y, r.w, r.h).data].join(), r);
   assert.equal((await intro(page)).hero.pile, true);
   const withPile = await grab(pileBox);
@@ -141,7 +141,7 @@ test('the bedroom shot shows the title and walks the hero out', async () => {
   await page.waitForFunction(() => window.__oq.intro.hero?.holding === true, null, { timeout: 4000 });
   // the way out is the profile view: side on across the floor and up to the threshold, no back view
   await page.waitForFunction(() => window.__oq.intro.hero?.view === 'side', null, { timeout: 6000 });
-  assert.match((await intro(page)).hero.pose, /^(w[1-8]|stand)$/);
+  assert.match((await intro(page)).hero.pose, /^(walk_(contact|down|pass|up)|stand)$/);
   // out through the door: it opens, the hero is gone, then the next screen
   await page.waitForFunction(() => window.__oq.intro.hero?.doorOpen === true, null, { timeout: 6000 });
   await page.waitForFunction(() => window.__oq.intro.hero?.doorOpen === true && window.__oq.intro.hero.visible === false, null, { timeout: 3000 });

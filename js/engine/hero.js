@@ -1,305 +1,151 @@
-// Hero sprite renderer — a line-for-line port of tools/hero_gen.py at the era-look size (Warp brief 09).
-// Part masks → shading pass → detail stamps → seams between parts → silhouette outline. The Python file
-// is the reference; tests/hero.test.js proves this port byte for byte against its fixtures.
-// The canvas (Grid), the colour ramps, the mask helpers and the blitter are exported for
-// js/engine/hero-side.js, which is the same renderer seen from the side; nothing here may change the
-// front view's output.
+// The painted hero (Warp brief 15): Art Claude's figures, cut to game size as parts the game recolours. The sheet
+// (assets/hero/hero.png) is codes, not a picture: a pixel's code is 1 + part × 32 + tone, 0 is clear, 255 (in the beard)
+// erases what is under it; the manifest (hero.json) says where every body, head and overlay is on it, with its anchor
+// (the neck), and holds every colour as ramps of 32 tones. A figure is layers stacked anchor on anchor, then each code
+// looked up in the player's colours; no colour maths, and nothing drawn by code. The one thing added is the Honeycomb
+// mark on his chest, from js/engine/hc-mark.js. Drawn smaller, a figure keeps whole rows and columns of itself.
 
-import { BODIES, DRAWSTRINGS, EYES, HAIR, HC_MARK, HC_MARK_AT, HC_MARK_PIXELS, HOODIE, JEANS, OUTLINE, PJ, SIT_CUT, SIT_DY, SKIN, SOLE, TOP, WALK } from './hero-parts.js';
+import { HC_MARK, HC_MARK_PIXELS } from './hc-mark.js';
+import { DEFAULT_HERO } from './hero-parts.js';
 
-export const HERO_W = 56;
-export const HERO_H = 144;
-export const HEAD_CROP = { x: 8, y: 4, w: 40, h: 42 };
+export const HERO_W = 56;                   // the canvas the rooms scale him by (heroScaleAt): his nominal box
+export const HERO_H = 144;                  // the painted figure stands 136 rows on it; not corrected (brief 15 C)
+export const HERO_URL = 'assets/hero/hero.json';
+export const PREVIEW = { w: 56, h: 148 };   // the creator's big preview: the front figure centred on its anchor, soles on the last row
+export const THUMB = { w: 40, h: 44, dx: -20, dy: -36 };   // a hair, beard or glasses thumbnail: the front figure cropped from (ax − 20, ay − 36)
+const TONES = 32, ERASE = 255;
+const HC_RGB = Object.fromEntries(Object.entries(HC_MARK).map(([k, v]) => [k, [parseInt(v.slice(1, 3), 16), parseInt(v.slice(3, 5), 16), parseInt(v.slice(5, 7), 16)]]));
 
-export function hexc(s) {
-  const h = s.replace('#', '');
-  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16), 255];
+// ---- the sheet ----
+let sheet = null, loading = null;
+const figCache = new Map();
+
+/** Installs the manifest and the sheet's codes (row-major, one byte a pixel). Tests call this with the fixture's codes. */
+export function setHeroSheet(manifest, codes, w, h) {
+  sheet = manifest && codes ? { m: manifest, codes, w, h } : null;
+  figCache.clear();
 }
-export function ramp(base, light = 1.22, shade = 0.74, dark = 0.5) {
-  const [r, g, b] = hexc(base);
-  const f = (k) => [Math.min(255, Math.trunc(r * k)), Math.min(255, Math.trunc(g * k)), Math.min(255, Math.trunc(b * k)), 255];
-  return { L: f(light), B: [r, g, b, 255], S: f(shade), D: f(dark) };
-}
-export const OUTLINE_C = hexc(OUTLINE);
-export const SHOE = ramp('#2E2E36', 1.6, 0.8);
-export const SOLE_C = hexc(SOLE);
-export const GLASSES = [30, 30, 42, 255];    // dark frames: they must read as glasses on every skin tone
-export const EYE_WHITE = hexc('#F2F2F2');
+export const heroReady = () => !!sheet;
+export const heroManifest = () => sheet?.m ?? null;
 
-export class Grid {
-  constructor() {
-    this.part = Array.from({ length: HERO_H }, () => new Array(HERO_W).fill(null));
-    this.col = Array.from({ length: HERO_H }, () => new Array(HERO_W).fill(null));
-    this.oy = TOP;                                               // vertical offset for fills/px (TOP, plus the walk bob)
-  }
-  fill(pid, mask) {
-    for (const [x, y0] of mask) {
-      const y = y0 + this.oy;
-      if (x >= 0 && x < HERO_W && y >= 0 && y < HERO_H) this.part[y][x] = pid;
-    }
-  }
-  shade(pid, rmp, hl = 1, sh = 2, topLight = true) {
-    const rows = new Map();
-    for (let y = 0; y < HERO_H; y++) {
-      const xs = [];
-      for (let x = 0; x < HERO_W; x++) if (this.part[y][x] === pid) xs.push(x);
-      if (xs.length) rows.set(y, xs);
-    }
-    const ys = [...rows.keys()].sort((a, b) => a - b);
-    for (const y of ys) {
-      const xs = rows.get(y); const lo = xs[0], hi = xs[xs.length - 1];
-      for (const x of xs) {
-        let c = rmp.B;
-        if (x - lo < hl) c = rmp.L;
-        else if (hi - x < sh) c = rmp.S;
-        if (topLight && y === ys[0]) c = rmp.L;
-        this.col[y][x] = c;
-      }
-    }
-  }
-  outline() {
-    const sil = this.part.map((row) => row.map((p) => p !== null));
-    for (let y = 0; y < HERO_H; y++) for (let x = 0; x < HERO_W; x++) {
-      if (!sil[y][x]) continue;
-      let edge = false;
-      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-        const nx = x + dx, ny = y + dy;
-        if (nx < 0 || ny < 0 || nx >= HERO_W || ny >= HERO_H || !sil[ny][nx]) edge = true;
-      }
-      if (edge) this.col[y][x] = OUTLINE_C;
-    }
-  }
-  /** A dark line where part `a` meets part `b` (on a's side): the outline between parts of the figure. */
-  seam(a, b) {
-    for (let y = 0; y < HERO_H; y++) for (let x = 0; x < HERO_W; x++) {
-      if (this.part[y][x] !== a) continue;
-      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-        const nx = x + dx, ny = y + dy;
-        if (nx >= 0 && nx < HERO_W && ny >= 0 && ny < HERO_H && this.part[ny][nx] === b) { this.col[y][x] = OUTLINE_C; break; }
-      }
-    }
-  }
-  px(x, y0, c) {
-    const y = y0 + this.oy;
-    if (x >= 0 && x < HERO_W && y >= 0 && y < HERO_H) { this.col[y][x] = c; this.part[y][x] = this.part[y][x] || 'detail'; }
-  }
-  toRGBA() {
-    const out = new Uint8ClampedArray(HERO_W * HERO_H * 4);
-    for (let y = 0; y < HERO_H; y++) for (let x = 0; x < HERO_W; x++) {
-      const c = this.col[y][x]; if (!c) continue;
-      const i = (y * HERO_W + x) * 4; out[i] = c[0]; out[i + 1] = c[1]; out[i + 2] = c[2]; out[i + 3] = c[3];
-    }
-    return out;
-  }
+/** Loads the manifest and the sheet in a browser, once. Never throws: resolves false and the game draws no hero. */
+export function loadHero(url = HERO_URL) {
+  if (sheet) return Promise.resolve(true);
+  if (loading) return loading;
+  loading = (async () => {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`${url} ${res.status}`);
+      const m = await res.json();
+      const img = new Image();
+      await new Promise((ok, fail) => { img.onload = ok; img.onerror = () => fail(new Error('hero sheet failed')); img.src = url.slice(0, url.lastIndexOf('/') + 1) + m.image; });
+      const c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight;
+      const g = c.getContext('2d'); g.drawImage(img, 0, 0);
+      const d = g.getImageData(0, 0, c.width, c.height).data, codes = new Uint8Array(c.width * c.height);
+      for (let i = 0; i < codes.length; i++) codes[i] = d[i * 4];                   // the red channel is the code
+      setHeroSheet(m, codes, c.width, c.height);
+      return true;
+    } catch { return false; } finally { loading = null; }
+  })();
+  return loading;
 }
 
-export function rect(x0, y0, x1, y1) {
-  const out = [];
-  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) out.push([x, y]);
+// ---- putting a figure together ----
+/** Which body a state uses (brief 15 C). A body's own name passes through (the walks name their frames). */
+export function bodyFor(pose = 'idle', outfit = 'hoodie') {
+  if (outfit === 'pj') return pose === 'situp' ? 'pj_sit' : 'pj_front';
+  if (pose === 'idle' || pose === 'front') return 'front';
+  if (pose === 'stand') return 'side';
+  if (pose === 'situp') return 'pj_sit';
+  return sheet?.m.bodies[pose] ? pose : 'front';
+}
+/** A piece's codes cut from the sheet. */
+function cut(e) {
+  const { codes, w } = sheet, out = new Uint8Array(e.w * e.h);
+  for (let y = 0; y < e.h; y++) out.set(codes.subarray((e.y + y) * w + e.x, (e.y + y) * w + e.x + e.w), y * e.w);
+  return { codes: out, w: e.w, h: e.h, ax: e.ax, ay: e.ay };
+}
+/** Layers anchor on anchor, later over earlier: 0 leaves what is under, ERASE clears it, anything else replaces it. */
+function stack(layers) {
+  const left = Math.max(...layers.map((l) => l.ax)), top = Math.max(...layers.map((l) => l.ay));
+  const w = Math.max(...layers.map((l) => l.w - l.ax)) + left, h = Math.max(...layers.map((l) => l.h - l.ay)) + top;
+  const codes = new Uint8Array(w * h);
+  for (const l of layers) {
+    const ox = left - l.ax, oy = top - l.ay;
+    for (let y = 0; y < l.h; y++) for (let x = 0; x < l.w; x++) {
+      const c = l.codes[y * l.w + x];
+      if (c === 0) continue;
+      codes[(oy + y) * w + ox + x] = c === ERASE ? 0 : c;
+    }
+  }
+  return { codes, w, h, ax: left, ay: top };
+}
+const hex6 = (s, i) => [parseInt(s.slice(i, i + 2), 16), parseInt(s.slice(i + 2, i + 4), 16), parseInt(s.slice(i + 4, i + 6), 16)];
+/** code → RGBA for one look (and outfit): the six parts' ramps in the manifest's part order. */
+function lut(cfg, outfit) {
+  const r = sheet.m.ramps, pj = outfit === 'pj';
+  const skin = r.skin[cfg.skin] ? cfg.skin : DEFAULT_HERO.skin;
+  const ramps = [
+    pj ? r.pj.top : (r.hoodie[cfg.hoodie] ?? r.hoodie[DEFAULT_HERO.hoodie]),
+    pj ? r.pj.bottom : (r.jeans[cfg.jeans] ?? r.jeans[DEFAULT_HERO.jeans]),
+    r.skin[skin],
+    (r.hair[cfg.hair] ?? r.hair[DEFAULT_HERO.hair])[skin],
+    r.grey, r.outline,
+  ];
+  const out = new Uint8ClampedArray(256 * 4);
+  ramps.forEach((ramp, i) => { for (let t = 0; t < TONES; t++) { const c = hex6(ramp, t * 6), o = (1 + i * TONES + t) * 4; out[o] = c[0]; out[o + 1] = c[1]; out[o + 2] = c[2]; out[o + 3] = 255; } });
   return out;
 }
-export function ellipse(cx, cy, rx, ry) {
-  const out = [];
-  for (let y = Math.trunc(cy - ry); y <= Math.trunc(cy + ry); y++)
-    for (let x = Math.trunc(cx - rx); x <= Math.trunc(cx + rx); x++)
-      if (((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1.0) out.push([x, y]);
-  return out;
+const key = (cfg, body, outfit, mark) => `${body}|${outfit}|${mark ? 1 : 0}|${cfg.hoodie}|${cfg.jeans}|${cfg.skin}|${cfg.hair}|${cfg.style}|${cfg.beard}|${cfg.glasses}`;
+
+/**
+ * A finished figure: { w, h, ax, ay, view, body, data (RGBA), eyes: [[x, y]…] in the figure's own pixels }, or null when the
+ * sheet is not loaded or the body is unknown. The body, the head of the hero's style for that view, the beard and the
+ * glasses if he has them and the view shows them; the colours looked up; the mark on the chest where the manifest says
+ * (hoodie only; `mark: false` leaves it off, as the fixtures are). Kept per look and body.
+ */
+export function composeFigure(cfg, body, outfit = 'hoodie', { mark = true } = {}) {
+  if (!sheet) return null;
+  const m = sheet.m, b = m.bodies[body];
+  if (!b) return null;
+  const k = key(cfg, body, outfit, mark), hit = figCache.get(k);
+  if (hit) return hit;
+  const style = m.heads[cfg.style] ? cfg.style : DEFAULT_HERO.style;
+  const layers = [cut(b), cut(m.heads[style][b.view])];
+  if (cfg.beard && cfg.beard !== 'none' && m.beard[b.view]) layers.push(cut(m.beard[b.view]));
+  if (cfg.glasses && cfg.glasses !== 'none' && m.glasses[b.view]) layers.push(cut(m.glasses[b.view]));
+  const s = stack(layers), L = lut(cfg, outfit), data = new Uint8ClampedArray(s.w * s.h * 4);
+  for (let i = 0; i < s.codes.length; i++) { const c = s.codes[i] * 4, o = i * 4; data[o] = L[c]; data[o + 1] = L[c + 1]; data[o + 2] = L[c + 2]; data[o + 3] = L[c + 3]; }
+  if (mark && outfit === 'hoodie' && m.mark.bodies.includes(body)) {
+    for (const [mx, my, colour] of HC_MARK_PIXELS) {
+      const x = s.ax + m.mark.dx + mx, y = s.ay + m.mark.dy + my;
+      if (x < 0 || y < 0 || x >= s.w || y >= s.h) continue;
+      const o = (y * s.w + x) * 4, c = HC_RGB[colour]; data[o] = c[0]; data[o + 1] = c[1]; data[o + 2] = c[2]; data[o + 3] = 255;
+    }
+  }
+  const fig = { w: s.w, h: s.h, ax: s.ax, ay: s.ay, view: b.view, body, data, eyes: (m.eyes[b.view] ?? []).map(([dx, dy]) => [s.ax + dx, s.ay + dy]) };
+  figCache.set(k, fig); if (figCache.size > 96) figCache.delete(figCache.keys().next().value);
+  return fig;
+}
+/** A prop from the sheet in the hero's colours (the heap of day clothes): { w, h, ax, ay, data, eyes: [] }, anchored at its bottom centre. */
+export function composeProp(name, cfg) {
+  const e = sheet?.m.props[name];
+  if (!e) return null;
+  const p = cut({ ...e, ax: Math.floor(e.w / 2), ay: e.h }), L = lut(cfg, 'hoodie'), data = new Uint8ClampedArray(p.w * p.h * 4);
+  for (let i = 0; i < p.codes.length; i++) { const c = (p.codes[i] === ERASE ? 0 : p.codes[i]) * 4, o = i * 4; data[o] = L[c]; data[o + 1] = L[c + 1]; data[o + 2] = L[c + 2]; data[o + 3] = L[c + 3]; }
+  return { w: p.w, h: p.h, ax: p.ax, ay: p.ay, view: 'front', body: name, data, eyes: [] };
+}
+/** The figure in one flat colour (the flash into day clothes). */
+export function silhouette(fig, [r, g, b]) {
+  const data = new Uint8ClampedArray(fig.data.length);
+  for (let i = 0; i < data.length; i += 4) if (fig.data[i + 3]) { data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = 255; }
+  return { ...fig, data };
 }
 
-/** Composes the 56×144 RGBA sprite for a hero config and pose. */
-export function composeHero(cfg, pose = 'idle', outfit = 'hoodie') {
-  const { body = 'masc', skin = 0, hair = 'black', style = 'standard', beard = 'none',
-    hoodie = 'ink', jeans = 'indigo', glasses = 'none' } = cfg;
-  const b = BODIES[body]; const c = new Grid();
-  const skinR = ramp(SKIN[skin], 1.12, 0.8, 0.62);
-  const hairR = ramp(HAIR[hair], 1.35, 0.7);
-  const pj = outfit === 'pj', sit = pose === 'situp';
-  const hoodR = ramp(pj ? PJ.top : HOODIE[hoodie]); const jeanR = ramp(pj ? PJ.bottom : JEANS[jeans], 1.25, 0.72);
-  const shoeR = pj ? skinR : SHOE;                                  // pyjamas go barefoot
-  const beardR = ramp(HAIR[hair], 1.3, 0.7);
-  const cx = 27.5;
-  const [legLdx, legRdx, shoeLdx, shoeRdx, bob0, armLdy, armRdy] = WALK[pose] || WALK.idle;
-  const bob = sit ? SIT_DY : bob0;                                  // sitting up: the whole upper body sits lower
-
-  // ---- legs & shoes (back; never bob) ----
-  const legTop = 90, legBot = 133;
-  c.oy = TOP;
-  if (!sit) {                                                       // sitting up: the legs are under the blanket
-    c.fill('legL', rect(b.legL[0] + legLdx, legTop, b.legL[1] + legLdx, legBot));
-    c.fill('legR', rect(b.legR[0] + legRdx, legTop, b.legR[1] + legRdx, legBot));
-    c.fill('shoeL', rect(b.shoeL[0] + shoeLdx, 134, b.shoeL[1] + shoeLdx, 139));
-    c.fill('shoeR', rect(b.shoeR[0] + shoeRdx, 134, b.shoeR[1] + shoeRdx, 139));
-    c.fill('legL', rect(b.hip[0], legTop, 27, 99)); c.fill('legR', rect(28, legTop, b.hip[1], 99));   // crotch: jeans continuous above row 100
-  }
-
-  // ---- everything above the legs bobs with the walk ----
-  c.oy = TOP + bob;
-  if (!pj) c.fill('hood', rect(17, 36, 38, 46));                   // pyjamas have no hood
-  // back hair: the mass behind the head and neck (the body is drawn over it)
-  if (style === 'shoulder') c.fill('hair', ellipse(cx, 20.0, b.headRx + 5.2, 16.0).concat(rect(12, 20, 43, 43)));
-  else if (style === 'long') c.fill('hair', ellipse(cx, 20.0, b.headRx + 5.8, 16.4).concat(rect(10, 20, 45, 47)));
-  const slope = [5, 3, 1, 0];
-  for (let y = 40; y <= 92; y++) {
-    let span;
-    if (y <= 43) span = [b.shoulder[0] + slope[y - 40], b.shoulder[1] - slope[y - 40]];   // rounded shoulders
-    else if (y <= 58) span = b.torso;
-    else if (y <= 76) span = b.waist;
-    else span = b.hip;
-    c.fill('torso', rect(span[0], y, span[1], y));
-  }
-  // arms (each swings by its own dy), hands below the sleeves
-  c.fill('armL', rect(b.armL[0], 44 + armLdy, b.armL[1], 86 + armLdy)); c.fill('armR', rect(b.armR[0], 44 + armRdy, b.armR[1], 86 + armRdy));
-  c.fill('handL', rect(b.armL[0], 87 + armLdy, b.armL[1], 95 + armLdy)); c.fill('handR', rect(b.armR[0], 87 + armRdy, b.armR[1], 95 + armRdy));
-  // the hood's opening: a V of the hood's inside at the neck of the hoodie
-  if (!pj) for (let i = 0; i < 6; i++) c.fill('hood', rect(22 + i, 40 + i, 33 - i, 40 + i));
-  c.fill('neck', rect(b.neck[0], 33, b.neck[1], 41));
-  c.fill('head', ellipse(cx, 21.5, b.headRx, 13.5));
-  c.fill('head', rect(16, 17, 39, 28));                            // cheeks out to the ears: no gap between ear and face
-  c.fill('head', rect(17, 29, 38, 30).concat(rect(18, 31, 37, 32), rect(20, 33, 35, 34), rect(23, 35, 32, 35)));   // jaw & chin
-  c.fill('earL', rect(14, 19, 15, 24)); c.fill('earR', rect(40, 19, 41, 24));
-
-  // ---- hair in front of the head ----
-  // standard: a cap with short sideburns, all inside the head's outline. shoulder/long: the cap, plus locks that
-  // fall in front of the shoulders (the mass behind the head was filled before the body). mohawk: a flat-topped
-  // ridge on a buzzed scalp — the head stays round. fro: one big round mass.
-  let hm = [];
-  c.fill('head', ellipse(cx, 13.5, b.headRx + 1.0, 7.5).concat(rect(16, 12, 39, 16)));   // a full round skull under any hair
-  if (style === 'mohawk') {
-    hm = rect(24, 1, 31, 10);                                          // the ridge stops above the forehead
-  } else if (style === 'fro') {
-    hm = ellipse(cx, 16.0, b.headRx + 8.5, 16.0).filter(([x, y]) => !(y >= 15 && x >= 18 && x <= 37));
-  } else {
-    hm = ellipse(cx, 12.0, b.headRx + 1.2, 8.5);                       // crown, with some height to it
-    hm = hm.concat(rect(16, 12, 39, 16));                              // down to the temples
-    if (style === 'standard') hm = hm.concat(rect(16, 17, 17, 22), rect(38, 17, 39, 22));        // sideburns, inside the head's outline
-    else if (style === 'shoulder') hm = hm.concat(rect(12, 12, 17, 43), rect(38, 12, 43, 43));   // locks to the shoulders, six wide
-    else if (style === 'long') hm = hm.concat(rect(10, 14, 17, 63), rect(38, 14, 45, 63), rect(12, 64, 17, 67), rect(38, 64, 43, 67));   // down over the chest
-    hm = hm.filter(([x, y]) => !(y >= 13 && x >= 18 && x <= 37));     // hairline: four rows of forehead above the brows
-  }
-  c.fill('hair', hm);
-
-  // ---- shading ----
-  c.shade('legL', jeanR, 2, 3); c.shade('legR', jeanR, 2, 3);
-  c.shade('shoeL', shoeR, 2, 2); c.shade('shoeR', shoeR, 2, 2);
-  c.shade('hood', { L: hoodR.S, B: hoodR.D, S: hoodR.D, D: hoodR.D }, 0, 0, false);
-  c.shade('torso', hoodR, 3, 5); c.shade('armL', hoodR, 2, 2); c.shade('armR', hoodR, 2, 3);
-  c.shade('handL', skinR, 1, 2); c.shade('handR', skinR, 1, 2);
-  c.shade('neck', { L: skinR.S, B: skinR.S, S: skinR.D, D: skinR.D }, 0, 2, false);
-  c.shade('head', skinR, 2, 3); c.shade('earL', skinR, 0, 1); c.shade('earR', skinR, 0, 1);
-  c.shade('hair', hairR, 3, 5);
-  if (pj) {                                                         // pyjama stripes: every fourth column of the cloth
-    const stripe = hexc(PJ.stripe);
-    for (let y = 0; y < HERO_H; y++) for (let x = 1; x < HERO_W; x += 4) {
-      const p = c.part[y][x];
-      if (p === 'torso' || p === 'armL' || p === 'armR' || p === 'legL' || p === 'legR') c.col[y][x] = stripe;
-    }
-  }
-
-  // ---- details ----
-  for (let y = 46; y <= 88; y++) { c.px(b.torso[0], y, hoodR.S); c.px(b.torso[1], y, hoodR.D); }   // the sleeves' inner lines
-  if (!pj) {                                                        // hem, pocket, drawstrings and the mark: hoodie only
-    for (let x = b.hip[0]; x <= b.hip[1]; x++) { c.px(x, 91, hoodR.D); c.px(x, 92, hoodR.D); }
-    const px0 = b.waist[0] + 5, px1 = b.waist[1] - 5;                                    // the kangaroo pocket
-    for (let x = px0; x <= px1; x++) { c.px(x, 75, hoodR.S); c.px(x, 89, hoodR.S); }
-    for (let y = 75; y <= 89; y++) { c.px(px0, y, hoodR.S); c.px(px1, y, hoodR.S); }
-    for (let i = 0; i < 4; i++) { c.px(px0 + 1 + i, 76 + i, hoodR.S); c.px(px1 - 1 - i, 76 + i, hoodR.S); }   // the slanted openings
-    for (const x of DRAWSTRINGS) {
-      for (let y = 46; y <= 61; y++) c.px(x, y, hoodR.L);
-      c.px(x, 62, hoodR.D);                                                                // the aglet
-    }
-    const [ax, ay] = HC_MARK_AT;
-    for (const [x, y, k] of HC_MARK_PIXELS) c.px(ax + x, ay + y, hexc(HC_MARK[k]));      // Honeycomb-branded hoodie
-  }
-  // hands: a line between the fingers and the thumb
-  for (const [x0, x1, dy] of [[b.armL[0], b.armL[1], armLdy], [b.armR[0], b.armR[1], armRdy]]) {
-    for (let x = x0 + 1; x < x1; x++) c.px(x, 92 + dy, skinR.S);
-  }
-  // knees, seams, cuffs and soles: on the legs, which never bob
-  c.oy = TOP;
-  if (!sit) {
-    for (const [l0, l1, dx] of [[b.legL[0], b.legL[1], legLdx], [b.legR[0], b.legR[1], legRdx]]) {
-      for (let x = l0 + dx + 1; x < l1 + dx; x++) c.px(x, 112, jeanR.S);                                        // knee
-      for (let x = l0 + dx + 1; x < l1 + dx; x++) { c.px(x, 131, jeanR.L); c.px(x, 132, jeanR.S); c.px(x, 133, jeanR.S); }   // cuff
-    }
-    for (let y = 100; y <= 130; y++) { c.px(b.legL[0] + legLdx + 2, y, jeanR.L); c.px(b.legR[1] + legRdx - 2, y, jeanR.L); }   // seams
-    if (!pj) {
-      for (const [s0, s1, dx] of [[b.shoeL[0], b.shoeL[1], shoeLdx], [b.shoeR[0], b.shoeR[1], shoeRdx]]) {
-        for (let x = s0 + dx + 1; x < s1 + dx; x++) { c.px(x, 138, SOLE_C); c.px(x, 139, SOLE_C); }   // soles
-      }
-    }
-  }
-  c.oy = TOP + bob;
-  // face
-  const brow = hairR.D;
-  for (const ex of EYES) {
-    for (let x = ex; x < ex + 4; x++) c.px(x, 17, brow);
-    for (const y of [19, 20]) for (let x = ex; x < ex + 4; x++) c.px(x, y, EYE_WHITE);
-    c.px(ex + 1, 19, OUTLINE_C); c.px(ex + 1, 20, OUTLINE_C); c.px(ex + 2, 20, OUTLINE_C);   // the pupil, with a glint top right
-  }
-  for (let y = 22; y <= 25; y++) c.px(28, y, skinR.S);                                      // the nose's shaded side
-  c.px(26, 26, skinR.S); c.px(27, 26, skinR.D); c.px(28, 26, skinR.D); c.px(29, 26, skinR.S);   // nostrils
-  for (let x = 25; x <= 30; x++) c.px(x, 29, skinR.D);                                      // mouth
-  for (let x = 26; x <= 29; x++) c.px(x, 30, skinR.S);                                      // the lower lip
-  // hair texture: buzzed sides for the mohawk, dark curls dotted through the fro, a few strands otherwise
-  if (style === 'mohawk') {
-    const buzz = skinR.B.map((a, i) => Math.floor((a * 11 + hairR.B[i] * 9) / 20));      // stubble: skin showing through
-    for (let y = 6; y <= 16; y++) for (let x = 14; x <= 41; x++) if (c.part[y + c.oy]?.[x] === 'head' && !(y >= 13 && x >= 18 && x <= 37)) c.px(x, y, buzz);
-  }
-  if (style === 'fro') for (const [x, y] of [[18, 4], [33, 2], [12, 12], [43, 10], [24, 8], [37, 9], [10, 24], [45, 22], [16, 30], [39, 29], [28, 3], [20, 14]]) if (c.part[y + c.oy]?.[x] === 'hair') c.px(x, y, hairR.D);   // a few darker curls
-  if (style === 'standard' || style === 'shoulder' || style === 'long') for (const [x, y] of [[22, 6], [23, 7], [30, 5], [31, 6], [26, 9]]) if (c.part[y + c.oy]?.[x] === 'hair') c.px(x, y, hairR.D);   // a parting's worth of strands
-  // beard (takes the hair colour): short = close-cropped over the jaw with a solid chin; long = full, down the chest
-  if (beard === 'short') {
-    const pts = rect(18, 26, 19, 30).concat(rect(36, 26, 37, 30),         // sideburns down the jaw
-      rect(22, 27, 33, 28),                                               // moustache (the mouth is row 29)
-      [[22, 29], [23, 29], [32, 29], [33, 29], [20, 30], [21, 30], [22, 30], [33, 30], [34, 30], [35, 30]],   // round the mouth
-      rect(20, 31, 35, 32), rect(21, 33, 34, 34), rect(23, 35, 32, 35));  // jaw line and chin
-    for (const [x, y] of pts) c.px(x, y, x >= 33 ? beardR.S : beardR.B);
-  } else if (beard === 'long') {
-    for (const [x, y] of rect(18, 26, 37, 45)) {
-      if (y >= 29 && y <= 30 && x >= 24 && x <= 31) continue;
-      if (y >= 38 && (x < 20 + (y - 38) || x > 35 - (y - 38))) continue;
-      c.px(x, y, x >= 34 ? beardR.S : beardR.B);
-    }
-    for (let y = 26; y <= 32; y++) c.px(18, y, beardR.L);
-    for (const [x, y] of [[23, 36], [28, 40], [32, 37], [26, 43]]) c.px(x, y, beardR.D);   // a few darker curls
-  }
-  // glasses: a dark frame about each eye (the eye and a row of skin show inside), a bridge, arms to the ears
-  if (glasses === 'glasses') {
-    const frame = [];
-    for (const ex of EYES) {
-      const x0 = ex - 1, x1 = ex + 4;
-      for (let x = x0 + 1; x < x1; x++) frame.push([x, 17], [x, 22]);
-      for (let y = 18; y <= 21; y++) frame.push([x0, y], [x1, y]);
-      for (let x = x0 + 1; x < x1; x++) c.px(x, 18, skinR.L);                               // the brow sits behind the lens
-    }
-    for (let x = EYES[0] + 5; x < EYES[1] - 1; x++) frame.push([x, 19]);                    // bridge
-    frame.push([16, 19], [17, 19], [38, 19], [39, 19]);                                     // arms
-    for (const [x, y] of frame) c.px(x, y, GLASSES);
-  }
-  if (sit) for (let y = TOP + SIT_DY + SIT_CUT + 1; y < HERO_H; y++) for (let x = 0; x < HERO_W; x++) { c.part[y][x] = null; c.col[y][x] = null; }   // under the covers from the waist down
-  c.oy = 0;
-  c.seam('torso', 'armL'); c.seam('torso', 'armR');                 // the sleeves read as sleeves
-  c.seam('legL', 'legR');                                           // the legs part
-  c.outline();
-  return c.toRGBA();
-}
-
-// Small cache so a walk cycle doesn't recompose every frame.
-const cache = new Map();
-function composed(cfg, pose, outfit = 'hoodie') {
-  const key = JSON.stringify([cfg, pose, outfit]);
-  let v = cache.get(key);
-  if (!v) { v = composeHero(cfg, pose, outfit); cache.set(key, v); if (cache.size > 64) cache.delete(cache.keys().next().value); }
-  return v;
-}
-
-// ---- the hero drawn smaller than his sprite (every room scales him by depth) ----
-// A smaller sprite keeps whole rows and columns of the sprite, evenly spaced, so every pixel is one the sprite has
-// and the figure stays crisp. Plain nearest neighbour does that too, but it takes whichever lines fall under the
-// destination's centres, and his eyes are two columns wide on one row: at 0.86 they came out as slits, at 0.73 one
-// eye lost its pupil, at 0.65 both did (Rick, 2026-11-14: "the game model now looks like crap"). Here the even
-// spacing is slid along each axis to the offset that keeps the most detail: the lines with the most colour changes,
-// and above all a white and a pupil for each eye.
+// ---- drawn smaller (brief 15 D) ----
+// A smaller figure keeps whole rows and columns of itself, evenly spaced, slid along each axis to the offset that keeps
+// the most: his soles' row always, the eyes' row and columns whenever some offset allows it, then the lines with the
+// most colour changes. No blending, ever: every pixel is one of the figure's own.
 
 /** Which of `n` source lines `m` destination lines take, evenly spaced, slid by `phase` (0..1) of a destination line. */
 export function evenLines(n, m, phase = 0.5) {
@@ -308,7 +154,6 @@ export function evenLines(n, m, phase = 0.5) {
   return out;
 }
 const PHASES = Array.from({ length: 20 }, (_, i) => i / 20);
-/** The evenly spaced lines that keep the most: `score(lines)` judges a choice; ties go to the middle offset. */
 function bestLines(n, m, score, ok = () => true) {
   let best = null, top = -Infinity;
   for (const phase of PHASES) {
@@ -319,72 +164,60 @@ function bestLines(n, m, score, ok = () => true) {
   }
   return best ?? evenLines(n, m);
 }
-const lumAt = (px, i) => 0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2];
-/** What a sprite's lines are worth keeping for: colour changes along each row and column, and where the eyes are. */
-function detail(px) {
-  const rows = new Float64Array(HERO_H), cols = new Float64Array(HERO_W);
-  const same = (i, j) => px[i] === px[j] && px[i + 1] === px[j + 1] && px[i + 2] === px[j + 2] && px[i + 3] === px[j + 3];
-  for (let y = 0; y < HERO_H; y++) for (let x = 0; x < HERO_W; x++) {
-    const i = (y * HERO_W + x) * 4;
-    if (x + 1 < HERO_W && !same(i, i + 4)) rows[y]++;
-    if (y + 1 < HERO_H && !same(i, i + HERO_W * 4)) cols[x]++;
-  }
-  // the eyes: the rows that hold the eye's white; on them, whites no more than a pupil apart are one eye
-  const eyeRows = [];
-  for (let y = 0; y < HERO_H; y++) for (let x = 0; x < HERO_W; x++) if (isEyeWhite(px, (y * HERO_W + x) * 4)) { eyeRows.push(y); break; }
-  const eyes = [];
-  for (let x = 0; x < HERO_W; x++) {
-    if (!eyeRows.some((y) => isEyeWhite(px, (y * HERO_W + x) * 4))) continue;
-    const e = eyes.at(-1);
-    if (e && x - e.hi <= 3) e.hi = x; else eyes.push({ lo: x, hi: x });
-  }
-  return { rows, cols, eyeRows, eyes };
-}
-const isEyeWhite = (px, i) => px[i + 3] && px[i] === EYE_WHITE[0] && px[i + 1] === EYE_WHITE[1] && px[i + 2] === EYE_WHITE[2];
-/** How well the chosen rows and columns keep the eyes: each needs a white and a pupil; white on both sides of the pupil is better still. */
-function eyesKept(px, d, ys, xs) {
-  let v = 0;
-  const rows = d.eyeRows.filter((y) => ys.includes(y));
-  for (const e of d.eyes) {
-    const cols = xs.filter((x, i) => x >= e.lo && x <= e.hi && x !== xs[i - 1]);
-    let white = false, pupil = false, framed = false;
-    for (const y of rows) {
-      const seen = cols.map((x) => { const i = (y * HERO_W + x) * 4; return isEyeWhite(px, i) ? 'w' : lumAt(px, i) < 70 ? 'p' : '-'; }).join('');
-      white ||= seen.includes('w'); pupil ||= seen.includes('p'); framed ||= /w.*p.*w/.test(seen);
-    }
-    v += (white && pupil ? 1e4 : white || pupil ? 1e3 : 0) + (framed ? 2e3 : 0);
-  }
-  return v;
-}
 const detailCache = new WeakMap();
-function detailOf(px) { let d = detailCache.get(px); if (!d) { d = detail(px); detailCache.set(px, d); } return d; }
+/** Colour changes along each row and column of a figure. */
+function detailOf(fig) {
+  let d = detailCache.get(fig);
+  if (d) return d;
+  const { w, h, data: px } = fig, rows = new Float64Array(h), cols = new Float64Array(w);
+  const same = (i, j) => px[i] === px[j] && px[i + 1] === px[j + 1] && px[i + 2] === px[j + 2] && px[i + 3] === px[j + 3];
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = (y * w + x) * 4;
+    if (x + 1 < w && !same(i, i + 4)) rows[y]++;
+    if (y + 1 < h && !same(i, i + w * 4)) cols[x]++;
+  }
+  d = { rows, cols }; detailCache.set(fig, d);
+  return d;
+}
+/** The destination line that carries source line `s` (the first kept line at or after it; the last if none). */
+const placeOf = (lines, s) => { const i = lines.findIndex((l) => l >= s); return i < 0 ? lines.length - 1 : i; };
 
 /**
- * A composed sprite at `scale`: { w, h, data } with w = round(HERO_W × scale), h = round(HERO_H × scale), RGBA.
- * At the sprite's size or larger every pixel is the sprite's own, repeated. Smaller, it is whole rows and columns
- * of the sprite, evenly spaced, at the offset that keeps the most detail (above): the soles on the last row, a
- * white and a pupil in each eye wherever the size leaves room for both. `flip` mirrors about the sprite's centre.
+ * A figure at `scale` (never above 1): { w, h, ax, ay, data }. Whole rows and columns of the figure, evenly spaced, at the
+ * offset that keeps the most (above); `flip` mirrors the result and the anchor's column moves with it.
  */
-export function scaleSprite(px, scale = 1, flip = false) {
-  const w = Math.round(HERO_W * scale), h = Math.round(HERO_H * scale), data = new Uint8ClampedArray(w * h * 4);
+export function scaleFigure(fig, scale = 1, flip = false) {
+  const s = Math.min(1, scale), w = Math.max(1, Math.round(fig.w * s)), h = Math.max(1, Math.round(fig.h * s));
   let ys, xs;
-  if (w >= HERO_W && h >= HERO_H) { ys = evenLines(HERO_H, h); xs = evenLines(HERO_W, w); }
+  if (w >= fig.w && h >= fig.h) { ys = evenLines(fig.h, h); xs = evenLines(fig.w, w); }
   else {
-    const d = detailOf(px), sum = (score) => (lines) => { let v = 0, last = -1; for (const l of lines) if (l !== last) { v += score[l]; last = l; } return v; };
+    const d = detailOf(fig), eyeRows = [...new Set(fig.eyes.map(([, y]) => y))], eyeCols = [...new Set(fig.eyes.map(([x]) => x))];
+    const sum = (score) => (lines) => { let v = 0, last = -1; for (const l of lines) if (l !== last) { v += score[l]; last = l; } return v; };
     const rowScore = sum(d.rows), colScore = sum(d.cols);
-    ys = bestLines(HERO_H, h, (lines) => rowScore(lines) + (d.eyeRows.some((y) => lines.includes(y)) ? 1e4 : 0), (lines) => lines[h - 1] === HERO_H - 1);
-    xs = bestLines(HERO_W, w, (lines) => colScore(lines) + eyesKept(px, d, ys, lines));
+    ys = bestLines(fig.h, h, (lines) => rowScore(lines) + eyeRows.filter((y) => lines.includes(y)).length * 1e4, (lines) => lines[h - 1] === fig.h - 1);
+    xs = bestLines(fig.w, w, (lines) => colScore(lines) + eyeCols.filter((x) => lines.includes(x)).length * 1e4);
   }
+  const data = new Uint8ClampedArray(w * h * 4);
   for (let dr = 0; dr < h; dr++) for (let dc = 0; dc < w; dc++) {
-    const sx = xs[flip ? w - 1 - dc : dc], i = (ys[dr] * HERO_W + sx) * 4, o = (dr * w + dc) * 4;
-    data[o] = px[i]; data[o + 1] = px[i + 1]; data[o + 2] = px[i + 2]; data[o + 3] = px[i + 3];
+    const sx = xs[flip ? w - 1 - dc : dc], i = (ys[dr] * fig.w + sx) * 4, o = (dr * w + dc) * 4;
+    data[o] = fig.data[i]; data[o + 1] = fig.data[i + 1]; data[o + 2] = fig.data[i + 2]; data[o + 3] = fig.data[i + 3];
   }
-  return { w, h, data };
+  const ax = placeOf(xs, fig.ax), ay = placeOf(ys, fig.ay);
+  return { w, h, ax: flip ? w - 1 - ax : ax, ay, data };
+}
+const scaledCache = new WeakMap();
+function scaled(fig, scale, flip) {
+  let m = scaledCache.get(fig);
+  if (!m) { m = new Map(); scaledCache.set(fig, m); }
+  const k = `${Math.round(fig.w * Math.min(1, scale))}x${Math.round(fig.h * Math.min(1, scale))}${flip ? 'f' : ''}`;
+  let v = m.get(k);
+  if (!v) { v = scaleFigure(fig, scale, flip); m.set(k, v); if (m.size > 48) m.delete(m.keys().next().value); }
+  return v;
 }
 
-/** Paints a composed sprite at (x, y) at `scale` (see scaleSprite), in whole pixels: runs of one colour go as one fillRect. */
-export function blit(ctx, px, x, y, scale = 1, flip = false) {
-  const { w, h, data } = scaled(px, scale, flip);
+/** Paints a figure with its top-left at (x, y) at `scale`, in whole pixels: runs of one colour go as one fillRect. */
+export function blit(ctx, fig, x, y, scale = 1, flip = false) {
+  const { w, h, data } = scaled(fig, scale, flip);
   for (let dr = 0; dr < h; dr++) {
     let run = null, from = 0;
     for (let dc = 0; dc <= w; dc++) {
@@ -395,31 +228,45 @@ export function blit(ctx, px, x, y, scale = 1, flip = false) {
     }
   }
 }
-// A walk through a room draws the same sprite at a handful of sizes: keep the scaled copies (per sprite, by size and flip).
-const scaledCache = new WeakMap();
-function scaled(px, scale, flip) {
-  let m = scaledCache.get(px);
-  if (!m) { m = new Map(); scaledCache.set(px, m); }
-  const key = `${Math.round(HERO_W * scale)}x${Math.round(HERO_H * scale)}${flip ? 'f' : ''}`;
-  let v = m.get(key);
-  if (!v) { v = scaleSprite(px, scale, flip); m.set(key, v); if (m.size > 48) m.delete(m.keys().next().value); }
-  return v;
-}
 
-/** Paints the hero at (x, y) with `scale` px per sprite pixel; flip mirrors about the sprite's centre. */
-export function drawHero(ctx, cfg, pose, x, y, scale = 1, { flip = false, outfit = 'hoodie' } = {}) {
-  blit(ctx, composed(cfg, pose, outfit), x, y, scale, flip);
+/**
+ * Where the hero's figure goes for his feet's centre at (feetX, feetY) on the floor (brief 15 C): its anchor's column on
+ * feetX, its last row the row above feetY (so box.y + box.h is the floor line, as the rooms count it), moved down `dy`
+ * figure pixels (a walk frame's bob). Side bodies mirror when `flip`; the front and back views never do. Returns the box
+ * of what would be drawn, { x, y, w, h, ax, ay, scale, fig }, or null without the sheet.
+ */
+export function placeHero(cfg, pose, feetX, feetY, scale = 1, { flip = false, outfit = 'hoodie', dy = 0 } = {}) {
+  const fig = composeFigure(cfg, bodyFor(pose, outfit), outfit);
+  if (!fig) return null;
+  const s = Math.min(1, scale), mirror = flip && fig.view === 'side', sc = scaled(fig, s, mirror);
+  return { x: feetX - sc.ax, y: feetY - sc.h + Math.round(dy * s), w: sc.w, h: sc.h, ax: sc.ax, ay: sc.ay, scale: s, flip: mirror, fig };
 }
-
-/** Paints only `crop` ({x,y,w,h} in sprite px) at (0,0) — picker thumbnails. */
-export function drawHeroCrop(ctx, cfg, crop, scale = 1, pose = 'idle') {
-  const px = composed(cfg, pose);
-  for (let r = 0; r < crop.h; r++) for (let c = 0; c < crop.w; c++) {
-    const sx = crop.x + c, sy = crop.y + r;
-    if (sx < 0 || sy < 0 || sx >= HERO_W || sy >= HERO_H) continue;
-    const i = (sy * HERO_W + sx) * 4;
-    if (!px[i + 3]) continue;
-    ctx.fillStyle = `rgb(${px[i]},${px[i + 1]},${px[i + 2]})`;
-    ctx.fillRect(c * scale, r * scale, scale, scale);
+/** Draws the hero for his feet at (feetX, feetY); see placeHero. Returns the drawn box, or null when there is no hero to draw. */
+export function drawHero(ctx, cfg, pose, feetX, feetY, scale = 1, opts = {}) {
+  const p = placeHero(cfg, pose, feetX, feetY, scale, opts);
+  if (p) blit(ctx, p.fig, p.x, p.y, p.scale, p.flip);
+  return p;
+}
+/** The creator's big preview: the front figure centred on its anchor in a PREVIEW canvas, soles on the last row. */
+export function drawPreview(ctx, cfg) {
+  const fig = composeFigure(cfg, 'front');
+  if (!fig) return null;
+  const x = Math.floor(PREVIEW.w / 2) - fig.ax, y = PREVIEW.h - fig.h;
+  blit(ctx, fig, x, y, 1, false);
+  return { x, y, w: fig.w, h: fig.h };
+}
+/** A thumbnail for hair, beard or glasses: the front figure cropped to THUMB from (ax + dx, ay + dy), at (0, 0). */
+export function drawHeadThumb(ctx, cfg) {
+  const fig = composeFigure(cfg, 'front');
+  if (!fig) return false;
+  const x0 = fig.ax + THUMB.dx, y0 = fig.ay + THUMB.dy;
+  for (let r = 0; r < THUMB.h; r++) for (let c = 0; c < THUMB.w; c++) {
+    const sx = x0 + c, sy = y0 + r;
+    if (sx < 0 || sy < 0 || sx >= fig.w || sy >= fig.h) continue;
+    const i = (sy * fig.w + sx) * 4;
+    if (!fig.data[i + 3]) continue;
+    ctx.fillStyle = `rgb(${fig.data[i]},${fig.data[i + 1]},${fig.data[i + 2]})`;
+    ctx.fillRect(c, r, 1, 1);
   }
+  return true;
 }
