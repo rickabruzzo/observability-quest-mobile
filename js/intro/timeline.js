@@ -1,8 +1,7 @@
 // The intro as data: nine shots, each a still (or two stills it cuts between). Limited animation, as on a
 // 1990 PC: nothing tweens, the picture is replaced whole. Pure — the screen module does the drawing.
 import { flashOn } from './pager.js';
-import { SIDE_POSES } from '../engine/hero-side.js';
-import { STRIDE_PX } from '../engine/walk.js';
+import { walkFrame } from '../engine/walk.js';
 
 export const FLASH_MS = 500;                          // one on/off cycle; 2Hz is the ceiling for anything that flashes
 const CTO = 'Backend is down. Front end is down. Database is down. Get in here! -CTO';
@@ -67,15 +66,14 @@ export function heroAt(tMs) {
 
 // ---- the way out of the bedroom: across the floor to the door, up to its threshold, through it ----
 // Still limited animation: the door is two stills (shut, open), the hero is there and then is not.
-// The whole exit is the profile view — there is no back view, so the few steps up to the threshold are
-// walked side on too, and the hero stays side on at the door rather than turning to face the player for
-// one beat before vanishing. The frame comes from distance travelled, the same rule the room walk uses.
+// The whole exit is the profile view (the painted hero has a back view, but the way out stays side on: he
+// walks across, then the few steps up to the threshold, and stays side on at the door rather than turning
+// to face the player for one beat before vanishing). The frame comes from distance travelled, the same rule
+// the room walk uses: one of the side walk's four bodies every ADVANCE of his own pixels (brief 15).
 const AMBLE = 100, AMBLE_UP = 66;                     // px/s: a sleepy walk — about a step and a half a second on the 76-px stride at 0.85
 const DOOR_OPEN_MS = 350, DOOR_GONE_MS = 300, DOOR_SHUT_MS = 400;
-const STEP = SIDE_POSES.slice(1);                     // w1..w8
-const PER_FRAME_PX = STRIDE_PX / STEP.length;
-// The frame for a distance walked, in the hero's own pixels: a hero drawn at heroScale covers heroScale × STRIDE_PX scene px per cycle.
-const frameAfter = (px, heroScale = 1) => STEP[Math.floor(Math.abs(px) / heroScale / PER_FRAME_PX) % STEP.length];
+// The frame for a distance walked, in the hero's own pixels: a hero drawn at heroScale covers heroScale × ADVANCE scene px per frame.
+const frameAfter = (px, heroScale = 1) => walkFrame('side', Math.abs(px) / heroScale);
 
 export function exitPlan({ standX, doorX, floorY, doorY = floorY, heroScale = 1 }) {
   const across = Math.round((Math.abs(doorX - standX) / AMBLE) * 1000);
@@ -86,7 +84,7 @@ export function exitPlan({ standX, doorX, floorY, doorY = floorY, heroScale = 1 
 /** Where the hero is tMs into the plan. x is the sprite's left edge, y the row the feet stand on. */
 export function exitAt(p, tMs) {
   const t = Math.max(0, tMs), flip = p.doorX < p.standX;
-  const at = (x, y, pose, visible, doorOpen, done = false) => ({ x, y, pose, view: 'side', flip, visible, doorOpen, done });
+  const at = (x, y, frame, visible, doorOpen, done = false) => ({ x, y, pose: frame.body ?? frame, dy: frame.dy ?? 0, view: 'side', flip, visible, doorOpen, done });
   if (t < p.across) {
     const x = Math.round(p.standX + (p.doorX - p.standX) * (t / p.across));
     return at(x, p.floorY, frameAfter(x - p.standX, p.heroScale), true, false);

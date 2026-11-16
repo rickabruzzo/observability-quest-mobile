@@ -33,7 +33,7 @@ test('tap right: hero walks right over time, lands at the tap, ends idle', async
   await page.mouse.click(sc.x + sc.width * 0.85, sc.y + sc.height * 0.9);
   await page.waitForTimeout(90);
   const mid = await pv(page);
-  assert.ok(mid.walking && mid.x > x0 && /^w[1-8]$/.test(mid.pose), JSON.stringify(mid));
+  assert.ok(mid.walking && mid.x > x0 && /^walk_(contact|down|pass|up)$/.test(mid.pose), JSON.stringify(mid));
   await page.waitForFunction(() => window.__oq.preview.walking === false, null, { timeout: 6000 });
   const end = await pv(page);
   assert.equal(end.pose, 'idle');
@@ -48,7 +48,7 @@ test('the room reports the side view while walking and the front view at rest', 
   await page.mouse.click(sc.x + sc.width * 0.85, sc.y + sc.height * 0.9);
   await page.waitForFunction(() => window.__oq.preview.view === 'side', null, { timeout: 2000 });
   const mid = await pv(page);
-  assert.ok(/^w[1-8]$/.test(mid.pose), `side view but pose ${mid.pose}`);
+  assert.ok(/^walk_(contact|down|pass|up)$/.test(mid.pose), `side view but pose ${mid.pose}`);
   // walking left is the same side view, mirrored
   await page.waitForFunction(() => window.__oq.preview.walking === false, null, { timeout: 6000 });
   assert.deepEqual([(await pv(page)).view, (await pv(page)).pose], ['front', 'idle']);
@@ -102,7 +102,7 @@ test('Sheet button returns to the creator with the same hero', async () => {
   const { ctx, page } = await openPreview();
   await page.click('#btn-redo');
   await page.waitForFunction(() => document.body.dataset.screen === 'CREATOR');
-  assert.equal((await page.evaluate(() => window.__oq.creator.hero)).body, 'masc');
+  assert.equal((await page.evaluate(() => window.__oq.creator.hero)).style, 'standard');
   await ctx.close();
 });
 

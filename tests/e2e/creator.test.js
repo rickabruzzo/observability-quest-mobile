@@ -22,12 +22,13 @@ async function openCreator(opts = {}, init = null) {
 }
 const hero = (page) => page.evaluate(() => window.__oq.creator.hero);
 
-test('sheet: 5 FACE rows, 5 KIT rows, every option 44px+, hero drawn', async () => {
+test('sheet: 4 FACE rows (no Body row), 4 KIT rows, every option 44px+, the painted hero drawn', async () => {
   const { ctx, page } = await openCreator();
-  assert.equal(await page.locator('.sheet-row').count(), 5);
+  assert.equal(await page.locator('.sheet-row').count(), 4);
+  assert.equal(await page.locator('.opt[data-key="body"]').count(), 0, 'no Body row (brief 15 E)');
   const boxes = await page.locator('.opt').evaluateAll((els) => els.map((e) => e.getBoundingClientRect()).map((r) => [r.width, r.height]));
   assert.ok(boxes.every(([w, h]) => w >= 44 && h >= 44), JSON.stringify(boxes.filter(([w, h]) => w < 44 || h < 44)));
-  assert.equal(boxes.length, 3 + 4 + 5 + 5 + 3); // body, skin, hair colour, hair, beard
+  assert.equal(boxes.length, 4 + 5 + 4 + 2); // skin, hair colour, hair (four painted heads), beard (none, short)
   await page.click('.tab[data-page="kit"]');
   assert.equal(await page.locator('.sheet-row').count(), 4); // name row + hoodie, jeans, glasses (nothing is carried)
   assert.equal(await page.locator('.opt[data-key="hold"]').count(), 0);
@@ -35,7 +36,7 @@ test('sheet: 5 FACE rows, 5 KIT rows, every option 44px+, hero drawn', async () 
     const c = document.querySelector('#hero-view'); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
     let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i]) n++; return [n, c.width, c.height];
   });
-  assert.deepEqual(painted.slice(1), [56, 144], 'the sheet draws the 56×144 sprite');
+  assert.deepEqual(painted.slice(1), [56, 148], 'the preview canvas is 56 wide and 148 tall (the afro stands six rows above short hair)');
   assert.ok(painted[0] > 2400, `painted ${painted[0]}`);
   await ctx.close();
 });
@@ -44,23 +45,23 @@ test('picking updates state and the pressed marker; the beard follows the hair c
   const { ctx, page } = await openCreator();
   await page.click('.opt[data-key="hair"][data-value="ginger"]');
   await page.click('.opt[data-key="style"][data-value="fro"]');
-  await page.click('.opt[data-key="beard"][data-value="long"]');
+  await page.click('.opt[data-key="beard"][data-value="none"]');
   const h = await hero(page);
-  assert.equal(h.hair, 'ginger'); assert.equal(h.style, 'fro'); assert.equal(h.beard, 'long');
+  assert.equal(h.hair, 'ginger'); assert.equal(h.style, 'fro'); assert.equal(h.beard, 'none');
   assert.ok(!('beardCol' in h));
   assert.equal(await page.locator('.opt[data-key="style"][data-value="fro"]').getAttribute('aria-pressed'), 'true');
   assert.equal(await page.locator('.opt[data-key="style"][data-value="standard"]').getAttribute('aria-pressed'), 'false');
   await ctx.close();
 });
 
-test('preset buttons replace appearance; RANDOM changes something', async () => {
+test('RANDOM changes something, and rolls only what exists', async () => {
   const { ctx, page } = await openCreator();
-  await page.click('.opt[data-key="body"][data-value="fem"]');
-  assert.equal((await hero(page)).hoodie, 'honey');
   const before = JSON.stringify(await hero(page));
   let changed = false;
   for (let i = 0; i < 5 && !changed; i++) { await page.click('#btn-random'); changed = JSON.stringify(await hero(page)) !== before; }
   assert.ok(changed);
+  const h = await hero(page);
+  assert.ok(!('body' in h) && ['standard', 'long', 'fro', 'mohawk'].includes(h.style) && ['none', 'short'].includes(h.beard), JSON.stringify(h));
   await ctx.close();
 });
 
@@ -104,11 +105,15 @@ test('storage throwing does not break the creator or START', async () => {
   await ctx.close();
 });
 
-test('corrupt stored hero is sanitised', async () => {
+test('corrupt stored hero is sanitised; a hero saved before the painted hero loads as E says', async () => {
   const { ctx, page } = await openCreator({}, () => { sessionStorage.setItem('oq.hero', '{"body":"robot","hoodie":"lime","name":42'); });
   const h = await hero(page);
-  assert.equal(h.body, 'masc'); assert.equal(h.name, '');
+  assert.ok(!('body' in h)); assert.equal(h.name, ''); assert.equal(h.hoodie, 'ink', 'unparseable JSON: the default');
   await ctx.close();
+  const old = await openCreator({}, () => { sessionStorage.setItem('oq.hero', JSON.stringify({ body: 'fem', skin: 1, hair: 'brown', style: 'shoulder', beard: 'long', hoodie: 'honey', jeans: 'black', glasses: 'glasses', name: 'Ada' })); });
+  const o = await hero(old.page);
+  assert.deepEqual(o, { skin: 1, hair: 'brown', style: 'long', beard: 'short', hoodie: 'honey', jeans: 'black', glasses: 'glasses', name: 'Ada' });
+  await old.ctx.close();
 });
 
 for (const [w, h] of [[667, 375], [800, 360], [844, 390], [932, 430]]) {
@@ -140,7 +145,7 @@ for (const [w, h] of [[1700, 1100], [1280, 800], [1240, 1044]]) {
       const opts = [...document.querySelectorAll('.opt')].map((e) => e.getBoundingClientRect());
       return { hero: r('#hero-view'), inner: r('.frame-inner'), scene: r('#scene-box'), right: Math.max(...opts.map((b) => b.right)), bottom: Math.max(...opts.map((b) => b.bottom)) };
     });
-    assert.ok(Math.abs(m.hero.w / m.hero.h - 56 / 144) < 0.02, `hero stretched: ${JSON.stringify(m.hero)}`);
+    assert.ok(Math.abs(m.hero.w / m.hero.h - 56 / 148) < 0.02, `hero stretched: ${JSON.stringify(m.hero)}`);
     // the sprite's empty side margins may tuck under the frame (as on a phone); the figure itself must not
     assert.ok(m.hero.w <= m.inner.w * 1.15 && m.hero.h <= m.inner.h + 1 && m.hero.y >= m.inner.y - 1, `hero does not fit its frame: ${JSON.stringify(m)}`);
     assert.ok(m.right > m.scene.x + m.scene.w * 0.6, `rows huddle in the corner: ${JSON.stringify(m)}`);
