@@ -24,6 +24,49 @@ def test_a_dark_green_fold_is_still_hoodie_not_outline():
     assert [hp.PARTS[p] for p in parts[0]] == ['hoodie', 'jeans', 'outline']
 
 
+def test_a_dark_grey_line_is_outline_and_only_a_lighter_grey_is_a_shoe():
+    """Rick, 2026-11-16: "Seeing fringe around the legs and feet." The paintings' outline is a dark grey in places,
+    round the shoes above all, a little lighter than the line that used to divide outline from grey. Sorted as
+    grey it was painted at its own lightness, a mid grey line hanging round his feet on a dark floor."""
+    px = [[(56, 56, 58), (80, 80, 82), (92, 92, 94), (150, 150, 152)]]          # lightness .22, .32, .36, .59
+    parts, _ = hp.classify(_img(px), speck=0)
+    assert [hp.PARTS[p] for p in parts[0]] == ['outline', 'outline', 'grey', 'grey']
+
+
+def test_where_a_shoe_and_its_outline_share_a_pixel_evenly_the_outline_has_it():
+    """Half outline and half grey is neither the shoe's grey nor dark: sorted as grey it is a soft mid grey on
+    the edge of the shoe, which reads as fringe. The outline has the pixel; a pixel that is mostly shoe is shoe."""
+    o, g = (22, 20, 28), (150, 150, 152)
+    rows = [[o, g, o, g, KEY, KEY],
+            [o, g, g, g, o, g],
+            [KEY, KEY, KEY, KEY, KEY, KEY],
+            [KEY, KEY, KEY, KEY, KEY, KEY]]
+    parts, light = hp.classify(_img(rows), speck=0)
+    for p, _ in (hp.halve(parts, light), hp.to_size(parts, light, 3, 2)):
+        assert [hp.PARTS[x] for x in p[0]] == ['outline', 'grey', 'outline'] and not p[1].any()
+
+
+def test_a_patch_of_the_background_colour_shut_inside_a_shoe_is_its_sole():
+    """The soles were painted in the background's yellow, each shut in between the shoe and its outline. Taken as
+    background they were slits in his shoes that the floor showed through. A patch of the background's colour
+    that cannot reach the outside and has only shoe and outline round it is the sole: grey, and light. A gap
+    between his legs or under his arm has cloth round it and stays a gap."""
+    o, g, j = (22, 20, 28), (150, 150, 152), (30, 150, 235)
+    K = KEY
+    rows = [[K, K, K, K, K, K, K, K, K, K, K, K, K, K],
+            [K, o, o, o, o, o, K, j, j, j, j, j, j, K],
+            [K, o, g, g, g, o, K, j, j, j, j, j, j, K],
+            [K, o, K, K, K, o, K, j, j, o, o, j, j, K],
+            [K, o, o, o, o, o, K, j, j, o, K, o, j, K],
+            [K, K, K, K, K, K, K, j, j, o, o, j, j, K],
+            [K, K, K, K, K, K, K, j, j, j, j, j, j, K]]
+    parts, light = hp.classify(_img(rows), speck=0)
+    assert [hp.PARTS[x] for x in parts[3, 2:5]] == ['grey'] * 3 and np.allclose(light[3, 2:5], hp.SOLE)
+    assert hp.SOLE > light[2, 3]                                          # lighter than the shoe above it
+    assert parts[4, 10] == 0                                              # the gap in the cloth is still a gap
+    assert (parts[0] == 0).all() and parts[3, 6] == 0                     # and the background outside is background
+
+
 def test_game_size_takes_each_pixels_majority_part_and_the_mean_lightness_of_what_it_covers():
     g, b = (60, 200, 70), (30, 150, 235)
     # 4x4 -> 2x2: top-left mostly hoodie with one jeans pixel; top-right all background; bottom-left half background; bottom-right jeans

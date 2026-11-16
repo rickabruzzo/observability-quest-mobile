@@ -61,8 +61,8 @@ def classify(im, speck=None):
     # next to no colour: neutral. Dark neutral is outline, the rest grey (shoes, soles, the eyes' whites, the collar).
     chroma = d                                             # how much colour is in it, whatever its lightness
     neutral = (sat < 0.18) | (chroma < 0.07)
-    parts[neutral & (light < 0.25)] = PARTS.index('outline')
-    parts[neutral & (light >= 0.25)] = PARTS.index('grey')
+    parts[neutral & (light < OUTLINE_BELOW)] = PARTS.index('outline')
+    parts[neutral & (light >= OUTLINE_BELOW)] = PARTS.index('grey')
     key = np.abs(np.asarray(im.convert('RGB')).astype(int) - KEY).max(axis=2) <= 24
     parts[key] = 0
     # The fringe: where a part was blended into the yellow background the edge pixel is yellowish, which hue alone
@@ -71,6 +71,10 @@ def classify(im, speck=None):
     edge[1:] |= key[:-1]; edge[:-1] |= key[1:]; edge[:, 1:] |= key[:, :-1]; edge[:, :-1] |= key[:, 1:]
     fringe = ~key & edge & (hue >= FRINGE_HUE[0]) & (hue < FRINGE_HUE[1]) & (sat >= 0.3)
     parts[fringe] = PARTS.index('outline'); light = np.where(fringe, np.minimum(light, 0.15), light)
+    # The soles: painted in the background's yellow, each shut in between the shoe and its outline. A patch of the
+    # background's colour that cannot reach the outside and has only shoe and outline round it is the sole.
+    _soles(parts, light, key & ~_reaches_the_border(key), reach=2)
+    key = key & (parts == 0)
     # Specks: a few pixels of one family inside another part (the eyes are a dark blue; a stray blend on a cuff).
     # A dark speck is outline; a lighter one belongs to whatever part it mostly touches.
     # A garment is also a few big pieces: a patch of a clothing family that is a sliver of that family's whole (the
@@ -91,9 +95,50 @@ def classify(im, speck=None):
     return parts, np.where(key, 0.0, light)
 
 
+OUTLINE_BELOW = 0.33         # a neutral pixel darker than this is outline. The painted outline is a dark grey in places (round the
+                             # shoes above all); between this and the shoes' own grey the paintings have next to nothing
+SOLE = 0.75                  # how light a sole is: a little lighter than the shoe above it (they were painted in the background's colour)
 FRINGE_HUE = (38, 70)        # yellowish, between the skin's orange and the hoodie's green: the background showing through an edge
 SPECK = 14                   # a patch of a family smaller than this many pixels (as delivered, 272 px tall) is not that part
 SLIVER = 0.04                # nor is a patch of a clothing family smaller than this share of that family's pixels
+
+
+def _spread(mask):
+    """A boolean mask grown by one pixel in all eight directions."""
+    out = mask.copy()
+    out[1:] |= mask[:-1]; out[:-1] |= mask[1:]
+    grown = out.copy()
+    grown[:, 1:] |= out[:, :-1]; grown[:, :-1] |= out[:, 1:]
+    return grown
+
+
+def _reaches_the_border(mask):
+    """The pixels of a boolean mask joined (4-connected) to the picture's border: the background round the figure."""
+    h, w = mask.shape
+    seen = np.zeros_like(mask)
+    stack = [(y, x) for y in range(h) for x in (0, w - 1) if mask[y, x]] + [(y, x) for x in range(w) for y in (0, h - 1) if mask[y, x]]
+    for y, x in stack: seen[y, x] = True
+    while stack:
+        y, x = stack.pop()
+        for ny, nx in ((y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)):
+            if 0 <= ny < h and 0 <= nx < w and mask[ny, nx] and not seen[ny, nx]: seen[ny, nx] = True; stack.append((ny, nx))
+    return seen
+
+
+def _soles(parts, light, holes, reach):
+    """Makes each patch of `holes` (clear pixels shut inside the figure) that is a sole into one: grey, SOLE light.
+    A sole has shoe within `reach` pixels of it and no cloth, skin or hair; a gap between his legs or under his
+    arm has cloth round it and stays a gap. Changes `parts` and `light` in place."""
+    cloth = np.isin(parts, [PARTS.index(n) for n in ('hoodie', 'jeans', 'skin', 'hair')])
+    for piece in _pieces(holes):
+        ys, xs = np.array(piece).T
+        y0, y1, x0, x1 = max(ys.min() - reach, 0), ys.max() + reach + 1, max(xs.min() - reach, 0), xs.max() + reach + 1
+        patch = np.zeros_like(holes); patch[ys, xs] = True
+        near = patch[y0:y1, x0:x1]
+        for _ in range(reach): near = _spread(near)
+        near = near & ~patch[y0:y1, x0:x1]
+        if (near & (parts[y0:y1, x0:x1] == PARTS.index('grey'))).any() and not (near & cloth[y0:y1, x0:x1]).any():
+            parts[ys, xs] = PARTS.index('grey'); light[ys, xs] = SOLE
 
 
 def _pieces(mask):
@@ -111,10 +156,29 @@ def _pieces(mask):
     return out
 
 
+_G, _O = PARTS.index('grey'), PARTS.index('outline')
+
+
+def _edge_lines(P, L):
+    """What making a figure smaller leaves to tidy at his feet. A sole whose outline had a gap a pixel wide in the
+    painting was open to the background there and comes out as a slit: shut in at this size, with only shoe round
+    it, it is sole. And at the figure's edge a grey pixel as dark as a line is the line: outline. A pixel that is
+    mostly shoe and partly outline is a grey darker than OUTLINE_BELOW, and on the silhouette it stands out from
+    the dark outline on either side of it as one stray pixel."""
+    _soles(P, L, (P == 0) & ~_reaches_the_border(np.pad(P == 0, 1, constant_values=True))[1:-1, 1:-1], reach=1)
+    clear = P == 0
+    edge = np.zeros_like(clear)
+    edge[1:] |= clear[:-1]; edge[:-1] |= clear[1:]; edge[:, 1:] |= clear[:, :-1]; edge[:, :-1] |= clear[:, 1:]
+    edge[0] = edge[-1] = True; edge[:, 0] = edge[:, -1] = True
+    P[(P == _G) & edge & (L < OUTLINE_BELOW)] = _O
+    return P, L
+
+
 def to_size(parts, light, w, h):
     """The figure at w×h: each pixel takes the part that most of what it covers is, and the mean lightness of all
     it covers (so an outline too thin to keep its own pixel still darkens the edge it ran along). A pixel that
-    covers more background than figure is background."""
+    covers more background than figure is background. Where grey and outline cover a pixel evenly the outline has
+    it: half shoe and half line as grey is a soft mid grey on the shoe's edge, which reads as fringe."""
     H, W = parts.shape
     ky, kx = H / h, W / w
     P = np.zeros((h, w), np.uint8); L = np.zeros((h, w))
@@ -131,8 +195,9 @@ def to_size(parts, light, w, h):
             if his * 2 < wgt.sum(): continue
             votes = np.bincount(blk.ravel(), weights=wgt.ravel(), minlength=len(PARTS)); votes[0] = 0
             P[y, x] = votes.argmax()
+            if P[y, x] == _G and abs(votes[_G] - votes[_O]) < 1e-9: P[y, x] = _O        # shoe and outline evenly: the outline has it
             L[y, x] = (light[np.ix_(ys, xs)] * wgt)[blk > 0].sum() / his
-    return P, L
+    return _edge_lines(P, L)
 
 
 def trim(parts, light):
@@ -298,7 +363,8 @@ def halve(parts, light, phase=(0, 0)):
     his = 4 - votes[..., 0]; votes[..., 0] = 0
     keep = his * 2 >= 4
     out = np.where(keep, votes.argmax(axis=2), 0).astype(np.uint8)
-    return out, np.where(keep, (lb * (pb > 0)).sum(axis=2) / np.maximum(his, 1), 0.0)
+    out[(out == _G) & (votes[..., _G] == votes[..., _O])] = _O                   # shoe and outline evenly: the outline has it, as in to_size()
+    return _edge_lines(out, np.where(keep, (lb * (pb > 0)).sum(axis=2) / np.maximum(his, 1), 0.0))
 
 
 @functools.lru_cache(maxsize=None)
@@ -625,9 +691,14 @@ MARK = (-14, 10)      # the Honeycomb mark's corner from the anchor on the hoodi
 MARKED = ('front', 'toward_l', 'toward_r')   # the wearer's right of the drawstrings. The mark itself is js/engine/hc-mark.js.
 
 
+ADVANCE = 13.5     # how far he travels in one frame of the side walk at full size. Measured by _advance() on the first build of
+                   # the set and approved in motion; kept as a number so that re-sorting his shoes' pixels cannot change his pace
+
+
 def _advance():
-    """How far he travels in one frame of the side walk at full size: a step is the distance between his shoes at
-    the long stride, and a step is four frames."""
+    """How far he travels in one frame of the side walk at full size, as the shoes measure it: a step is the
+    distance between his shoes at the long stride, and a step is four frames. A check on ADVANCE, not its source:
+    the measurement moves by a fraction of a pixel with how the shoes' pixels are sorted."""
     b = bodies()['walk_contact']
     xs = np.sort(np.nonzero(b['parts'][-14:] == _GREY)[1])
     cut = xs[np.diff(xs).argmax()]
@@ -683,7 +754,7 @@ def build_set(out=None):
         'eyes': _eyes(),
         'ramps': ramps(),
     }
-    m['walk']['side']['advance'] = _advance()
+    m['walk']['side']['advance'] = ADVANCE
     im = Image.fromarray(sheet, 'P'); im.putpalette([v for i in range(256) for v in (i, i, i)])
     im.save(os.path.join(out, m['image']), optimize=True, transparency=0)
     with open(os.path.join(out, 'hero.json'), 'w') as f: json.dump(m, f, indent=1); f.write('\n')
