@@ -298,6 +298,43 @@ def test_the_ramps_cover_every_colour_the_creator_offers():
     assert np.array_equal(pj[1 + 64:], lut[1 + 64:])                                           # skin, hair, grey and outline are his own
 
 
+def _outside(clear):
+    """The clear pixels that reach the outside of the piece (4-connected)."""
+    h, w = clear.shape
+    pad = np.ones((h + 2, w + 2), bool); pad[1:-1, 1:-1] = clear
+    seen = np.zeros_like(pad); seen[0, :] = seen[-1, :] = seen[:, 0] = seen[:, -1] = True
+    stack = [(y, x) for y in range(h + 2) for x in range(w + 2) if seen[y, x]]
+    while stack:
+        y, x = stack.pop()
+        for ny, nx in ((y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)):
+            if 0 <= ny < h + 2 and 0 <= nx < w + 2 and pad[ny, nx] and not seen[ny, nx]: seen[ny, nx] = True; stack.append((ny, nx))
+    return seen[1:-1, 1:-1]
+
+
+def test_his_shoes_have_soles_and_no_grey_line_hangs_round_his_legs_and_feet():
+    """Rick, 2026-11-16: "Seeing fringe around the legs and feet." On every body: no shoe has a slit in it where
+    the sole should be, and on his silhouette nothing sorted as grey is as dark as a line (a line is outline, and
+    outline is dark)."""
+    for name, b in hp.bodies().items():
+        parts, light = b['parts'], b['light']
+        grey = parts == P('grey')
+        holes = (parts == 0) & ~_outside(parts == 0)
+        cloth = hp._near(np.isin(parts, (P('hoodie'), P('jeans'), P('skin'))))
+        assert not (holes & hp._near(grey) & ~cloth).any(), (name, 'a slit in a shoe')
+        stray = grey & (light < hp.OUTLINE_BELOW) & hp._near(_outside(parts == 0), diagonal=False)
+        assert not stray.any(), (name, 'a dark grey pixel on his edge', [(int(x), int(y)) for y, x in zip(*np.nonzero(stray))])
+
+
+def test_how_fast_he_walks_does_not_depend_on_how_his_shoes_pixels_are_sorted():
+    """The side walk covers ADVANCE of his own pixels a frame: the distance between his shoes at the long stride
+    over four frames, measured on the first build of the set and approved in motion (13.5). It is kept as a number:
+    re-sorting the shoes' pixels (the soles, the outline, 2026-11-16) moved the measurement by a third of a pixel
+    and would have changed his pace. The measurement must still agree with it to within half a pixel."""
+    assert hp.ADVANCE == 13.5
+    assert abs(hp._advance() - hp.ADVANCE) <= 0.5
+    assert json.load(open(os.path.join(hp.ROOT, 'assets', 'hero', 'hero.json')))['walk']['side']['advance'] == 13.5
+
+
 def test_the_outline_is_never_lighter_than_it_was_painted():
     """An outline pixel takes the mean lightness of what its block of the painting held, so one on the figure's edge
     can come out a little lighter than the outline usually is. The ramp used to lift such a pixel toward white, as
