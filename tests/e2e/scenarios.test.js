@@ -205,7 +205,8 @@ for (const n of NS) {
 import { heroHeightAt, heroScaleAt, insideFloor } from '../../js/engine/room.js';
 import { setHeroSheet, composeFigure, HERO_W } from '../../js/engine/hero.js';
 import { DEFAULT_HERO } from '../../js/engine/hero-parts.js';
-setHeroSheet(JSON.parse(readFileSync('assets/hero/hero.json', 'utf8')), new Uint8Array(readFileSync('tests/fixtures/hero-painted/sheet.codes')), 506, 253);
+{ const png = readFileSync('assets/hero/hero.png');   // the sheet's size is in the PNG's header
+  setHeroSheet(JSON.parse(readFileSync('assets/hero/hero.json', 'utf8')), new Uint8Array(readFileSync('tests/fixtures/hero-painted/sheet.codes')), png.readUInt32BE(16), png.readUInt32BE(20)); }
 const FRONT_H = composeFigure(DEFAULT_HERO, 'front').h;      // the painted figure's own height, 136 rows on the 144-row canvas (brief 15 C)
 
 for (const n of Object.keys(CHAPTERS).map(Number)) {

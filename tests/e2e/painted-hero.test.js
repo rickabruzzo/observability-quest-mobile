@@ -18,7 +18,8 @@ before(async () => { server = await startServer(); browser = await chromium.laun
 after(async () => { await browser?.close(); await server?.close(); });
 
 const MANIFEST = JSON.parse(readFileSync('assets/hero/hero.json', 'utf8')), CODES = readFileSync('tests/fixtures/hero-painted/sheet.codes');
-setHeroSheet(MANIFEST, new Uint8Array(CODES), 506, 253);
+const SHEET_PNG = readFileSync('assets/hero/' + MANIFEST.image), SHEET_W = SHEET_PNG.readUInt32BE(16), SHEET_H = SHEET_PNG.readUInt32BE(20);   // the sheet's size, from the PNG's header
+setHeroSheet(MANIFEST, new Uint8Array(CODES), SHEET_W, SHEET_H);
 const SIDE = WALKS.side.frames.map((f) => f.body), AWAY = WALKS.away.frames.map((f) => f.body);
 const PHONES = [[844, 390], [667, 375], [800, 360]];
 const region = (page, r) => page.evaluate((q) => [...document.querySelector('#scene').getContext('2d').getImageData(q.x, q.y, q.w, q.h).data].join(','), r);
@@ -62,9 +63,52 @@ test('the codes the page reads from hero.png equal the fixture\'s sheet.codes', 
     for (let i = 0; i < out.length; i++) out[i] = d[i * 4];
     return { w: c.width, h: c.height, hash: out.reduce((a, b, i) => (a * 31 + b * (i % 7 + 1)) >>> 0, 7), sample: out.slice(0, 400).join(','), len: out.length };
   });
-  assert.deepEqual([read.w, read.h, read.len], [506, 253, CODES.length]);
+  assert.deepEqual([read.w, read.h, read.len], [SHEET_W, SHEET_H, CODES.length]);
   assert.equal(read.sample, [...CODES.subarray(0, 400)].join(','));
   assert.equal(read.hash, [...CODES].reduce((a, b, i) => (a * 31 + b * (i % 7 + 1)) >>> 0, 7), 'every code the page reads is the fixture\'s');
+  await ctx.close();
+});
+
+// ---- review, 2026-11-16: the sheet is read from the file, not back from a canvas ----
+// Brave (by default), Firefox (private windows, strict mode) and Safari (in places) guard against fingerprinting by
+// changing what a page reads back from a canvas by a little. For a picture that is nothing; for the sheet, which is
+// codes, it is pixels of the wrong tone or the wrong part. These two contexts stand in for such a browser and for an
+// old one without DecompressionStream; `window.__honest` lets the test itself read the preview back truthfully.
+const GUARDED = () => {
+  const real = CanvasRenderingContext2D.prototype.getImageData;
+  CanvasRenderingContext2D.prototype.getImageData = function (...a) {
+    const d = real.apply(this, a);
+    if (!window.__honest) for (let i = 0; i < d.data.length; i += 12) if (d.data[i + 3]) { d.data[i] ^= 1; d.data[i + 1] ^= 1; d.data[i + 2] ^= 1; }   // every third pixel's lowest bit
+    return d;
+  };
+};
+const NO_STREAMS = () => { window.DecompressionStream = undefined; };
+/** The share of the default hero's own pixels the creator's preview shows exactly where drawPreview puts them. */
+async function previewShare(page) {
+  const fig = composeFigure(DEFAULT_HERO, 'front');
+  return page.evaluate(([f, x, y]) => {
+    window.__honest = true;
+    const c = document.querySelector('#hero-view'), d = c.getContext('2d').getImageData(x, y, f.w, f.h).data;
+    let n = 0, all = 0;
+    for (let i = 0; i < f.data.length; i += 4) { if (!f.data[i + 3]) continue; all++; if (d[i] === f.data[i] && d[i + 1] === f.data[i + 1] && d[i + 2] === f.data[i + 2] && d[i + 3] === 255) n++; }
+    return n / all;
+  }, [{ w: fig.w, h: fig.h, data: [...fig.data] }, Math.floor(56 / 2) - fig.ax, 148 - fig.h]);
+}
+test('in a browser that alters what a page reads back from a canvas, the hero is still exact: the sheet comes from the file', async () => {
+  const { ctx, page } = await openCreator({}, (p) => p.addInitScript(GUARDED));
+  await page.waitForFunction(() => window.__oq.heroReady === true, null, { timeout: 9000 });
+  await page.waitForTimeout(150);
+  assert.equal(await previewShare(page), 1, 'every pixel of the preview is the figure\'s own');
+  assert.deepEqual(page.errors, []);
+  await ctx.close();
+});
+test('in an old browser without DecompressionStream the sheet is read through a canvas, and the hero is the same', async () => {
+  const { ctx, page } = await openCreator({}, (p) => p.addInitScript(NO_STREAMS));
+  await page.waitForFunction(() => window.__oq.heroReady === true, null, { timeout: 9000 });
+  await page.waitForTimeout(150);
+  assert.equal(await page.evaluate(() => typeof DecompressionStream), 'undefined');
+  assert.equal(await previewShare(page), 1);
+  assert.deepEqual(page.errors, []);
   await ctx.close();
 });
 

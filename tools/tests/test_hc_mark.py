@@ -1,8 +1,9 @@
 """The Honeycomb mark on the hoodie comes from the official file, reduced by a tool — never drawn by hand.
-tools/hc_mark.py reduces assets/hc_logomark.png to the sprite's mark and writes the one pixel table both
-generators use: tools/hc_mark.json (Python) and js/engine/hc-mark.js (the game), which must agree."""
+tools/hc_mark.py reduces assets/hc_logomark.png to the sprite's mark and writes the one pixel table twice:
+tools/hc_mark.json (for Python tools) and js/engine/hc-mark.js (the game, which puts it on the painted hero's
+chest), which must agree."""
 import json, re
-from tools import hc_mark, hero_gen
+from tools import hc_mark
 
 OFFICIAL = 'assets/hc_logomark.png'
 
@@ -48,8 +49,3 @@ def test_js_module_carries_the_same_table():
     assert [tuple(p) for p in table] == hc_mark.reduce_mark(OFFICIAL, hc_mark.SIZE)
     colours = dict(re.findall(r"(\w+): '(#[0-9A-F]{6})'", re.search(r'HC_MARK\s*=\s*(\{[^}]*\});', src).group(1)))
     assert colours == hc_mark.HC_MARK
-
-
-def test_the_generator_uses_the_tools_table():
-    assert hero_gen.HC_MARK_PIXELS == hc_mark.reduce_mark(OFFICIAL, hc_mark.SIZE)
-    assert hero_gen.HC_MARK == hc_mark.HC_MARK

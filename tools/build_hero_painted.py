@@ -171,6 +171,13 @@ def _ramp(base, ratio):
     return np.where(ratio[:, None] <= 1, dark, base[None, :] + (255 - base[None, :]) * lift)
 
 
+def _outline(ratio):
+    """The outline at a lightness `ratio` times its usual one: the game's outline colour scaled, darker or lighter.
+    Never lifted toward white as cloth is: an outline has no highlights, and one on the figure's edge that took a
+    little light from its neighbours in the painting was coming out as a pale speck."""
+    return _hex(OUTLINE)[None, :] * np.clip(ratio, 0.6, 1.6)[:, None]
+
+
 def repaint(parts, light, look, ref=None):
     """The figure in the player's colours. `look` gives a colour for hoodie, jeans, skin and hair; a part keeps its
     painted shading: a pixel as light as the part usually is gets the colour itself, darker folds get it darker,
@@ -182,7 +189,7 @@ def repaint(parts, light, look, ref=None):
         if not i or not m.any(): continue
         l = light[m]
         if name == 'grey': rgb = np.repeat((l * 255)[:, None], 3, axis=1) * np.array([0.985, 0.985, 1.0])
-        elif name == 'outline': rgb = _ramp(_hex(OUTLINE), np.clip(l / max(ref.get('outline', 0.12), 1e-3), 0.6, 1.6))
+        elif name == 'outline': rgb = _outline(l / max(ref.get('outline', 0.12), 1e-3))
         elif name not in look: rgb = np.repeat((l * 255)[:, None], 3, axis=1)
         elif name == 'hair' and 'skin' in look:                 # hair painted lighter than usual is thinner hair over skin (stubble): toward the skin, not toward white
             base, skin, ratio = _hex(look['hair']), _hex(look['skin']), l / ref['hair']
@@ -269,6 +276,7 @@ OVERLAY_FILES = {  # what is added -> view -> (the painting with it, the paintin
     'beard': {v: (BASE[v], f'{SET}/HD_clean_{v}.png') for v in ('front', 'side')},
     'glasses': {v: (f'{SET}/HD_glasses_{v}.png', f'{SET}/HD_clean_{v}.png') for v in ('front', 'side')},
 }
+HAIR_SCALE = {'fro': 0.78}                         # a hair style cut smaller than it was painted (Rick, 2026-11-16: "Those afros are way too large")
 FRAME = 0.04                                       # a pixel this much darker with the glasses on is frame
 PJ = {'top': '#A9C4EC', 'bottom': '#A9C4EC'}       # the pyjamas' pale blue, the same on everyone (js/engine/hero-parts.js)
 TONES, TONE_0, TONE_STEP = 32, 0.15, 0.05          # a part's lightness, as a share of its usual one, in 32 steps from 0.15
@@ -421,8 +429,37 @@ def bodies():
     return {name: _body(name) for name in BODY_FILES}
 
 
-def _head(view, path):
+def _smaller_hair(parts, light, view, k):
+    """A standing figure's painting with its hair at `k` of its size, about the middle of his skull. Nothing is
+    drawn: each hair pixel of the smaller hair is a hair pixel of the painting (the nearest one, as every picture
+    here is made smaller). His face, his neck and his clothes stay exactly as painted and lie over the hair, so
+    only the hair's outer edge moves in. Where the approved head has his skull the painting's hair stays, so no
+    part of his head is ever left bare. The hair's old outline goes and the same one-pixel outline is put round
+    its new edge."""
+    parts, light = parts.copy(), light.copy()
+    hair, skull = parts == _HAIR, _base_mask(view)
+    rows = np.arange(parts.shape[0])[:, None]
+    ys, xs = np.nonzero(skull & (rows <= NECK[view] - 6))                  # his skull above the jaw: where an afro sits
+    cy, cx = ys.mean(), xs.mean()
+    ring = (parts == _OUTLINE) & _near(hair) & ~_near(parts == _SKIN)      # the outline round the hair, not the face's
+    yy, xx = np.mgrid[0:parts.shape[0], 0:parts.shape[1]]
+    sy, sx = np.rint(cy + (yy - cy) / k).astype(int), np.rint(cx + (xx - cx) / k).astype(int)
+    inside = (sy >= 0) & (sy < parts.shape[0]) & (sx >= 0) & (sx < parts.shape[1])
+    sy, sx = np.clip(sy, 0, parts.shape[0] - 1), np.clip(sx, 0, parts.shape[1] - 1)
+    small = inside & hair[sy, sx] & (hair | ring | (parts == 0))           # never over his face or his clothes
+    stays = hair & skull & ~small
+    gone = (hair | ring) & ~small & ~stays
+    new_light = light[sy, sx]
+    parts[gone] = 0; light[gone] = 0
+    parts[small] = _HAIR; light[small] = new_light[small]
+    edge = (parts == 0) & _near(parts == _HAIR, diagonal=False)
+    parts[edge] = _OUTLINE; light[edge] = REF()['outline']
+    return parts, light
+
+
+def _head(view, path, style=None):
     parts, light = (a.copy() for a in full(path))
+    if style in HAIR_SCALE: parts, light = _smaller_hair(parts, light, view, HAIR_SCALE[style])
     hair = parts == _HAIR
     for ys, xs in _blobs(parts == _SKIN):                                      # a light streak in hair that hangs below the collar reads as
         if ys.min() >= NECK[view] + 3 and _near(hair)[ys, xs].any():          # skin by its colour; a patch of it wholly below the collar
@@ -434,7 +471,7 @@ def _head(view, path):
 @functools.lru_cache(maxsize=None)
 def heads():
     """{style: {view: piece}}: each hair style as a whole clean-shaven head."""
-    return {style: {view: _head(view, path) for view, path in views.items()} for style, views in HEAD_FILES.items()}
+    return {style: {view: _head(view, path, style) for view, path in views.items()} for style, views in HEAD_FILES.items()}
 
 
 def _overlay(what, view, with_path, without_path):
@@ -528,7 +565,7 @@ def _tones(name, colour=None, skin=None):
     """The 32 colours of one part in one of the creator's colours, as repaint() paints them."""
     ratio = TONE_0 + TONE_STEP * np.arange(TONES)
     if name == 'grey': rgb = np.repeat((np.arange(TONES) / (TONES - 1) * 255)[:, None], 3, axis=1) * np.array([0.985, 0.985, 1.0])
-    elif name == 'outline': rgb = _ramp(_hex(OUTLINE), np.clip(ratio, 0.6, 1.6))
+    elif name == 'outline': rgb = _outline(ratio)
     elif name == 'hair':
         base, under = _hex(colour), _hex(skin)
         thin = np.clip((ratio - 1) / 0.9, 0, 0.75)[:, None]

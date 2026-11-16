@@ -1,11 +1,11 @@
 """The Honeycomb mark for the hero's hoodie, reduced from the official file — never drawn or generated.
 
 assets/hc_logomark.png is the four hexagons and a small dark 'h'. This takes the hexagons down to a SIZE×SIZE
-pixel table in the four brand colours and writes it twice, so the reference generator (tools/hero_gen.py) and
-the game (js/engine/hero.js, hero-side.js) agree exactly:
+pixel table in the four brand colours and writes it twice:
 
-    tools/hc_mark.json      read by hero_gen.py
-    js/engine/hc-mark.js    imported by hero-parts.js
+    tools/hc_mark.json      the table for Python tools (the code-drawn hero's generator read it until that
+                            generator was retired with the painted hero, 2026-11-16)
+    js/engine/hc-mark.js    the game's copy: js/engine/hero.js puts it on the painted hero's chest
 
 Run `python3 tools/hc_mark.py` after the official file changes; tools/tests/test_hc_mark.py checks both
 outputs against a fresh reduction.

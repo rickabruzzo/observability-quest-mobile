@@ -6,6 +6,7 @@
 // mark on his chest, from js/engine/hc-mark.js. Drawn smaller, a figure keeps whole rows and columns of itself.
 
 import { HC_MARK, HC_MARK_PIXELS } from './hc-mark.js';
+import { pngCodes } from './png-codes.js';
 import { DEFAULT_HERO } from './hero-parts.js';
 
 export const HERO_W = 56;                   // the canvas the rooms scale him by (heroScaleAt): his nominal box
@@ -28,6 +29,24 @@ export function setHeroSheet(manifest, codes, w, h) {
 export const heroReady = () => !!sheet;
 export const heroManifest = () => sheet?.m ?? null;
 
+/** The sheet's codes from the PNG's own bytes: exact in every browser (js/engine/png-codes.js). null when that cannot be done here. */
+async function fromFile(src) {
+  try { const res = await fetch(src); return res.ok ? await pngCodes(await res.arrayBuffer()) : null; } catch { return null; }
+}
+/**
+ * The sheet's codes read back from a canvas (the red channel; the PNG is a grey palette, so the code survives). Only for a
+ * browser without DecompressionStream (before Safari 16.4): a newer browser may alter what a canvas gives back, to guard
+ * against fingerprinting, and a code that is off by one is a pixel of the wrong tone or part.
+ */
+async function fromCanvas(src) {
+  const img = new Image();
+  await new Promise((ok, fail) => { img.onload = ok; img.onerror = () => fail(new Error('hero sheet failed')); img.src = src; });
+  const c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight;
+  const g = c.getContext('2d'); g.drawImage(img, 0, 0);
+  const d = g.getImageData(0, 0, c.width, c.height).data, codes = new Uint8Array(c.width * c.height);
+  for (let i = 0; i < codes.length; i++) codes[i] = d[i * 4];
+  return { w: c.width, h: c.height, codes };
+}
 /** Loads the manifest and the sheet in a browser, once. Never throws: resolves false and the game draws no hero. */
 export function loadHero(url = HERO_URL) {
   if (sheet) return Promise.resolve(true);
@@ -36,14 +55,9 @@ export function loadHero(url = HERO_URL) {
     try {
       const res = await fetch(url);
       if (!res.ok) throw new Error(`${url} ${res.status}`);
-      const m = await res.json();
-      const img = new Image();
-      await new Promise((ok, fail) => { img.onload = ok; img.onerror = () => fail(new Error('hero sheet failed')); img.src = url.slice(0, url.lastIndexOf('/') + 1) + m.image; });
-      const c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight;
-      const g = c.getContext('2d'); g.drawImage(img, 0, 0);
-      const d = g.getImageData(0, 0, c.width, c.height).data, codes = new Uint8Array(c.width * c.height);
-      for (let i = 0; i < codes.length; i++) codes[i] = d[i * 4];                   // the red channel is the code
-      setHeroSheet(m, codes, c.width, c.height);
+      const m = await res.json(), src = url.slice(0, url.lastIndexOf('/') + 1) + m.image;
+      const read = (await fromFile(src)) ?? (await fromCanvas(src));
+      setHeroSheet(m, read.codes, read.w, read.h);
       return true;
     } catch { return false; } finally { loading = null; }
   })();

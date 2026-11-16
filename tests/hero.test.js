@@ -10,11 +10,12 @@ import { DEFAULT_HERO, OPTIONS } from '../js/engine/hero-parts.js';
 const DIR = 'tests/fixtures/hero-painted/';
 export const MANIFEST = JSON.parse(readFileSync('assets/hero/hero.json', 'utf8'));
 export const CODES = new Uint8Array(readFileSync(DIR + 'sheet.codes'));
-/** Installs the sheet from the fixtures (Node has no PNG decoder); the manifest gives the sheet's size by its pieces. */
+/** The sheet's size, from the PNG's own header (bytes 16-23): the build packs the pieces, so the size is the build's to choose. */
+const PNG = readFileSync('assets/hero/' + MANIFEST.image);
+export const SHEET = { w: PNG.readUInt32BE(16), h: PNG.readUInt32BE(20) };
+/** Installs the sheet from the fixtures: sheet.codes is the PNG's codes, row by row (tests/png-codes.test.js holds the two equal). */
 export function installSheet() {
-  const w = Math.max(...Object.values(MANIFEST.bodies).map((b) => b.x + b.w), ...Object.values(MANIFEST.heads).flatMap((h) => Object.values(h).map((e) => e.x + e.w)));
-  const W = CODES.length % 506 === 0 ? 506 : w;              // the built sheet is 506 wide; its codes are row-major
-  setHeroSheet(MANIFEST, CODES, W, CODES.length / W);
+  setHeroSheet(MANIFEST, CODES, SHEET.w, SHEET.h);
 }
 installSheet();
 const names = readdirSync(DIR).filter((f) => f.endsWith('.json')).map((f) => f.slice(0, -5));
@@ -22,7 +23,7 @@ const names = readdirSync(DIR).filter((f) => f.endsWith('.json')).map((f) => f.s
 const cfgOf = (f) => ({ ...f.look, style: f.style, beard: f.beard ? 'short' : 'none', glasses: f.glasses ? 'glasses' : 'none' });
 
 test('the sheet is installed from the fixtures and its codes are the manifest\'s size', () => {
-  assert.ok(heroReady()); assert.equal(CODES.length, 506 * 253);
+  assert.ok(heroReady()); assert.equal(CODES.length, SHEET.w * SHEET.h);
   assert.deepEqual(MANIFEST.parts, ['hoodie', 'jeans', 'skin', 'hair', 'grey', 'outline']); assert.equal(MANIFEST.erase, 255);
 });
 test('fixtures exist', () => assert.ok(names.length >= 10, `${names.length}`));
@@ -46,7 +47,7 @@ test('the figure\'s last row is the body\'s last row: soles, or the cut at the w
     assert.equal(low, fig.h - 1, `${body}: the last row is painted`);
   }
   assert.equal(composeFigure(DEFAULT_HERO, 'front').h, 136);
-  assert.equal(composeFigure({ ...DEFAULT_HERO, style: 'fro' }, 'front').h, 142, 'the afro stands six rows above short hair');
+  assert.equal(composeFigure({ ...DEFAULT_HERO, style: 'fro' }, 'front').h, 139, 'the afro stands three rows above short hair (it stood six until it was cut smaller, 2026-11-16)');
 });
 test('the mark: on front, toward_l and toward_r in the hoodie, its 32 pixels at (ax + dx, ay + dy) in the official colours; nowhere else, not in pyjamas', () => {
   const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));

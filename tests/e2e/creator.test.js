@@ -36,7 +36,7 @@ test('sheet: 4 FACE rows (no Body row), 4 KIT rows, every option 44px+, the pain
     const c = document.querySelector('#hero-view'); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
     let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i]) n++; return [n, c.width, c.height];
   });
-  assert.deepEqual(painted.slice(1), [56, 148], 'the preview canvas is 56 wide and 148 tall (the afro stands six rows above short hair)');
+  assert.deepEqual(painted.slice(1), [56, 148], 'the preview canvas is 56 wide and 148 tall (room above short hair for the tallest style)');
   assert.ok(painted[0] > 2400, `painted ${painted[0]}`);
   await ctx.close();
 });
