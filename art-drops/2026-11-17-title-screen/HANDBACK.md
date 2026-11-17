@@ -124,9 +124,21 @@ letters only (with the I), hard alpha. It is scaled ×3 NEAREST, and the glow is
 
 | File | Size | What |
 |---|---|---|
-| `T_wordmark.png` | 582×204 | The letters at ×3 (534×156), on transparency, with a 24-px margin on every side so the glow layers line up 1:1. Hard alpha, no glow. |
-| `T_wordmark_glow.png` | 582×204 | A smooth blue glow (`#4678FF`): the letter mask grown 3 px, blurred, alpha up to 200 of 255. Real partial alpha, so the game can fade or pulse it with `globalAlpha`. |
-| `T_wordmark_glow_stepped.png` | 582×204 | The same glow in three hard steps (alpha 55, 110 and 170), dithered at each step's edge. More 1990s. |
+| `T_wordmark.png` | 582×204 | The letters at ×3 (534×156), on transparency, with a 24-px margin on every side so the glow lines up 1:1. Hard alpha, no glow. |
+| `T_wordmark_glow.png` | 582×204 | **The glow Rick chose:** stepped, not smooth. |
+
+**Rick, 09:32:** "the banding fits better. it can ever have some needless aliasing checker pattern at the edge to
+fit the genre better."
+
+**How the glow is built:**
+- **It is made on the wordmark's own 1× grid and scaled ×3 NEAREST**, so every glow pixel and every checker
+  square is the same 3-px block as the letters' pixels.
+- **Colour and steps:** blue `#4678FF`, in three hard alpha steps: 170, 110 and 55.
+- **Checker edges:** each step's outer edge is a one-pixel checkerboard band, and the outermost edge is a
+  checker fringe into the dark sky.
+- **No partial alpha inside a step.** The steps themselves are partial alpha, so the game can still pulse the
+  whole layer with `globalAlpha`.
+- **The smooth glow is removed.**
 
 **How to draw it:**
 1. Draw one glow layer.
