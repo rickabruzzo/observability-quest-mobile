@@ -110,3 +110,38 @@ Edit this picture. Change only one thing: the small dark green pager lying on th
 
 No game screenshot and no other game's art went to the generator. There is no lettering, no logo, no hexagons and
 no person in the picture.
+
+## Added 2026-11-17: the wordmark as layers
+
+**Rick, on the first mock:** "That rule under the title looks like a glitch and sits way to close. We might need
+to rerender the title so there is more flexibility with the glow and transparency."
+
+**The rule was Art Claude's mock, not the game.** The mock had cut the letters out of `assets/title_screen.png`
+and brought some of that picture's starfield dither and divider bar along with them.
+
+**The new wordmark is not generated.** It is the game's own clean wordmark, `assets/intro/wall_logo.png`: 178×52,
+letters only (with the I), hard alpha. It is scaled ×3 NEAREST, and the glow is a separate layer.
+
+| File | Size | What |
+|---|---|---|
+| `T_wordmark.png` | 582×204 | The letters at ×3 (534×156), on transparency, with a 24-px margin on every side so the glow layers line up 1:1. Hard alpha, no glow. |
+| `T_wordmark_glow.png` | 582×204 | A smooth blue glow (`#4678FF`): the letter mask grown 3 px, blurred, alpha up to 200 of 255. Real partial alpha, so the game can fade or pulse it with `globalAlpha`. |
+| `T_wordmark_glow_stepped.png` | 582×204 | The same glow in three hard steps (alpha 55, 110 and 170), dithered at each step's edge. More 1990s. |
+
+**How to draw it:**
+1. Draw one glow layer.
+2. Draw the letters on top, at the same position.
+3. For a pulse, vary the glow's alpha, about 0.7–1.0.
+4. The glint frames run across the letters.
+
+**Placement as mocked, at 640×400** (halve for 320×200):
+- **The layer's top-left:** (−17, 10). The letters run x 7–541, y 34–190, centred on the sky left of the window
+  frame (x 0–548).
+- **The glow:** runs off the left edge into the dark wall, which is fine.
+- **The window frame (x 550–575):** the letters stop short of it.
+- **The subtitle:** at 3× the default 5×7-ish type, about 15 px tall at 320. It sits 24 px below the letters, at
+  y 214–244 at 640 (107–122 at 320). Its lower half is over the tops of the dark towers, which still reads.
+
+**Scale:** ×3 at 640 is ×1.5 against the 320 canvas. If the game draws the title on the 320-px canvas, scale the
+178×52 wordmark itself with NEAREST to the size wanted, and use these files as the reference look. Either way,
+don't scale the letters by a non-whole factor in a bilinear way.
