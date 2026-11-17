@@ -12,7 +12,7 @@ export const SHOTS = [
   { id: 'asleep', ms: 3000, image: 'C_face_asleep', alt: 'C_eye_crack', altAt: 1800 },
   { id: 'arm', ms: 1500, image: 'B_arm' },
   { id: 'lit', ms: 2000, image: 'C_awake', alt: 'C_awake_lit', flash: 'alt' },
-  { id: 'message', ms: 5000, image: 'B_nightstand', lcd: 'marquee', text: CTO },
+  { id: 'message', ms: 6250, image: 'B_nightstand', lcd: 'marquee', text: CTO },                // the scroll: 5 s read as a bit too fast; four fifths of that speed (Rick, 2026-11-17)
   { id: 'misery', ms: 2000, image: 'C_misery' },
   { id: 'wide', ms: 1400, image: 'A_room_dark', title: 'dim' },                       // back to the wide dark room, steady in the pager's glow…
   { id: 'bedroom', ms: 15000, image: 'D_bedroom_vga', hero: true, clickAt: 0, heroScale: 0.85, standY: 196, sitY: 143, sitX: 49 },   // …click: the light is on, and this is the room.

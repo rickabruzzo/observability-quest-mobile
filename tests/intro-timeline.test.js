@@ -1,12 +1,24 @@
 import test from 'node:test'; import assert from 'node:assert/strict';
 import { SHOTS, frameAt, nextShot, TOTAL_MS, HERO_STEPS, heroAt, FLASH_MS } from '../js/intro/timeline.js';
+import { readFileSync } from 'node:fs';
+import { marqueeScale } from '../js/intro/pager.js';
+import { textWidth } from '../js/intro/font5x7.js';
 
 test('shots are the storyboard, in order, with its timings', () => {
   assert.deepEqual(SHOTS.map((s) => s.id), ['dark', 'help', 'asleep', 'arm', 'lit', 'message', 'misery', 'wide', 'bedroom']);
-  assert.deepEqual(SHOTS.map((s) => s.ms), [3000, 2500, 3000, 1500, 2000, 5000, 2000, 1400, 15000]);
-  assert.equal(TOTAL_MS, 35400);
+  assert.deepEqual(SHOTS.map((s) => s.ms), [3000, 2500, 3000, 1500, 2000, 6250, 2000, 1400, 15000]);
+  assert.equal(TOTAL_MS, 36650);
   assert.equal(SHOTS[1].text, 'Help!');
   assert.equal(SHOTS[5].text, 'Backend is down. Front end is down. Database is down. Get in here! -CTO');
+});
+test('the CTO\'s message scrolls at four fifths of the speed it had: about twelve characters a second', () => {
+  // Rick, 2026-11-17, watching the intro: "the text scroll is a bit too fast, slow it down 20%". It crossed the pager in 5 s
+  // (some fifteen characters a second); four fifths of that speed is 5 s ÷ 0.8.
+  const lcd = JSON.parse(readFileSync('assets/intro/intro.json', 'utf8')).lcd, scale = marqueeScale(lcd), shot = SHOTS[5];
+  const travel = lcd.w + textWidth(shot.text, scale);          // from just off the screen's right edge to just off its left
+  const charsPerSecond = travel / (shot.ms / 1000) / (6 * scale);   // a character is five dots and a gap
+  assert.equal(shot.ms, 5000 / 0.8);
+  assert.ok(charsPerSecond > 12 && charsPerSecond < 12.5, String(charsPerSecond));
 });
 test('dark room flashes to black', () => { assert.equal(frameAt(0, 0).black, false); assert.equal(frameAt(0, 300).black, true); assert.equal(frameAt(0, 0).image, 'A_room_dark'); });
 test('pager LCD flashes Help! then scrolls the message', () => {
