@@ -567,10 +567,19 @@ def overlays():
     return {what: {view: _overlay(what, view, *pair) for view, pair in views.items()} for what, views in OVERLAY_FILES.items()}
 
 
+# Yesterday's outfit, lying where it was dropped (art brief 08; Rick, 2026-11-17: "spread on the ground like it was what
+# the character took off before bed"). It replaces brief 06's folded stack, which nobody had asked for. The Honeycomb
+# mark lies face up on the hoodie: Art Claude's hand-back gives the chest's point on the painting, and the mark's 9x9
+# is centred on it.
+CLOTHES = 'art-drops/2026-11-17-clothes-on-the-floor/B_clothes.png'
+CLOTHES_CHEST = (60, 27)
+
+
 @functools.lru_cache(maxsize=None)
 def props():
-    parts, light = full(f'{SET}/B_clothes.png')
-    return {'clothes': dict(parts=parts, light=light, ax=parts.shape[1] // 2, ay=parts.shape[0])}
+    parts, light = full(CLOTHES)
+    mark = (CLOTHES_CHEST[0] // 2 - 4, CLOTHES_CHEST[1] // 2 - 4)
+    return {'clothes': dict(parts=parts, light=light, ax=parts.shape[1] // 2, ay=parts.shape[0], mark=mark)}
 
 
 ERASE = 255          # in the coded form: an overlay's pixel that clears what is under it
@@ -748,7 +757,7 @@ def build_set(out=None):
         'heads': {s: {v: entry(('heads', s, v), H[s][v]) for v in H[s]} for s in H},
         'beard': {v: entry(('beard', v), O['beard'][v]) for v in O['beard']},
         'glasses': {v: entry(('glasses', v), O['glasses'][v]) for v in O['glasses']},
-        'props': {n: entry(('props', n), Pr[n], anchor=False) for n in Pr},
+        'props': {n: {**entry(('props', n), Pr[n], anchor=False), 'mark': list(Pr[n]['mark'])} for n in Pr},
         'walk': {name: {'frames': [{'body': b, 'dy': dy} for b, dy in frames]} for name, frames in WALKS.items()},
         'mark': {'dx': MARK[0], 'dy': MARK[1], 'bodies': list(MARKED)},
         'eyes': _eyes(),

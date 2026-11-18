@@ -112,8 +112,16 @@ test('drawHero paints whole pixels in runs inside its box; the preview and the t
   const fig = composeFigure(DEFAULT_HERO, 'front'), sil = silhouette(fig, [255, 255, 255]);
   for (let i = 0; i < fig.data.length; i += 4) assert.ok(fig.data[i + 3] ? sil.data[i] === 255 && sil.data[i + 3] === 255 : sil.data[i + 3] === 0);
   const clothes = composeProp('clothes', DEFAULT_HERO);
-  assert.deepEqual([clothes.w, clothes.h, clothes.ax, clothes.ay], [35, 23, 17, 23]);
-  assert.notDeepEqual(clothes.data, composeProp('clothes', { ...DEFAULT_HERO, hoodie: 'honey' }).data, 'the heap takes his hoodie colour');
+  assert.deepEqual([clothes.w, clothes.h, clothes.ax, clothes.ay], [100, 38, 50, 38]);       // art brief 08: yesterday's outfit, dropped and spread
+  assert.notDeepEqual(clothes.data, composeProp('clothes', { ...DEFAULT_HERO, hoodie: 'honey' }).data, 'the clothes take his hoodie colour');
+  // the Honeycomb mark lies face up on the dropped hoodie's chest, where the manifest says, in the brand's own colours
+  const [mx0, my0] = MANIFEST.props.clothes.mark, rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  for (const [mx, my, colour] of HC_MARK_PIXELS) {
+    const o = ((my0 + my) * clothes.w + mx0 + mx) * 4;
+    assert.deepEqual([...clothes.data.slice(o, o + 4)], [...rgb(HC_MARK[colour]), 255], `mark pixel ${mx},${my}`);
+  }
+  const bare = composeProp('clothes', DEFAULT_HERO, { mark: false }), at = ((my0 + 4) * clothes.w + mx0 + 3) * 4;
+  assert.notDeepEqual([...bare.data.slice(at, at + 3)], [...clothes.data.slice(at, at + 3)], 'without the mark it is plain hoodie');
 });
 test('without the sheet nothing is drawn and nothing throws', () => {
   setHeroSheet(null);

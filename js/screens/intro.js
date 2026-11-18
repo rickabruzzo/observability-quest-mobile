@@ -58,14 +58,14 @@ function drawFlash(g, cfg, outfit, feetX, feetY, scale) {
   if (p) blit(g, silhouette(p.fig, [255, 255, 255]), p.x, p.y, p.scale, false);
 }
 
-/** Day clothes on the floor, in the hero's own colours: Art Claude's heap (props.clothes), at the hero's scale, its bottom
- * edge on `y` and its centre where the old drawn heap's was: (x, y) was that heap's left and floor row, `k` its scale
- * (2 × the hero's). Draws nothing without the sheet. */
-export function drawClothes(g, cfg, x, y, k = 1) {
-  const heap = composeProp('clothes', cfg);
-  if (!heap) return;
-  const hs = k / 2, centre = x + Math.round(25.5 * k), w = Math.round(heap.w * hs), h = Math.round(heap.h * hs);
-  blit(g, heap, centre - Math.round(w / 2), y - h, hs, false);
+/** Yesterday's clothes on the floor, in the hero's own colours and with the mark on the hoodie: Art Claude's painting
+ * (props.clothes, art brief 08) at the hero's scale `hs`, the middle of its bottom edge at (x, y). Draws nothing without
+ * the sheet. */
+export function drawClothes(g, cfg, x, y, hs = 1) {
+  const clothes = composeProp('clothes', cfg);
+  if (!clothes) return;
+  const w = Math.round(clothes.w * hs), h = Math.round(clothes.h * hs);
+  blit(g, clothes, x - Math.round(w / 2), y - h, hs, false);
 }
 
 export function createIntroScreen(game) {
@@ -156,7 +156,7 @@ export function createIntroScreen(game) {
     if (bareRoom && h.holding) { g.drawImage(bareRoom, 0, 0, 320, 200); plate = 'D_laptop_gone'; }
     if (e?.doorOpen) { openDoor(g, m); plate = assets.images.get('D_door_open') ? 'D_door_open' : plate; }
     showTitle(ctx, m, h.titled);
-    if (pile) drawClothes(g, cfg, m.clothes.x, m.clothes.y, 2 * hs);
+    if (pile) drawClothes(g, cfg, m.clothes.x, m.clothes.y, hs);
     heroState = { pose: h.pose, view: 'front', outfit: h.outfit, x: standX, visible: h.visible, pile, holding: h.holding, doorOpen: !!e?.doorOpen, plate, box: box(placeHero(cfg, 'idle', feet(standX), floorY, hs, { outfit: h.outfit })) };
     sound('title', h.titled); sound('rustle', h.stirring); sound('step', h.standing); sound('pickup', h.outfit === 'hoodie');
     sound('take', h.holding); sound('door', !!e?.doorOpen); sound('shut', !!e && !e.visible && !e.doorOpen);
