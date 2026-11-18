@@ -130,7 +130,7 @@ test('the bedroom shot shows the title and walks the hero out', async () => {
   await page.waitForFunction(() => window.__oq.intro.hero?.visible && window.__oq.intro.hero.pose === 'situp');
   // day clothes lie on the floor in the hero's own colours until the change, then they are on the hero
   const m = await page.evaluate(() => window.__oq.intro.manifest);
-  const pileBox = { x: m.clothes.x + 30, y: m.clothes.y - 18, w: 24, h: 16 };          // the painted heap (35×23 at 0.85) sits centred 43 px right of the manifest's x, its bottom on its y
+  const pileBox = { x: m.clothes.x - 34, y: m.clothes.y - 26, w: 24, h: 16 };          // inside the dropped hoodie: the clothes (100×38 at 0.85) lie with the middle of their bottom edge on the manifest's point
   const grab = (r) => page.evaluate((r) => [...document.getElementById('scene').getContext('2d').getImageData(r.x, r.y, r.w, r.h).data].join(), r);
   assert.equal((await intro(page)).hero.pile, true);
   const withPile = await grab(pileBox);

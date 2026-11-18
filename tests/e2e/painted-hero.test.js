@@ -270,7 +270,7 @@ test('the intro: he sits up in pale blue pyjamas with nothing of him below the b
   const stand = await page.evaluate(() => ({ ...window.__oq.intro.hero }));
   assert.equal(stand.pile, true);
   const m = await page.evaluate(() => window.__oq.intro.manifest);
-  const heap = await page.evaluate(([x, y]) => { const d = document.querySelector('#scene').getContext('2d').getImageData(x + 20, y - 24, 60, 24).data; const cols = new Set(); for (let i = 0; i < d.length; i += 4) cols.add(`${d[i]},${d[i + 1]},${d[i + 2]}`); return [...cols]; }, [m.clothes.x, m.clothes.y]);
+  const heap = await page.evaluate(([x, y]) => { const d = document.querySelector('#scene').getContext('2d').getImageData(x - 43, y - 32, 86, 32).data; const cols = new Set(); for (let i = 0; i < d.length; i += 4) cols.add(`${d[i]},${d[i + 1]},${d[i + 2]}`); return [...cols]; }, [m.clothes.x, m.clothes.y]);
   assert.ok(heap.includes('43,54,71') || heap.some((c) => { const [r, g, b] = c.split(',').map(Number); return b > r + 10 && b > 50 && b < 120; }), `the heap is in his hoodie's ink and his jeans' indigo (${heap.length} colours)`);
   await page.waitForFunction(() => window.__oq.intro.hero?.outfit === 'hoodie' && window.__oq.intro.hero.pose === 'idle', null, { timeout: 6000 });
   assert.equal((await page.evaluate(() => window.__oq.intro.hero.pile)), false);

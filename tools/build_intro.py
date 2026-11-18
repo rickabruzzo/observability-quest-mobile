@@ -24,7 +24,7 @@ COLOURS = 32                        # the EGA-style shots
 COLOURS_FOR = {'D_bedroom_vga': 192}   # the VGA bedroom keeps its full palette: at 32 a green plant or a yellow lampshade greys out
 CHANGE_COLOURS_FOR = {'D_bedroom_vga': 32}   # 192 + two chained edits of 32 still fit one 256-colour file
 DEFAULTS = {'wall': {'x': 24, 'y': 14, 'w': 232, 'h': 44}, 'bed': {'x': 60, 'y': 96}, 'stand': {'x': 90}, 'door': {'x': 286}, 'floorY': 176,
-            'clothes': {'x': 126, 'y': 184}, 'item': {'x': 200, 'y': 150}, 'doorway': {'x': 272, 'y': 60, 'w': 56, 'h': 116}}
+            'clothes': {'x': 190, 'y': 176}, 'item': {'x': 200, 'y': 150}, 'doorway': {'x': 272, 'y': 60, 'w': 56, 'h': 116}}
 LCD_MIN = (40, 10)                  # anything smaller is a stray green speck, not the pager's LCD
 CHANGE_COLOURS = 16
 LCD_FALLBACK = (92, 62, 136, 36)

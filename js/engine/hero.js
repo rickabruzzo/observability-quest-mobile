@@ -141,12 +141,23 @@ export function composeFigure(cfg, body, outfit = 'hoodie', { mark = true } = {}
   figCache.set(k, fig); if (figCache.size > 96) figCache.delete(figCache.keys().next().value);
   return fig;
 }
-/** A prop from the sheet in the hero's colours (the heap of day clothes): { w, h, ax, ay, data, eyes: [] }, anchored at its bottom centre. */
-export function composeProp(name, cfg) {
+/**
+ * A prop from the sheet in the hero's colours (yesterday's clothes on the bedroom floor): { w, h, ax, ay, data, eyes: [] },
+ * anchored at its bottom centre. Where the manifest gives the prop a `mark` (the top left of the mark's 9×9 on the
+ * dropped hoodie's chest) the Honeycomb mark is put there, as on the figure; `mark: false` leaves it off.
+ */
+export function composeProp(name, cfg, { mark = true } = {}) {
   const e = sheet?.m.props[name];
   if (!e) return null;
   const p = cut({ ...e, ax: Math.floor(e.w / 2), ay: e.h }), L = lut(cfg, 'hoodie'), data = new Uint8ClampedArray(p.w * p.h * 4);
   for (let i = 0; i < p.codes.length; i++) { const c = (p.codes[i] === ERASE ? 0 : p.codes[i]) * 4, o = i * 4; data[o] = L[c]; data[o + 1] = L[c + 1]; data[o + 2] = L[c + 2]; data[o + 3] = L[c + 3]; }
+  if (mark && e.mark) {
+    for (const [mx, my, colour] of HC_MARK_PIXELS) {
+      const x = e.mark[0] + mx, y = e.mark[1] + my;
+      if (x < 0 || y < 0 || x >= p.w || y >= p.h) continue;
+      const o = (y * p.w + x) * 4, c = HC_RGB[colour]; data[o] = c[0]; data[o + 1] = c[1]; data[o + 2] = c[2]; data[o + 3] = 255;
+    }
+  }
   return { w: p.w, h: p.h, ax: p.ax, ay: p.ay, view: 'front', body: name, data, eyes: [] };
 }
 /** The figure in one flat colour (the flash into day clothes). */

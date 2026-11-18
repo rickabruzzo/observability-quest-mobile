@@ -235,10 +235,29 @@ def test_the_beard_and_the_glasses_are_small_and_sit_on_the_face():
             assert o['parts'].shape[0] <= head['parts'].shape[0] + 4 and o['parts'].shape[1] <= head['parts'].shape[1] + 4
 
 
-def test_the_clothes_heap_is_a_prop_in_the_same_parts():
-    heap = hp.props()['clothes']
-    assert heap['parts'].shape == (23, 35)
-    assert (heap['parts'] == P('hoodie')).sum() > 60 and (heap['parts'] == P('jeans')).sum() > 40 and (heap['parts'] == P('hair')).sum() == 0
+def test_the_clothes_are_yesterdays_outfit_dropped_on_the_floor_not_a_folded_stack():
+    # Rick, 2026-11-17: "before it was spread on the ground like it was what the character took off before bed. I want it
+    # to appear as if they are in a hurry and threw on yesterdays outfit." Art brief 08's painting (200x75) at half size.
+    heap = hp.props()['clothes']; parts = heap['parts']
+    assert parts.shape == (38, 100)
+    n = lambda name: int((parts == P(name)).sum())
+    assert n('hoodie') > 500 and n('jeans') > 400 and n('grey') > 60
+    assert n('hair') == 0 and n('skin') == 0                                   # nobody is in them
+    cols = lambda name: np.where((parts == P(name)).any(axis=0))[0]
+    hoodie, jeans, shoes = cols('hoodie'), cols('jeans'), cols('grey')
+    # spread along the floor, not stacked: the hoodie, then the jeans, then the shoes kicked off beyond them
+    assert hoodie.mean() < jeans.mean() < shoes.mean() and shoes.min() > hoodie.max()
+    his = np.where((parts > 0).any(axis=0))[0]
+    assert his.max() - his.min() + 1 >= 2.4 * parts.shape[0]                     # low and wide
+
+
+def test_the_mark_goes_on_the_dropped_hoodies_chest():
+    # the heap the game drew before the painted hero had the mark face up on the hoodie; the painted heap lost it. Art
+    # Claude's hand-back gives the chest's point on the painting, (60, 27); the mark is 9x9 and is centred there.
+    heap = hp.props()['clothes']; x, y = heap['mark']
+    assert (x + 4, y + 4) == (30, 13)
+    under = heap['parts'][y:y + 9, x:x + 9]
+    assert under.shape == (9, 9) and (under == P('hoodie')).all(), 'every pixel of the mark lies on the hoodie'
 
 
 # ---- the form the game reads: one sheet of codes, ramps to look colours up in ----
@@ -375,6 +394,7 @@ def test_the_built_sheet_and_manifest_are_what_the_game_needs():
     for k in ('beard', 'glasses'):
         for e in m[k].values(): box(e)
     box(m['props']['clothes'])
+    assert m['props']['clothes']['mark'] == list(hp.props()['clothes']['mark'])
     for i, p in enumerate(boxes):
         for q in boxes[i + 1:]:
             assert p[2] <= q[0] or q[2] <= p[0] or p[3] <= q[1] or q[3] <= p[1], (p, q)
