@@ -9,7 +9,7 @@ composition says otherwise), then resize.
 
 ## Title
 - [x] `title_screen.png` — 640×428 — exported 2026-11-09 from 1536×1024 Firefly original → `scratch/exports/` (the v0.1 title; its wordmark is still the game's)
-- [ ] `T_title.png` — 640×400 — the new title painting, with its one-change edits (`T_title_light.png` or `T_title_flash.png`, `T_title_stars.png`) and an optional glint (`T_glint_1..4.png`, 22×22) — art brief 07, 2026-11-16
+- [x] `T_title.png` — 640×400 — the new title painting (picture A, "Before the page"), with `T_title_light.png`, `T_title_stars.png`, the wordmark as two layers (`T_wordmark.png`, `T_wordmark_glow.png`) and a glint not yet asked for (`T_glint_1..4.png`) — art brief 07; delivered 2026-11-17 in `art-drops/2026-11-17-title-screen/`; cut to game size in `assets/title/` by `tools/build_title.py`
 
 ## Scenes
 - [x] `s1_llm.png` — 640×428 — Intercom / LLM server room — exported 2026-11-09 from 1536×1024 Firefly original → `scratch/exports/`

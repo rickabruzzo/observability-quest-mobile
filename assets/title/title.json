@@ -1,0 +1,130 @@
+{
+ "images": {
+  "plate": "T_title.png",
+  "pager": "T_pager_lit.png",
+  "wordmark": "T_wordmark.png",
+  "glow": "T_wordmark_glow.png"
+ },
+ "layer": {
+  "x": -8.5,
+  "y": 5,
+  "w": 291,
+  "h": 102,
+  "scale": 1.5
+ },
+ "letters": {
+  "x": 3.5,
+  "y": 17,
+  "w": 267,
+  "h": 78
+ },
+ "pager": {
+  "x": 213,
+  "y": 114,
+  "w": 104,
+  "h": 49
+ },
+ "screen": {
+  "x": 245,
+  "y": 128,
+  "w": 42,
+  "h": 18
+ },
+ "stars": [
+  {
+   "x": 221,
+   "y": 4,
+   "on": "#AEBCC9",
+   "cross": true,
+   "arm": "#4C5774"
+  },
+  {
+   "x": 132,
+   "y": 6,
+   "on": "#CBD8DE",
+   "cross": true,
+   "arm": "#CDD6DF"
+  },
+  {
+   "x": 16,
+   "y": 8,
+   "on": "#DDE6EB",
+   "cross": true,
+   "arm": "#4C546F"
+  },
+  {
+   "x": 264,
+   "y": 10,
+   "on": "#D5DFE1",
+   "cross": true,
+   "arm": "#4C546F"
+  },
+  {
+   "x": 205,
+   "y": 35,
+   "on": "#C3D6DD",
+   "cross": true,
+   "arm": "#4C5772"
+  },
+  {
+   "x": 159,
+   "y": 57,
+   "on": "#FFFFFF",
+   "cross": true,
+   "arm": "#DCDEEA"
+  },
+  {
+   "x": 54,
+   "y": 57,
+   "on": "#C9E3FC",
+   "cross": true,
+   "arm": "#4C587C"
+  },
+  {
+   "x": 23,
+   "y": 69,
+   "on": "#D2E3F5",
+   "cross": true,
+   "arm": "#4C597E"
+  },
+  {
+   "x": 206,
+   "y": 75,
+   "on": "#A5BBD3",
+   "cross": true,
+   "arm": "#5A6B8F"
+  },
+  {
+   "x": 104,
+   "y": 66,
+   "on": "#DBEDFB",
+   "cross": false
+  },
+  {
+   "x": 30,
+   "y": 16,
+   "on": "#9DAFB3",
+   "cross": false
+  },
+  {
+   "x": 241,
+   "y": 33,
+   "on": "#D0DBDD",
+   "cross": false
+  }
+ ],
+ "quiet": {
+  "x": 20,
+  "y": 5,
+  "w": 250,
+  "h": 73
+ },
+ "frame": {
+  "x": 275,
+  "w": 13
+ },
+ "print": {
+  "x": 8,
+  "w": 182
+ }
+}
