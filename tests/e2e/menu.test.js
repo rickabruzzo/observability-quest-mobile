@@ -123,7 +123,7 @@ test('?ch=1 and ?ch=5 skip the menu; ?ch=6 and junk show it', async () => {
   }
 });
 
-test('Claim: Charity\'s portrait, her header, the clean line, the count line, the not-yet line, then the menu; the menu\'s Claim does the same', async () => {
+test('Claim: Charity\'s portrait, her header, the clean line, the count line, then the coda (brief 17); the menu\'s Claim does the same', async () => {
   const { ctx, page } = await openGame(browser, server, { query: '?ch=1' });
   await playShortest(page);
   await page.click('#btn-claim');
@@ -145,13 +145,17 @@ test('Claim: Charity\'s portrait, her header, the clean line, the count line, th
   assert.equal(clipped, 'hidden', 'the layer clips her at the scene\'s edge');
   const a = await charitySays(page);
   assert.equal(a.head, SCRIPT['final.header']);
-  assert.deepEqual(a.lines, [SCRIPT['final.clean'], SCRIPT['final.count.one'], 'The prize desk opens in a later build. For now, back to the menu.']);
+  assert.deepEqual(a.lines, [SCRIPT['final.clean'], SCRIPT['final.count.one']], 'two lines: the "prize desk opens later" line is gone');
+  await page.waitForFunction(() => document.body.dataset.screen === 'CODA', null, { timeout: 3000 });
+  await page.click('#btn-skip');
+  await page.waitForFunction(() => document.body.dataset.screen === 'COMPLETE', null, { timeout: 3000 });
+  await page.waitForTimeout(400);                                   // past the double-tap guard, like a person
+  await page.click('#btn-again');
   await page.waitForFunction(() => document.body.dataset.screen === 'MENU');
   await page.waitForTimeout(400);
+  assert.equal(await page.locator('#btn-menu-claim').innerText(), SCRIPT['complete.show'], 'claimed: the button is "My prize"');
   await page.click('#btn-menu-claim');
-  const b = await charitySays(page);
-  assert.deepEqual(b.lines.slice(0, 2), [SCRIPT['final.clean'], SCRIPT['final.count.one']]);
-  assert.equal(await page.evaluate(() => document.body.dataset.screen), 'MENU');
-  assert.ok(await page.locator('.menu').isVisible());
+  await page.waitForFunction(() => document.body.dataset.screen === 'COMPLETE', null, { timeout: 3000 });
+  assert.equal(await page.locator('#charity').count(), 0, 'no Charity the second time');
   await ctx.close();
 });

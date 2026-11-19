@@ -687,7 +687,7 @@ export function createChapterScreen(game) {
     ctx.overlay.querySelector('#btn-claim').addEventListener('click', async () => {
       if (wins.open) return;
       if (ctx.overlay.querySelector('#charity')) return;
-      if (await playCharity(ctx, wins, say('claim.soon'), () => t === live())) game.go('MENU');
+      if (await playCharity(ctx, wins, null, () => t === live())) game.go('CODA');          // then the sunrise, then the staff screen (brief 17)
     });
   }
 

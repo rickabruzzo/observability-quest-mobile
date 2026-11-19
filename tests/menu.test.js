@@ -72,3 +72,17 @@ test('the claim button: once one scenario is solved and the prize is unclaimed',
 test('nothing exported is named for a score', () => {
   assert.deepEqual(Object.keys(menu).filter((k) => /score|^max_|per_scenario/i.test(k)), []);
 });
+
+// ---- the ending (Warp brief 17) ----
+import { CLAIMED_KEY, parseClaimed, serializeClaimed, menuButton } from '../js/menu.js';
+test('claimed: false at first, kept as oq.claimed beside oq.done', () => {
+  assert.equal(CLAIMED_KEY, 'oq.claimed');
+  assert.equal(parseClaimed(null), false); assert.equal(parseClaimed('0'), false); assert.equal(parseClaimed('junk'), false);
+  assert.equal(parseClaimed(serializeClaimed(true)), true); assert.equal(parseClaimed(serializeClaimed(false)), false);
+});
+test('the menu\'s button: Claim when something is solved and nothing claimed; "My prize" once claimed; nothing when nothing is solved', () => {
+  assert.equal(menuButton({}, false), null);
+  assert.equal(menuButton({ 1: 2 }, false), 'claim');
+  assert.equal(menuButton({ 1: 0 }, true), 'show');
+  assert.equal(menuButton({}, true), 'show', 'claimed with nothing solved this session (a cleared oq.done): the prize is still theirs');
+});
