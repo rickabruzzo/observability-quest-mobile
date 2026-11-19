@@ -13,12 +13,14 @@ bedroom window, and the intro's pager on its nightstand, not gone off yet. His o
 - On the wordmark's glow: "the banding fits better. it can ever have some needless aliasing checker pattern at
   the edge to fit the genre better."
 - On the subtitle: "Subhead needs to be larger if its gonna be legible on mobile."
+- On the sparkle (2026-11-18): "I asked for glints on the title."
 
 What those title screens do, and what this one does: one picture, almost still, the logo big across the quiet
-sky, and one or two small things alive. Here the stars twinkle, the logo's glow breathes, and the pager goes
-off when you press Start.
+sky, and one or two small things alive. Here the stars twinkle, the logo's glow breathes, glints run across
+its letters, and the pager goes off when you press Start.
 
-`title-screen-as-briefed.png` (sent to Rick with this brief) is the screen below, mocked on the real page.
+`title-screen-as-briefed.png` and `title-screen-with-glint.png` (sent to Rick) are the screen below, mocked on
+the real page; the second has one glint at its largest.
 
 ## A. What is built
 
@@ -31,6 +33,7 @@ the manifest is in the game's 320×200 pixels.
 | `T_pager_lit.png` | 104×49 | The pager gone off: opaque only where it differs from the picture (the lit screen, the glow on the nightstand), clear everywhere else. Draw it at `pager.x, pager.y`. |
 | `T_wordmark.png` | 194×68 | The letters OBSERVABILITY QUEST I, the game's own `wall_logo`, with a clear 8-pixel margin. |
 | `T_wordmark_glow.png` | 194×68 | The glow Rick chose, the same size, to sit under the letters. Three hard steps of one blue with checker edges. |
+| `T_glint.png` | 88×22 | The glint: four frames side by side, 22×22 each, small, larger, largest, small again. |
 
 ```
 layer    { x: -8.5, y: 5, w: 291, h: 102, scale: 1.5 }   where both wordmark layers go
@@ -38,6 +41,8 @@ letters  { x: 3.5, y: 17, w: 267, h: 78 }                the letters inside them
 pager    { x: 213, y: 114, w: 104, h: 49 }               where T_pager_lit goes
 screen   { x: 245, y: 128, w: 42, h: 18 }                the pager's screen
 stars    [ { x, y, on, cross, arm? } × 12 ]              the stars that twinkle
+glint    { frames: 4, size: 22, points: [ [x, y] × 9 ] }  where a glint plays: the centre of its frame, in the
+                                                         wordmark layer's own 194×68 pixels, not the picture's
 quiet    { x: 20, y: 5, w: 250, h: 73 }                  sky with nothing in it but stars
 frame    { x: 275, w: 13 }                               the window's frame, a hard edge
 print    { x: 8, w: 182 }                                the dark stretch of the bottom rows
@@ -71,7 +76,16 @@ manifest's numbers; do not hard-code them.
      Set it from the screen's `tick`; no CSS transition, the steps are meant to show.
    - With `ctx.reducedMotion`: steady at 1.0.
    - The letters' `alt` is `Observability Quest I`; the glow's is empty.
-2. **The subtitle**, *So you want to be on-call?*, one line, the game's read font:
+2. **The glints**: a sparkle on a light edge of a letter, one at a time, running across the wordmark.
+   - One element over the letters. **A glint pixel is the size of a letter pixel**, so its arms are as thick
+     as the letters' edges: put it in the same box as the two layers, `size/194` of that box wide and
+     `size/68` high, its top left at `(x − 11)/194`, `(y − 11)/68` of the box for the point `[x, y]`.
+     `image-rendering: pixelated`. Show one frame of `T_glint.png` at a time.
+   - Do not clip it to the layers' box: the first point's top arm reaches a pixel above it.
+   - A pass: the nine points in order, a new glint every 450 ms. Each glint shows frames 1, 2, 3, 4 for 90 ms
+     each and is gone. The first pass starts 1.5 s after the title appears, and a pass starts every 8 s.
+   - With `ctx.reducedMotion`: no glints.
+3. **The subtitle**, *So you want to be on-call?*, one line, the game's read font:
    - `font-size: calc(var(--scene-h) * 0.115)`, `line-height: 1`, `white-space: nowrap`, colour `#DCF0FF`,
      a hard shadow of one game pixel down and right in black (`calc(var(--scene-h) / 200)`).
    - Centred on the letters: left `letters.x/320`, width `letters.w/320`, `text-align: center`.
@@ -80,7 +94,7 @@ manifest's numbers; do not hard-code them.
      this size and place the type runs y 100 to 113 (the y of "you" reaches 116, over the city) and x 18 to
      255: five pixels under the letters, three above the nightstand, left of the window frame. It is the
      largest one centred line that touches neither. On an 844×390 phone it is 42 px type.
-3. **The small print**, bottom left: one block, its left at `print.x/320`, its bottom 2 % above the scene's
+4. **The small print**, bottom left: one block, its left at `print.x/320`, its bottom 2 % above the scene's
    bottom edge, two things stacked with a gap of 0.015 of the scene's height:
    - **The Honeycomb logo**: `assets/hc_logo_white.png`, the official file, as an `<img>` with
      `alt="Honeycomb"`, 7 % of the scene high, `image-rendering: auto`. Never drawn, recoloured or generated.
@@ -92,7 +106,7 @@ manifest's numbers; do not hard-code them.
      font, `font-size: calc(var(--scene-h) * 0.046)` (16 px on the smallest phone we test), `line-height: 1`,
      `white-space: nowrap`, colour `var(--dim)`.
    - The block then fills x 8 to 181, y 161 to 196: the dark stretch left of the nightstand.
-4. Start and Sound stay where they are, in the side columns.
+5. Start and Sound stay where they are, in the side columns.
 
 ## D. Start: the page arrives
 
@@ -112,16 +126,16 @@ Pressing Start is the page. Inside the tap, as today: `ctx.fullscreen?.()`. Then
 
 ## E. When something is missing
 
-The title is the first thing a visitor sees on a conference network. If `title.json` or any of the four
-pictures fails or takes more than 6 s (as `preloadIntro` does it), show today's placeholder: the black card
-with the title lettered in type. Start works either way.
+The title is the first thing a visitor sees on a conference network. If `title.json`, the picture, the lit
+pager or either wordmark layer fails or takes more than 6 s (as `preloadIntro` does it), show today's
+placeholder: the black card with the title lettered in type. If only the glint's picture fails, show the title
+without glints. Start works either way.
 
 ## F. What goes
 
 - The placeholder's drawing in `js/screens/title.js` stays only as E's fallback.
 - `js/anim/title.js` is the v0.1 title's animation. If nothing imports it, delete it.
 - `assets/title_screen.png` stays: `tools/build_intro.py` cuts the wordmark from it.
-- The glint frames (`T_glint_1` to `4`, in the art drop) are not used. Rick has not asked for the glint.
 
 ## Tests
 
@@ -130,6 +144,9 @@ Pure functions, in a new `js/title/timeline.js`, with unit tests written first:
 - `starsOn(t)`: which of the twelve are on at time `t`. Each star is on about 400 ms in every cycle of its own;
   over a minute every star has been on; never more than three at once; the same `t` gives the same answer.
 - `glowAt(t)`: 1.0, 0.9, 0.8, 0.7, 0.8, 0.9 by 500 ms steps; 1.0 with reduced motion.
+- `glintAt(t)`: `{ point, frame }` or nothing. Nothing before 1.5 s; then point 0's four frames by 90 ms,
+  point 1 from 450 ms later, and so on to point 8; nothing for the rest of the 8 s; then again. Never two at
+  once. Nothing with reduced motion.
 - `startBeat(t)`: `{ lit, beeps, go }` for the time since the tap: lit from 0; one beep by 0, two by 300; go
   at 600.
 
@@ -143,13 +160,16 @@ In a browser (`tests/e2e/title.test.js`), at 844×390 and 667×375:
 - The logo is the official file, inside `print`'s stretch, at least 24 CSS px high. The credit is the script's
   words in two lines, at least 16 CSS px type, inside `print`'s stretch, under the logo.
 - Over two seconds the glow's opacity takes at least three different values, all from the list.
+- Over the first six seconds a glint has shown at five or more of the nine points and in all four frames,
+  each time with its centre on the manifest's point within a CSS pixel, and it is whole inside the scene.
 - Start: within 100 ms the centre of the pager's screen is `#06F805` and one beep has sounded; the creator
   opens between 500 and 900 ms after the tap; a second tap in between changes nothing.
-- Reduced motion: the glow stays at 1, no star changes over three seconds, Start still lights the pager.
+- Reduced motion: the glow stays at 1, no star changes and no glint shows over three seconds, Start still
+  lights the pager.
 - With `assets/title/T_title.png` refused: the lettered placeholder shows and Start opens the creator.
 
 Expose what the tests need on `window.__oq.title`: `loaded`, `lit`, `glow`, `stars` (the indexes on now),
-`beeps`.
+`glint` (`{ point, frame }` or null), `beeps`.
 
 Run all three suites, the browser files one at a time.
 

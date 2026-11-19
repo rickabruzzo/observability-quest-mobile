@@ -76,10 +76,36 @@ def test_the_wordmark_layers_are_the_drops_own_at_one_letter_pixel_a_pixel():
     assert (g[..., :3][g[..., 3] > 0] == (0x46, 0x78, 0xFF)).all()
 
 
+def test_the_glint_is_the_drops_four_frames_side_by_side():
+    # Rick, 2026-11-18: "I asked for glints on the title."
+    strip = bt.glint(); a = np.asarray(strip)
+    assert strip.size == (88, 22) and strip.mode == 'RGBA'
+    for i in range(4):
+        assert np.array_equal(a[:, i * 22:(i + 1) * 22], np.asarray(src(f'T_glint_{i + 1}.png').convert('RGBA'))), f'frame {i + 1} is the drop\'s, untouched'
+    assert set(np.unique(a[..., 3])) <= {0, 255}
+    lit = [int((a[:, i * 22:(i + 1) * 22, 3] > 0).sum()) for i in range(4)]
+    assert lit[0] < lit[1] < lit[2] > lit[3] > 0             # small, larger, largest, small again
+
+
+def test_the_glints_sit_on_the_letters_highlights_and_stay_whole_on_the_picture():
+    letters, _ = bt.wordmark(); a = np.asarray(letters).astype(int)
+    pts = bt.GLINTS
+    assert 6 <= len(pts) <= 12 and len(set(pts)) == len(pts)
+    reach = 10.5 * bt.SCALE                                  # the largest frame's arms, in game pixels
+    for x, y in pts:
+        assert a[y, x, 3] > 0 and lum(a[y, x]) > 150, f'{(x, y)} is on a light edge of a letter'
+        gx, gy = bt.LAYER_640[0] / 2 + (x + 0.5) * bt.SCALE, bt.LAYER_640[1] / 2 + (y + 0.5) * bt.SCALE
+        assert reach <= gx <= 320 - reach and reach <= gy <= 200 - reach, f'{(x, y)}: the whole sparkle is on the picture'
+    top, bottom = [q for q in pts if q[1] < 30], [q for q in pts if q[1] >= 30]
+    assert pts == top + bottom and top == sorted(top) and bottom == sorted(bottom), 'across the top line, then the bottom one'
+    assert len(top) >= 4 and len(bottom) >= 2
+
+
 def test_the_manifest_puts_everything_where_rick_approved_it(tmp_path):
     m = bt.build(str(tmp_path))
     assert m == json.load(open(tmp_path / 'title.json'))
-    assert set(m['images']) == {'plate', 'pager', 'wordmark', 'glow'}
+    assert set(m['images']) == {'plate', 'pager', 'wordmark', 'glow', 'glint'}
+    assert m['glint'] == {'frames': 4, 'size': 22, 'points': [list(q) for q in bt.GLINTS]}      # in the wordmark layer's own pixels
     for n in m['images'].values(): assert os.path.exists(tmp_path / n)
     assert Image.open(tmp_path / m['images']['plate']).size == (320, 200)
     # the layer as mocked at 640x400, top left (-17, 10), three screen pixels a letter pixel there: half that here
