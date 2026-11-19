@@ -70,3 +70,13 @@ export function afterIntro(search, available = AVAILABLE) {
 export function canClaim(done, claimed) {
   return !claimed && Object.keys(done).length > 0;
 }
+
+export const CLAIMED_KEY = 'oq.claimed';   // beside oq.done: the prize has been claimed this session (brief 17)
+/** What `oq.claimed` holds → whether the prize is claimed. */
+export function parseClaimed(raw) { return raw === '1'; }
+export function serializeClaimed(claimed) { return claimed ? '1' : '0'; }
+/** The menu's column button: 'claim' when something is solved and nothing claimed, 'show' ("My prize") once claimed, null when nothing is solved. */
+export function menuButton(done, claimed) {
+  if (claimed) return 'show';
+  return canClaim(done, claimed) ? 'claim' : null;
+}

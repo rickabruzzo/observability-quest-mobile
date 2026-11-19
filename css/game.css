@@ -189,6 +189,13 @@ html[data-swipe="1"] body { min-height: calc(100vh + 80px); }
 .menu-row[disabled] .mr-name, .menu-row[disabled] .mr-mark { color: #888; }
 
 /* ---- after the verdict: the prompt and its two buttons, centred; the timing summary only with ?stats=1 (brief 12) ---- */
+/* the screen to show booth staff (brief 17): a plain card in the window style over the dawn */
+.complete { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(560px, calc(100% - 24px)); max-height: calc(100% - 12px); overflow: hidden; display: flex; flex-direction: column; align-items: center; gap: 6px; background: var(--sheet-white); color: #111; border: 3px solid #000; outline: 2px solid var(--sheet-white); box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.85); padding: 8px 14px 10px; font-family: var(--font-text); text-align: center; }
+.complete h2 { margin: 0; font-family: var(--font-display); font-size: 20px; font-weight: normal; color: var(--sheet-blue); line-height: 1.1; }
+.complete .complete-instr { margin: 0; font-size: 18px; line-height: 1.1; }
+.complete .prompt { width: min(100%, 320px); min-height: 44px; }
+.complete .complete-again { font-weight: bold; }
+.complete .complete-note { margin: 0; font-size: 16px; line-height: 1.1; color: #555; }
 .after { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 0 12%; }
 .after-prompt { margin: 0; text-align: center; font-size: 22px; line-height: 1.15; color: var(--body, #DCE4F0); }
 .after .sum-btns { width: 100%; max-width: 440px; }
