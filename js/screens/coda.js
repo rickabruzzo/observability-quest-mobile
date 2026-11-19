@@ -9,8 +9,7 @@ import { createWindows } from '../engine/window.js';
 import { createSfx } from '../intro/sfx.js';
 import { placeHero, blit } from '../engine/hero.js';
 import { displayName } from '../creator-state.js';
-import { SCRIPT } from '../script.js';
-import { codaPlan, beat1At, sunAt, beat3At, BEAT0_MS, CODA_LINES } from '../coda/timeline.js';
+import { codaPlan, beat1At, sunAt, beat3At, narrationLines, codaLine, BEAT0_MS, CODA_LINES } from '../coda/timeline.js';
 
 export const MANIFEST = 'assets/coda/coda.json';
 const LOAD_TIMEOUT_MS = 6000;
@@ -51,7 +50,7 @@ export function createCodaScreen(game) {
   let token = 0, assets = null, plan = null, failed = false, wins = null, skip = null, onDown = null, sfx = null;
   let beat = 0, t = 0, frame = 0, sunY = null, hero = null, doorOpen = false, shades = false, done = false, out = false, waiting = false, fired = new Set();
   const name = (ctx) => displayName(ctx.hero);
-  const lines = (ctx) => CODA_LINES.map((k) => String(SCRIPT[k] ?? k).replaceAll('{name}', name(ctx)));
+  const lines = (ctx) => CODA_LINES.map((k) => codaLine(k, name(ctx)));
 
   function sound(what, on = true) { if (!on || fired.has(what)) return; fired.add(what); sfx?.play(what); }
 
@@ -76,7 +75,7 @@ export function createCodaScreen(game) {
     const mine = token;
     waiting = true;
     const scale = ctx.fit?.scale ?? 1, bottom = assets ? assets.manifest.windowBottom : 60;
-    await wins.say(text, { where: 'top-left', maxLines: Math.max(2, Math.floor(((bottom - 6) * scale - 22) / 27)) });
+    await wins.say(text, { where: 'top-left', maxLines: narrationLines(bottom, scale) });
     waiting = false;
     return mine === token;
   }

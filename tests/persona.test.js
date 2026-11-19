@@ -64,6 +64,7 @@ test('the stopwatch counts card views', () => {
 
 test('the strings that were waiting for slots come from the script now; only the summary\'s title stays in code', () => {
   assert.deepEqual(Object.keys(UI), ['summaryTitle']);
-  for (const k of ['ui.look', 'ui.use', 'ui.help', 'ui.back', 'ui.close.hc', 'ch1.old.close', 'ui.copy', 'ui.copied', 'menu.soon', 'claim.soon']) assert.ok(SCRIPT[k], k);
+  for (const k of ['ui.look', 'ui.use', 'ui.help', 'ui.back', 'ui.close.hc', 'ch1.old.close', 'ui.copy', 'ui.copied', 'menu.soon']) assert.ok(SCRIPT[k], k);
+  assert.equal(SCRIPT['claim.soon'], undefined, 'Claim now leads to the sunrise and the staff screen (brief 17): the "opens in a later build" line is retired');
   assert.equal(CH1.tools.old.close, 'ch1.old.close');
 });

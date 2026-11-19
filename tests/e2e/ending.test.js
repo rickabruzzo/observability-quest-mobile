@@ -8,6 +8,7 @@ import { startServer, windowed } from './_server.js';
 import { SCRIPT } from '../../js/script.js';
 import { displayName } from '../../js/creator-state.js';
 import { WALKS } from '../../js/engine/walk.js';
+import { codaLine } from '../../js/coda/timeline.js';
 import { throughIntro, charitySays, dismissMsg } from './_play.js';
 
 let server, browser;
@@ -38,6 +39,8 @@ const seen = (page) => page.evaluate(() => [...window.__seen]);
 const watchText = (page) => page.evaluate(() => { window.__seen = new Set([document.body.innerText]); new MutationObserver(() => window.__seen.add(document.body.innerText)).observe(document.body, { subtree: true, childList: true, characterData: true }); });
 /** The open narration window's text and box in scene px. */
 const narration = (page) => page.evaluate(() => { const el = document.querySelector('.msg'); if (!el) return null; const sc = document.querySelector('#scene').getBoundingClientRect(), r = el.getBoundingClientRect(), k = sc.width / 320; return { text: el.dataset.text, bottom: (r.bottom - sc.top) / k, left: (r.left - sc.left) / k, portrait: !!el.querySelector('.msg-portrait') }; });
+/** The open window shows the whole of `line` at once: one window a line, no page turned in the middle of a sentence. */
+const whole = (page, line) => page.waitForFunction((want) => { const el = document.querySelector('.msg'); return !!el && !el.classList.contains('more') && el.innerText.replace(/\s+/g, ' ').trim() === want; }, line, { timeout: 5000 });
 const px = (page, x, y) => page.evaluate(([x, y]) => [...document.querySelector('#scene').getContext('2d').getImageData(x, y, 1, 1).data].slice(0, 3), [x, y]);
 
 for (const [w, h] of PHONES) {
@@ -66,9 +69,11 @@ for (const [w, h] of PHONES) {
     assert.deepEqual([end.hero.x, end.hero.y, end.hero.view], [M.stand.x, M.floorY, 'side'], 'he ends with his feet at stand.x on floorY, side on');
     assert.equal(end.frame, 0);
     // the three lines, each a plain window top left ending above windowBottom
-    const lines = [SCRIPT['coda.1'], SCRIPT['coda.2'], SCRIPT['coda.3']].map((l) => l.replaceAll('{name}', name));
+    const lines = ['coda.1', 'coda.2', 'coda.3'].map((k) => codaLine(k, name));         // a line that begins with the name begins with a capital
+    assert.ok(/^[A-Z]/.test(lines[2]));
     const n1 = await narration(page);
     assert.equal(n1.text, lines[0]); assert.equal(n1.portrait, false); assert.ok(n1.bottom <= M.windowBottom + 0.5, `window bottom ${n1.bottom} vs ${M.windowBottom}`);
+    await whole(page, lines[0]);
     await dismissMsg(page);
     // beat 2: the sun rises, clipped to the sky; the frame goes 1, 2, 3
     await page.waitForFunction(() => window.__oq.coda.beat === 2, null, { timeout: 3000 });
@@ -94,11 +99,13 @@ for (const [w, h] of PHONES) {
     assert.equal(s2.sun, M.sun.y1); assert.equal(s2.frame, 3, 'frame 3 when the sun stops');
     assert.ok([0, 1, 2].every((f) => frameSeq.has(f)), `frames 0, 1, 2 on the way up: ${[...frameSeq]}`);
     const n2 = await narration(page); assert.equal(n2.text, lines[1]); assert.ok(n2.bottom <= M.windowBottom + 0.5);
+    await whole(page, lines[1]);
     await dismissMsg(page);
     // beat 3: he faces us; the shades flag follows 400 ms later
     await page.waitForFunction(() => window.__oq.coda.beat === 3 && window.__oq.coda.waiting === true, null, { timeout: 3000 });
     const s3 = await coda(page); assert.equal(s3.hero.view, 'front'); assert.equal(s3.hero.shades, true);
-    const n3 = await narration(page); assert.equal(n3.text, lines[2]); assert.ok(n3.text.includes(name)); assert.ok(n3.bottom <= M.windowBottom + 0.5);
+    const n3 = await narration(page); assert.equal(n3.text, lines[2]); assert.ok(n3.text.toLowerCase().includes(name.toLowerCase())); assert.ok(n3.bottom <= M.windowBottom + 0.5);
+    await whole(page, lines[2]);
     await dismissMsg(page);
     await page.waitForFunction(() => document.body.dataset.screen === 'COMPLETE', null, { timeout: 3000 });
     assert.doesNotMatch((await seen(page)).join('\n'), /prize desk opens/, 'claim.soon is never shown');
@@ -182,7 +189,7 @@ test('with coda.json refused: three windows over black, then COMPLETE', async ()
   for (const k of ['coda.1', 'coda.2', 'coda.3']) {
     await page.waitForSelector('.msg', { timeout: 3000 });
     assert.deepEqual(await px(page, 160, 150), [0, 0, 0], 'black');
-    assert.equal((await narration(page)).text, SCRIPT[k].replaceAll('{name}', name));
+    assert.equal((await narration(page)).text, codaLine(k, name));
     await dismissMsg(page);
   }
   await page.waitForFunction(() => document.body.dataset.screen === 'COMPLETE', null, { timeout: 3000 });

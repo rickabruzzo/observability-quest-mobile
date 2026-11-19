@@ -3,6 +3,7 @@
 // own walks at the bedroom's pace.
 
 import { walkFrame, SETTLE_MS } from '../engine/walk.js';
+import { SCRIPT } from '../script.js';
 
 export const BEAT0_MS = 600;                 // the dark street, the door shut, nobody there
 export const DOOR_OPEN_MS = 350;             // the door opens
@@ -64,4 +65,22 @@ export function sunAt(m, t, reduced = false) {
 /** Beat 3 at `t` ms: he faces us; the sunglasses are on SHADES_MS later. */
 export function beat3At(t) {
   return { view: 'front', pose: 'idle', shades: t >= SHADES_MS, done: t >= SHADES_MS };
+}
+
+// A narration window's own measurements, in CSS px (css .msg and js/engine/window.js): its top edge, its border and
+// padding together, and one line of 24 px type.
+const WINDOW_TOP = 6, WINDOW_CHROME = 22, WINDOW_LINE = 27;
+/**
+ * How many lines a narration window may show and still end above the manifest's `windowBottom` (a row of the 320×200
+ * picture) when a game pixel is `scale` CSS px. Never fewer than two. Each of the coda's lines wraps to three at the
+ * reading measure, so three here means one window a line and no page turn in the middle of a sentence.
+ */
+export function narrationLines(windowBottom, scale) {
+  return Math.max(2, Math.floor((windowBottom * scale - WINDOW_TOP - WINDOW_CHROME) / WINDOW_LINE));
+}
+
+/** One of the coda's lines with the hero's name in it; a line that begins with the name begins with a capital. */
+export function codaLine(key, name) {
+  const text = String(SCRIPT[key] ?? key).replaceAll('{name}', name);
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }

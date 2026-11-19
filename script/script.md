@@ -183,9 +183,6 @@ Copied
 ### menu.soon
 coming soon
 
-### claim.soon
-The prize desk opens in a later build. For now, back to the menu.
-
 ---
 
 ## The persona card

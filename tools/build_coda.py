@@ -31,8 +31,9 @@ DOOR = {'x': 28, 'y': 58, 'w': 52, 'h': 124}         # the doorway in the buildi
 DOORWAY = {'x': 54, 'y': 182}                        # the middle of his feet as he stands in it
 STAND = {'x': 150}                                   # the middle of his feet where he stops and faces us
 SKY = {'x': 96, 'y': 0, 'w': 224, 'h': 118}          # open sky down to the horizon: where the sun may show
-SUN = {'x': 208, 'y0': 118, 'y1': 62, 'w': 40, 'h': 40}   # its left edge; its top edge before and after it rises
-WINDOW_BOTTOM = 60                                   # the narration ends above this row, clear of his head and the sun
+SUN = {'x': 208, 'y0': 118, 'y1': 66, 'w': 40, 'h': 40}   # its left edge; its top edge before and after it rises
+WINDOW_BOTTOM = 64                                   # the narration ends above this row, clear of his head (70) and the sun:
+                                                     # room for three lines of type on both phone sizes, one window a line
 
 # the stand-ins' flat colours: four skies from before dawn to sunrise, the building, the pavement
 _SKIES = [((14, 16, 44), (36, 28, 66)), ((38, 34, 84), (120, 66, 92)), ((88, 78, 132), (226, 132, 84)), ((150, 170, 214), (250, 196, 110))]

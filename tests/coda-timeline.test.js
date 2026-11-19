@@ -2,7 +2,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { codaPlan, beat1At, sunAt, beat3At, SUN_MS, SHADES_MS, DOOR_OPEN_MS, DOORWAY_MS, DOOR_CLEAR_PX, AMBLE, AMBLE_DOWN, BEAT0_MS } from '../js/coda/timeline.js';
+import { codaPlan, beat1At, sunAt, beat3At, narrationLines, codaLine, SUN_MS, SHADES_MS, DOOR_OPEN_MS, DOORWAY_MS, DOOR_CLEAR_PX, AMBLE, AMBLE_DOWN, BEAT0_MS } from '../js/coda/timeline.js';
+import { SCRIPT } from '../js/script.js';
 import { WALKS, SETTLE_MS } from '../js/engine/walk.js';
 
 const M = JSON.parse(readFileSync('assets/coda/coda.json', 'utf8'));
@@ -65,4 +66,26 @@ test('a manifest with other numbers (the real art) changes the plan, not the rul
   assert.equal(p.down, Math.round((20 / AMBLE_DOWN) * 1000)); assert.equal(p.across, 1600); assert.equal(p.clearX, 90);
   const end = beat1At(p, p.total); assert.deepEqual([end.hero.x, end.hero.y, end.doorOpen], [200, 190, false]);
   assert.deepEqual(sunAt(m2, 2000), { y: 95, frame: 1, done: false });
+});
+
+// Review of brief 17 (2026-11-19). Each of the coda's lines is a punchline; as built each took two windows, breaking
+// "…The street is the same street. You / are not the same engineer." across a tap.
+test('the narration takes every line that fits above windowBottom, so each of the coda\'s lines is one window', () => {
+  // a window's top is 6 CSS px down, its border and padding are 22, a line is 27 at 24 px type (css .msg, js/engine/window.js)
+  const big = 592 / 320, small = 555 / 320;                 // CSS px a game pixel at 844×390 and at 667×375
+  assert.equal(narrationLines(64, big), 3);
+  assert.equal(narrationLines(64, small), 3);
+  assert.equal(narrationLines(60, small), 2, 'four rows less and the third line no longer fits the small phone');
+  assert.equal(narrationLines(10, big), 2, 'never fewer than two');
+  for (const k of [big, small]) {
+    const n = narrationLines(M.windowBottom, k);
+    assert.equal(n, 3, 'the manifest leaves room for three lines, which is what each of the three takes');
+    assert.ok((6 + 22 + 27 * n) / k <= M.windowBottom, 'and that many end above windowBottom');
+  }
+});
+test('a line that begins with the hero\'s name begins with a capital', () => {
+  assert.ok(codaLine('coda.3', 'the Engineer').startsWith('The Engineer puts on sunglasses.'));
+  assert.ok(codaLine('coda.3', 'Rick').startsWith('Rick puts on sunglasses.'));
+  assert.equal(codaLine('coda.1', 'the Engineer'), SCRIPT['coda.1']);
+  assert.ok(!codaLine('coda.3', 'the Engineer').includes('{name}'));
 });

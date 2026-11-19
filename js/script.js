@@ -45,7 +45,6 @@ export const SCRIPT = {
   "ui.copy": "Copy results",
   "ui.copied": "Copied",
   "menu.soon": "coming soon",
-  "claim.soon": "The prize desk opens in a later build. For now, back to the menu.",
   "persona.show": "[Show me your card again]",
   "persona.leave": "[I'll go and take a look]",
   "ch1.card.title": "THE CTO",
