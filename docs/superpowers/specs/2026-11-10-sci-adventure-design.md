@@ -67,8 +67,8 @@ This is **a game, not a toolkit**: we replicate the experience of an SCI-era gam
    - **Hotspots**: tapping one walks the hero there (or teleports under reduced motion) and triggers it.
    - **Solve**: the Honeycomb hotspot opens the gamified product screen; the right prompt animates the result; narrator declares the win; the status bar's solved count ticks up.
    - **Verdict**: short popup from the scenario's narrator portrait (the v0.1 portraits), then a choice: **CLAIM YOUR PRIZE** or **ANOTHER SCENARIO** (back to the menu).
-5. **Final**, on CLAIM — Charity's verdict on the night so far (see *Scoring*) with a **sunrise coda**: the hero walks out into daylight, shades on.
-6. **Claim** and **Complete** — as v0.1 (placeholder form → HubSpot embed after review; "SHOW THIS TO BOOTH STAFF"; staff REDEEMED tap; persisted), plus a **PLAY MORE** button on Complete that returns to the scenario menu with the hero and the completion marks kept. The form is never shown twice.
+5. **Final**, on CLAIM — Charity's verdict on the night so far (see *Scoring*) with a **sunrise coda**: the hero walks out into daylight, shades on. *Being built (2026-11-18):* the door of the building opens, the hero walks out onto the pavement and stops, the sun comes up beside them while the street lightens in four cuts, they turn and the sunglasses go on, with `coda.1` to `coda.3` as three windows; skippable. Art brief 09 paints the street, the open door, the sun and the sunglasses; Warp brief 17 builds it against labelled stand-ins (`tools/build_coda.py`, `assets/coda/`) that the paintings replace with no change to the game.
+6. **Claim** and **Complete** — as v0.1 (placeholder form → HubSpot embed after review; "SHOW THIS TO BOOTH STAFF"; staff REDEEMED tap; persisted), plus a **PLAY MORE** button on Complete that returns to the scenario menu with the hero and the completion marks kept. The form is never shown twice. **The form is shelved** (Rick, 2026-11-18: "The HS form isn't coming into play until this is approved, so shelve it. The show-to-staff screen can be whatever since it's just a placeholder, but the sunrise animation and play more screen can be built"). Until then Claim runs Charity, the coda and the staff screen with no form between; the staff screen is a plain placeholder with the staff's REDEEMED tap and **Play more**; once claimed, the menu's button reads "My prize" and opens the staff screen directly (Warp brief 17).
 
 Target length: **2–3 minutes for one scenario**, for a first-time player who tries one wrong thing. The sheet and the (skippable) intro add about a minute before it; the claim form comes after.
 
@@ -258,7 +258,7 @@ The intro follows `docs/intro-storyboard.md` (Rick, 2026-11-11), which supersede
 - **Sound**: pager beeps on the blinks, a lamp click, and a placeholder cue where the theme will go; the real theme arrives with the OPL soundtrack sub-project.
 - A storyboard of these shots lives on the design canvas for team comment.
 
-The **coda** (after Charity) is unchanged in intent: the hero walks out into dawn, shades on; its background is decided with the room art.
+The **coda** (after Charity) is unchanged in intent: the hero walks out into dawn, shades on. Its background is the street outside the building at sunrise (art brief 09, 2026-11-18); see *The game, start to finish*, item 5.
 
 ## Audio
 

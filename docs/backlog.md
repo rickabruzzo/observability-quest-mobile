@@ -123,6 +123,8 @@ block on. Test the restyle under `.hs-form` on a real phone.
 
 ## Claim form (when it is built)
 
+- **Shelved until the game is approved** (Rick, 2026-11-18). The ending is built without it (Warp brief 17); `js/claim.js` waits.
+
 - `js/claim.js` still fills a hidden `quest_score` field. With no score, it should carry the scenarios solved
   (and, if PMM wants it, whether there were missteps). Found by Warp in the brief 04-06 review, 2026-11-13.
 - Persona card (2026-11-13, Warp brief 07): the card's picture is still; brief 08 adds the painted frames from `assets/cards/cards.json` and Knight Watch's phone. The stopwatch summary's own labels stay in code until the summary comes out before the booth build.

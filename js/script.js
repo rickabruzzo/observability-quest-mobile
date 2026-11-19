@@ -468,6 +468,7 @@ export const SCRIPT = {
   "complete.instr": "You finished Observability Quest. Hand your phone to someone in a Honeycomb shirt.",
   "complete.redeem": "REDEEMED (staff)",
   "complete.redeemed": "REDEEMED",
-  "complete.again": "Play again",
+  "complete.again": "Play more",
+  "complete.show": "My prize",
   "complete.again.note": "More incidents, same hero. The prize is yours already."
 };

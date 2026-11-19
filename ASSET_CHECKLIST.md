@@ -39,3 +39,11 @@ composition says otherwise), then resize.
 - The 320×214 badge files (kept in `source/badge/assets/` for reference only).
 - Fonts — builder sources freely licensed web fonts.
 - Audio — composed in code.
+
+## Ending (the sunrise)
+
+- [ ] `E_dawn.png` — 640×400 — the street outside the building just after sunrise, no sun in it — art brief 09, 2026-11-18
+- [ ] `E_dawn_door.png` — the same with the door open
+- [ ] `E_sun.png` — 80×80 — the sun, stepped, hard edged
+- [ ] `HD_shades_front.png`, `HD_shades_side.png` — the clean head in dark sunglasses
+- Until they land, `assets/coda/` holds labelled stand-ins from `tools/build_coda.py`.
