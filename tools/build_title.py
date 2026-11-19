@@ -16,6 +16,8 @@ The painting is 640x400 and the game's picture is 320x200, so the build carries 
             the pager changes when the game shows it.
   wordmark  the letters and their glow at one letter pixel per pixel (194x68). The drop holds them three times that
             size; they come down without loss. The letters are the game's own assets/intro/wall_logo.png.
+  glint     the sparkle's four frames side by side, untouched, and the places on the letters where it plays. A
+            glint pixel is shown the size of a letter pixel, so its arms are as thick as the letters' edges.
 
 The wordmark is shown at 1.5 game pixels a letter pixel (three of the painting's), the size Rick approved, so the
 game lays it over the picture as its own layer instead of drawing it into the 320x200 canvas.
@@ -39,6 +41,9 @@ QUIET = {'x': 20, 'y': 5, 'w': 250, 'h': 73}       # stars only, and one faint b
 FRAME = {'x': 275, 'w': 13}                         # the window's frame: the one hard edge in the sky
 SCREEN = {'x': 245, 'y': 128, 'w': 42, 'h': 18}     # the pager's screen
 PRINT = {'x': 8, 'w': 182}                          # the bottom rows are dark only left of the nightstand
+# Where a glint sparkles, in the wordmark layer's own pixels (the centre of its 22x22 frame): light edges of the
+# letters, across the top line and then the bottom one. Rick, 2026-11-18: "I asked for glints on the title."
+GLINTS = [(18, 9), (52, 11), (80, 11), (108, 13), (157, 15), (184, 12), (49, 34), (107, 34), (148, 35)]
 MARGIN = 8                          # the layers' transparent margin round the letters, in letter pixels (24 in the drop)
 SCALE = 1.5                         # game pixels a letter pixel
 
@@ -112,6 +117,14 @@ def wordmark():
     return tuple(out)
 
 
+@functools.lru_cache(maxsize=None)
+def glint():
+    """The drop's four glint frames side by side, untouched: 88x22."""
+    frames = [_open(f'T_glint_{i}.png').convert('RGBA') for i in (1, 2, 3, 4)]
+    if any(f.size != (22, 22) for f in frames): raise SystemExit('a glint frame is not 22x22')
+    return Image.fromarray(np.hstack([np.asarray(f) for f in frames]), 'RGBA')
+
+
 def build(out=None):
     out = out or os.path.join(ROOT, OUT)
     os.makedirs(out, exist_ok=True)
@@ -120,13 +133,16 @@ def build(out=None):
     patch.save(os.path.join(out, 'T_pager_lit.png'), optimize=True)
     letters.save(os.path.join(out, 'T_wordmark.png'), optimize=True)
     glow.save(os.path.join(out, 'T_wordmark_glow.png'), optimize=True)
+    glint().save(os.path.join(out, 'T_glint.png'), optimize=True)
     lx, ly = LAYER_640[0] / 2, LAYER_640[1] / 2
     m = {
-        'images': {'plate': 'T_title.png', 'pager': 'T_pager_lit.png', 'wordmark': 'T_wordmark.png', 'glow': 'T_wordmark_glow.png'},
+        'images': {'plate': 'T_title.png', 'pager': 'T_pager_lit.png', 'wordmark': 'T_wordmark.png', 'glow': 'T_wordmark_glow.png', 'glint': 'T_glint.png'},
         # where the two wordmark layers go on the 320x200 picture, and the letters inside them
         'layer': {'x': lx, 'y': ly, 'w': letters.width * SCALE, 'h': letters.height * SCALE, 'scale': SCALE},
         'letters': {'x': lx + MARGIN * SCALE, 'y': ly + MARGIN * SCALE, 'w': (letters.width - 2 * MARGIN) * SCALE, 'h': (letters.height - 2 * MARGIN) * SCALE},
         'pager': box, 'screen': SCREEN, 'stars': stars(),
+        # the glint's frames lie side by side in its picture; its points are in the wordmark layer's own pixels
+        'glint': {'frames': 4, 'size': 22, 'points': [list(p) for p in GLINTS]},
         'quiet': QUIET, 'frame': FRAME, 'print': PRINT,
     }
     for k in ('layer', 'letters'): m[k] = {n: (int(v) if float(v).is_integer() else v) for n, v in m[k].items()}

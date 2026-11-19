@@ -3,7 +3,8 @@
   "plate": "T_title.png",
   "pager": "T_pager_lit.png",
   "wordmark": "T_wordmark.png",
-  "glow": "T_wordmark_glow.png"
+  "glow": "T_wordmark_glow.png",
+  "glint": "T_glint.png"
  },
  "layer": {
   "x": -8.5,
@@ -113,6 +114,48 @@
    "cross": false
   }
  ],
+ "glint": {
+  "frames": 4,
+  "size": 22,
+  "points": [
+   [
+    18,
+    9
+   ],
+   [
+    52,
+    11
+   ],
+   [
+    80,
+    11
+   ],
+   [
+    108,
+    13
+   ],
+   [
+    157,
+    15
+   ],
+   [
+    184,
+    12
+   ],
+   [
+    49,
+    34
+   ],
+   [
+    107,
+    34
+   ],
+   [
+    148,
+    35
+   ]
+  ]
+ },
  "quiet": {
   "x": 20,
   "y": 5,

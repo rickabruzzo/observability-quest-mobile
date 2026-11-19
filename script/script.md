@@ -1468,6 +1468,8 @@ Somewhere a pager is quiet. Somewhere a dashboard is green and, for once, tellin
 
 ## Claim & Complete (carried from v0.1; PMM review pending)
 
+**The email form is shelved** (Rick, 2026-11-18: "The HS form isn't coming into play until this is approved, so shelve it"). Until the game is approved, Claim goes from Charity's verdict to the sunrise and straight to the staff screen, which is a placeholder; the `claim.*` slots wait for the form. `complete.show` is the menu's button once the prize has been claimed.
+
 ### claim.title
 Claim your prize
 
@@ -1499,7 +1501,10 @@ REDEEMED (staff)
 REDEEMED
 
 ### complete.again
-Play again
+Play more
+
+### complete.show
+My prize
 
 ### complete.again.note
 More incidents, same hero. The prize is yours already.
