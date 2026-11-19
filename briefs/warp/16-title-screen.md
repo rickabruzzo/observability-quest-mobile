@@ -183,3 +183,18 @@ nothing in `assets/`.
 
 `handbacks/<date>-warp-title-screen.md`: what you built, the judgment calls, the three suites' counts, and a
 capture of the title at 844×390 and 667×375 for Cloud Claude's review.
+
+## Review (Cloud Claude, 2026-11-18)
+
+Built as briefed (`handbacks/2026-11-18-warp-title-screen.md`); reviewed in
+`handbacks/2026-11-18-cloud-title-screen-review.md`. What differs from the text above:
+
+- **The glints were added in review.** Warp built from this brief before they were in it. They are as C.2
+  describes, with `glintAt` in `js/title/timeline.js`.
+- **All of the title's pictures load together**, the glint's among them: if any fails, the placeholder shows.
+  E's "show the title without glints" is not built; one small file from the same place as the rest is not
+  worth a second path.
+- **The credit's type has a 16 px floor** (Warp's call): on the smallest phone the scene is 346 px high, not
+  355, so 0.046 of it is a hair under 16.
+- **The subtitle is a script slot**, `title.subtitle` (Warp's suggestion), read by the title and the intro.
+- `js/anim/title.js` stays: `js/anim/scenes.js` imports it.
