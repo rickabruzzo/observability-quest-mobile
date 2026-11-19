@@ -75,6 +75,8 @@ html[data-swipe="1"] body { min-height: calc(100vh + 80px); }
    the wordmark is 1.5 game pixels to a letter pixel, so it is two <img> layers (the glow under the letters), not canvas ---- */
 .title-art { position: absolute; inset: 0; pointer-events: none; }
 .title-layer { position: absolute; image-rendering: pixelated; }   /* pixelated alone: crisp-edges would win and is not what the brief asks */
+.title-glint { position: absolute; background-repeat: no-repeat; image-rendering: pixelated; }   /* one frame of assets/title/T_glint.png; placed and sized from the manifest */
+.title-glint[hidden] { display: none; }
 .title-sub { position: absolute; font-family: var(--font-text); font-size: calc(var(--scene-h) * 0.115); line-height: 1; white-space: nowrap; text-align: center; color: #DCF0FF; text-shadow: calc(var(--scene-h) / 200) calc(var(--scene-h) / 200) 0 #000; }
 .title-print { position: absolute; bottom: 2%; display: flex; flex-direction: column; align-items: flex-start; gap: calc(var(--scene-h) * 0.015); }
 .title-logo { display: block; height: calc(var(--scene-h) * 0.07); width: auto; image-rendering: auto; }

@@ -1,6 +1,6 @@
 // The title screen (Warp brief 16): Art Claude's picture, "Before the page" — the night sky over the city from an
 // open bedroom window, the pager on its nightstand not gone off yet. One picture, almost still: the stars twinkle,
-// the wordmark's glow breathes, and the pager goes off when you press Start. The wordmark is 1.5 game pixels to a
+// the wordmark's glow breathes, glints run across its letters, and the pager goes off when you press Start. The wordmark is 1.5 game pixels to a
 // letter pixel, so it is two <img> layers over the canvas, not drawn on it. If the art fails or takes too long the
 // old black card with the title in type shows, and Start works either way.
 
@@ -8,17 +8,17 @@ import { colButton } from '../engine/ui.js';
 import { loadManifest } from '../engine/images.js';
 import { createSfx } from '../intro/sfx.js';
 import { SCRIPT } from '../script.js';
-import { starsOn, glowAt, startBeat, STAR_COUNT } from '../title/timeline.js';
+import { starsOn, glowAt, glintAt, startBeat, STAR_COUNT } from '../title/timeline.js';
 
 export const MANIFEST = 'assets/title/title.json';
 export const LOGO = 'assets/hc_logo_white.png';           // the official file; never drawn, recoloured or generated
 const LOAD_TIMEOUT_MS = 6000;
-const SUBTITLE = 'So you want to be on-call?';           // the intro's subtitle (js/screens/intro.js); no script slot yet
+const SUBTITLE = SCRIPT['title.subtitle'] ?? '';          // the same line the intro shows under the wordmark
 const CREDIT_BREAK = '(CC BY-SA).';                       // the credit breaks after this sentence
 const PCT_X = (v) => `${(v / 320) * 100}%`, PCT_Y = (v) => `${(v / 200) * 100}%`;
 
 let loading = null;
-/** Fetches the manifest and the four pictures, once; rejects (and forgets, so a later visit retries) on failure or after 6 s. */
+/** Fetches the manifest and its pictures, once; rejects (and forgets, so a later visit retries) on failure or after 6 s. */
 export function preloadTitle() {
   if (!loading) { loading = loadManifest(MANIFEST, { timeout: LOAD_TIMEOUT_MS }); loading.catch(() => { loading = null; }); }
   return loading;
@@ -32,7 +32,7 @@ export function creditLines(text) {
 }
 
 export function createTitleScreen(game) {
-  let startBtn = null, token = 0, art = null, failed = false, t = 0, starsNow = [], glowNow = null, glowEl = null, starting = null, sfx = null, lit = false, beeps = 0;
+  let startBtn = null, token = 0, art = null, failed = false, t = 0, starsNow = [], glowNow = null, glowEl = null, glintEl = null, glintNow = null, starting = null, sfx = null, lit = false, beeps = 0;
 
   let exposed = false;
   /** What the browser tests read: window.__oq.title. */
@@ -41,7 +41,7 @@ export function createTitleScreen(game) {
     exposed = true;
     window.__oq.title = {
       get loaded() { return art !== null; }, get failed() { return failed; }, get lit() { return lit; }, get glow() { return glowNow; },
-      get stars() { return starsNow.slice(); }, get beeps() { return beeps; }, get starting() { return starting !== null; },
+      get stars() { return starsNow.slice(); }, get glint() { return glintNow ? { ...glintNow } : null; }, get beeps() { return beeps; }, get starting() { return starting !== null; },
     };
   }
   function placeholder(ctx) {
@@ -66,6 +66,7 @@ export function createTitleScreen(game) {
     el.innerHTML = `
         <img class="title-layer title-glow" alt="" style="${box(m.layer)}">
         <img class="title-layer title-letters" alt="Observability Quest I" style="${box(m.layer)}">
+        <div class="title-glint" hidden></div>
         <div class="title-sub" style="left:${PCT_X(m.letters.x)};width:${PCT_X(m.letters.w)};top:47.25%"></div>
         <div class="title-print" style="left:${PCT_X(m.print.x)}">
           <img class="title-logo" alt="Honeycomb">
@@ -78,6 +79,15 @@ export function createTitleScreen(game) {
     const [s1, s2] = el.querySelectorAll('.title-credit span'); s1.textContent = l1; s2.textContent = l2;
     ctx.overlay.replaceChildren(el);
     glowEl = el.querySelector('.title-glow'); glowNow = null;
+    // the glint: one frame of its strip at a time, a glint pixel the size of a letter pixel (review of brief 16)
+    glintEl = null; glintNow = null;
+    const strip = art.images.get('glint'), gl = m.glint;
+    if (strip && gl?.points?.length) {
+      glintEl = el.querySelector('.title-glint');
+      glintEl.style.width = PCT_X(gl.size * m.layer.scale); glintEl.style.height = PCT_Y(gl.size * m.layer.scale);
+      glintEl.style.backgroundImage = `url("${strip.src}")`;
+      glintEl.style.backgroundSize = `${gl.frames * 100}% 100%`;
+    }
     starsNow = []; paintStars(ctx, starsOn(0));
   }
   /** Redraws the stars whose state changed: off is the picture's own 3×3 back, on is the manifest's pixels. */
@@ -90,6 +100,16 @@ export function createTitleScreen(game) {
       g.fillStyle = s.on; g.fillRect(s.x, s.y, 1, 1);
     }
     starsNow = next;
+  }
+  /** Shows the glint `g` ({ point, frame }) with its centre pixel on its place in the wordmark's layer, or hides it. */
+  function paintGlint(g) {
+    glintNow = g;
+    if (!glintEl) return;
+    if (!g) { glintEl.hidden = true; return; }
+    const m = art.manifest, L = m.layer, [x, y] = m.glint.points[g.point], half = m.glint.size / 2;
+    glintEl.style.left = PCT_X(L.x + (x - half) * L.scale); glintEl.style.top = PCT_Y(L.y + (y - half) * L.scale);
+    glintEl.style.backgroundPosition = `${(g.frame / (m.glint.frames - 1)) * 100}% 0`;
+    glintEl.hidden = false;
   }
   function lightPager(ctx) {
     const p = art.manifest.pager;
@@ -111,7 +131,7 @@ export function createTitleScreen(game) {
     enter(ctx) {
       const mine = ++token;
       ctx.showSolved();
-      art = null; failed = false; t = 0; starsNow = []; glowNow = null; glowEl = null; starting = null; sfx = null; lit = false; beeps = 0; exposed = false;
+      art = null; failed = false; t = 0; starsNow = []; glowNow = null; glowEl = null; glintEl = null; glintNow = null; starting = null; sfx = null; lit = false; beeps = 0; exposed = false;
       ctx.ctx2d.fillStyle = '#000'; ctx.ctx2d.fillRect(0, 0, 320, 200);      // black until the picture is in
       ctx.overlay.innerHTML = '';
       startBtn = colButton({ id: 'btn-start', long: SCRIPT['title.start'] ?? 'Start', short: 'Go', className: 'go', onClick: () => start(ctx) });
@@ -127,6 +147,8 @@ export function createTitleScreen(game) {
       if (glow !== glowNow && glowEl) { glowNow = glow; glowEl.style.opacity = String(glow); }
       const next = ctx.reducedMotion ? [] : starsOn(t, Math.min(STAR_COUNT, art.manifest.stars.length));
       if (next.join() !== starsNow.join()) paintStars(ctx, next);
+      const glint = glintEl ? glintAt(t, !!ctx.reducedMotion, art.manifest.glint.points.length) : null;
+      if (glint?.point !== glintNow?.point || glint?.frame !== glintNow?.frame) paintGlint(glint);
       if (starting) {
         starting.t += dt;
         const b = startBeat(starting.t);
@@ -138,7 +160,7 @@ export function createTitleScreen(game) {
       token++;
       ctx.overlay.innerHTML = '';
       startBtn?.remove(); startBtn = null;
-      starting = null; glowEl = null; art = null;
+      starting = null; glowEl = null; glintEl = null; glintNow = null; art = null;
     },
   };
 }

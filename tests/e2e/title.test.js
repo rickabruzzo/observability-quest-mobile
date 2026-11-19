@@ -53,7 +53,7 @@ for (const [w, h] of PHONES) {
     }
     // the subtitle
     const sub = await sceneBox(page, '.title-sub'), subStyle = await page.evaluate(() => { const el = document.querySelector('.title-sub'), cs = getComputedStyle(el); return { font: parseFloat(cs.fontSize), lines: Math.round(el.getBoundingClientRect().height / parseFloat(cs.fontSize)), text: el.textContent, nowrap: cs.whiteSpace, color: cs.color, scrollW: el.scrollWidth, clientW: el.clientWidth }; });
-    assert.equal(subStyle.text, 'So you want to be on-call?');
+    assert.equal(subStyle.text, SCRIPT['title.subtitle']);
     assert.ok(Math.abs(subStyle.font - 0.115 * sub.sc.h) < 0.6, `type ${subStyle.font} vs ${0.115 * sub.sc.h}`);
     assert.equal(subStyle.lines, 1); assert.equal(subStyle.nowrap, 'nowrap'); assert.equal(subStyle.color, 'rgb(220, 240, 255)');
     assert.ok(subStyle.scrollW <= subStyle.clientW + 1, 'one line that fits its box');
@@ -92,6 +92,42 @@ test('over two seconds the glow\'s opacity takes at least three different values
   await ctx.close();
 });
 
+// The glints (review of brief 16). Rick, 2026-11-18: "I asked for glints on the title."
+test('glints run across the letters: one at a time, each centred on its place in the manifest, whole inside the scene', async () => {
+  const { ctx, page } = await open(844, 390);
+  await loaded(page);
+  const L = M.layer, G = M.glint, points = new Set(), frames = new Set();
+  let none = 0;
+  const until = Date.now() + 6200;                          // the first pass: 1.5 s, then nine places 450 ms apart
+  while (Date.now() < until) {
+    const s = await page.evaluate(() => {
+      const g = window.__oq.title.glint, el = document.querySelector('.title-glint');
+      if (!el) return { missing: true };
+      const cs = getComputedStyle(el), sc = document.querySelector('#scene').getBoundingClientRect(), r = el.getBoundingClientRect();
+      const shown = cs.display !== 'none' && cs.visibility !== 'hidden';
+      return { g, shown, cx: r.left + r.width / 2 - sc.left, cy: r.top + r.height / 2 - sc.top, w: r.width, h: r.height, sw: sc.width, sh: sc.height,
+        inside: r.left >= sc.left - 0.5 && r.top >= sc.top - 0.5 && r.right <= sc.right + 0.5 && r.bottom <= sc.bottom + 0.5,
+        posX: parseFloat(cs.backgroundPositionX), image: cs.backgroundImage, sizeX: cs.backgroundSize, render: cs.imageRendering };
+    });
+    assert.ok(!s.missing, 'the title has a glint element');
+    if (!s.g) { assert.equal(s.shown, false, 'between glints nothing shows'); none++; continue; }
+    assert.equal(s.shown, true);
+    const [x, y] = G.points[s.g.point];                     // the frame's centre pixel sits on this pixel of the layer
+    const wantX = ((L.x + x * L.scale) / 320) * s.sw, wantY = ((L.y + y * L.scale) / 200) * s.sh;
+    assert.ok(Math.abs(s.cx - wantX) <= 1 && Math.abs(s.cy - wantY) <= 1, `place ${s.g.point}: centre ${s.cx}, ${s.cy} vs ${wantX}, ${wantY}`);
+    assert.ok(Math.abs(s.w - ((G.size * L.scale) / 320) * s.sw) <= 1 && Math.abs(s.h - ((G.size * L.scale) / 200) * s.sh) <= 1, 'a glint pixel is the size of a letter pixel');
+    assert.ok(Math.abs(s.posX - (s.g.frame / (G.frames - 1)) * 100) < 0.1, `frame ${s.g.frame} of the strip is the one showing (${s.posX}%)`);
+    assert.ok(s.image.includes('T_glint.png') && s.render === 'pixelated');
+    assert.ok(s.inside, 'the whole sparkle is inside the scene');
+    points.add(s.g.point); frames.add(s.g.frame);
+  }
+  assert.ok(points.size >= 5, `a glint showed at ${points.size} of the nine places`);
+  assert.deepEqual([...frames].sort(), [0, 1, 2, 3], 'in all four frames');
+  assert.ok(none > 5, 'and there were moments with none');
+  assert.deepEqual(page.errors, []);
+  await ctx.close();
+});
+
 test('Start: the pager lights and one beep sounds within 100 ms, the creator opens between 500 and 900 ms, a second tap changes nothing', async () => {
   const { ctx, page } = await open();
   await loaded(page);
@@ -113,13 +149,19 @@ test('Start: the pager lights and one beep sounds within 100 ms, the creator ope
   await ctx.close();
 });
 
-test('reduced motion: the glow stays at 1, no star changes over three seconds, Start still lights the pager', async () => {
+test('reduced motion: the glow stays at 1, no star changes and no glint shows over three seconds, Start still lights the pager', async () => {
   const { ctx, page } = await open(844, 390, { reduced: true });
   await loaded(page); await page.waitForTimeout(100);
   const quiet = () => page.evaluate((q) => [...document.querySelector('#scene').getContext('2d').getImageData(q.x, q.y, q.w, q.h).data].join(','), M.quiet);
   const a = quiet(), glows = new Set();
-  for (let i = 0; i < 12; i++) { glows.add(await page.evaluate(() => getComputedStyle(document.querySelector('.title-glow')).opacity)); await page.waitForTimeout(250); }
+  let glints = 0;
+  for (let i = 0; i < 12; i++) {
+    glows.add(await page.evaluate(() => getComputedStyle(document.querySelector('.title-glow')).opacity));
+    if (await page.evaluate(() => { const el = document.querySelector('.title-glint'); return window.__oq.title.glint !== null || (!!el && getComputedStyle(el).display !== 'none'); })) glints++;
+    await page.waitForTimeout(250);
+  }
   assert.deepEqual([...glows], ['1']);
+  assert.equal(glints, 0, 'no glint under reduced motion');
   assert.equal(await quiet(), await a, 'the sky is still');
   assert.deepEqual(await page.evaluate(() => window.__oq.title.stars), []);
   await page.click('#btn-start'); await page.waitForTimeout(60);

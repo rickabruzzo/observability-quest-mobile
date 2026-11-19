@@ -28,6 +28,9 @@ they have been using to fight tonight's problem, and the scenario's stakes hang 
 ### title.tagline
 Honeycomb presents a night on call.
 
+### title.subtitle
+So you want to be on-call?
+
 ### title.start
 Start
 

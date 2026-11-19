@@ -3,6 +3,7 @@
 // this module loads the pictures, draws the frame the timeline asks for, and gets out of the way.
 
 import { SHOTS, HERO_STEPS, frameAt, heroAt, nextShot, exitPlan, exitAt } from '../intro/timeline.js';
+import { SCRIPT } from '../script.js';
 import { lcdScale, marqueeScale, marqueeX, drawLcd, lcdPages, drawLcdPage } from '../intro/pager.js';
 import { createSfx } from '../intro/sfx.js';
 import { blit, composeFigure, composeProp, drawHero, placeHero, silhouette, HERO_W } from '../engine/hero.js';
@@ -17,9 +18,9 @@ const STAND_DX = 30;                 // standing spot when the manifest has none
 const WALK_AT = HERO_STEPS.find((s) => s.walkTo).at;
 const REDUCED_BEDROOM_MS = 2500;
 const NEXT = 'AFTER_INTRO';                // the game routes it: the scenario menu, or ?ch=N / ?preview=1
-const TITLE = ['OBSERVABILITY QUEST I', 'So you want to be on-call?'];     // lettered whole when the wordmark picture is missing
-const SUBTITLE = 'So you want to be on-call?';                             // under the wordmark, which carries the I
-const TITLE_LABEL = 'Observability Quest I: So you want to be on-call?';
+const SUBTITLE = SCRIPT['title.subtitle'] ?? '';                           // under the wordmark, which carries the I; the title screen shows the same slot
+const TITLE = ['OBSERVABILITY QUEST I', SUBTITLE];                         // lettered whole when the wordmark picture is missing
+const TITLE_LABEL = `Observability Quest I: ${SUBTITLE}`;
 
 let loading = null;
 
