@@ -110,24 +110,27 @@ function lut(cfg, outfit) {
   ramps.forEach((ramp, i) => { for (let t = 0; t < TONES; t++) { const c = hex6(ramp, t * 6), o = (1 + i * TONES + t) * 4; out[o] = c[0]; out[o + 1] = c[1]; out[o + 2] = c[2]; out[o + 3] = 255; } });
   return out;
 }
-const key = (cfg, body, outfit, mark) => `${body}|${outfit}|${mark ? 1 : 0}|${cfg.hoodie}|${cfg.jeans}|${cfg.skin}|${cfg.hair}|${cfg.style}|${cfg.beard}|${cfg.glasses}`;
+const key = (cfg, body, outfit, mark, shades) => `${body}|${outfit}|${mark ? 1 : 0}|${shades ? 1 : 0}|${cfg.hoodie}|${cfg.jeans}|${cfg.skin}|${cfg.hair}|${cfg.style}|${cfg.beard}|${cfg.glasses}`;
 
 /**
  * A finished figure: { w, h, ax, ay, view, body, data (RGBA), eyes: [[x, y]…] in the figure's own pixels }, or null when the
  * sheet is not loaded or the body is unknown. The body, the head of the hero's style for that view, the beard and the
  * glasses if he has them and the view shows them; the colours looked up; the mark on the chest where the manifest says
- * (hoodie only; `mark: false` leaves it off, as the fixtures are). Kept per look and body.
+ * (hoodie only; `mark: false` leaves it off, as the fixtures are). With `shades` (the coda, brief 17) the manifest's
+ * `shades[view]` is laid where the glasses would be, instead of them; a manifest without them adds nothing. Kept per
+ * look, body and options.
  */
-export function composeFigure(cfg, body, outfit = 'hoodie', { mark = true } = {}) {
+export function composeFigure(cfg, body, outfit = 'hoodie', { mark = true, shades = false } = {}) {
   if (!sheet) return null;
   const m = sheet.m, b = m.bodies[body];
   if (!b) return null;
-  const k = key(cfg, body, outfit, mark), hit = figCache.get(k);
+  const k = key(cfg, body, outfit, mark, shades), hit = figCache.get(k);
   if (hit) return hit;
   const style = m.heads[cfg.style] ? cfg.style : DEFAULT_HERO.style;
   const layers = [cut(b), cut(m.heads[style][b.view])];
   if (cfg.beard && cfg.beard !== 'none' && m.beard[b.view]) layers.push(cut(m.beard[b.view]));
-  if (cfg.glasses && cfg.glasses !== 'none' && m.glasses[b.view]) layers.push(cut(m.glasses[b.view]));
+  if (shades && m.shades?.[b.view]) layers.push(cut(m.shades[b.view]));
+  else if (cfg.glasses && cfg.glasses !== 'none' && m.glasses[b.view]) layers.push(cut(m.glasses[b.view]));
   const s = stack(layers), L = lut(cfg, outfit), data = new Uint8ClampedArray(s.w * s.h * 4);
   for (let i = 0; i < s.codes.length; i++) { const c = s.codes[i] * 4, o = i * 4; data[o] = L[c]; data[o + 1] = L[c + 1]; data[o + 2] = L[c + 2]; data[o + 3] = L[c + 3]; }
   if (mark && outfit === 'hoodie' && m.mark.bodies.includes(body)) {
@@ -260,8 +263,8 @@ export function blit(ctx, fig, x, y, scale = 1, flip = false) {
  * figure pixels (a walk frame's bob). Side bodies mirror when `flip`; the front and back views never do. Returns the box
  * of what would be drawn, { x, y, w, h, ax, ay, scale, fig }, or null without the sheet.
  */
-export function placeHero(cfg, pose, feetX, feetY, scale = 1, { flip = false, outfit = 'hoodie', dy = 0 } = {}) {
-  const fig = composeFigure(cfg, bodyFor(pose, outfit), outfit);
+export function placeHero(cfg, pose, feetX, feetY, scale = 1, { flip = false, outfit = 'hoodie', dy = 0, shades = false } = {}) {
+  const fig = composeFigure(cfg, bodyFor(pose, outfit), outfit, { shades });
   if (!fig) return null;
   const s = Math.min(1, scale), mirror = flip && fig.view === 'side', sc = scaled(fig, s, mirror);
   return { x: feetX - sc.ax, y: feetY - sc.h + Math.round(dy * s), w: sc.w, h: sc.h, ax: sc.ax, ay: sc.ay, scale: s, flip: mirror, fig };

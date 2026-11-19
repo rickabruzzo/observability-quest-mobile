@@ -1,7 +1,6 @@
 // Charity's verdict on Claim (spec: No score): her portrait on the left with its bottom on the scene's edge, her
-// header across the top, her mood line, the count line and the "prize desk opens later" line in one window on the
-// right (brief 12). The rules are
-// js/engine/verdict.js; the claim form and the sunrise coda come in a later brief.
+// header across the top, her mood line and the count line in one window on the right (brief 12). The rules are
+// js/engine/verdict.js; the sunrise coda follows her (brief 17).
 
 import { SCRIPT } from '../script.js';
 import { charityVerdict, fillN, figureCentre, portraitLayout } from '../engine/verdict.js';
@@ -12,9 +11,9 @@ export const PORTRAIT = 'assets/portrait_charity.png';
  * Plays the verdict over whatever is on screen and resolves when the last window is dismissed, or false if
  * `alive()` says the screen went away meanwhile.
  * @param {object} ctx the game ctx   @param {object} wins a js/engine/window.js window manager
- * @param {string} soon the closing placeholder line
+ * @param {string|null} soon an optional closing line; with none she says two (brief 17: the coda follows)
  */
-export async function playCharity(ctx, wins, soon, alive = () => true) {
+export async function playCharity(ctx, wins, soon = null, alive = () => true) {
   const v = charityVerdict(ctx.loadDone());
   const layer = document.createElement('div');
   layer.className = 'charity'; layer.id = 'charity';
@@ -36,7 +35,7 @@ export async function playCharity(ctx, wins, soon, alive = () => true) {
   const scale = ctx.fit?.scale ?? 1, textX = portraitLayout(640, 428, 320).textX;
   const place = { where: 'right', maxWidth: Math.floor((320 - textX) * scale) - 8, maxLines: 12 };
   try {
-    for (const text of [SCRIPT[v.mood], fillN(SCRIPT[v.count], v.n), soon]) {
+    for (const text of [SCRIPT[v.mood], fillN(SCRIPT[v.count], v.n), ...(soon ? [soon] : [])]) {
       await wins.say(text, place);
       if (!alive()) return false;
     }
