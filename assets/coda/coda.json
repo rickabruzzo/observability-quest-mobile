@@ -1,0 +1,42 @@
+{
+ "placeholder": true,
+ "images": {
+  "frames": [
+   "E_dawn_0.png",
+   "E_dawn_1.png",
+   "E_dawn_2.png",
+   "E_dawn_3.png"
+  ],
+  "door": "E_door_open.png",
+  "sun": "E_sun.png"
+ },
+ "floorY": 186,
+ "heroScale": 0.85,
+ "door": {
+  "x": 28,
+  "y": 58,
+  "w": 52,
+  "h": 124
+ },
+ "doorway": {
+  "x": 54,
+  "y": 182
+ },
+ "stand": {
+  "x": 150
+ },
+ "sun": {
+  "x": 208,
+  "y0": 118,
+  "y1": 62,
+  "w": 40,
+  "h": 40
+ },
+ "sky": {
+  "x": 96,
+  "y": 0,
+  "w": 224,
+  "h": 118
+ },
+ "windowBottom": 60
+}
