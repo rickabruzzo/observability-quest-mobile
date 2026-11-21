@@ -1,5 +1,5 @@
 {
- "placeholder": true,
+ "placeholder": false,
  "images": {
   "frames": [
    "E_dawn_0.png",
@@ -11,32 +11,32 @@
   "sun": "E_sun.png"
  },
  "floorY": 186,
- "heroScale": 0.85,
+ "heroScale": 0.8,
  "door": {
-  "x": 28,
-  "y": 58,
-  "w": 52,
-  "h": 124
+  "x": 4,
+  "y": 44,
+  "w": 76,
+  "h": 139
  },
  "doorway": {
-  "x": 54,
-  "y": 182
+  "x": 34,
+  "y": 171
  },
  "stand": {
-  "x": 150
+  "x": 132
  },
  "sun": {
-  "x": 208,
-  "y0": 118,
-  "y1": 66,
+  "x": 205,
+  "y0": 115,
+  "y1": 75,
   "w": 40,
   "h": 40
  },
  "sky": {
-  "x": 96,
+  "x": 123,
   "y": 0,
-  "w": 224,
-  "h": 118
+  "w": 175,
+  "h": 115
  },
  "windowBottom": 64
 }

@@ -176,3 +176,7 @@ Built as briefed (`handbacks/2026-11-19-warp-the-ending.md`); reviewed in
   sunglasses."
 - **`claim.soon` is gone from the script.**
 - The coda has its own loader (Warp's call): `coda.json` lists its frames as a list.
+- **The paintings landed 2026-11-21** (art brief 09; `handbacks/2026-11-21-cloud-sunrise-art.md`). The manifest's
+  numbers changed and the game's code did not: `heroScale` 0.8, `doorway` 34, 171, `stand.x` 132, the sun's left
+  edge 205 rising from 115 to 75, `sky` x 123 to 297 down to the horizon at 115, `windowBottom` 64. The hero's
+  manifest has `shades.front` and `shades.side`.
