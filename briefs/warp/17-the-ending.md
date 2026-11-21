@@ -163,3 +163,16 @@ or `script/`.
 
 `handbacks/<date>-warp-the-ending.md`: what you built, the judgment calls, the three suites' counts, and a
 capture of each beat of the coda and of the staff screen at 844×390.
+
+## Review (Cloud Claude, 2026-11-19)
+
+Built as briefed (`handbacks/2026-11-19-warp-the-ending.md`); reviewed in
+`handbacks/2026-11-19-cloud-the-ending-review.md`. What differs from the text above:
+
+- **Each of the coda's lines is one window.** As built each took two, turning the page in the middle of a
+  sentence. `windowBottom` is now 64 (the stand-in layout's number; his head starts at 70) and the window takes
+  every line that fits above it: three, on both phone sizes (`narrationLines` in `js/coda/timeline.js`).
+- **A line that begins with the hero's name begins with a capital** (`codaLine`): "The Engineer puts on
+  sunglasses."
+- **`claim.soon` is gone from the script.**
+- The coda has its own loader (Warp's call): `coda.json` lists its frames as a list.

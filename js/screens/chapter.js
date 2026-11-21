@@ -31,7 +31,7 @@ const RECOVER_HOLD_MS = 900;                 // after the wall display has recov
 const LOAD_WAIT_MS = 6000;                   // the card waits this long for the room's pictures, then plays without
 const CARDS_MANIFEST = 'assets/cards/cards.json';
 // The one string the script has no slot for: the stopwatch summary is Rick's tuning tool and comes out before the
-// booth build. Everything else the player reads is a script slot (ui.*, menu.soon, claim.soon, chN.old.close).
+// booth build. Everything else the player reads is a script slot (ui.*, menu.soon, chN.old.close).
 export const UI = {
   summaryTitle: (n, t) => `Scenario ${n} · ${t}`,
 };
@@ -687,7 +687,7 @@ export function createChapterScreen(game) {
     ctx.overlay.querySelector('#btn-claim').addEventListener('click', async () => {
       if (wins.open) return;
       if (ctx.overlay.querySelector('#charity')) return;
-      if (await playCharity(ctx, wins, say('claim.soon'), () => t === live())) game.go('MENU');
+      if (await playCharity(ctx, wins, null, () => t === live())) game.go('CODA');          // then the sunrise, then the staff screen (brief 17)
     });
   }
 

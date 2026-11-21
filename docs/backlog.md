@@ -46,7 +46,7 @@ block on. Test the restyle under `.hs-form` on a real phone.
 - `#rotate` gate uses `max-width: 700px`; a small tablet in portrait never sees it (plays letterboxed) — fine, but confirm on an iPad mini.
 
 ## Deferred minors from the sub-project 1 review (2026-11-10)
-- README claims the GloryQuest credit appears in the title's small print; the placeholder title has none yet — add it with the title art. (In Warp brief 16, 2026-11-18.)
+- README claims the GloryQuest credit appears in the title's small print; the placeholder title has none yet — add it with the title art. (Done: Warp brief 16, 2026-11-18.)
 - Name input `maxlength="24"` while the copy says 16 — characters 17–24 vanish on Done; set `maxlength="16"` (the clamp stays for paste).
 - Safe-area insets pad the thumb columns but `fitStage` doesn't know them; check a notch iPhone, or fold the inset into `minCol`.
 - Hero is drawn with ~1,400 `fillRect`s per frame while walking; cache each pose as an offscreen canvas before rooms add backgrounds and sprites.
@@ -81,7 +81,7 @@ block on. Test the restyle under `.hs-form` on a real phone.
 - Bedroom round 2 (2026-11-11): furnished plate and `D_door_open` to come from the personal account (`briefs/intro-bedroom-round2-agent-brief.md`); then re-measure `intro.overrides.json`. Until then the open door is a dark rectangle.
 - The 4×4 chest mark disappears into same-coloured hoodies (honey on honey, blue on teal, green on lime) — a pixel of outline or a light patch behind it would fix that.
 - Character sheet scales up on big windows now; the thumb-column buttons and the name sheet do not yet.
-- Title screen is still a text placeholder; use the wordmark (and title art) there in the title sub-project. (Art delivered 2026-11-17; Warp brief 16.)
+- Title screen is still a text placeholder; use the wordmark (and title art) there in the title sub-project. (Done: art 2026-11-17, Warp brief 16 built and reviewed 2026-11-18.)
 - Furnished bedroom, `D_laptop_gone` and `D_door_open` landed 2026-11-11 and are placed from the hand-back's measurements; awaiting Rick's sign-off. `D_laptop_gone` keeps a faint mark on the wall above the dresser — redo that edit if it shows on a phone.
 
 ## From Rick's play-through, 2026-11-11 (for the room-engine sub-project)

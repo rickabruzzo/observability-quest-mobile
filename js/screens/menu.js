@@ -1,12 +1,12 @@
 // The scenario menu (spec: The scenario menu): a Sierra window with five rows, 1→5. Built scenarios can be
 // played (and replayed); the rest show, disabled. Once one is done and the prize is unclaimed, a claim
-// button sits in the right thumb column. The rules are js/menu.js; this is the DOM.
+// button sits in the right thumb column; once claimed it reads "My prize" and opens the staff screen. The rules are
+// js/menu.js; this is the DOM.
 
 import { SCRIPT } from '../script.js';
-import { menuRows, canClaim } from '../menu.js';
+import { menuRows, menuButton } from '../menu.js';
 import { colButton } from '../engine/ui.js';
 import { createWindows } from '../engine/window.js';
-import { UI as CHAPTER_UI } from './chapter.js';
 import { playCharity } from './charity.js';
 
 
@@ -41,8 +41,15 @@ export function createMenuScreen(game) {
       wins = createWindows(ctx);
       onDown = (e) => { if (wins.open && !e.target.closest?.('button')) wins.tap(); };
       ctx.canvas.parentElement.addEventListener('pointerdown', onDown);
-      if (canClaim(done, ctx.claimed)) {
-        claim = colButton({ id: 'btn-menu-claim', long: SCRIPT['claim.button'], className: 'go', onClick: () => { if (!wins.open && !ctx.overlay.querySelector('#charity')) playCharity(ctx, wins, CHAPTER_UI.claimSoon); } });
+      const which = menuButton(done, ctx.claimed);
+      if (which === 'claim') {                                       // Charity, then the sunrise, then the staff screen (brief 17)
+        claim = colButton({ id: 'btn-menu-claim', long: SCRIPT['claim.button'], className: 'go', onClick: async () => {
+          if (wins.open || ctx.overlay.querySelector('#charity')) return;
+          if (await playCharity(ctx, wins, null, () => claim !== null)) game.go('CODA');
+        } });
+        ctx.colR.appendChild(claim);
+      } else if (which === 'show') {                                 // claimed already: straight back to the staff screen
+        claim = colButton({ id: 'btn-menu-claim', long: SCRIPT['complete.show'], className: 'go', onClick: () => { if (!wins.open) game.go('COMPLETE'); } });
         ctx.colR.appendChild(claim);
       }
     },

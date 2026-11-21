@@ -9,9 +9,11 @@ import { createPreviewScreen } from './screens/preview.js';
 import { createIntroScreen } from './screens/intro.js';
 import { createMenuScreen } from './screens/menu.js';
 import { createChapterScreen } from './screens/chapter.js';
+import { createCodaScreen } from './screens/coda.js';
+import { createCompleteScreen } from './screens/complete.js';
 import { sanitizeHero } from './creator-state.js';
 import { loadHero, heroReady } from './engine/hero.js';
-import { parseDone, serializeDone, afterIntro, solvedCount, DONE_KEY } from './menu.js';
+import { parseDone, serializeDone, afterIntro, solvedCount, DONE_KEY, CLAIMED_KEY, parseClaimed, serializeClaimed } from './menu.js';
 import { SCRIPT } from './script.js';
 
 export const ADVANCE_GUARD_MS = 350;
@@ -38,7 +40,9 @@ const ctx = {
   fullscreen() { if (shouldGoFullscreen(detectFullscreen(window))) goFullscreen(); },
   fit: null,
   chapterId: 1,          // the scenario the CHAPTER screen plays; the menu sets it
-  claimed: false,        // the prize: nothing claims it yet (the claim flow is a later brief)
+  claimed: false,        // the prize is claimed this session (set by the staff screen, kept in sessionStorage; brief 17)
+  loadClaimed() { let raw = null; try { raw = sessionStorage.getItem(CLAIMED_KEY); } catch { raw = null; } return parseClaimed(raw); },
+  saveClaimed(v) { try { sessionStorage.setItem(CLAIMED_KEY, serializeClaimed(v)); } catch { /* storage unavailable: keep going */ } },
   runlog: null,          // the current scenario's stopwatch (js/engine/runlog.js)
   holds: { rotate: false, hidden: false },   // why the clock is stopped, if it is
   /** The status bar's right side: how many scenarios are solved (no score: spec, No score). */
@@ -57,6 +61,8 @@ game.screens.INTRO = createIntroScreen(game);
 game.screens.PREVIEW = createPreviewScreen(game);
 game.screens.MENU = createMenuScreen(game);
 game.screens.CHAPTER = createChapterScreen(game);
+game.screens.CODA = createCodaScreen(game);
+game.screens.COMPLETE = createCompleteScreen(game);
 
 let current = null, currentName = 'LOADING', lastGo = -Infinity, transitions = 0;
 let paused = false, lastT = 0, statsAt = 0;
@@ -141,6 +147,7 @@ document.addEventListener('visibilitychange', () => {
 });
 resize();
 ctx.hero = ctx.loadHero();
+ctx.claimed = ctx.loadClaimed();
 go('TITLE');
 requestAnimationFrame(frame);
 
@@ -148,6 +155,7 @@ window.__oq = {
   get ready() { return true; },
   get state() { return currentName; },
   get hero() { return ctx.hero; },
+  get claimed() { return ctx.claimed; },
   get heroReady() { return heroReady(); },
   get fit() { return ctx.fit; },
   get paused() { return paused; },

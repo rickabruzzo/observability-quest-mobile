@@ -22,7 +22,8 @@ function moduleGraph(entry) {
 }
 
 const HERO = ['assets/hero/hero.json', 'assets/hero/hero.png'];      // the painted hero's sheet, fetched at boot (brief 15)
-const FILES = ['index.html', 'css/game.css', ...moduleGraph('js/game.js'), ...FONTS, ...HERO];
+const TITLE = ['assets/title/title.json', 'assets/title/T_title.png', 'assets/title/T_pager_lit.png', 'assets/title/T_wordmark.png', 'assets/title/T_wordmark_glow.png', 'assets/title/T_glint.png', 'assets/hc_logo_white.png'];   // the title's picture (brief 16)
+const FILES = ['index.html', 'css/game.css', ...moduleGraph('js/game.js'), ...FONTS, ...HERO, ...TITLE];
 
 test('title files total under 600 KB', () => {
   const sizes = FILES.map((f) => [f, statSync(f).size]);

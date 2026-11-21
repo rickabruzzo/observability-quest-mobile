@@ -60,11 +60,16 @@ export async function dismissMsg(page) {
   }
   throw new Error('window would not close');
 }
-/** Charity's verdict after a Claim: her header and the three lines, in order; returns the lines' texts. */
+/** Charity's verdict after a Claim: her header and her lines, in order (two since brief 17), until her layer is gone; returns the lines' texts. */
 export async function charitySays(page) {
   await page.waitForSelector('#charity', { timeout: 9000 });
   const head = await page.locator('.charity-head').innerText();
-  const lines = [await dismissMsg(page), await dismissMsg(page), await dismissMsg(page)];
+  const lines = [];
+  while (lines.length < 4 && await page.evaluate(() => !!document.querySelector('#charity'))) {
+    await page.waitForSelector('#charity .msg', { timeout: 9000 }).catch(() => {});
+    if (!(await page.evaluate(() => !!document.querySelector('#charity .msg')))) break;
+    lines.push(await dismissMsg(page));
+  }
   await page.waitForFunction(() => !document.querySelector('#charity'));
   return { head, lines };
 }
