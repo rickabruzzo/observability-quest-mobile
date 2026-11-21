@@ -30,7 +30,7 @@ test('fixtures exist', () => assert.ok(names.length >= 10, `${names.length}`));
 for (const n of names) {
   test(`reproduces ${n} byte for byte, with its w, h, ax, ay`, () => {
     const f = JSON.parse(readFileSync(DIR + n + '.json', 'utf8')), want = readFileSync(DIR + n + '.rgba');
-    const fig = composeFigure(cfgOf(f), f.body, f.outfit, { mark: false });
+    const fig = composeFigure(cfgOf(f), f.body, f.outfit, { mark: false, shades: !!f.shades });
     assert.deepEqual([fig.w, fig.h, fig.ax, fig.ay], [f.w, f.h, f.ax, f.ay]);
     const got = Buffer.from(fig.data.buffer);
     assert.equal(got.length, want.length);
@@ -134,18 +134,31 @@ test('without the sheet nothing is drawn and nothing throws', () => {
 test('HERO_W and HERO_H are the nominal canvas the rooms scale by', () => { assert.equal(HERO_W, 56); assert.equal(HERO_H, 144); });
 
 // ---- the sunglasses (Warp brief 17 C) ----
-test('shades: with a manifest entry the figure wears them where the glasses would be, instead of them; without the entry, nothing is added', () => {
+test('shades: the manifest\'s sunglasses go where the glasses would be, instead of them; a manifest without them adds nothing', () => {
   const bare = { ...DEFAULT_HERO, glasses: 'none' }, specs = { ...DEFAULT_HERO, glasses: 'glasses' };
   const plain = composeFigure(bare, 'front'), withGlasses = composeFigure(specs, 'front');
-  assert.deepEqual(composeFigure(bare, 'front', 'hoodie', { shades: true }).data, plain.data, 'no shades in today\'s manifest: the bare face');
-  assert.deepEqual(composeFigure(specs, 'front', 'hoodie', { shades: true }).data, withGlasses.data, 'and his glasses stay');
-  const m2 = { ...MANIFEST, shades: { front: MANIFEST.glasses.front } };          // the glasses' own rectangle standing in for the shades
-  setHeroSheet(m2, CODES, SHEET.w, SHEET.h);
-  assert.deepEqual(composeFigure(bare, 'front', 'hoodie', { shades: true }).data, withGlasses.data, 'with shades he is the figure with glasses');
-  assert.deepEqual(composeFigure(specs, 'front', 'hoodie', { shades: true }).data, withGlasses.data, 'shades replace the glasses, not add to them');
+  const worn = composeFigure(bare, 'front', 'hoodie', { shades: true });
+  assert.notDeepEqual(worn.data, plain.data, 'he wears them'); assert.notDeepEqual(worn.data, withGlasses.data, 'and they are not the glasses');
+  assert.deepEqual(composeFigure(specs, 'front', 'hoodie', { shades: true }).data, worn.data, 'sunglasses replace the glasses, not add to them');
   assert.deepEqual(composeFigure(bare, 'front').data, plain.data, 'without asking, the bare face');
+  assert.notDeepEqual(composeFigure(bare, 'side', 'hoodie', { shades: true }).data, composeFigure(bare, 'side').data, 'in profile too');
+  assert.deepEqual(composeFigure(bare, 'back', 'hoodie', { shades: true }).data, composeFigure(bare, 'back').data, 'from behind there are none');
+  // the lenses are the same dark on everyone: where the sunglasses changed a pixel to the outline's colours, another skin and hair change nothing
+  const other = composeFigure({ ...bare, skin: 3, hair: OPTIONS.hair[OPTIONS.hair.length - 1] }, 'front', 'hoodie', { shades: true });
+  const otherPlain = composeFigure({ ...bare, skin: 3, hair: OPTIONS.hair[OPTIONS.hair.length - 1] }, 'front');
+  let lens = 0, same = 0;
+  for (let i = 0; i < worn.data.length; i += 4) {
+    const changed = [0, 1, 2].some((k) => worn.data[i + k] !== plain.data[i + k]), there = [0, 1, 2].some((k) => other.data[i + k] !== otherPlain.data[i + k]);
+    if (changed && there) { lens++; if ([0, 1, 2].every((k) => worn.data[i + k] === other.data[i + k])) same++; }
+  }
+  assert.ok(lens >= 50, `the sunglasses change ${lens} pixels`); assert.ok(same >= lens * 0.7, `${same} of ${lens} are the same colour on another player`);
+  assert.deepEqual(placeHero(bare, 'idle', 100, 180, 1, { shades: true }).fig.data, worn.data, 'placeHero passes shades through');
+  // a manifest with no sunglasses, or none for the view: nothing is added and nothing fails
+  const { shades, ...none } = MANIFEST;
+  setHeroSheet(none, CODES, SHEET.w, SHEET.h);
+  assert.deepEqual(composeFigure(bare, 'front', 'hoodie', { shades: true }).data, plain.data, 'no entry: the bare face');
+  assert.deepEqual(composeFigure(specs, 'front', 'hoodie', { shades: true }).data, withGlasses.data, 'and his glasses stay');
+  setHeroSheet({ ...none, shades: { front: shades.front } }, CODES, SHEET.w, SHEET.h);
   assert.deepEqual(composeFigure(bare, 'side', 'hoodie', { shades: true }).data, composeFigure(bare, 'side').data, 'no entry for the side view: nothing added');
-  const p = placeHero(bare, 'idle', 100, 180, 1, { shades: true });
-  assert.deepEqual(p.fig.data, withGlasses.data, 'placeHero passes shades through');
   installSheet();
 });

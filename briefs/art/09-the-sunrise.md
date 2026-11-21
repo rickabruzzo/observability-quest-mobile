@@ -105,3 +105,14 @@ reactions, anything edited by hand, and these facts measured at **320×200**:
 - The horizon's row, and the clear stretch of sky: its x from and to.
 - What is in the top 60 rows.
 - For the sunglasses: the rows where each painting ends, as you gave them for the glasses.
+
+## Review (Cloud Claude, 2026-11-21)
+
+Delivered in `art-drops/2026-11-19-the-sunrise/` and built in (`handbacks/2026-11-21-cloud-sunrise-art.md`). All
+five files are used as delivered; nothing was redrawn.
+
+- The street's three darker moments are this painting recoloured by `tools/build_coda.py`.
+- The door is drawn in perspective, so the opening is 127 high where the hero stands in it and less to the right.
+  He is shown at 0.8 (109 high) on this screen so that he fits.
+- The sorting read the near-black lenses as dark skin and dark hair, which the game would have painted in the
+  player's own colours. The build writes them as outline, so they are the same dark on everyone.

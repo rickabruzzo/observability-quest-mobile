@@ -134,8 +134,8 @@ tools/build_hero_painted.py   the hero's asset build: sorts each painting's pixe
                           size, lifts the head off every body, and writes assets/hero/ and the fixtures
 tools/build_title.py      the title screen's asset build: the painting at game size, the lit pager as a patch, the
                           twinkling stars, the wordmark's two layers, the glint; writes assets/title/
-tools/build_coda.py       the sunrise's pictures and layout; labelled stand-ins until art brief 09 lands; writes
-                          assets/coda/
+tools/build_coda.py       the sunrise's asset build: the painted street at game size and three darker recolourings
+                          of it, the open door as a patch, the sun, and the layout; writes assets/coda/
 ```
 
 The game composes the hero exactly as the build does: `tests/hero.test.js` compares ten figures in

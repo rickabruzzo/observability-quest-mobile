@@ -169,6 +169,41 @@ def test_the_glasses_are_the_frames_of_the_glasses_painting_and_nothing_else():
     assert 'back' not in over['glasses'] and 'back' not in over['beard']         # neither shows from behind
 
 
+SUNRISE = 'art-drops/2026-11-19-the-sunrise'
+
+
+def test_the_sunglasses_are_the_dark_of_the_sunglasses_painting_in_the_outlines_own_colour():
+    """Art brief 09: the clean head again, wearing dark sunglasses. Over the clean face the dark lands exactly where
+    the painting has it. The sorting reads a near-black lens as dark skin or dark hair, which would come out brown
+    on one player and violet on another: the lenses are written as outline, the one dark that is the same on
+    everyone. The eyes do not show."""
+    assert hp.SHADES == SUNRISE
+    bodies, heads, over = hp.bodies(), hp.heads(), hp.overlays()
+    assert set(over['shades']) == {'front', 'side'}                               # they do not show from behind
+    for view in ('front', 'side'):
+        want = hp.full(f'{SUNRISE}/HD_shades_{view}.png')
+        clean = _on(want[0].shape, hp.ANCHOR, [bodies[view], heads['standard'][view]])
+        got = _on(want[0].shape, hp.ANCHOR, [bodies[view], heads['standard'][view], over['shades'][view]])
+        g = over['shades'][view]; top = hp.ANCHOR[1] - g['ay']
+        band = np.zeros(want[0].shape, bool); band[top:top + g['parts'].shape[0]] = True
+        was = hp.full(f'{SET}/HD_clean_{view}.png')
+        added = (want[0] != was[0]) | ~np.isclose(want[1], was[1])                 # what the sunglasses' painting changed
+        dark = band & added & (was[0] != P('hair')) & (want[0] > 0) & (want[1] < hp.LENS)   # lens and frame, wherever the clean head has face
+        assert dark.sum() >= 30, (view, int(dark.sum()))                          # two lenses facing us, one in profile
+        assert (got[0][dark] == P('outline')).all() and np.allclose(got[1][dark], want[1][dark]), view
+        assert set(np.unique(g['parts'])) <= {0, P('outline'), P('grey'), P('skin')} and 'erase' not in g, view
+        changed = (got[0] != clean[0]) | ~np.isclose(got[1], clean[1])
+        assert (np.isin(got[0], (P('outline'), P('grey'))) | (got[1] < clean[1] - hp.FRAME))[changed].all(), view   # all it changes becomes dark, or darker
+        assert 50 <= changed.sum() <= 130, (view, int(changed.sum()))             # a pair of sunglasses, not a new face
+        assert (g['parts'] == P('outline')).sum() >= 0.7 * (g['parts'] > 0).sum(), view   # nearly all of it the one dark
+        # no pupil is left: no outline pixel with skin on all four sides in the rows they span
+        skin = np.pad(got[0] == P('skin'), 1)
+        pupil = (got[0] == P('outline')) & skin[:-2, 1:-1] & skin[2:, 1:-1] & skin[1:-1, :-2] & skin[1:-1, 2:]
+        assert not (pupil & band).any(), view
+        # and they are bigger and darker than the glasses
+        assert (g['parts'] > 0).sum() > (over['glasses'][view]['parts'] > 0).sum(), view
+
+
 def _mid(view):
     """The row half way down the head, in the standing figure of that view."""
     rows = np.nonzero(hp.head_mask(hp.full(hp.BASE[view])[0], hp.NECK[view]).any(axis=1))[0]
@@ -183,12 +218,13 @@ def test_the_beard_and_the_glasses_sit_right_on_every_hair_style():
         for view in ('front', 'side'):
             plain = hp.place([bodies[view], heads[style][view]])
             top = plain[3] - hp.ANCHOR[1]                                               # the canvas row of the standing figure's row 0
-            for what in ('beard', 'glasses'):
+            for what in ('beard', 'glasses', 'shades'):
                 both = hp.place([bodies[view], heads[style][view], over[what][view]])
                 assert both[0].shape == plain[0].shape, (style, view, what)
                 changed = both[0] != plain[0]
                 if what == 'beard': assert not changed[:top + _mid(view)].any(), (style, view)
                 else: assert ((plain[0] == P('hair')) & (both[0] == P('skin'))).sum() <= 8, (style, view)   # the arm crossing the hair to the ear, no more
+                if what == 'shades': assert not ((plain[0] == 0) & (both[0] > 0)).sum() > 6, (style, view)   # an arm's end past a narrow head, no more
 
 
 BASE_CLEAN = {'front': f'{SET}/HD_clean_front.png', 'side': f'{SET}/HD_clean_side.png'}
@@ -384,6 +420,7 @@ def test_the_built_sheet_and_manifest_are_what_the_game_needs():
     assert set(m['bodies']) == set(hp.bodies()) and set(m['heads']) == {'standard', 'long', 'fro', 'mohawk'}
     assert all(set(v) == {'front', 'side', 'back'} for v in m['heads'].values())
     assert set(m['beard']) == {'front', 'side'} and set(m['glasses']) == {'front', 'side'} and set(m['props']) == {'clothes'}
+    assert set(m['shades']) == {'front', 'side'} and all({'x', 'y', 'w', 'h', 'ax', 'ay'} <= set(e) for e in m['shades'].values())
     boxes = []
     def box(e):
         assert e['x'] >= 0 and e['y'] >= 0 and e['x'] + e['w'] <= sheet.width and e['y'] + e['h'] <= sheet.height
@@ -391,7 +428,7 @@ def test_the_built_sheet_and_manifest_are_what_the_game_needs():
     for e in m['bodies'].values(): box(e); assert {'ax', 'ay', 'view'} <= set(e)
     for v in m['heads'].values():
         for e in v.values(): box(e); assert {'ax', 'ay'} <= set(e)
-    for k in ('beard', 'glasses'):
+    for k in ('beard', 'glasses', 'shades'):
         for e in m[k].values(): box(e)
     box(m['props']['clothes'])
     assert m['props']['clothes']['mark'] == list(hp.props()['clothes']['mark'])
@@ -440,13 +477,14 @@ def test_fixtures_for_the_games_tests_are_python_compositions():
     seen = set()
     for c in cases:
         spec = json.load(open(os.path.join(d, c + '.json')))
-        img, ax, ay = hp.compose(m, codes, spec['body'], spec['style'], spec['beard'], spec['glasses'], spec['look'], spec['outfit'])
+        img, ax, ay = hp.compose(m, codes, spec['body'], spec['style'], spec['beard'], spec['glasses'], spec['look'], spec['outfit'], spec['shades'])
         assert spec['outfit'] == ('pj' if spec['body'].startswith('pj_') else 'hoodie'), c
         want = np.frombuffer(open(os.path.join(d, c + '.rgba'), 'rb').read(), np.uint8).reshape(spec['h'], spec['w'], 4)
         assert np.array_equal(np.asarray(img), want), c
         assert (spec['ax'], spec['ay']) == (ax, ay), c
         seen |= {spec['body'], spec['style']}
-    assert {'front', 'side', 'back', 'walk_contact', 'toward_l', 'away_l', 'pj_sit', 'long', 'fro', 'mohawk', 'standard'} <= seen
+        if spec['shades']: seen.add('shades')
+    assert {'front', 'side', 'back', 'walk_contact', 'toward_l', 'away_l', 'pj_sit', 'long', 'fro', 'mohawk', 'standard', 'shades'} <= seen
 
 
 def test_composing_from_the_built_files_is_placing_the_pieces():

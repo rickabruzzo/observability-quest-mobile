@@ -320,6 +320,7 @@ import functools
 import json
 
 SET = 'art-drops/2026-11-15-hero-painted-set'
+SHADES = 'art-drops/2026-11-19-the-sunrise'            # the sunglasses of the ending (art brief 09): HD_shades_front, HD_shades_side
 ANCHOR = (28, 36)                                  # the neck on the standing figures' game canvas (56, 72 as delivered)
 NECK = {'front': 35, 'side': 36, 'back': 33}       # the collar's row at game size, each view's standing figure (the drop's hand-back)
 BASE = {'front': f'{DROP}/H_front.png', 'side': f'{DROP}/H_side.png', 'back': f'{SET}/H_back.png'}   # the approved figure of each view: short hair, beard
@@ -340,9 +341,11 @@ HEAD_FILES = {     # 'standard' is the approved short hair on the clean-shaven f
 OVERLAY_FILES = {  # what is added -> view -> (the painting with it, the painting without)
     'beard': {v: (BASE[v], f'{SET}/HD_clean_{v}.png') for v in ('front', 'side')},
     'glasses': {v: (f'{SET}/HD_glasses_{v}.png', f'{SET}/HD_clean_{v}.png') for v in ('front', 'side')},
+    'shades': {v: (f'{SHADES}/HD_shades_{v}.png', f'{SET}/HD_clean_{v}.png') for v in ('front', 'side')},
 }
 HAIR_SCALE = {'fro': 0.78}                         # a hair style cut smaller than it was painted (Rick, 2026-11-16: "Those afros are way too large")
 FRAME = 0.04                                       # a pixel this much darker with the glasses on is frame
+LENS = 0.30                                        # a face pixel darker than this with the sunglasses on is lens or frame
 PJ = {'top': '#A9C4EC', 'bottom': '#A9C4EC'}       # the pyjamas' pale blue, the same on everyone (js/engine/hero-parts.js)
 TONES, TONE_0, TONE_STEP = 32, 0.15, 0.05          # a part's lightness, as a share of its usual one, in 32 steps from 0.15
 TONE_OF_1 = round((1 - TONE_0) / TONE_STEP)        # the tone that is the player's colour itself
@@ -547,10 +550,20 @@ def _overlay(what, view, with_path, without_path):
     edge, a cheek shaded a little differently, the hair beside the glasses redrawn. None of that belongs on
     another hair style. So the beard is the differing patches that hold beard (hair in the lower half of the
     head), and the glasses are the frames alone: the differing outline and grey, and the pixels a frame darkened
-    (a frame is half a pixel thick at this size, so most of it is a face pixel painted darker)."""
+    (a frame is half a pixel thick at this size, so most of it is a face pixel painted darker).
+
+    The sunglasses (art brief 09) are the frames and the lenses. A lens is near black, and the sorting reads near
+    black over a face as dark skin or dark hair, which the game would then paint in the player's skin or hair
+    colour. So where the clean head has face and the sunglasses' painting is dark, the pixel is written as outline,
+    the one dark that is the same on everyone, at the painting's own lightness. The lighter pixels round them (a
+    lens's edge half over the cheek) stay skin, painted darker, as the glasses' frames do."""
     a, al = full(with_path); b, bl = full(without_path)
     differ = (a != b) | (np.abs(al - bl) > 1e-9)
     if what == 'glasses': keep = differ & (a != _HAIR) & (np.isin(a, (_OUTLINE, _GREY)) | (al < bl - FRAME))
+    elif what == 'shades':
+        dark = differ & (a > 0) & (b != _HAIR) & (al < LENS)
+        keep = dark | (differ & (a != _HAIR) & (np.isin(a, (_OUTLINE, _GREY)) | (al < bl - FRAME)))
+        a = np.where(dark, _OUTLINE, a).astype(a.dtype)
     else:
         rows = np.nonzero(_base_mask(view).any(axis=1))[0]
         mid = (rows[0] + min(rows[-1], NECK[view])) / 2
@@ -563,7 +576,7 @@ def _overlay(what, view, with_path, without_path):
 
 @functools.lru_cache(maxsize=None)
 def overlays():
-    """{'beard' | 'glasses': {view: piece}}: see _overlay."""
+    """{'beard' | 'glasses' | 'shades': {view: piece}}: see _overlay."""
     return {what: {view: _overlay(what, view, *pair) for view, pair in views.items()} for what, views in OVERLAY_FILES.items()}
 
 
@@ -757,6 +770,7 @@ def build_set(out=None):
         'heads': {s: {v: entry(('heads', s, v), H[s][v]) for v in H[s]} for s in H},
         'beard': {v: entry(('beard', v), O['beard'][v]) for v in O['beard']},
         'glasses': {v: entry(('glasses', v), O['glasses'][v]) for v in O['glasses']},
+        'shades': {v: entry(('shades', v), O['shades'][v]) for v in O['shades']},
         'props': {n: {**entry(('props', n), Pr[n], anchor=False), 'mark': list(Pr[n]['mark'])} for n in Pr},
         'walk': {name: {'frames': [{'body': b, 'dy': dy} for b, dy in frames]} for name, frames in WALKS.items()},
         'mark': {'dx': MARK[0], 'dy': MARK[1], 'bodies': list(MARKED)},
@@ -770,20 +784,22 @@ def build_set(out=None):
     return m
 
 
-def compose(m, codes, body, style, beard=False, glasses=False, look=None, outfit='hoodie'):
+def compose(m, codes, body, style, beard=False, glasses=False, look=None, outfit='hoodie', shades=False):
     """A finished figure from the built files, exactly as the game makes one: the body, the head of that style for
     the body's view, then the beard and the glasses if asked for and the view shows them, anchor on anchor; then
-    each code looked up in the look's colours. -> (RGBA picture, ax, ay)."""
+    each code looked up in the look's colours. With `shades` the sunglasses go where the glasses would, in place
+    of them. -> (RGBA picture, ax, ay)."""
     cut = lambda e: (codes[e['y']:e['y'] + e['h'], e['x']:e['x'] + e['w']], e['ax'], e['ay'])
     b = m['bodies'][body]; view = b['view']
     layers = [cut(b), cut(m['heads'][style][view])]
     if beard and view in m['beard']: layers.append(cut(m['beard'][view]))
-    if glasses and view in m['glasses']: layers.append(cut(m['glasses'][view]))
+    if shades and view in m['shades']: layers.append(cut(m['shades'][view]))
+    elif glasses and view in m['glasses']: layers.append(cut(m['glasses'][view]))
     out, ax, ay = _stack(layers)
     return paint(out, look, outfit), ax, ay
 
 
-CASES = [   # finished figures for the game's tests: name, body, style, beard, glasses, look
+CASES = [   # finished figures for the game's tests: name, body, style, beard, glasses, look, and True for sunglasses
     ('front-standard-beard', 'front', 'standard', True, False, {'hoodie': 'ink', 'jeans': 'indigo', 'skin': 0, 'hair': 'black'}),
     ('side-long-glasses', 'side', 'long', False, True, {'hoodie': 'honey', 'jeans': 'black', 'skin': 1, 'hair': 'brown'}),
     ('back-fro', 'back', 'fro', False, False, {'hoodie': 'teal', 'jeans': 'grey', 'skin': 0, 'hair': 'violet'}),
@@ -794,6 +810,9 @@ CASES = [   # finished figures for the game's tests: name, body, style, beard, g
     ('away-l-long-asked-for-beard-and-glasses', 'away_l', 'long', True, True, {'hoodie': 'honey', 'jeans': 'black', 'skin': 2, 'hair': 'brown'}),
     ('pj-sit-standard-beard', 'pj_sit', 'standard', True, False, {'hoodie': 'ink', 'jeans': 'indigo', 'skin': 0, 'hair': 'black'}),
     ('pj-front-mohawk-glasses', 'pj_front', 'mohawk', False, True, {'hoodie': 'teal', 'jeans': 'grey', 'skin': 3, 'hair': 'violet'}),
+    ('front-fro-glasses-under-shades', 'front', 'fro', False, True, {'hoodie': 'honey', 'jeans': 'indigo', 'skin': 3, 'hair': 'black'}, True),
+    ('side-standard-beard-shades', 'side', 'standard', True, False, {'hoodie': 'teal', 'jeans': 'light', 'skin': 0, 'hair': 'blonde'}, True),
+    ('back-long-asked-for-shades', 'back', 'long', False, False, {'hoodie': 'ink', 'jeans': 'grey', 'skin': 1, 'hair': 'ginger'}, True),
 ]
 
 
@@ -804,11 +823,11 @@ def write_fixtures(out=None, built=None):
     m = json.load(open(os.path.join(built, 'hero.json')))
     codes = np.asarray(Image.open(os.path.join(built, m['image'])))
     with open(os.path.join(out, 'sheet.codes'), 'wb') as f: f.write(codes.tobytes())
-    for name, body, style, beard, glasses, look in CASES:
-        outfit = 'pj' if body.startswith('pj_') else 'hoodie'
-        img, ax, ay = compose(m, codes, body, style, beard, glasses, look, outfit)
+    for name, body, style, beard, glasses, look, *more in CASES:
+        outfit = 'pj' if body.startswith('pj_') else 'hoodie'; shades = bool(more and more[0])
+        img, ax, ay = compose(m, codes, body, style, beard, glasses, look, outfit, shades)
         with open(os.path.join(out, name + '.json'), 'w') as f:
-            json.dump(dict(body=body, style=style, beard=beard, glasses=glasses, look=look, outfit=outfit, w=img.width, h=img.height, ax=ax, ay=ay), f); f.write('\n')
+            json.dump(dict(body=body, style=style, beard=beard, glasses=glasses, shades=shades, look=look, outfit=outfit, w=img.width, h=img.height, ax=ax, ay=ay), f); f.write('\n')
         with open(os.path.join(out, name + '.rgba'), 'wb') as f: f.write(np.asarray(img).tobytes())
     return [c[0] for c in CASES]
 
