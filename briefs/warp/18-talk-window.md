@@ -90,3 +90,6 @@ Built as briefed (`handbacks/2026-11-25-warp-talk-window.md`); reviewed in
   wrapped and put the window on his hair; every room now clears him at both phone sizes.
 - **The portrait never grows past today's four lines.** This brief said today's portrait was the name and four
   lines; it was four lines. It now shrinks to the name and the lines and a four-line window is as before.
+- **Then one size everywhere** (Rick: "They should be consistent in scale. Pick the relative smallest and use that
+  as a basis for the others."): every persona's window is two lines, its name at 18 px, its portrait 72 CSS px. The
+  per-room line count is gone.

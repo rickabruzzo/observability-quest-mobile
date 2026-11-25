@@ -2,7 +2,7 @@
 // portrait moves. Pure functions in js/engine/conversation.js; the DOM is js/engine/window.js.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { speakerOf, personaLine, portraitFrame, FRAME_MS, PORTRAIT_CROP, talkWindow, talkLines, TALK_MAX, TALK_MIN, HEAD_CLEAR } from '../js/engine/conversation.js';
+import { speakerOf, personaLine, portraitFrame, FRAME_MS, PORTRAIT_CROP, talkWindow, TALK_LINES, HEAD_CLEAR } from '../js/engine/conversation.js';
 import { SCRIPT } from '../js/script.js';
 import { CH1 } from '../js/chapters/ch1.js';
 
@@ -76,34 +76,8 @@ test('the window sits where it hides the persona least: beside their patch, at t
   assert.ok(talkWindow('top-left', null, scale, 10).maxWidth >= Math.floor(320 * scale) - 20, 'no patch: the whole width');
 });
 
-// ---- the conversation window clears the hero's head (Warp brief 18) ----
+// ---- one size for every persona's window (brief 18 review; Rick, 2026-11-25: consistent, the smallest as the basis) ----
 
-test('a conversation window takes as many lines as end 2 CSS px above his head: at most four, at least two', () => {
-  assert.equal(TALK_MAX, 4); assert.equal(TALK_MIN, 2); assert.equal(HEAD_CLEAR, 2);
-  // a window from x 8 to 400 CSS px, its outline's top at 4, 25 px of chrome (outline, border, padding), a 22 px name, 26.4 px lines
-  const win = { top: 4, left: 8, right: 400, chrome: 25, name: 22, line: 26.4 };
-  const scale = 1.85, hero = (y) => ({ x: 160, y, w: 36 });          // his box in scene px, his head's top at y
-  const bottom = (n) => win.top + win.chrome + win.name + n * win.line;
-  // four when it all fits: the bottom of four lines plus the 2 px clearance, in scene px
-  assert.equal(talkLines(hero((bottom(4) + 2) / scale), scale, win), 4);
-  assert.equal(talkLines(hero(200), scale, win), 4, 'never over four');
-  // fewer as his head rises: one pixel short of four is three, and so on
-  assert.equal(talkLines(hero((bottom(4) + 1.9) / scale), scale, win), 3);
-  assert.equal(talkLines(hero((bottom(3) + 2) / scale), scale, win), 3);
-  assert.equal(talkLines(hero((bottom(3) + 1) / scale), scale, win), 2);
-  assert.equal(talkLines(hero((bottom(2) + 2) / scale), scale, win), 2);
-  // never under two, however high he stands
-  assert.equal(talkLines(hero(40), scale, win), 2);
-  assert.equal(talkLines(hero(0), scale, win), 2);
-  // as his head rises the count never grows
-  let last = TALK_MAX;
-  for (let y = 120; y >= 0; y -= 0.5) { const n = talkLines(hero(y), scale, win); assert.ok(n <= last && n >= TALK_MIN, `y ${y}: ${n}`); last = n; }
-});
-
-test('four lines when the window is not over him, or he is not there', () => {
-  const win = { top: 4, left: 8, right: 300, chrome: 25, name: 22, line: 26.4 }, scale = 2;
-  assert.equal(talkLines({ x: 150, y: 40, w: 30 }, scale, win), 4, 'he is right of the window: 300 ≤ 150×2');
-  assert.equal(talkLines({ x: 0, y: 40, w: 4 }, scale, win), 4, 'he is left of it: 4×2 ≤ 8');
-  assert.equal(talkLines({ x: 148, y: 40, w: 30 }, scale, win), 2, 'one pixel under its right edge is over him');
-  assert.equal(talkLines(null, scale, win), 4, 'not in the room');
+test('every conversation window takes two lines, the fewest any room needs to clear the hero\'s head', () => {
+  assert.equal(TALK_LINES, 2); assert.equal(HEAD_CLEAR, 2);
 });

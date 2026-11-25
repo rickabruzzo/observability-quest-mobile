@@ -48,3 +48,23 @@ Talk to each persona. Rooms 2, 3 and 5 page two lines at a time, so they take mo
 ## Next
 
 Nothing is waiting on me. Still unbriefed: the soundtrack, and going live.
+
+## Then: one size in every room (Rick, 2026-11-25)
+
+Rick, on the five rooms side by side: "They should be consistent in scale. Pick the relative smallest and use that
+as a basis for the others."
+
+So every persona's window is now the smallest any room needed, in every room and on every screen:
+
+- **Two lines a page** (`TALK_LINES` in `js/engine/conversation.js`). The per-room fitting (`talkLines`) is gone:
+  two is what clears his head where he stands highest (room 2), so it clears him everywhere.
+- **The name at 18 px**, the size the longest name, THE FRONTEND DEVELOPER, needs to stay on one line in room 3's
+  narrow window on the 667×375 phone. The shrink-to-fit stays as a fallback for a narrower phone.
+- **The portrait** as tall as the name and the two lines: 72 CSS px, the same in every room.
+
+At both phone sizes the window's bottom edge is at row 56 to 59 in every room, clear of his head by 4 (room 2) to
+31 (room 4). The CTO test's portrait floor is 64 px now (it was 96, the four-line size).
+
+| Tree | Unit | Python | Browser |
+|---|---|---|---|
+| `desktop/talk-window-scale` | 437 | 151 | 187 |

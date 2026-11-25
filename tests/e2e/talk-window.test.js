@@ -1,6 +1,8 @@
-// The conversation window clears the hero's head (Warp brief 18): in every room, at both phone sizes, the persona's first
-// line opens a window that takes only the lines ending 2 CSS px above the top of his hair (at most four, at least two),
-// stays clear of the persona's patch, and has a square portrait as tall as its name and its lines. Every expectation
+// The conversation window clears the hero's head (Warp brief 18) and is the same size in every room (the review; Rick,
+// 2026-11-25: "They should be consistent in scale. Pick the relative smallest and use that as a basis for the others."):
+// in every room, at both phone sizes, the persona's first line opens a window of two lines, its name at 18 px on one
+// line, ending 2 CSS px above the top of his hair, clear of the persona's patch, with a square portrait as tall as its
+// name and its lines, the same portrait in every room. Every expectation
 // comes from the chapter's data, the room's manifest and the rule in js/engine/conversation.js; nothing names a room.
 import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -8,7 +10,7 @@ import { chromium } from 'playwright';
 import { readFileSync } from 'node:fs';
 import { startServer } from './_server.js';
 import { CHAPTERS } from '../../js/chapters/index.js';
-import { TALK_MAX, TALK_MIN, HEAD_CLEAR } from '../../js/engine/conversation.js';
+import { TALK_LINES, HEAD_CLEAR } from '../../js/engine/conversation.js';
 import { openGame, ch, dismiss, tapSpot, closeCard, winOpen } from './_play.js';
 import { SCRIPT } from '../../js/script.js';
 
@@ -17,6 +19,7 @@ before(async () => { server = await startServer(); browser = await chromium.laun
 after(async () => { await browser?.close(); await server?.close(); });
 
 const PHONES = [[844, 390], [667, 375]];
+const SIZES = {};                                  // what each room's window came out as, per phone
 const NS = Object.keys(CHAPTERS).map(Number);
 const spot = (n) => CHAPTERS[n].room.hotspots.find((h) => h.use?.action === 'persona').id;
 
@@ -46,25 +49,18 @@ for (const n of NS) {
       const m = await measure(page);
       const at = `room ${n} ${w}x${h}: ${m.lines} lines, bottom ${m.box.bottom.toFixed(1)}, head ${m.head.toFixed(1)}`;
       console.log(`# ${at}`);
-      assert.ok(m.lines >= TALK_MIN && m.lines <= TALK_MAX, at);
-      const over = m.box.right > m.hero.left && m.box.left < m.hero.right;
-      if (!over) assert.equal(m.lines, TALK_MAX, `${at}: not over him, so four`);
-      else {
-        // clear of his head, unless two (the floor) do not clear him; and as many as fit: one more would not
-        const clear = m.box.bottom <= m.head - HEAD_CLEAR + 0.5;
-        assert.ok(clear, `${at}: covers his head`);
-        if (m.lines < TALK_MAX) assert.ok(m.box.bottom + m.line > m.head - HEAD_CLEAR, `${at}: another line would have fitted`);
-      }
+      assert.equal(m.lines, TALK_LINES, at);
+      assert.ok(m.box.bottom <= m.head - HEAD_CLEAR + 0.5, `${at}: covers his head`);
       // clear of the persona's patch
       const p = { left: patch.x * m.k, right: (patch.x + patch.w) * m.k, top: patch.y * m.k, bottom: (patch.y + patch.h) * m.k };
       const hits = m.box.right > p.left + 0.5 && m.box.left < p.right - 0.5 && m.box.bottom > p.top + 0.5 && m.box.top < p.bottom - 0.5;
       assert.ok(!hits, `${at}: the window ${JSON.stringify(m.box)} is over the persona's patch ${JSON.stringify(p)}`);
       // the portrait: square, as tall as the name and the lines (to the whole pixel below)
       assert.ok(Math.abs(m.portrait.w - m.portrait.h) < 0.5, `${at}: portrait ${m.portrait.w}×${m.portrait.h}`);
-      const tall = Math.min(m.words, TALK_MAX * m.line);                       // it only shrinks: never above today's four lines
-      assert.ok(m.portrait.h <= tall + 0.5 && m.portrait.h > tall - 1 - 4, `${at}: portrait ${m.portrait.h} vs ${tall}`);
-      // the name is one line, set no smaller than 16 px
-      assert.ok(m.nameLines === 1 && m.namePx >= 16, `${at}: the name takes ${m.nameLines} lines at ${m.namePx} px`);
+      assert.ok(m.portrait.h <= m.words + 0.5 && m.portrait.h > m.words - 1, `${at}: portrait ${m.portrait.h} vs name and lines ${m.words}`);
+      // the name is one line at 18 px, the size the longest name needs in the narrowest window
+      assert.ok(m.nameLines === 1 && m.namePx === 18, `${at}: the name takes ${m.nameLines} lines at ${m.namePx} px`);
+      (SIZES[`${w}x${h}`] ??= []).push({ n, portrait: Math.round(m.portrait.h), name: m.namePx });
       // every page holds that many lines, the last up to that many: the words are all there, paged by the window
       const id = (await ch(page)).window.id, same = async () => (await ch(page)).window?.id === id;
       for (let guard = 0; guard < 40; guard++) {
@@ -80,4 +76,13 @@ for (const n of NS) {
       await ctx.close();
     });
   }
+}
+
+for (const [w, h] of PHONES) {
+  test(`${w}x${h}: every room's window is the same size: the same portrait and the same name`, () => {
+    const got = SIZES[`${w}x${h}`] ?? [];
+    assert.equal(got.length, NS.length, 'every room was measured');
+    assert.equal(new Set(got.map((g) => g.portrait)).size, 1, JSON.stringify(got));
+    assert.equal(new Set(got.map((g) => g.name)).size, 1, JSON.stringify(got));
+  });
 }

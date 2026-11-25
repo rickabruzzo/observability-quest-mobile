@@ -4,11 +4,11 @@
 // so a paused game (the rotate gate) freezes the typing too.
 //
 // A conversation window (Warp brief 10) is the same window grown a portrait on its left — the persona's
-// close-up, as tall as its name and lines (four, or fewer to clear the hero's head: brief 18), moving as the narrators do while the words type — with their name above the
+// close-up, as tall as its name and its two lines (brief 18), moving as the narrators do while the words type — with their name above the
 // words. Which lines get one, and whose portrait, is the chapter's business (js/engine/conversation.js).
 
 import { paginate, createMessage, stepMessage, tapMessage, visibleLines, linesFor, hugWidth, MAX_LINE_PX } from './message.js';
-import { PORTRAIT_CROP, portraitFrame, talkLines, TALK_MAX } from './conversation.js';
+import { PORTRAIT_CROP, portraitFrame, TALK_LINES } from './conversation.js';
 import { sprite } from '../anim/sprites.js';
 
 const FONT_PX = 24;
@@ -27,15 +27,6 @@ function nameHeight(el) {
   const n = el.querySelector('.msg-name');
   return n.getBoundingClientRect().height + (parseFloat(getComputedStyle(n).marginBottom) || 0);
 }
-/** A conversation window's measurements for talkLines, in CSS px from the overlay's (the scene's) top left: its outline's
- * edges, the height that is neither name nor lines (outline, border, padding), the name with its margin, one line. */
-function talkMeasure(el) {
-  const cs = getComputedStyle(el), o = el.offsetParent?.getBoundingClientRect() ?? { left: 0, top: 0 }, r = el.getBoundingClientRect();
-  const ow = cs.outlineStyle === 'none' ? 0 : parseFloat(cs.outlineWidth) || 0;
-  const chrome = 2 * ow + parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth) + parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
-  return { top: r.top - o.top - ow, left: r.left - o.left - ow, right: r.right - o.left + ow, chrome, name: nameHeight(el), line: lineHeight(el.querySelector('.msg-body')) };
-}
-
 /** Paints the portrait's square: the still, then the mouth patch and the blink patch for this frame. */
 function paintPortrait(canvas, portrait, { mouth, blink }) {
   const g = canvas.getContext('2d'), c = PORTRAIT_CROP;
@@ -90,10 +81,9 @@ export function createWindows(ctx, { onShow } = {}) {
     /**
      * Opens a window (closing any open one) and resolves when the player dismisses it.
      * `portrait` ({ name, still, frames: { talk1, talk2, blink }, seed }) makes it a conversation window;
-     * `maxWidth` (CSS px) keeps it off something in the scene. `clear` ({ hero, scale }: his drawn box in scene px and
-     * CSS px per scene px) makes a conversation window take only the lines that end above his head (brief 18).
+     * `maxWidth` (CSS px) keeps it off something in the scene.
      */
-    say(text, { where = 'center', className = '', portrait = null, maxWidth = null, name = null, maxLines = null, clear = null } = {}) {
+    say(text, { where = 'center', className = '', portrait = null, maxWidth = null, name = null, maxLines = null } = {}) {
       if (el) close();
       serial++;
       onShow?.(text);
@@ -135,8 +125,7 @@ export function createWindows(ctx, { onShow } = {}) {
           const body = el.querySelector('.msg-body'), lh = lineHeight(body);
           body.style.minHeight = `${lines * lh}px`;
           const box = el.querySelector('.msg-portrait'), bw = box.offsetWidth - box.clientWidth;
-          // as tall as the name and the lines, but never taller than today's four lines: it only shrinks, to clear his head
-          const inner = Math.max(1, Math.floor(Math.min(nameHeight(el) + lines * lh, TALK_MAX * lh) - bw));   // whole CSS px
+          const inner = Math.max(1, Math.floor(nameHeight(el) + lines * lh - bw));   // as tall as the name and the lines, whole CSS px
           box.style.width = box.style.height = `${inner}px`;
           side = box.offsetWidth + (parseFloat(cs.columnGap) || 0);
         }
@@ -146,17 +135,8 @@ export function createWindows(ctx, { onShow } = {}) {
         const column = Math.min(Math.max(hugWidth(pages, measureFn()), nameW), width);
         el.style.width = `${column + 2 + pad + chrome + side}px`;            // and no wider than its longest line
       };
-      let lines = maxLines ?? (portrait ? TALK_MAX : linesFor(ctx.fit?.sceneH ?? 370));
+      const lines = maxLines ?? (portrait ? TALK_LINES : linesFor(ctx.fit?.sceneH ?? 370));
       fitTo(lines);
-      // over the hero, it takes only the lines that end above his head; the name may rewrap as the portrait changes size,
-      // so settle the two (each pass is a handful of measurements)
-      if (portrait && clear && maxLines == null) {
-        for (let i = 0, nameH = -1; i < 4; i++) {
-          const m = talkMeasure(el), n = talkLines(clear.hero, clear.scale, m);
-          if (n === lines && m.name === nameH) break;
-          lines = n; nameH = m.name; fitTo(lines);
-        }
-      }
       el.dataset.lines = String(lines);
       msg = createMessage(pages, { instant: ctx.reducedMotion });
       el.dataset.text = text;

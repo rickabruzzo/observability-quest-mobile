@@ -46,23 +46,11 @@ export function talkWindow(where, patch, scale, margin = 10) {
   return { className: where === 'top-right' ? 'top-right' : 'top-left', maxWidth: Math.floor(free * scale) - 2 * margin };
 }
 
-/** A conversation window's lines: at most four (the portrait's height in brief 10), never fewer than two. */
-export const TALK_MAX = 4, TALK_MIN = 2;
+/**
+ * A conversation window's lines: two in every room (Warp brief 18 and its review). Two is the most that clears the
+ * hero's head in the room where he stands highest; Rick, 2026-11-25: "They should be consistent in scale. Pick the
+ * relative smallest and use that as a basis for the others." So every persona's window is that size.
+ */
+export const TALK_LINES = 2;
 /** Clear of his head means the window's outline ends at least this many CSS px above the top of his hair (brief 18). */
 export const HEAD_CLEAR = 2;
-
-/**
- * How many lines a conversation window may take and still end HEAD_CLEAR CSS px above the hero's head (Warp brief 18).
- * `hero` is the box of what is drawn of him, in scene px (`heroBox()`: its `y` is the top of his hair), or null when he
- * is not in the room; `scale` CSS px per scene px. `win` is the window as measured, in CSS px from the scene's top left:
- * `top`, `left` and `right` its outline's edges, `chrome` all of its height that is neither name nor lines (outline,
- * border, padding), `name` the name's height with its margin, `line` one line. Four when the window is not over him.
- */
-export function talkLines(hero, scale, win) {
-  if (!hero) return TALK_MAX;
-  const l = hero.x * scale, r = (hero.x + hero.w) * scale;
-  if (win.right <= l || win.left >= r) return TALK_MAX;
-  const room = hero.y * scale - HEAD_CLEAR - win.top - win.chrome - win.name;
-  const n = Math.floor(room / win.line + 1e-6);
-  return Math.max(TALK_MIN, Math.min(TALK_MAX, n));
-}

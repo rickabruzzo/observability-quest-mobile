@@ -178,10 +178,8 @@ export function createChapterScreen(game) {
     if (spoken) {
       const patch = art?.manifest.patches?.[room.image] ?? null;
       const scale = gctx?.fit?.scale ?? 1, { className, maxWidth } = talkWindow(persona.where, patch, scale);
-      // in the room he stands under the window: it takes only the lines that end above his head (brief 18)
-      const clear = ['room', 'decide', 'ending'].includes(state) ? { hero: heroBox(), scale } : null;
       personaTalking = true;
-      await wins.say(text, { ...opts, where: className, maxWidth, clear, portrait: { name: persona.name, seed: persona.seed, ...persona.portrait } });
+      await wins.say(text, { ...opts, where: className, maxWidth, portrait: { name: persona.name, seed: persona.seed, ...persona.portrait } });
       if (t === live()) personaTalking = false;
     } else await wins.say(text, opts);
     return t === live();
