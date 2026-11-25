@@ -130,3 +130,5 @@ block on. Test the restyle under `.hs-form` on a real phone.
 - Persona card (2026-11-13, Warp brief 07): the card's picture is still; brief 08 adds the painted frames from `assets/cards/cards.json` and Knight Watch's phone. The stopwatch summary's own labels stay in code until the summary comes out before the booth build.
 - The menu's `menu.soon` slot is unused now that all five scenarios play (brief 08); delete it from the script when convenient.
 - Scenario 4's coding-agent tool needs a close label slot (`ch4.hc.close`, "[Close Claw Codez]"); until then the data carries the string.
+
+- **The conversation window clears the hero's head** (Rick, 2026-11-25: fit it per room): Warp brief 18, `briefs/warp/18-talk-window.md`. The window takes as many lines as fit above his head, two to four.
