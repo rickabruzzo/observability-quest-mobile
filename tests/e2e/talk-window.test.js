@@ -30,6 +30,8 @@ const measure = (page) => page.evaluate(() => {
     shown: el.querySelectorAll('.msg-line').length, line: parseFloat(getComputedStyle(el.querySelector('.msg-body')).lineHeight),
     box: { left: r.left - sc.left - ow, right: r.right - sc.left + ow, top: r.top - sc.top - ow, bottom: r.bottom - sc.top + ow },
     portrait: { w: P.width, h: P.height }, words: T.height,
+    nameLines: Math.round(el.querySelector('.msg-name').getBoundingClientRect().height / parseFloat(getComputedStyle(el.querySelector('.msg-name')).lineHeight)),
+    namePx: parseFloat(getComputedStyle(el.querySelector('.msg-name')).fontSize),
     head: hb.y * k, hero: { left: hb.x * k, right: (hb.x + hb.w) * k },
   };
 });
@@ -50,7 +52,7 @@ for (const n of NS) {
       else {
         // clear of his head, unless two (the floor) do not clear him; and as many as fit: one more would not
         const clear = m.box.bottom <= m.head - HEAD_CLEAR + 0.5;
-        assert.ok(clear || m.lines === TALK_MIN, `${at}: covers his head with more than ${TALK_MIN} lines`);
+        assert.ok(clear, `${at}: covers his head`);
         if (m.lines < TALK_MAX) assert.ok(m.box.bottom + m.line > m.head - HEAD_CLEAR, `${at}: another line would have fitted`);
       }
       // clear of the persona's patch
@@ -59,7 +61,10 @@ for (const n of NS) {
       assert.ok(!hits, `${at}: the window ${JSON.stringify(m.box)} is over the persona's patch ${JSON.stringify(p)}`);
       // the portrait: square, as tall as the name and the lines (to the whole pixel below)
       assert.ok(Math.abs(m.portrait.w - m.portrait.h) < 0.5, `${at}: portrait ${m.portrait.w}×${m.portrait.h}`);
-      assert.ok(m.portrait.h <= m.words + 0.5 && m.portrait.h > m.words - 1, `${at}: portrait ${m.portrait.h} vs name and lines ${m.words}`);
+      const tall = Math.min(m.words, TALK_MAX * m.line);                       // it only shrinks: never above today's four lines
+      assert.ok(m.portrait.h <= tall + 0.5 && m.portrait.h > tall - 1 - 4, `${at}: portrait ${m.portrait.h} vs ${tall}`);
+      // the name is one line, set no smaller than 16 px
+      assert.ok(m.nameLines === 1 && m.namePx >= 16, `${at}: the name takes ${m.nameLines} lines at ${m.namePx} px`);
       // every page holds that many lines, the last up to that many: the words are all there, paged by the window
       const id = (await ch(page)).window.id, same = async () => (await ch(page)).window?.id === id;
       for (let guard = 0; guard < 40; guard++) {

@@ -12,6 +12,7 @@ import { PORTRAIT_CROP, portraitFrame, talkLines, TALK_MAX } from './conversatio
 import { sprite } from '../anim/sprites.js';
 
 const FONT_PX = 24;
+const NAME_MIN_PX = 16;                     // the floor for read text
 
 let measurer = null;
 function measureFn(px = FONT_PX) {
@@ -116,6 +117,16 @@ export function createWindows(ctx, { onShow } = {}) {
         nameW = Math.ceil(measureFn(parseFloat(ns.fontSize))(shownName) + (parseFloat(ns.letterSpacing) || 0) * shownName.length);
       }
       let pages = null;
+      /** A name wider than the words column is set smaller, down to NAME_MIN_PX, so it stays on one line: a wrapped name
+       * makes the window a line taller, over the hero's head (room 3's THE FRONTEND DEVELOPER, brief 18 review). */
+      const nameEl = el.querySelector('.msg-name'), namePx = shownName ? parseFloat(getComputedStyle(nameEl).fontSize) : 0;
+      const nameAt = (px) => Math.ceil(measureFn(px)(shownName) + (parseFloat(getComputedStyle(nameEl).letterSpacing) || 0) * shownName.length);
+      const fitName = (width) => {
+        let px = namePx;
+        while (px > NAME_MIN_PX && nameAt(px) > width) px--;
+        nameEl.style.fontSize = px === namePx ? '' : `${px}px`;
+        nameW = nameAt(px);
+      };
       /** Pages the words by `lines` and sizes the window to them: a conversation window's portrait is as tall as its name
        * and its lines (brief 18), and the words column is what the portrait leaves, up to the reading measure. */
       const fitTo = (lines) => {
@@ -124,11 +135,13 @@ export function createWindows(ctx, { onShow } = {}) {
           const body = el.querySelector('.msg-body'), lh = lineHeight(body);
           body.style.minHeight = `${lines * lh}px`;
           const box = el.querySelector('.msg-portrait'), bw = box.offsetWidth - box.clientWidth;
-          const inner = Math.max(1, Math.floor(nameHeight(el) + lines * lh - bw));   // whole CSS px, so the picture stays crisp
+          // as tall as the name and the lines, but never taller than today's four lines: it only shrinks, to clear his head
+          const inner = Math.max(1, Math.floor(Math.min(nameHeight(el) + lines * lh, TALK_MAX * lh) - bw));   // whole CSS px
           box.style.width = box.style.height = `${inner}px`;
           side = box.offsetWidth + (parseFloat(cs.columnGap) || 0);
         }
         const width = Math.min(MAX_LINE_PX, avail - pad - 2 - side);         // never wider than the reading measure
+        if (shownName) fitName(width);
         pages = paginate(text, measureFn(), width, lines);
         const column = Math.min(Math.max(hugWidth(pages, measureFn()), nameW), width);
         el.style.width = `${column + 2 + pad + chrome + side}px`;            // and no wider than its longest line
