@@ -137,6 +137,8 @@ html[data-swipe="1"] body { min-height: calc(100vh + 80px); }
 .msg.right { left: auto; right: 8px; top: 50%; transform: translateY(-50%); }
 .msg.named .msg-name { font-size: 20px; line-height: 1; color: var(--sheet-blue); margin-bottom: 2px; letter-spacing: 1px; }
 .msg.talk { display: flex; align-items: flex-start; column-gap: 10px; }
+/* the portrait's size and the words' height are four lines' here; js/engine/window.js sets both to the name and the
+   lines the window takes, fewer where it would cover the hero's head (brief 18) */
 .msg.talk .msg-portrait { flex: none; width: 4.4em; height: 4.4em; border: 2px solid #111; background: #000; box-sizing: content-box; }
 .msg.talk .msg-portrait canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; image-rendering: crisp-edges; }
 .msg.talk .msg-text { flex: 1; min-width: 0; }
