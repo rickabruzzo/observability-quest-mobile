@@ -479,7 +479,7 @@ for (const [w, h] of PHONES) {
     assert.notEqual(m.text, SCRIPT['ch1.cto.call.1']);
     assert.ok(m.canvas && m.canvas.w > 0 && m.canvas.h > 0, 'the portrait has a size');
     assert.ok(m.canvas.painted > m.canvas.w * m.canvas.h * 0.5, `the portrait is painted (${m.canvas.painted})`);
-    assert.ok(m.canvas.css >= 96, `portrait ${m.canvas.css} CSS px tall`);
+    assert.ok(m.canvas.css >= 64, `portrait ${m.canvas.css} CSS px tall`);              // as tall as the name and two lines (brief 18 review)
     assert.ok(m.fontPx >= 14, `font ${m.fontPx}`);
     // inside the scene
     assert.ok(m.box.x >= -0.5 && m.box.y >= -0.5 && m.box.x + m.box.w <= m.scene.w + 0.5 && m.box.y + m.box.h <= m.scene.h + 0.5, JSON.stringify(m.box));

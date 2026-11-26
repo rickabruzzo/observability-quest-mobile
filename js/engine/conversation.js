@@ -45,3 +45,12 @@ export function talkWindow(where, patch, scale, margin = 10) {
   if (patch) free = where === 'top-right' ? sceneW - (patch.x + patch.w) : patch.x;
   return { className: where === 'top-right' ? 'top-right' : 'top-left', maxWidth: Math.floor(free * scale) - 2 * margin };
 }
+
+/**
+ * A conversation window's lines: two in every room (Warp brief 18 and its review). Two is the most that clears the
+ * hero's head in the room where he stands highest; Rick, 2026-11-25: "They should be consistent in scale. Pick the
+ * relative smallest and use that as a basis for the others." So every persona's window is that size.
+ */
+export const TALK_LINES = 2;
+/** Clear of his head means the window's outline ends at least this many CSS px above the top of his hair (brief 18). */
+export const HEAD_CLEAR = 2;

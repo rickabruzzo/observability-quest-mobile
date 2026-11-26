@@ -2,7 +2,7 @@
 // portrait moves. Pure functions in js/engine/conversation.js; the DOM is js/engine/window.js.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { speakerOf, personaLine, portraitFrame, FRAME_MS, PORTRAIT_CROP, talkWindow } from '../js/engine/conversation.js';
+import { speakerOf, personaLine, portraitFrame, FRAME_MS, PORTRAIT_CROP, talkWindow, TALK_LINES, HEAD_CLEAR } from '../js/engine/conversation.js';
 import { SCRIPT } from '../js/script.js';
 import { CH1 } from '../js/chapters/ch1.js';
 
@@ -74,4 +74,10 @@ test('the window sits where it hides the persona least: beside their patch, at t
   assert.equal(right.maxWidth, Math.floor((320 - 102) * scale) - 10 - 10);
   assert.equal(right.className, 'top-right');
   assert.ok(talkWindow('top-left', null, scale, 10).maxWidth >= Math.floor(320 * scale) - 20, 'no patch: the whole width');
+});
+
+// ---- one size for every persona's window (brief 18 review; Rick, 2026-11-25: consistent, the smallest as the basis) ----
+
+test('every conversation window takes two lines, the fewest any room needs to clear the hero\'s head', () => {
+  assert.equal(TALK_LINES, 2); assert.equal(HEAD_CLEAR, 2);
 });

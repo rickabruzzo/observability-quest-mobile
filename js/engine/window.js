@@ -4,15 +4,15 @@
 // so a paused game (the rotate gate) freezes the typing too.
 //
 // A conversation window (Warp brief 10) is the same window grown a portrait on its left — the persona's
-// close-up, four lines tall, moving as the narrators do while the words type — with their name above the
+// close-up, as tall as its name and its two lines (brief 18), moving as the narrators do while the words type — with their name above the
 // words. Which lines get one, and whose portrait, is the chapter's business (js/engine/conversation.js).
 
 import { paginate, createMessage, stepMessage, tapMessage, visibleLines, linesFor, hugWidth, MAX_LINE_PX } from './message.js';
-import { PORTRAIT_CROP, portraitFrame } from './conversation.js';
+import { PORTRAIT_CROP, portraitFrame, TALK_LINES } from './conversation.js';
 import { sprite } from '../anim/sprites.js';
 
 const FONT_PX = 24;
-const TALK_LINES = 4;                        // a conversation window pages by the portrait's height
+const NAME_MIN_PX = 16;                     // the floor for read text
 
 let measurer = null;
 function measureFn(px = FONT_PX) {
@@ -21,6 +21,12 @@ function measureFn(px = FONT_PX) {
   return (s) => measurer.measureText(s).width;
 }
 
+const lineHeight = (node) => parseFloat(getComputedStyle(node).lineHeight);
+/** The name's height with its margin under it, as it is set now. */
+function nameHeight(el) {
+  const n = el.querySelector('.msg-name');
+  return n.getBoundingClientRect().height + (parseFloat(getComputedStyle(n).marginBottom) || 0);
+}
 /** Paints the portrait's square: the still, then the mouth patch and the blink patch for this frame. */
 function paintPortrait(canvas, portrait, { mouth, blink }) {
   const g = canvas.getContext('2d'), c = PORTRAIT_CROP;
@@ -93,19 +99,45 @@ export function createWindows(ctx, { onShow } = {}) {
       const chrome = el.offsetWidth - el.clientWidth;                          // the border
       let avail = el.clientWidth;
       if (maxWidth) avail = Math.min(avail, maxWidth - chrome);
-      let side = 0, nameW = 0;
+      let nameW = 0;
       const shownName = portrait ? portrait.name : name;                      // a persona's, or a narrator's over a verdict (brief 12)
       if (shownName) {
         el.querySelector('.msg-name').textContent = shownName;
         const ns = getComputedStyle(el.querySelector('.msg-name'));       // the name's width as it is set: its letters and their spacing
         nameW = Math.ceil(measureFn(parseFloat(ns.fontSize))(shownName) + (parseFloat(ns.letterSpacing) || 0) * shownName.length);
       }
-      if (portrait) side = el.querySelector('.msg-portrait').offsetWidth + (parseFloat(cs.columnGap) || 0);
-      const width = Math.min(MAX_LINE_PX, avail - pad - 2 - side);           // never wider than the reading measure
+      let pages = null;
+      /** A name wider than the words column is set smaller, down to NAME_MIN_PX, so it stays on one line: a wrapped name
+       * makes the window a line taller, over the hero's head (room 3's THE FRONTEND DEVELOPER, brief 18 review). */
+      const nameEl = el.querySelector('.msg-name'), namePx = shownName ? parseFloat(getComputedStyle(nameEl).fontSize) : 0;
+      const nameAt = (px) => Math.ceil(measureFn(px)(shownName) + (parseFloat(getComputedStyle(nameEl).letterSpacing) || 0) * shownName.length);
+      const fitName = (width) => {
+        let px = namePx;
+        while (px > NAME_MIN_PX && nameAt(px) > width) px--;
+        nameEl.style.fontSize = px === namePx ? '' : `${px}px`;
+        nameW = nameAt(px);
+      };
+      /** Pages the words by `lines` and sizes the window to them: a conversation window's portrait is as tall as its name
+       * and its lines (brief 18), and the words column is what the portrait leaves, up to the reading measure. */
+      const fitTo = (lines) => {
+        let side = 0;
+        if (portrait) {
+          const body = el.querySelector('.msg-body'), lh = lineHeight(body);
+          body.style.minHeight = `${lines * lh}px`;
+          const box = el.querySelector('.msg-portrait'), bw = box.offsetWidth - box.clientWidth;
+          const inner = Math.max(1, Math.floor(nameHeight(el) + lines * lh - bw));   // as tall as the name and the lines, whole CSS px
+          box.style.width = box.style.height = `${inner}px`;
+          side = box.offsetWidth + (parseFloat(cs.columnGap) || 0);
+        }
+        const width = Math.min(MAX_LINE_PX, avail - pad - 2 - side);         // never wider than the reading measure
+        if (shownName) fitName(width);
+        pages = paginate(text, measureFn(), width, lines);
+        const column = Math.min(Math.max(hugWidth(pages, measureFn()), nameW), width);
+        el.style.width = `${column + 2 + pad + chrome + side}px`;            // and no wider than its longest line
+      };
       const lines = maxLines ?? (portrait ? TALK_LINES : linesFor(ctx.fit?.sceneH ?? 370));
-      const pages = paginate(text, measureFn(), width, lines);
-      const column = Math.min(Math.max(hugWidth(pages, measureFn()), nameW), width);
-      el.style.width = `${column + 2 + pad + chrome + side}px`;              // and no wider than its longest line
+      fitTo(lines);
+      el.dataset.lines = String(lines);
       msg = createMessage(pages, { instant: ctx.reducedMotion });
       el.dataset.text = text;
       if (portrait) { face = { canvas: el.querySelector('canvas'), portrait, elapsed: 0, key: null }; animateFace(); }

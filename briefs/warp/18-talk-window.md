@@ -80,3 +80,16 @@ and a browser test file. Nothing in `tools/`, `assets/` or `script/`.
 
 `handbacks/<date>-warp-talk-window.md`: what you built, the judgment calls, the three suites' counts, the line
 count each room got at both phone sizes, and one capture per room at 667×375 with the persona's first line up.
+
+## Review (Cloud Claude, 2026-11-25)
+
+Built as briefed (`handbacks/2026-11-25-warp-talk-window.md`); reviewed in
+`handbacks/2026-11-25-cloud-talk-window-review.md`. What differs from the text above:
+
+- **A name wider than the words column is set smaller, down to 16 px, so it stays on one line.** Room 3's name
+  wrapped and put the window on his hair; every room now clears him at both phone sizes.
+- **The portrait never grows past today's four lines.** This brief said today's portrait was the name and four
+  lines; it was four lines. It now shrinks to the name and the lines and a four-line window is as before.
+- **Then one size everywhere** (Rick: "They should be consistent in scale. Pick the relative smallest and use that
+  as a basis for the others."): every persona's window is two lines, its name at 18 px, its portrait 72 CSS px. The
+  per-room line count is gone.

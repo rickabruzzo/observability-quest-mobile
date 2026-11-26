@@ -177,7 +177,7 @@ export function createChapterScreen(game) {
     const { spoken, text } = persona ? personaLine(say(key), persona.title) : { spoken: false, text: say(key) };
     if (spoken) {
       const patch = art?.manifest.patches?.[room.image] ?? null;
-      const { className, maxWidth } = talkWindow(persona.where, patch, gctx?.fit?.scale ?? 1);
+      const scale = gctx?.fit?.scale ?? 1, { className, maxWidth } = talkWindow(persona.where, patch, scale);
       personaTalking = true;
       await wins.say(text, { ...opts, where: className, maxWidth, portrait: { name: persona.name, seed: persona.seed, ...persona.portrait } });
       if (t === live()) personaTalking = false;
@@ -752,7 +752,7 @@ export function createChapterScreen(game) {
         get heroBox() { return heroBox(); },
         get view() { return view; }, get pose() { return pose; }, get flip() { return flip; }, get busy() { return busy; }, get pcView() { return pcView; },
         get loaded() { return art !== null; }, get screensLoaded() { return hcArt !== null; },
-        get window() { return wins.open ? { id: wins.serial, text: wins.element.dataset.text, pages: wins.pages, page: wins.page } : null; },
+        get window() { return wins.open ? { id: wins.serial, text: wins.element.dataset.text, pages: wins.pages, page: wins.page, lines: Number(wins.element.dataset.lines) } : null; },
         get tool() { const t = tools[toolName]; return t && state === 'tool' ? { name: toolName, from: toolFrom, step: t.step, done: t.done, wrong: t.wrong, prompts: promptsOf(t) } : null; },
         get scenario() { return { ...scen }; },
         /** The wall display: its state, its tone and whatever frame its painter exposes. */
